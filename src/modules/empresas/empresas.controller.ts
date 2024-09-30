@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException } from '@nestjs/common';
 import { EmpresasService } from './empresas.service';
 import { CreateEmpresaDto } from './dto/create-empresa.dto';
 import { UpdateEmpresaDto } from './dto/update-empresa.dto';
@@ -8,27 +8,56 @@ export class EmpresasController {
   constructor(private readonly empresasService: EmpresasService) {}
 
   @Post()
-  create(@Body() createEmpresaDto: CreateEmpresaDto) {
-    return this.empresasService.create(createEmpresaDto);
+  async create(@Body() createEmpresaDto: CreateEmpresaDto) {
+    try {
+      const empresa = await this.empresasService.create(createEmpresaDto);
+      return {
+        message: 'Empresa creada exitosamente',
+        data: empresa,
+      };
+    } catch (error) {
+      throw new BadRequestException('Error al crear la empresa');
+    }
   }
 
   @Get()
-  findAll() {
-    return this.empresasService.findAll();
+  async findAll() {
+    const empresas = await this.empresasService.findAll();
+    if (!empresas || empresas.length === 0) {
+      throw new NotFoundException('No se encontraron empresas');
+    }
+    return empresas;
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.empresasService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const empresa = await this.empresasService.findOne(id);
+    if (!empresa) {
+      throw new NotFoundException(`Empresa con id ${id} no encontrada`);
+    }
+    return empresa;
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEmpresaDto: UpdateEmpresaDto) {
-    return this.empresasService.update(+id, updateEmpresaDto);
+  async update(@Param('id') id: string, @Body() updateEmpresaDto: UpdateEmpresaDto) {
+    const updatedEmpresa = await this.empresasService.update(id, updateEmpresaDto);
+    if (!updatedEmpresa) {
+      throw new NotFoundException(`No se pudo actualizar la empresa con id ${id}`);
+    }
+    return {
+      message: 'Empresa actualizada exitosamente',
+      data: updatedEmpresa,
+    };
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.empresasService.remove(+id);
+  async remove(@Param('id') id: string) {
+    const deletedEmpresa = await this.empresasService.remove(id);
+    if (!deletedEmpresa) {
+      throw new NotFoundException(`No se pudo eliminar la empresa con id ${id}`);
+    }
+    return {
+      message: 'Empresa eliminada exitosamente',
+    };
   }
 }

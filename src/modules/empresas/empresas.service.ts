@@ -1,26 +1,32 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Empresa } from './entities/empresa.entity';
 import { CreateEmpresaDto } from './dto/create-empresa.dto';
 import { UpdateEmpresaDto } from './dto/update-empresa.dto';
 
 @Injectable()
 export class EmpresasService {
-  create(createEmpresaDto: CreateEmpresaDto) {
-    return 'This action adds a new empresa';
+  constructor(@InjectModel(Empresa.name) private empresaModel: Model<Empresa>) {}
+
+  async create(createEmpresaDto: CreateEmpresaDto): Promise<Empresa> {
+    const createdEmpresa = new this.empresaModel(createEmpresaDto);
+    return createdEmpresa.save();
   }
 
-  findAll() {
-    return `This action returns all empresas`;
+  async findAll(): Promise<Empresa[]> {
+    return this.empresaModel.find({ baseOperaciones: 'Pruebas' }).exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} empresa`;
+  async findOne(id: string): Promise<Empresa> {
+    return this.empresaModel.findById(id).exec();
   }
 
-  update(id: number, updateEmpresaDto: UpdateEmpresaDto) {
-    return `This action updates a #${id} empresa`;
+  async update(id: string, updateEmpresaDto: UpdateEmpresaDto): Promise<Empresa> {
+    return this.empresaModel.findByIdAndUpdate(id, updateEmpresaDto, { new: true }).exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} empresa`;
+  async remove(id: string): Promise<Empresa> {
+    return this.empresaModel.findByIdAndDelete(id).exec();
   }
 }
