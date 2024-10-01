@@ -80,6 +80,7 @@ export class CreateEmpresaDto {
     example: '60d9f70fc39b3c1b8f0d6c0b',
   })
   @IsMongoId({ message: 'El ID de "createdBy" no es válido' })
+  @IsNotEmpty({ message: 'El ID de "createdBy" no puede estar vacío' })
   createdBy: string;
 
   @ApiProperty({
@@ -87,5 +88,6 @@ export class CreateEmpresaDto {
     example: '60d9f70fc39b3c1b8f0d6c0b',
   })
   @IsMongoId({ message: 'El ID de "updatedBy" no es válido' })
+  @IsNotEmpty({ message: 'El ID de "updatedBy" no puede estar vacío' })
   updatedBy: string;
 }

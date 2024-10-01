@@ -68,11 +68,11 @@ export class CentrosTrabajoController {
   @ApiResponse({ status: 400, description: 'El ID de centro de trabajo proporcionado no es válido' })
   async remove(@Param('empresaId') empresaId: string, @Param('centroId') centroId: string) {
     if (!isValidObjectId(empresaId)) {
-      throw new BadRequestException('El ID proporcionado no es válido');
+      throw new BadRequestException('El ID de empresa proporcionado no es válido');
     }
 
     if (!isValidObjectId(centroId)) {
-      throw new BadRequestException('El ID proporcionado no es válido');
+      throw new BadRequestException('El ID de centro de trabajo proporcionado no es válido');
     }
 
     const deletedCentroTrabajo = await this.centrosTrabajoService.remove(centroId);

@@ -9,7 +9,7 @@ export class CentroTrabajo extends Document {
     codigoPostal: string;
     estado: string;
     municipio: string;
-    idEmpresa: Empresa |string;
+    idEmpresa: Empresa | string;
     createdBy: User | string;
     updatedBy: User | string;
 }

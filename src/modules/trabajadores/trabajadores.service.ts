@@ -1,26 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTrabajadoreDto } from './dto/create-trabajadore.dto';
-import { UpdateTrabajadoreDto } from './dto/update-trabajadore.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Trabajador } from './entities/trabajador.entity';
+import { CreateTrabajadorDto } from './dto/create-trabajador.dto';
+import { UpdateTrabajadorDto } from './dto/update-trabajador.dto';
+import { normalizeTrabajadorData } from 'src/utils/normalization'
 
 @Injectable()
 export class TrabajadoresService {
-  create(createTrabajadoreDto: CreateTrabajadoreDto) {
-    return 'This action adds a new trabajadore';
+  constructor(@InjectModel(Trabajador.name) private trabajadorModel: Model<Trabajador>) {}
+
+  async create(createTrabajadorDto: CreateTrabajadorDto): Promise<Trabajador> {
+    const normalizedDto = normalizeTrabajadorData(createTrabajadorDto);
+    const createdTrabajador = new this.trabajadorModel(normalizedDto);
+    return await createdTrabajador.save();
   }
 
-  findAll() {
-    return `This action returns all trabajadores`;
+  async findWorkersByCenter(id: string): Promise<Trabajador[]> {
+    return await this.trabajadorModel.find({ idCentroTrabajo: id }).exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} trabajadore`;
+  async update(id: string, updateTrabajadorDto: UpdateTrabajadorDto): Promise<Trabajador> {
+    const normalizedDto = normalizeTrabajadorData(updateTrabajadorDto);
+    return await this.trabajadorModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();
   }
 
-  update(id: number, updateTrabajadoreDto: UpdateTrabajadoreDto) {
-    return `This action updates a #${id} trabajadore`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} trabajadore`;
+  async remove(id: string): Promise<boolean> {
+    const result = await this.trabajadorModel.findByIdAndDelete(id).exec();
+    return result !== null;
   }
 }

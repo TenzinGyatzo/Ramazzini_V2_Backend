@@ -38,8 +38,7 @@ const estadosDeMexico = [
 export class CreateCentrosTrabajoDto {
     @ApiProperty({
       description: 'Nombre del centro de trabajo',
-      example: 'Bodega Topolobampo',
-      type: String
+      example: 'Bodega Topolobampo'
     })
     @IsString({ message: 'El nombre debe ser un string' })
     @IsNotEmpty({ message: 'El nombre no puede estar vacío' })
@@ -85,6 +84,7 @@ export class CreateCentrosTrabajoDto {
       example: '60d9f70fc39b3c1b8f0d6c0a',
     })
     @IsMongoId({ message: 'El ID de "idEmpresa" no es válido' })
+    @IsNotEmpty({ message: 'El ID de la empresa no puede estar vacío' })
     idEmpresa: string
 
     @ApiProperty({
@@ -92,12 +92,14 @@ export class CreateCentrosTrabajoDto {
       example: '60d9f70fc39b3c1b8f0d6c0b',
     })
     @IsMongoId({ message: 'El ID de "createdBy" no es válido' })
-    createdBy: string
+    @IsNotEmpty({ message: 'El ID de "createdBy" no puede estar vacío' })
+    createdBy: string;
 
     @ApiProperty({
       description: 'El ID del usuario que actualizó este registro',
       example: '60d9f70fc39b3c1b8f0d6c0c',
     })
     @IsMongoId({ message: 'El ID de "updatedBy" no es válido' })
+    @IsNotEmpty({ message: 'El ID de "updatedBy" no puede estar vacío' })
     updatedBy: string
 }
