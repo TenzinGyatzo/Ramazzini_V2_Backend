@@ -1,3 +1,4 @@
+import { ApiProperty } from "@nestjs/swagger";
 import { IsEnum, IsNotEmpty, IsString, Matches, IsMongoId } from "class-validator";
 
 const estadosDeMexico = [
@@ -35,34 +36,68 @@ const estadosDeMexico = [
   ];
 
 export class CreateCentrosTrabajoDto {
+    @ApiProperty({
+      description: 'Nombre del centro de trabajo',
+      example: 'Bodega Topolobampo',
+      type: String
+    })
     @IsString({ message: 'El nombre debe ser un string' })
     @IsNotEmpty({ message: 'El nombre no puede estar vacío' })
     nombreCentro: string
 
+    @ApiProperty({
+      description: 'Dirección del centro de trabajo',
+      example: 'Calle SinNombre #123'
+    })
     @IsString({ message: 'La dirección debe ser un string' })
     @IsNotEmpty({ message: 'La dirección no puede estar vacía' })
     direccionCentro: string
 
+    @ApiProperty({
+      description: 'El Código Postal del centro de trabajo, con un formato válido de 5 dígitos',
+      example: '81200',
+    })
     @IsString({ message: 'El Código Postal debe ser un string' })
     @IsNotEmpty({ message: 'El Código Postal no puede estar vacío' })
     @Matches(/^[0-9]{5}$/, { message: 'El Código Postal debe de tener un formato válido' })
     codigoPostal: string
-
+    
+    @ApiProperty({
+      description: 'El estado donde se encuentra el centro de trabajo',
+      enum: estadosDeMexico,
+      example: 'Sinaloa',
+    })
     @IsString({ message: 'El estado debe ser un string' })
     @IsNotEmpty({ message: 'El estado no puede estar vacío' })
     @IsEnum(estadosDeMexico, { message: 'El estado no es válido' })
     estado: string
 
+    @ApiProperty({
+      description: 'El municipio donde se encuentra el centro de trabajo',
+      example: 'Ahome',
+    })
     @IsString({ message: 'El municipio debe ser un string' })
     @IsNotEmpty({ message: 'El municipio no puede estar vacío' })
     municipio: string
 
+    @ApiProperty({
+      description: 'El ID de la empresa a la cual pertenece el centro de trabajo',
+      example: '60d9f70fc39b3c1b8f0d6c0a',
+    })
     @IsMongoId({ message: 'El ID de "idEmpresa" no es válido' })
     idEmpresa: string
 
+    @ApiProperty({
+      description: 'El ID del usuario que creó este registro',
+      example: '60d9f70fc39b3c1b8f0d6c0b',
+    })
     @IsMongoId({ message: 'El ID de "createdBy" no es válido' })
     createdBy: string
 
+    @ApiProperty({
+      description: 'El ID del usuario que actualizó este registro',
+      example: '60d9f70fc39b3c1b8f0d6c0c',
+    })
     @IsMongoId({ message: 'El ID de "updatedBy" no es válido' })
     updatedBy: string
 }
