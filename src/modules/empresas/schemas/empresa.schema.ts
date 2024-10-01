@@ -17,7 +17,7 @@ export class Empresa extends Document {
   @Prop({ required: true })
   razonSocial: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true }) // No se está aplicando el unique porque ya había registros duplicados desde el uso de Ramazzini-V1
   RFC: string;
 
   @Prop()
