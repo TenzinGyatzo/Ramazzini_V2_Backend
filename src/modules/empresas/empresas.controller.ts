@@ -1,14 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException } from '@nestjs/common';
 import { EmpresasService } from './empresas.service';
 import { CreateEmpresaDto } from './dto/create-empresa.dto';
 import { UpdateEmpresaDto } from './dto/update-empresa.dto';
 import { isValidObjectId } from 'mongoose';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller('empresas')
+@ApiTags('Empresas')
 export class EmpresasController {
   constructor(private readonly empresasService: EmpresasService) {}
 
   @Post('crear-empresa')
+  @ApiOperation({ summary: 'Crea una nueva empresa' })
+  @ApiResponse({ status: 201, description: 'Empresa creada exitosamente' })
+  @ApiResponse({ status: 400, description: 'Solicitud Incorrecta *(Muestra violaciones de reglas de validación)*' })
   async create(@Body() createEmpresaDto: CreateEmpresaDto) {
     try {
       const empresa = await this.empresasService.create(createEmpresaDto);
@@ -21,8 +26,9 @@ export class EmpresasController {
     }
   }
   
-
   @Get()
+  @ApiOperation({ summary: 'Obtiene todas las empresas' })
+  @ApiResponse({ status: 200, description: 'Empresas obtenidas exitosamente' })
   async findAll() {
 
     const empresas = await this.empresasService.findAll();
@@ -35,6 +41,10 @@ export class EmpresasController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Obtiene una empresa por su ID' })
+  @ApiResponse({ status: 200, description: 'Empresa obtenida exitosamente' })
+  @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido' })
+  @ApiResponse({ status: 404, description: 'No se encontró la empresa' })
   async findOne(@Param('id') id: string) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
@@ -50,6 +60,9 @@ export class EmpresasController {
   }
 
   @Patch('/actualizar-empresa/:id')
+  @ApiOperation({ summary: 'Actualiza una empresa por su ID' })
+  @ApiResponse({ status: 200, description: 'Empresa actualizada exitosamente' })
+  @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido | Solicitud Incorrecta *(Muestra violaciones de reglas de validación)*' })
   async update(@Param('id') id: string, @Body() updateEmpresaDto: UpdateEmpresaDto) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
@@ -68,6 +81,9 @@ export class EmpresasController {
   }
 
   @Delete('/eliminar-empresa/:id')
+  @ApiOperation({ summary: 'Elimina una empresa por su ID' })
+  @ApiResponse({ status: 200, description: 'Empresa eliminada exitosamente | La empresa del ID proporcionado no existe o ya ha sido eliminada' })
+  @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido' })
   async remove(@Param('id') id: string) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');

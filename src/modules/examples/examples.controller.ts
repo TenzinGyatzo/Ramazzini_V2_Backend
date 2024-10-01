@@ -5,8 +5,10 @@ import { CreateExampleDto } from './dto/create-example.dto';
 import { UpdateExampleDto } from './dto/update-example.dto';
 import { ValidateUserPipe } from 'src/modules/examples/pipes/validate-user/validate-user.pipe';
 import { AuthGuard } from './guards/auth/auth.guard';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('examples')
+@ApiTags('Examples')
 export class ExamplesController {
   constructor(private readonly examplesService: ExamplesService) {}
 
@@ -48,31 +50,5 @@ export class ExamplesController {
     console.log(typeof query.age);
     console.log(typeof query.name);
     return `Hello ${query.name}, your age is ${query.age}`;
-  }
-
-  // CRUD OPERATIONS
-  @Post()
-  create(@Body() createExampleDto: CreateExampleDto) {
-    return this.examplesService.create(createExampleDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.examplesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.examplesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateExampleDto: UpdateExampleDto) {
-    return this.examplesService.update(+id, updateExampleDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.examplesService.remove(+id);
   }
 }

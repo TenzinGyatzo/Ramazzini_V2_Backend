@@ -29,8 +29,9 @@ export class EmpresasService {
     return this.empresaModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();
   }
 
-  async remove(id: string): Promise<Empresa> {
-    return this.empresaModel.findByIdAndDelete(id).exec();
+  async remove(id: string): Promise<boolean> {
+    const result = await this.empresaModel.findByIdAndDelete(id).exec();
+    return result !== null;
   }
 }
 

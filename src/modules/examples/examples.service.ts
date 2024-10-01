@@ -24,33 +24,4 @@ export class ExamplesService {
     },
   ];
 
-  create(example: CreateExampleDto) {
-    console.log(example);
-    this.examples.push({
-      id: this.examples.length + 1,
-      name: example.name,
-      description: example.description
-    })
-  }
-
-  findAll() {
-    return this.examples;
-  }
-
-  findOne(id: number) {
-    const exampleFound = this.examples.find(example => example.id === id)
-    if(!exampleFound) {
-      return new NotFoundException('No se encontro la example')
-    }
-    
-    return exampleFound;
-  }
-
-  update(id: number, updateExampleDto: UpdateExampleDto) {
-    return `This action updates a #${id} example`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} example`;
-  }
 }
