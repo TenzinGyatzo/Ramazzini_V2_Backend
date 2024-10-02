@@ -5,7 +5,7 @@ import { UpdateTrabajadorDto } from './dto/update-trabajador.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { isValidObjectId } from 'mongoose';
 
-@Controller(':centroId')
+@Controller('api/:centroId')
 @ApiTags('Trabajadores')
 export class TrabajadoresController {
   constructor(private readonly trabajadoresService: TrabajadoresService) {}
