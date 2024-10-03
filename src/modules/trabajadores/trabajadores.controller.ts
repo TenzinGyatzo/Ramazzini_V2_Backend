@@ -5,7 +5,7 @@ import { UpdateTrabajadorDto } from './dto/update-trabajador.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { isValidObjectId } from 'mongoose';
 
-@Controller('api/:centroId')
+@Controller('api/:empresaId/:centroId')
 @ApiTags('Trabajadores')
 export class TrabajadoresController {
   constructor(private readonly trabajadoresService: TrabajadoresService) {}
@@ -27,7 +27,11 @@ export class TrabajadoresController {
   @ApiOperation({ summary: 'Obtiene todos los trabajadores de una empresa' })
   @ApiResponse({ status: 200, description: 'Trabajadores encontrados exitosamente | Este centro de trabajo no tiene trabajadores registrados' })
   @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido' })
-  async findWorkersByCenter(@Param('centroId') centroId: string) {
+  async findWorkersByCenter(@Param('empresaId') empresaId: string, @Param('centroId') centroId: string) {
+    if (!isValidObjectId(empresaId)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
     if (!isValidObjectId(centroId)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }

@@ -5,7 +5,7 @@ import { UpdateEmpresaDto } from './dto/update-empresa.dto';
 import { isValidObjectId } from 'mongoose';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-@Controller('api/empresas')
+@Controller('api')
 @ApiTags('Empresas')
 export class EmpresasController {
   constructor(private readonly empresasService: EmpresasService) {}
@@ -26,7 +26,7 @@ export class EmpresasController {
     }
   }
   
-  @Get()
+  @Get('empresas')
   @ApiOperation({ summary: 'Obtiene todas las empresas' })
   @ApiResponse({ status: 200, description: 'Empresas obtenidas exitosamente' })
   async findAll() {
