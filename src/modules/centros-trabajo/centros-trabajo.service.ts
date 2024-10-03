@@ -20,6 +20,10 @@ export class CentrosTrabajoService {
     return await this.centroTrabajoModel.find({ idEmpresa: id }).exec();
   }
 
+  async findOne(id: string): Promise<CentroTrabajo> {
+    return this.centroTrabajoModel.findById(id).exec();
+  }
+
   async update(id: string, updateCentrosTrabajoDto: UpdateCentrosTrabajoDto): Promise<CentroTrabajo> {
     const normalizedDto = normalizeCentroTrabajoData(updateCentrosTrabajoDto);
     return await this.centroTrabajoModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();

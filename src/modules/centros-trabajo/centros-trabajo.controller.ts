@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException } from '@nestjs/common';
 import { CentrosTrabajoService } from './centros-trabajo.service';
 import { CreateCentrosTrabajoDto } from './dto/create-centros-trabajo.dto';
 import { UpdateCentrosTrabajoDto } from './dto/update-centros-trabajo.dto';
@@ -39,6 +39,25 @@ export class CentrosTrabajoController {
     }
   
     return centrosTrabajo;
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtiene un centro de trabajo por su ID' })
+  @ApiResponse({ status: 200, description: 'Centro de Trabajo obtenido exitosamente' })
+  @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido' })
+  @ApiResponse({ status: 404, description: 'No se encontró el centro de trabajo' })
+  async findOne(@Param('id') id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    const empresa = await this.centrosTrabajoService.findOne(id);
+
+    if (!empresa) {
+      throw new NotFoundException('No se encontró el centro de trabajo');
+    }
+
+    return empresa;
   }
 
   @Patch('/actualizar-centro-trabajo/:centroId')
