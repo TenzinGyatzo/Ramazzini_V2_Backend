@@ -20,6 +20,10 @@ export class TrabajadoresService {
     return await this.trabajadorModel.find({ idCentroTrabajo: id }).exec();
   }
 
+  async findOne(id: string): Promise<Trabajador> {
+    return await this.trabajadorModel.findById(id).exec();
+  }
+
   async update(id: string, updateTrabajadorDto: UpdateTrabajadorDto): Promise<Trabajador> {
     const normalizedDto = normalizeTrabajadorData(updateTrabajadorDto);
     return await this.trabajadorModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();

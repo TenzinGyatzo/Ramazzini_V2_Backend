@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException } from '@nestjs/common';
 import { TrabajadoresService } from './trabajadores.service';
 import { CreateTrabajadorDto } from './dto/create-trabajador.dto';
 import { UpdateTrabajadorDto } from './dto/update-trabajador.dto';
@@ -43,6 +43,25 @@ export class TrabajadoresController {
     }
 
     return trabajadores;
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtiene un trabajador por su ID' })
+  @ApiResponse({ status: 200, description: 'trabajador obtenido exitosamente' })
+  @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido' })
+  @ApiResponse({ status: 404, description: 'No se encontró el trabajador' })
+  async findOne(@Param('id') id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    const empresa = await this.trabajadoresService.findOne(id);
+
+    if (!empresa) {
+      throw new NotFoundException('No se encontró el trabajador');
+    }
+
+    return empresa;
   }
 
   @Patch('/actualizar-trabajador/:id')
