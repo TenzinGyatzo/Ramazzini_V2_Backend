@@ -17,7 +17,7 @@ export class EmpresasService {
   }
 
   async findAll(): Promise<Empresa[]> {
-    return this.empresaModel.find({ baseOperaciones: 'Los Mochis' }).sort({ nombreComercial: 1 }).exec();
+    return this.empresaModel.find({ baseOperaciones: 'Pruebas' }).sort({ nombreComercial: 1 }).exec();
   }
 
   async findOne(id: string): Promise<Empresa> {
