@@ -7,7 +7,7 @@ const basesOperaciones = ["Pruebas", "Los Mochis"];
 class LogotipoDto {
     @ApiProperty({
       description: 'Nombre del Logotipo',
-      example: 'baketopLogopng;,'
+      example: 'baketopLogo.png;,'
     })
     @IsString({ message: 'El "data" del logotipo debe ser un string' })
     @IsNotEmpty({ message: 'El "data" del logotipo no puede estar vacío' })
@@ -63,7 +63,7 @@ export class CreateEmpresaDto {
   })
   @ValidateNested()
   @Type(() => LogotipoDto)
-  logotipoEmpresa: LogotipoDto;
+  logotipoEmpresa?: LogotipoDto;
 
   @ApiProperty({
     description: 'Base de operaciones de la empresa',

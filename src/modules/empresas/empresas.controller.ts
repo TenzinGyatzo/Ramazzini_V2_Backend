@@ -1,9 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 import { EmpresasService } from './empresas.service';
 import { CreateEmpresaDto } from './dto/create-empresa.dto';
 import { UpdateEmpresaDto } from './dto/update-empresa.dto';
 import { isValidObjectId } from 'mongoose';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import * as path from 'path';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Controller('api')
 @ApiTags('Empresas')
@@ -14,8 +20,37 @@ export class EmpresasController {
   @ApiOperation({ summary: 'Crea una nueva empresa' })
   @ApiResponse({ status: 201, description: 'Empresa creada exitosamente' })
   @ApiResponse({ status: 400, description: 'Solicitud Incorrecta *(Muestra violaciones de reglas de validación)*' })
-  async create(@Body() createEmpresaDto: CreateEmpresaDto) {
+  @UseInterceptors(
+    FileInterceptor('logotipoEmpresa', {
+      storage: diskStorage({
+        destination: path.resolve(__dirname, `../../../../${process.env.UPLOADS_DIR}`),
+        filename: (req, file, callback) => {
+          // Genera un nombre de archivo único basado en el nombre comercial de la empresa.
+          const sanitizedCompanyName = req.body.nombreComercial
+            .replace(/\s+/g, "-") // Reemplaza espacios por guiones
+            .replace(/[^a-zA-Z0-9\-]/g, "") // Elimina caracteres especiales para evitar problemas en el nombre de archivo
+            .toLowerCase(); // Convierte el nombre a minúsculas
+
+          // Forma el nombre del archivo con el nombre comercial y la extensión original del archivo
+          const uniqueFilename = `${sanitizedCompanyName}-logo${path.extname(file.originalname)}`;
+
+          callback(null, uniqueFilename);
+        }
+      })
+    })
+  )
+  async create(@Body() createEmpresaDto: CreateEmpresaDto, @UploadedFile() file: Express.Multer.File) {
+    console.log('Archivo recibido:', file);
+    console.log('Datos de la empresa:', createEmpresaDto);
+
     try {
+      if (file) {
+        createEmpresaDto.logotipoEmpresa = {
+          data: file.filename,
+          contentType: file.mimetype
+        }
+      }
+
       const empresa = await this.empresasService.create(createEmpresaDto);
       return { message: 'Empresa creada exitosamente', data: empresa };
     } catch (error) {
