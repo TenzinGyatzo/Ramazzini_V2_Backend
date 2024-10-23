@@ -98,9 +98,35 @@ export class EmpresasController {
   @ApiOperation({ summary: 'Actualiza una empresa por su ID' })
   @ApiResponse({ status: 200, description: 'Empresa actualizada exitosamente' })
   @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido | Solicitud Incorrecta *(Muestra violaciones de reglas de validación)*' })
-  async update(@Param('id') id: string, @Body() updateEmpresaDto: UpdateEmpresaDto) {
+  @UseInterceptors(
+    FileInterceptor('logotipoEmpresa', {
+      storage: diskStorage({
+        destination: path.resolve(__dirname, `../../../../${process.env.UPLOADS_DIR}`),
+        filename: (req, file, callback) => {
+          // Genera un nombre de archivo único basado en el nombre comercial de la empresa.
+          const sanitizedCompanyName = req.body.nombreComercial
+            .replace(/\s+/g, "-") // Reemplaza espacios por guiones
+            .replace(/[^a-zA-Z0-9\-]/g, "") // Elimina caracteres especiales para evitar problemas en el nombre de archivo
+            .toLowerCase(); // Convierte el nombre a minúsculas
+  
+          // Forma el nombre del archivo con el nombre comercial y la extensión original del archivo
+          const uniqueFilename = `${sanitizedCompanyName}-logo${path.extname(file.originalname)}`;
+          callback(null, uniqueFilename);
+        }
+      })
+    })
+  )
+  async update(@Param('id') id: string, @Body() updateEmpresaDto: UpdateEmpresaDto, file: Express.Multer.File) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    // Si se sube un archivo, se añade al DTO para actualizar el logotipo
+    if (file) {
+      updateEmpresaDto.logotipoEmpresa = {
+        data: file.filename,
+        contentType: file.mimetype,
+      };
     }
 
     const updatedEmpresa = await this.empresasService.update(id, updateEmpresaDto);
