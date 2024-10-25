@@ -14,9 +14,15 @@ export class CentrosTrabajoController {
   @ApiOperation({ summary: 'Crea un nuevo centro de trabajo' })
   @ApiResponse({ status: 201, description: 'Centro de Trabajo creado exitosamente' })
   @ApiResponse({ status: 400, description: 'Solicitud Incorrecta *(Muestra violaciones de reglas de validación)*' })
-  async create(@Body() createCentrosTrabajoDto: CreateCentrosTrabajoDto) {
+  async create(
+    @Param('empresaId') empresaId: string,
+    @Body() createCentrosTrabajoDto: CreateCentrosTrabajoDto,
+  ) {
     try {
-      const centroTrabajo = await this.centrosTrabajoService.create(createCentrosTrabajoDto);
+      const centroTrabajo = await this.centrosTrabajoService.create({
+        ...createCentrosTrabajoDto,
+        idEmpresa: empresaId,
+      });
       return { message: 'Centro de Trabajo creado exitosamente', data: centroTrabajo };
     } catch (error) {
       throw new BadRequestException('Error al crear el centro de trabajo');
