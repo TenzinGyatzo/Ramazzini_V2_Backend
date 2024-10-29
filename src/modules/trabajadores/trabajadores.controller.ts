@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as xlsx from 'xlsx';
 import { TrabajadoresService } from './trabajadores.service';
@@ -6,11 +6,35 @@ import { CreateTrabajadorDto } from './dto/create-trabajador.dto';
 import { UpdateTrabajadorDto } from './dto/update-trabajador.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { isValidObjectId } from 'mongoose';
+import { Response } from 'express';
 
 @Controller('api/:empresaId/:centroId')
 @ApiTags('Trabajadores')
 export class TrabajadoresController {
   constructor(private readonly trabajadoresService: TrabajadoresService) {}
+
+  @Get('/exportar-trabajadores')
+  @ApiOperation({ summary: 'Exporta todos los trabajadores de un centro de trabajo en un archivo .xlsx' })
+  @ApiResponse({ status: 200, description: 'Archivo de trabajadores exportado exitosamente' })
+  @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido' })
+  async exportarTrabajadores(
+    @Param('centroId') centroId: string,
+    @Res() res: Response
+  ) {
+    if (!isValidObjectId(centroId)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    // Llamar al servicio para generar el archivo .xlsx temporalmente
+    const workbookBuffer = await this.trabajadoresService.exportarTrabajadores(centroId);
+
+    // Configurar encabezados de respuesta para la descarga del archivo
+    res.setHeader('Content-Disposition', 'attachment; filename="trabajadores.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+    // Enviar el archivo al cliente
+    res.send(workbookBuffer);
+  }
 
   @Post('registrar-trabajador')
   @ApiOperation({ summary: 'Registra un trabajador nuevo '})

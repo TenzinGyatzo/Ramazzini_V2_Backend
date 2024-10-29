@@ -6,6 +6,8 @@ import { CreateTrabajadorDto } from './dto/create-trabajador.dto';
 import { UpdateTrabajadorDto } from './dto/update-trabajador.dto';
 import { normalizeTrabajadorData } from 'src/utils/normalization'
 import * as moment from 'moment';
+import * as xlsx from 'xlsx';
+import { calcularEdad, calcularAntiguedad } from 'src/utils/dates';
 
 @Injectable()
 export class TrabajadoresService {
@@ -79,5 +81,41 @@ export class TrabajadoresService {
   async remove(id: string): Promise<boolean> {
     const result = await this.trabajadorModel.findByIdAndDelete(id).exec();
     return result !== null;
+  }
+
+  async exportarTrabajadores(idCentroTrabajo: string): Promise<Buffer> {
+    // Consultar trabajadores del centro de trabajo especificado
+    const trabajadores = await this.trabajadorModel.find({ idCentroTrabajo }).exec();
+
+    // Convertir los datos en un arreglo de objetos para el archivo Excel, usando edad y antigüedad
+    const trabajadoresData = trabajadores.map(trabajador => {
+      // Convertir las fechas a formato string 'YYYY-MM-DD' para usar en calcularEdad y calcularAntiguedad
+      const fechaNacimientoStr = trabajador.fechaNacimiento
+        ? moment(trabajador.fechaNacimiento).format('YYYY-MM-DD')
+        : null;
+      const fechaIngresoStr = trabajador.fechaIngreso
+        ? moment(trabajador.fechaIngreso).format('YYYY-MM-DD')
+        : null;
+
+      return {
+        Nombre: trabajador.nombre,
+        Edad: fechaNacimientoStr ? `${calcularEdad(fechaNacimientoStr)} años` : 'Desconocido',
+        Sexo: trabajador.sexo,
+        Escolaridad: trabajador.escolaridad,
+        Puesto: trabajador.puesto,
+        Antiguedad: fechaIngresoStr ? calcularAntiguedad(fechaIngresoStr) : 'Desconocido',
+        Telefono: trabajador.telefono,
+        EstadoCivil: trabajador.estadoCivil,
+        Hijos: trabajador.hijos
+      };
+    });
+
+    // Crear un nuevo libro y hoja de trabajo
+    const worksheet = xlsx.utils.json_to_sheet(trabajadoresData);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, 'Trabajadores');
+
+    // Convertir el libro a un buffer
+    return xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
   }
 }
