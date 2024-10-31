@@ -9,6 +9,7 @@ import { TrabajadoresModule } from './modules/trabajadores/trabajadores.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ExamplesModule } from './modules/examples/examples.module';
+import { ExpedientesModule } from './modules/expedientes/expedientes.module';
 
 
 @Module({
@@ -33,6 +34,7 @@ import { ExamplesModule } from './modules/examples/examples.module';
     TrabajadoresModule, 
     AuthModule, 
     UsersModule, 
+    ExpedientesModule, 
   ]
 })
 export class AppModule {}
