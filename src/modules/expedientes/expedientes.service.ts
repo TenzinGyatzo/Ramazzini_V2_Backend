@@ -1,26 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { CreateExpedienteDto } from './dto/create-expediente.dto';
-import { UpdateExpedienteDto } from './dto/update-expediente.dto';
+import { CreateAntidopingDto } from './dto/create-antidoping.dto';
+import { UpdateAntidopingDto } from './dto/update-antidoping.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Antidoping } from './schemas/antidoping.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class ExpedientesService {
-  create(createExpedienteDto: CreateExpedienteDto) {
-    return 'This action adds a new expediente';
+  constructor(@InjectModel(Antidoping.name) private antidopingModel: Model<Antidoping>) {}
+
+  async create(createAntidopingDto: CreateAntidopingDto): Promise<Antidoping> {
+    const createdAntidoping = new this.antidopingModel(createAntidopingDto);
+    return createdAntidoping.save();
   }
 
-  findAll() {
-    return `This action returns all expedientes`;
+  async findAntidopings(trabajadorId: string): Promise<Antidoping[]> {
+    return this.antidopingModel.find({ idTrabajador: trabajadorId }).exec();
   }
 
-  findOne(id: number) {
+  async findOne(id: string) {
     return `This action returns a #${id} expediente`;
   }
 
-  update(id: number, updateExpedienteDto: UpdateExpedienteDto) {
-    return `This action updates a #${id} expediente`;
+  async update(id: string, updateAntidopingDto: UpdateAntidopingDto): Promise<Antidoping> {
+    return await this.antidopingModel.findByIdAndUpdate(id, updateAntidopingDto, { new: true }).exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} expediente`;
+  async remove(id: string): Promise<boolean> {
+    const result = await this.antidopingModel.findByIdAndDelete(id).exec();
+    return result !== null;
   }
 }
