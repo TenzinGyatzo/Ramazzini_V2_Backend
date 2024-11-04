@@ -6,6 +6,7 @@ import { Antidoping, AntidopingSchema } from './schemas/antidoping.schema';
 import { Aptitud, AptitudSchema } from './schemas/aptitud.schema';
 import { Certificado, CertificadoSchema } from './schemas/certificado.schema';
 import { DocumentoExterno, DocumentoExternoSchema } from './schemas/documento-externo.schema';
+import { ExamenVista, ExamenVistaSchema } from './schemas/examen-vista.schema';
 
 @Module({
   controllers: [ExpedientesController],
@@ -16,6 +17,7 @@ import { DocumentoExterno, DocumentoExternoSchema } from './schemas/documento-ex
       { name: Aptitud.name, schema: AptitudSchema },
       { name: Certificado.name, schema: CertificadoSchema },
       { name: DocumentoExterno.name, schema: DocumentoExternoSchema },
+      { name: ExamenVista.name, schema: ExamenVistaSchema },
     ]),
   ]
 })
