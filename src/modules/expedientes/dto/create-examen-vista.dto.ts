@@ -70,10 +70,139 @@ export class CreateExamenVistaDto {
     requiereLentesUsoGeneral: string
 
     // Sin corrección vista cercana
+    @ApiProperty({
+        description: 'Agudeza visual cercana de ojo izquierdo sin corrección',
+        example: 20
+    })
+    @IsNumber({ maxDecimalPlaces: 0 })
+    @Min(10)
+    @Max(200)
+    @IsNotEmpty({ message: 'La agudeza visual cercana de ojo izquierdo sin corrección no puede estar vacía' })
+    ojoIzquierdoCercanaSinCorreccion: number
 
+    @ApiProperty({
+        description: 'Agudeza visual cercana de ojo derecho sin corrección',
+        example: 20
+    })
+    @IsNumber({ maxDecimalPlaces: 0 })
+    @Min(10)
+    @Max(200)
+    @IsNotEmpty({ message: 'La agudeza visual cercana de ojo derecho sin corrección no puede estar vacía' })
+    ojoDerechoCercanaSinCorreccion: number
 
+    @ApiProperty({
+        description: 'Interpretación de la agudeza visual cercana sin corrección',
+        enum: agudezaVisualInterpretaciones,
+        example: 'Visión ligeramente reducida'
+    })
+    @IsString({ message: 'La interpretación de la agudeza visual cercana sin corrección debe ser un string' })
+    @IsNotEmpty({ message: 'La interpretación de la agudeza visual cercana sin corrección no puede estar vacía' })
+    @IsEnum(agudezaVisualInterpretaciones, { message: 'La interpretación de la agudeza visual cercana sin corrección debe ser uno de los siguientes: ' + agudezaVisualInterpretaciones })
+    sinCorreccionCercanaInterpretacion: string
+
+    @ApiProperty({
+        description: 'Indica si requiere lentes para la lectura',
+        enum: siONo,
+        example: 'Si'
+    })
+    @IsString({ message: 'El indicador de si requiere lentes para lectura debe ser un string' })
+    @IsNotEmpty({ message: 'El indicador de si requiere lentes para lectura no puede estar vacía' })
+    @IsEnum(siONo, { message: 'El indicador de si requiere lentes para lectura debe ser uno de los siguientes: ' + siONo })
+    requiereLentesParaLectura: string
+
+    // Con corrección vista lejana
+    @ApiProperty({
+        description: 'Agudeza visual lejana de ojo izquierdo con corrección',
+        example: 20
+    })
+    @IsNumber({ maxDecimalPlaces: 0 })
+    @Min(10)
+    @Max(200)
+    @IsOptional()
+    ojoIzquierdoLejanaConCorreccion: number
+
+    @ApiProperty({
+        description: 'Agudeza visual lejana de ojo derecho con corrección',
+        example: 20
+    })
+    @IsNumber({ maxDecimalPlaces: 0 })
+    @Min(10)
+    @Max(200)
+    @IsOptional()
+    ojoDerechoLejanaConCorreccion: number
+
+    @ApiProperty({
+        description: 'Interpretación de la agudeza visual lejana con corrección',
+        enum: agudezaVisualInterpretaciones,
+        example: 'Visión ligeramente reducida'
+    })
+    @IsString({ message: 'La interpretación de la agudeza visual lejana con corrección debe ser un string' })
+    @IsOptional()
+    @IsEnum(agudezaVisualInterpretaciones, { message: 'La interpretación de la agudeza visual lejana con corrección debe ser uno de los siguientes: ' + agudezaVisualInterpretaciones })
+    conCorreccionLejanaInterpretacion: string
     
-    
+    // Con corrección vista cercana
+    @ApiProperty({
+        description: 'Agudeza visual cercana de ojo izquierdo con corrección',
+        example: 20
+    })
+    @IsNumber({ maxDecimalPlaces: 0 })
+    @Min(10)
+    @Max(200)
+    @IsOptional()
+    ojoIzquierdoCercanaConCorreccion: number
+
+    @ApiProperty({
+        description: 'Agudeza visual cercana de ojo derecho con corrección',
+        example: 20
+    })
+    @IsNumber({ maxDecimalPlaces: 0 })
+    @Min(10)
+    @Max(200)
+    @IsOptional()
+    ojoDerechoCercanaConCorreccion: number
+
+    @ApiProperty({
+        description: 'Interpretación de la agudeza visual cercana con corrección',
+        enum: agudezaVisualInterpretaciones,
+        example: 'Visión ligeramente reducida'
+    })
+    @IsString({ message: 'La interpretación de la agudeza visual cercana con corrección debe ser un string' })
+    @IsOptional()
+    @IsEnum(agudezaVisualInterpretaciones, { message: 'La interpretación de la agudeza visual cercana con corrección debe ser uno de los siguientes: ' + agudezaVisualInterpretaciones })
+    conCorreccionCercanaInterpretacion: string
+
+    // Ishihara
+    @ApiProperty({
+        description: 'Número de placas que pudo ver correctamente',
+        example: 10
+    })
+    @IsNumber({ maxDecimalPlaces: 0 })
+    @Min(0)
+    @Max(14)
+    @IsNotEmpty({ message: 'El número de placas que pudo ver correctamente no puede estar vacía' })
+    placasCorrectas: number
+
+    @ApiProperty({
+        description: 'Porcentaje de placas que pudo ver correctamente',
+        example: 71
+    })
+    @IsNumber({ maxDecimalPlaces: 0 })
+    @Min(0)
+    @Max(100)
+    @IsNotEmpty({ message: 'El porcentaje de placas que pudo ver correctamente no puede estar vacía' })
+    porcentajeIshihara: number
+
+    @ApiProperty({
+        description: 'Interpretación de prueba Ishihara',
+        enum: ishiharaInterpretaciones,
+        example: 'Normal'
+    })
+    @IsString({ message: 'La interpretación de la prueba Ishihara debe ser un string' })
+    @IsNotEmpty({ message: 'La interpretación de la prueba Ishihara no puede estar vacía' })
+    @IsEnum(ishiharaInterpretaciones, { message: 'La interpretación de la prueba Ishihara debe ser uno de los siguientes: ' + ishiharaInterpretaciones })
+    interpretacionIshihara: string
+
     // RESTO
     @ApiProperty({
         description: 'El ID del trabajador',

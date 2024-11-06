@@ -50,23 +50,23 @@ export class ExamenVista extends Document {
     requiereLentesParaLectura: string
 
     // Con corrección vista lejana
-    @Prop({ required: true })
+    @Prop()
     ojoIzquierdoLejanaConCorreccion: number
 
-    @Prop({ required: true })
+    @Prop()
     ojoDerechoLejanaConCorreccion: number
 
-    @Prop({ required: true, enum: agudezaVisualInterpretaciones })
+    @Prop({ enum: agudezaVisualInterpretaciones })
     conCorreccionLejanaInterpretacion: string
 
     // Con corrección vista cercana
-    @Prop({ required: true })
+    @Prop()
     ojoIzquierdoCercanaConCorreccion: number
 
-    @Prop({ required: true })
+    @Prop()
     ojoDerechoCercanaConCorreccion: number
 
-    @Prop({ required: true, enum: agudezaVisualInterpretaciones })
+    @Prop({ enum: agudezaVisualInterpretaciones })
     conCorreccionCercanaInterpretacion: string
 
     // Ishihara

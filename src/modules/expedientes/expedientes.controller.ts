@@ -6,6 +6,16 @@ import { CreateAntidopingDto } from './dto/create-antidoping.dto';
 import { UpdateAntidopingDto } from './dto/update-antidoping.dto';
 import { CreateAptitudDto } from './dto/create-aptitud.dto';
 import { UpdateAptitudDto } from './dto/update-aptitud.dto';
+import { CreateCertificadoDto } from './dto/create-certificado.dto';
+import { UpdateCertificadoDto } from './dto/update-certificado.dto';
+import { CreateDocumentoExternoDto } from './dto/create-documento-externo.dto';
+import { UpdateDocumentoExternoDto } from './dto/update-documento-externo.dto';
+import { CreateExamenVistaDto } from './dto/create-examen-vista.dto';
+import { UpdateExamenVistaDto } from './dto/update-examen-vista.dto';
+import { CreateExploracionFisicaDto } from './dto/create-exploracion-fisica.dto';
+import { UpdateExploracionFisicaDto } from './dto/update-exploracion-fisica.dto';
+
+import e from 'express';
 
 @Controller('api/expedientes/:trabajadorId/documentos')
 export class ExpedientesController {
@@ -15,12 +25,20 @@ export class ExpedientesController {
   private createDtos = {
     antidoping: CreateAntidopingDto,
     aptitud: CreateAptitudDto,
+    certificado: CreateCertificadoDto,
+    documentoExterno: CreateDocumentoExternoDto,
+    examenVista: CreateExamenVistaDto,
+    exploracionFisica: CreateExploracionFisicaDto
     // Agrega otros tipos de documentos...
   };
 
   private updateDtos = {
     antidoping: UpdateAntidopingDto,
     aptitud: UpdateAptitudDto,
+    certificado: UpdateCertificadoDto,
+    documentoExterno: UpdateDocumentoExternoDto,
+    examenVista: UpdateExamenVistaDto,
+    exploracionFisica: UpdateExploracionFisicaDto
     // Agrega otros tipos de documentos...
   };
 

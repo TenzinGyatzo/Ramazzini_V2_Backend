@@ -6,6 +6,8 @@ import { Antidoping } from './schemas/antidoping.schema';
 import { Aptitud } from './schemas/aptitud.schema';
 import { Certificado } from './schemas/certificado.schema';
 import { DocumentoExterno } from './schemas/documento-externo.schema';
+import { ExamenVista } from './schemas/examen-vista.schema';
+import { ExploracionFisica } from './schemas/exploracion-fisica.schema';
 
 @Injectable()
 export class ExpedientesService {
@@ -15,13 +17,17 @@ export class ExpedientesService {
     @InjectModel(Antidoping.name) private antidopingModel: Model<Antidoping>,
     @InjectModel(Aptitud.name) private aptitudModel: Model<Aptitud>,
     @InjectModel(Certificado.name) private certificadoModel: Model<Certificado>,
-    @InjectModel(DocumentoExterno.name) private documentoExternoModel: Model<DocumentoExterno>
+    @InjectModel(DocumentoExterno.name) private documentoExternoModel: Model<DocumentoExterno>,
+    @InjectModel(ExamenVista.name) private examenVistaModel: Model<ExamenVista>,
+    @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>
   ) {
     this.models = {
       antidoping: this.antidopingModel,
       aptitud: this.aptitudModel,
       certificado: this.certificadoModel,
       documentoExterno: this.documentoExternoModel,
+      examenVista: this.examenVistaModel,
+      exploracionFisica: this.exploracionFisicaModel
     };
   }
 
