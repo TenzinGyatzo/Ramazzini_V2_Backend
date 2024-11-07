@@ -145,95 +145,123 @@ export class CreateExploracionFisicaDto {
 
     // Cabeza y Cuello
     @IsOptional()
-    craneoCara: number;
+    @IsString( {message: 'craneoCara debe ser un string' })
+    craneoCara: string;
 
     @IsOptional()
-    ojos: number;
+    @IsString( {message: 'ojos debe ser un string' })
+    ojos: string;
 
     @IsOptional()
-    oidos: number;
+    @IsString( {message: 'oidos debe ser un string' })
+    oidos: string;
 
     @IsOptional()
-    nariz: number;
+    @IsString( {message: 'nariz debe ser un string' })
+    nariz: string;
 
     @IsOptional()
-    boca: number;
+    @IsString( {message: 'boca debe ser un string' })
+    boca: string;
 
     @IsOptional()
-    cuello: number;
+    @IsString( {message: 'cuello debe ser un string' })
+    cuello: string;
 
     // Extremidades Superiores
     @IsOptional()
-    hombros: number;
+    @IsString( {message: 'hombros debe ser un string' })
+    hombros: string;
 
     @IsOptional()
-    codos: number;
+    @IsString( {message: 'codos debe ser un string' })
+    codos: string;
 
     @IsOptional()
-    manos: number;
+    @IsString( {message: 'manos debe ser un string' })
+    manos: string;
 
     @IsOptional()
+    @IsString( {message: 'neurologicoESuperiores debe ser un string' })
     neurologicoESuperiores: string;
 
     @IsOptional()
+    @IsString( {message: 'vascularESuperiores debe ser un string' })
     vascularESuperiores: string;
 
     // Tórax
     @IsOptional()
+    @IsString( {message: 'torax debe ser un string' })
     torax: string;
 
     // Abdomen
     @IsOptional()
+    @IsString( {message: 'abdomen debe ser un string' })
     abdomen: string;
 
     // Extremidades Inferiores
     @IsOptional()
+    @IsString( {message: 'cadera debe ser un string' })
     cadera: string;
 
     @IsOptional()
+    @IsString( {message: 'rodillas debe ser un string' })
     rodillas: string;
 
     @IsOptional()
+    @IsString( {message: 'tobillosPies debe ser un string' })
     tobillosPies: string;
 
     @IsOptional()
+    @IsString( {message: 'neurologicoEInferiores debe ser un string' })
     neurologicoEInferiores: string;
 
     @IsOptional()
+    @IsString( {message: 'vascularEInferiores debe ser un string' })
     vascularEInferiores: string;
 
     // Columna
     @IsOptional()
+    @IsString( {message: 'inspeccionColumna debe ser un string' })
     inspeccionColumna: string;
 
     @IsOptional()
+    @IsString( {message: 'movimientosColumna debe ser un string' })
     movimientosColumna: string;
 
     // Piel
     @IsOptional()
+    @IsString( {message: 'lesionesPiel debe ser un string' })
     lesionesPiel: string;
 
     @IsOptional()
+    @IsString( {message: 'cicatrices debe ser un string' })
     cicatrices: string;
 
     @IsOptional()
+    @IsString( {message: 'nevos debe ser un string' })
     nevos: string;
 
     // Exploración Neurológica Complementaria
     @IsOptional()
+    @IsString( {message: 'coordinacion debe ser un string' })
     coordinacion: string;
 
     @IsOptional()
+    @IsString( {message: 'sensibilidad debe ser un string' })
     sensibilidad: string;
 
     @IsOptional()
+    @IsString( {message: 'equilibrio debe ser un string' })
     equilibrio: string;
 
     @IsOptional()
+    @IsString( {message: 'marcha debe ser un string' })
     marcha: string;
 
     // Resumen de la exploración física
     @IsOptional()
+    @IsString( {message: 'resumenExploracionFisica debe ser un string' })
     resumenExploracionFisica: string;
 
     // Trabajador, ruta al archivo e info de creador y actualizador

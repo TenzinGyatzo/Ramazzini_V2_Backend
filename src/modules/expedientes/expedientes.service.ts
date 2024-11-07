@@ -8,6 +8,7 @@ import { Certificado } from './schemas/certificado.schema';
 import { DocumentoExterno } from './schemas/documento-externo.schema';
 import { ExamenVista } from './schemas/examen-vista.schema';
 import { ExploracionFisica } from './schemas/exploracion-fisica.schema';
+import { HistoriaClinica } from './schemas/historia-clinica.schema';
 
 @Injectable()
 export class ExpedientesService {
@@ -19,7 +20,8 @@ export class ExpedientesService {
     @InjectModel(Certificado.name) private certificadoModel: Model<Certificado>,
     @InjectModel(DocumentoExterno.name) private documentoExternoModel: Model<DocumentoExterno>,
     @InjectModel(ExamenVista.name) private examenVistaModel: Model<ExamenVista>,
-    @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>
+    @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
+    @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>
   ) {
     this.models = {
       antidoping: this.antidopingModel,
@@ -27,7 +29,8 @@ export class ExpedientesService {
       certificado: this.certificadoModel,
       documentoExterno: this.documentoExternoModel,
       examenVista: this.examenVistaModel,
-      exploracionFisica: this.exploracionFisicaModel
+      exploracionFisica: this.exploracionFisicaModel,
+      historiaClinica: this.historiaClinicaModel
     };
   }
 

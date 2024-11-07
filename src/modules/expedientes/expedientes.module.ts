@@ -8,6 +8,7 @@ import { Certificado, CertificadoSchema } from './schemas/certificado.schema';
 import { DocumentoExterno, DocumentoExternoSchema } from './schemas/documento-externo.schema';
 import { ExamenVista, ExamenVistaSchema } from './schemas/examen-vista.schema';
 import { ExploracionFisica, ExploracionFisicaSchema } from './schemas/exploracion-fisica.schema';
+import { HistoriaClinica, HistoriaClinicaSchema } from './schemas/historia-clinica.schema';
 
 @Module({
   controllers: [ExpedientesController],
@@ -20,6 +21,7 @@ import { ExploracionFisica, ExploracionFisicaSchema } from './schemas/exploracio
       { name: DocumentoExterno.name, schema: DocumentoExternoSchema },
       { name: ExamenVista.name, schema: ExamenVistaSchema },
       { name: ExploracionFisica.name, schema: ExploracionFisicaSchema },
+      { name: HistoriaClinica.name, schema: HistoriaClinicaSchema }
     ]),
   ]
 })

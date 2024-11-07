@@ -14,8 +14,8 @@ import { CreateExamenVistaDto } from './dto/create-examen-vista.dto';
 import { UpdateExamenVistaDto } from './dto/update-examen-vista.dto';
 import { CreateExploracionFisicaDto } from './dto/create-exploracion-fisica.dto';
 import { UpdateExploracionFisicaDto } from './dto/update-exploracion-fisica.dto';
-
-import e from 'express';
+import { CreateHistoriaClinicaDto } from './dto/create-historia-clinica.dto';
+import { UpdateHistoriaClinicaDto } from './dto/update-historia-clinica.dto';
 
 @Controller('api/expedientes/:trabajadorId/documentos')
 export class ExpedientesController {
@@ -28,8 +28,8 @@ export class ExpedientesController {
     certificado: CreateCertificadoDto,
     documentoExterno: CreateDocumentoExternoDto,
     examenVista: CreateExamenVistaDto,
-    exploracionFisica: CreateExploracionFisicaDto
-    // Agrega otros tipos de documentos...
+    exploracionFisica: CreateExploracionFisicaDto,
+    historiaClinica: CreateHistoriaClinicaDto
   };
 
   private updateDtos = {
@@ -38,8 +38,8 @@ export class ExpedientesController {
     certificado: UpdateCertificadoDto,
     documentoExterno: UpdateDocumentoExternoDto,
     examenVista: UpdateExamenVistaDto,
-    exploracionFisica: UpdateExploracionFisicaDto
-    // Agrega otros tipos de documentos...
+    exploracionFisica: UpdateExploracionFisicaDto,
+    historiaClinica: UpdateHistoriaClinicaDto
   };
 
   @Post(':documentType/crear')
