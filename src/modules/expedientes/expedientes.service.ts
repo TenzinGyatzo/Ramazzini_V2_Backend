@@ -3,7 +3,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Antidoping } from './schemas/antidoping.schema';
-import { Aptitud } from './schemas/aptitud.schema';
+import { AptitudPuesto } from './schemas/aptitud-puesto.schema';
 import { Certificado } from './schemas/certificado.schema';
 import { DocumentoExterno } from './schemas/documento-externo.schema';
 import { ExamenVista } from './schemas/examen-vista.schema';
@@ -16,7 +16,7 @@ export class ExpedientesService {
 
   constructor(
     @InjectModel(Antidoping.name) private antidopingModel: Model<Antidoping>,
-    @InjectModel(Aptitud.name) private aptitudModel: Model<Aptitud>,
+    @InjectModel(AptitudPuesto.name) private aptitudModel: Model<AptitudPuesto>,
     @InjectModel(Certificado.name) private certificadoModel: Model<Certificado>,
     @InjectModel(DocumentoExterno.name) private documentoExternoModel: Model<DocumentoExterno>,
     @InjectModel(ExamenVista.name) private examenVistaModel: Model<ExamenVista>,

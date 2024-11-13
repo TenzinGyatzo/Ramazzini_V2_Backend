@@ -12,7 +12,7 @@ const tipoAptitud = [
   ];
 
 @Schema()
-export class Aptitud extends Document {
+export class AptitudPuesto extends Document {
     @Prop({ required: true })
     fechaAptitudPuesto: Date;
 
@@ -95,4 +95,4 @@ export class Aptitud extends Document {
     updatedBy: User;
 }
 
-export const AptitudSchema = SchemaFactory.createForClass(Aptitud).set('timestamps', true);
+export const AptitudPuestoSchema = SchemaFactory.createForClass(AptitudPuesto).set('timestamps', true);
