@@ -5,7 +5,7 @@ import { Trabajador } from './entities/trabajador.entity';
 import { CreateTrabajadorDto } from './dto/create-trabajador.dto';
 import { UpdateTrabajadorDto } from './dto/update-trabajador.dto';
 import { normalizeTrabajadorData } from 'src/utils/normalization'
-import * as moment from 'moment';
+import moment from 'moment';
 import * as xlsx from 'xlsx';
 import { calcularEdad, calcularAntiguedad } from 'src/utils/dates';
 
