@@ -10,6 +10,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ExamplesModule } from './modules/examples/examples.module';
 import { ExpedientesModule } from './modules/expedientes/expedientes.module';
+import { InformesModule } from './modules/informes/informes.module';
+import { PrinterModule } from './modules/printer/printer.module';
 
 
 @Module({
@@ -34,7 +36,9 @@ import { ExpedientesModule } from './modules/expedientes/expedientes.module';
     TrabajadoresModule, 
     AuthModule, 
     UsersModule, 
-    ExpedientesModule, 
+    ExpedientesModule,
+    InformesModule,
+    PrinterModule 
   ]
 })
 export class AppModule {}

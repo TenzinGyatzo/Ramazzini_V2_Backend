@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import PdfPrinter from 'pdfmake';
-import { TDocumentDefinitions } from 'pdfmake/interfaces';
+import { TDocumentDefinitions } from 'pdfmake/interfaces'; 
 
 const fonts = {
     Roboto: { // Marca error si este no se llama Roboto, no sé por que

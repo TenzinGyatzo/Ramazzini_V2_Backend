@@ -16,7 +16,7 @@ export class InformesController {
     pdfDoc.end();
   }
 
- /*  @Get('documento')
+  /* @Get('documento')
   async getInforme() {
     return {
       Hola: 'Mundo'

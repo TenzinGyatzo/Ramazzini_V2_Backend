@@ -7,41 +7,49 @@ import type {
   // Estilos
   const styles: StyleDictionary = {
     header: {
-      fontSize: 13,
+      fontSize: 15,
       bold: false,
-      color: 'blue', // #ff5500 rojo
+      color: 'blue',
       decoration: 'underline',
       decorationColor: 'red',
     },
-    h1: {
-      fontSize: 16,
-      bold: true,
+    nombreEmpresa: {
+      fontSize: 15,
+      characterSpacing: 0,
       alignment: 'center',
-      margin: [0, 20, 0, 0]
+      lineHeight: 1,
+    },
+    fecha: {
+      fontSize: 10,
+      alignment: 'right',
     },
     sectionHeader: {
       fontSize: 10,
       bold: true,
-      fillColor: '#e5e5e5',
+      // fillColor: '#e5e5e5',
       alignment: 'center',
+      margin: [3, 3, 3, 3],
     },
     label: {
-      bold: true,
-      fontSize: 9,
+      fontSize: 11,
     },
     value: {
-      fontSize: 9,
+      bold: true,
+      fontSize: 11,
     },
     tableHeader: {
       fillColor: '#262626',
       color: '#FFFFFF',
       bold: true,
-      fontSize: 9,
+      fontSize: 11,
       alignment: 'center',
+      margin: [3, 3, 3, 3],
     },
     tableCell: {
-      fontSize: 9,
+      fontSize: 10,
+      bold: true,
       alignment: 'center',
+      margin: [3, 3, 3, 3],
     },
   };
   
@@ -49,22 +57,28 @@ import type {
   const logo: Content = {
     image: 'src/assets/AmesBrand.png',
     width: 60,
-    margin: [40, 20, 0, 0],
+    margin: [40, 25, 0, 0],
   };
   
   const headerText: Content = {
-    text: '                                                                                                                      ANTIDOPING\n',
+    text: '                                                                                                         ANTIDOPING\n',
     style: 'header',
     alignment: 'right',
-    margin: [0, 20, 45, 0],
+    margin: [0, 35, 40, 0],
+  };
+
+  const firma: Content = {
+    image: 'src/assets/Firma-Dr-Coronel.png',
+    width: 32,
+    margin: [0, 0, 0, 0],
   };
   
   // ESTRUCTURA DEL INFORME
   export const antidopingInforme = (): TDocumentDefinitions => {
     return {
 
-        pageSize: 'LETTER',
-        pageMargins: [40, 80, 40, 60],
+      pageSize: 'LETTER',
+      pageMargins: [40, 70, 40, 80],
 
       // Estructura Encabezado
       header: {
@@ -74,13 +88,29 @@ import type {
       // Estructura Cuerpo
       content: [
         {
-          text: 'AGRICULTURE',
-          style: 'h1',
+          style: 'table',
+          table: {
+            widths: ['70%', '30%'],
+            body: [
+              [
+                { text: 'AGRICULTURE', style: 'nombreEmpresa', alignment: 'center', margin: [0, 0, 0, 0] },
+                { 
+                  text: [
+                    { text: 'Fecha: ', style: 'fecha', bold: false },
+                    { text: '10-11-2024', style: 'fecha', bold: true, decoration: 'underline' },
+                  ],
+                  margin: [0, 3, 0, 0],
+                },
+              ]
+            ]
+          },
+          layout: 'noBorders',
+          margin: [0, 0, 0, 5],
         },
         {
           style: 'table',
           table: {
-            widths: ['15%', '35%', '15%', '35%'],
+            widths: ['15%', '45%', '15%', '25%'],
             body: [
               [
                 { text: 'NOMBRE', style: 'label' },
@@ -102,13 +132,26 @@ import type {
               ],
             ],
           },
-          layout: 'noBorders',
-          margin: [0, 20, 0, 10],
+          layout: {
+            hLineColor: function () {
+              return '#9ca3af'; // Color para las líneas horizontales
+            },
+            vLineColor: function () {
+              return '#9ca3af'; // Color para las líneas verticales
+            },
+            hLineWidth: function () {
+              return 1; // Grosor de las líneas horizontales
+            },
+            vLineWidth: function () {
+              return 1; // Grosor de las líneas verticales
+            },
+          },
+          margin: [0, 0, 0, 10],
         },
         {
           style: 'table',
           table: {
-            widths: ['33%', '33%', '33%'],
+            widths: ['33.33%', '33.33%', '33.33%'],
             body: [
               [
                 { text: 'DROGAS DE ABUSO', style: 'tableHeader' },
@@ -143,13 +186,78 @@ import type {
             ],
           },
           layout: {
-            fillColor: (rowIndex: number) => {
-              return rowIndex === 0 ? '#000000' : '#FFFFFF';
+            hLineColor: function () {
+              return '#9ca3af'; // Color para las líneas horizontales
+            },
+            vLineColor: function () {
+              return '#9ca3af'; // Color para las líneas verticales
+            },
+            hLineWidth: function () {
+              return 1; // Grosor de las líneas horizontales
+            },
+            vLineWidth: function () {
+              return 1; // Grosor de las líneas verticales
             },
           },
-          margin: [0, 10, 0, 0],
+          margin: [0, 0, 0, 10],
         },
       ],
+
+      footer: {
+        stack: [
+          {
+            canvas: [
+              {
+                type: 'line',
+                x1: 40,
+                y1: 0,
+                x2: 575,
+                y2: 0,
+                lineWidth: 0.5,
+                lineColor: '#FF0000',
+              },
+              {
+                type: 'line',
+                x1: 40,
+                y1: 0.5, // Una ligera variación para darle mayor visibilidad
+                x2: 575,
+                y2: 0.5,
+                lineWidth: 0.5,
+                lineColor: '#FF0000',
+              }
+            ],
+            margin: [0, 0, 0, 5],
+          },
+          {
+            columns: [
+              {
+                text: [
+                  { text: 'Dr. Jesús Manuel Coronel Valenzuela\n', bold: true, italics: true },
+                  { text: 'Cédula Profesional Médico Cirujano No. 1379978\n', bold: false, italics: true },
+                  { text: 'Cédula Especialidad Med. del Trab. No. 3181172\n', bold: false, italics: true },
+                  { text: 'Certificado Consejo Mex. de Med. Trab. No.891', bold: false, italics: true },
+                ],
+                fontSize: 8,
+                margin: [40, 0, 0, 0],
+              },
+              firma,
+              {
+                text: [
+                  { text: 'Asesoría Médico Empresarial de Sinaloa\n', bold: true, italics: true },
+                  { text: 'Ángel Flores No. 2072 Norte, Fracc Las Fuentes.\n', bold: false, italics: true },
+                  { text: 'Los Mochis, Ahome, Sinaloa. Tel. (668) 136 3973\n', bold: false, italics: true },
+                  { text: 'www.ames.org.mx', bold: false, link: 'https://www.ames.org.mx', italics: true, color: 'blue' },
+                ],
+                alignment: 'right',
+                fontSize: 8,
+                margin: [0, 0, 40, 0],
+              }
+            ],
+          }
+        ]
+      },
+      
+      
   
       // Estilos
       styles: styles,
