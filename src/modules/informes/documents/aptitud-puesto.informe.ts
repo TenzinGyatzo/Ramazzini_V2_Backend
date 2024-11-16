@@ -15,6 +15,7 @@ const styles: StyleDictionary = {
   },
   nombreEmpresa: {
     fontSize: 15,
+    bold: true,
     alignment: 'center',
     lineHeight: 1,
   },
@@ -187,7 +188,7 @@ export const aptitudPuestoInforme = (
           ],
         },
         layout: 'noBorders',
-        margin: [0, 0, 0, 3],
+        margin: [0, 0, 0, 0],
       },
       // Datos del trabajador
       {

@@ -15,6 +15,7 @@ const styles: StyleDictionary = {
   },
   nombreEmpresa: {
     fontSize: 15,
+    bold: true,
     alignment: 'center',
     lineHeight: 1,
   },
@@ -62,8 +63,14 @@ const styles: StyleDictionary = {
     fillColor: '#262626',
     color: '#FFFFFF',
     bold: true,
-    fontSize: 11,
+    fontSize: 9,
     alignment: 'center',
+    margin: [0, 0, 0, 0],
+  },
+  tableCellBold: {
+    fontSize: 8,
+    bold: true, 
+    alignment: 'left',
     margin: [0, 0, 0, 0],
   },
   tableCell: {
@@ -168,7 +175,7 @@ export const historiaClinicaInforme = (
           ],
         },
         layout: 'noBorders',
-        margin: [0, 0, 0, 3],
+        margin: [0, 0, 0, 0],
       },
       // Datos del trabajador
       {
@@ -218,27 +225,264 @@ export const historiaClinicaInforme = (
           hLineWidth: () => 1,
           vLineWidth: () => 1,
         },
-        margin: [0, 0, 0, 6],
+        margin: [0, 0, 0, 8],
+      },
+      // Antecedentes Heredofamiliares y Personales Patológicos
+      {
+        columns: [
+          // Antecedentes Heredofamiliares
+          {
+            style: 'table',
+            table: {
+              widths: ['30%', '12%', '12%', '*'],
+              body: [
+                // Encabezado
+                [
+                  { text: 'ANTECEDENTES HEREDOFAMILIARES', style: 'tableHeader', colSpan: 4, alignment: 'center' },
+                  {}, {}, {}
+                ],
+                [
+                  { text: '-', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Sí', style: 'tableHeader', alignment: 'center' },
+                  { text: 'No', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Especifique', style: 'tableHeader', alignment: 'center' },
+                ],
+                // Filas de datos
+                ...[
+                  ['NEFROPATIA', 'XX', 'XX', 'Negado'],
+                  ['DIABETES', 'XX', 'XX', 'Negado'],
+                  ['HIPERTENSIVOS', 'XX', 'XX', 'Negado'],
+                  ['CARDIOPÁTICOS', 'XX', 'XX', 'Negado'],
+                  ['NEOPLÁSICOS', 'XX', 'XX', 'Negado'],
+                  ['PSIQUIÁTRICOS', 'XX', 'XX', 'Negado'],
+                  ['EPILÉPTICOS', 'XX', 'XX', 'Negado'],
+                  ['LUÉTICOS', 'XX', 'XX', 'Negado'],
+                  ['FÍMICOS', 'XX', 'XX', 'Negado'],
+                  ['HEPATOPATÍAS', 'XX', 'XX', 'Negado'],
+                ].map(row => row.map((text, i) => ({
+                  text,
+                  style: i === 0 ? 'tableCellBold' : 'tableCell', // Aplica estilo específico si es la primera columna
+                  alignment: i === 0 ? 'left' : 'center', // Alinea a la izquierda para la primera columna
+                }))),
+              ],
+            },
+            layout: {
+              hLineWidth: (i: number, node: any) => (i === 0 || i === node.table.body.length ? 0 : 0.5),
+              vLineWidth: () => 0,
+              hLineColor: () => '#9ca3af',
+              paddingTop: (i: number, node: any) => 0,
+              paddingBottom: (i: number, node: any) => 0,
+              paddingLeft: (i: number, node: any) => 2,
+              paddingRight: (i: number, node: any) => 2,
+            },
+            
+            margin: [0, 0, 6, 0],
+          },
+          // Antecedentes Personales Patológicos
+          {
+            style: 'table',
+            table: {
+              widths: ['30%', '12%', '12%', '*'],
+              body: [
+                // Encabezado
+                [
+                  { text: 'ANTECEDENTES PERSONALES PATOLÓGICOS', style: 'tableHeader', colSpan: 4, alignment: 'center' },
+                  {}, {}, {}
+                ],
+                [
+                  { text: '-', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Sí', style: 'tableHeader', alignment: 'center' },
+                  { text: 'No', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Especifique', style: 'tableHeader', alignment: 'center' },
+                ],
+                // Filas de datos
+                ...[
+                  ['LUMBALGIAS', 'XX', 'XX', 'Negado'],
+                  ['DIABÉTICOS', 'XX', 'XX', 'Negado'],
+                  ['CARDIOPÁTICOS', 'XX', 'XX', 'Negado'],
+                  ['ALÉRGICOS', 'XX', 'XX', 'Negado'],
+                  ['HIPERTENSIVOS', 'XX', 'XX', 'Negado'],
+                  ['OBESIDAD', 'XX', 'XX', 'Negado'],
+                  ['EPILÉPTICOS', 'XX', 'XX', 'Negado'],
+                  ['ACCIDENTES', 'XX', 'XX', 'Negado'],
+                  ['QUIRÚRGICOS', 'XX', 'XX', 'Negado'],
+                  ['TRAUMÁTICOS', 'XX', 'XX', 'Negado'],
+                ].map(row => row.map((text, i) => ({
+                  text,
+                  style: i === 0 ? 'tableCellBold' : 'tableCell', // Aplica estilo específico si es la primera columna
+                  alignment: i === 0 ? 'left' : 'center', // Alinea a la izquierda para la primera columna
+                }))),
+              ],
+            },
+            layout: {
+              hLineWidth: (i: number, node: any) => (i === 0 || i === node.table.body.length ? 0 : 0.5),
+              vLineWidth: () => 0,
+              hLineColor: () => '#9ca3af',
+              paddingTop: (i: number, node: any) => 0,
+              paddingBottom: (i: number, node: any) => 0,
+              paddingLeft: (i: number, node: any) => 2,
+              paddingRight: (i: number, node: any) => 2,
+            },
+            
+          },
+        ],
+        margin: [0, 0, 0, 8],
       },
       {
-        text: 'La evaluación médica para la aptitud ante el puesto está basada en la siguiente información:',
+        columns: [
+          // Antecedentes Personales No Patológicos
+          {
+            style: 'table',
+            table: {
+              widths: ['30%', '12%', '12%', '*'],
+              body: [
+                // Encabezado
+                [
+                  { text: 'ANTECEDENTES HEREDOFAMILIARES', style: 'tableHeader', colSpan: 4, alignment: 'center' },
+                  {}, {}, {}
+                ],
+                [
+                  { text: '-', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Sí', style: 'tableHeader', alignment: 'center' },
+                  { text: 'No', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Especifique', style: 'tableHeader', alignment: 'center' },
+                ],
+                // Filas de datos
+                ...[
+                  ['ALCOHOLISMO', 'XX', 'XX', 'Negado'],
+                  ['TABAQUISMO', 'XX', 'XX', 'Negado'],
+                  ['TOXICOMANIAS', 'XX', 'XX', 'Negado'],
+                ].map(row => row.map((text, i) => ({
+                  text,
+                  style: i === 0 ? 'tableCellBold' : 'tableCell', // Aplica estilo específico si es la primera columna
+                  alignment: i === 0 ? 'left' : 'center', // Alinea a la izquierda para la primera columna
+                }))),
+              ],
+            },
+            layout: {
+              hLineWidth: (i: number, node: any) => (i === 0 || i === node.table.body.length ? 0 : 0.5),
+              vLineWidth: () => 0,
+              hLineColor: () => '#9ca3af',
+              paddingTop: (i: number, node: any) => 0,
+              paddingBottom: (i: number, node: any) => 0,
+              paddingLeft: (i: number, node: any) => 2,
+              paddingRight: (i: number, node: any) => 2,
+            },
+            
+            margin: [0, 0, 6, 0],
+          },
+          // Antecedentes Personales No Patológicos
+          {
+            style: 'table',
+            table: {
+              widths: ['30%', '12%', '12%', '*'],
+              body: [
+                // Encabezado
+                [
+                  { text: 'ANTECEDENTES PERSONALES PATOLÓGICOS', style: 'tableHeader', colSpan: 4, alignment: 'center' },
+                  {}, {}, {}
+                ],
+                [
+                  { text: '-', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Sí', style: 'tableHeader', alignment: 'center' },
+                  { text: 'No', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Especifique', style: 'tableHeader', alignment: 'center' },
+                ],
+                // Filas de datos
+                ...[
+                  ['ALIMENTACIÓN', 'XX', 'XX', 'Negado'],
+                  ['ACTIVIDAD FÍSICA', 'XX', 'XX', 'Negado'],
+                  ['HIGIENE PERSONAL', 'XX', 'XX', 'Negado'],
+                ].map(row => row.map((text, i) => ({
+                  text,
+                  style: i === 0 ? 'tableCellBold' : 'tableCell', // Aplica estilo específico si es la primera columna
+                  alignment: i === 0 ? 'left' : 'center', // Alinea a la izquierda para la primera columna
+                }))),
+              ],
+            },
+            layout: {
+              hLineWidth: (i: number, node: any) => (i === 0 || i === node.table.body.length ? 0 : 0.5),
+              vLineWidth: () => 0,
+              hLineColor: () => '#9ca3af',
+              paddingTop: (i: number, node: any) => 0,
+              paddingBottom: (i: number, node: any) => 0,
+              paddingLeft: (i: number, node: any) => 2,
+              paddingRight: (i: number, node: any) => 2,
+            },
+            
+          },
+        ],
+        margin: [0, 0, 0, 8],
       },
-      // Antecedentes
+      // Antecedentes Laborales
       {
         style: 'table',
         table: {
-          widths: ['29%', '11%', '*'],
+          widths: ['3%', '22%', '25%', '17%', '*'],
           body: [
+            // Encabezado
             [
-              createTableCell('INFORMACIÓN Y ESTUDIOS', 'tableHeader', 'center'),
-              createTableCell('FECHAS', 'tableHeader', 'center'),
-              createTableCell('RESUMEN Y/O ALTERACIONES ENCONTRADAS', 'tableHeader', 'center'),
+              { text: 'ANTECEDENTES LABORALES', style: 'tableHeader', colSpan: 5, alignment: 'center' },
+              {}, {}, {}, {}
             ],
             [
-              createTableCell('HISTORIA CLÍNICA LABORAL', 'sectionHeader', 'center'),
-              createTableCell('11-09-2024', 'tableCell', 'center'),
-              createTableCell('Se refiere actualmente asintomático', 'tableCell', 'center'),
-            ]
+              { text: '#', style: 'tableHeader', alignment: 'center' },
+              { text: 'Empresa', style: 'tableHeader', alignment: 'center' },
+              { text: 'Puesto', style: 'tableHeader', alignment: 'center' },
+              { text: 'Antigüedad', style: 'tableHeader', alignment: 'center' },
+              { text: 'Agentes', style: 'tableHeader', alignment: 'center' },
+            ],
+            // Filas de datos
+            ...[
+              ['1', 'Leche Yaqui', 'Soldador', '3 años, 2 meses', 'Ergonómicos, Ruido, Polvos'],
+              ['2', 'Grupo GEPP', 'Tecnico Mantenimiento', '10 años', 'Ergonómicos, Ruido, Polvos'],
+              ['3', 'Aceros Guamuchil', 'Supervisor', '2 semanas', 'Ergonómicos, Ruido, Polvos'],
+            ].map(row => row.map((text, i) => ({
+              text,
+              style: i === 0 ? 'tableCell' : 'tableCell',
+              alignment: 'center', 
+            }))),
+          ],
+        },
+        layout: {
+          hLineWidth: (i: number, node: any) => (i === 0 || i === node.table.body.length ? 0 : 0.5),
+          vLineWidth: () => 0,
+          hLineColor: () => '#9ca3af',
+          paddingTop: (i: number, node: any) => 0,
+          paddingBottom: (i: number, node: any) => 0,
+          paddingLeft: (i: number, node: any) => 2,
+          paddingRight: (i: number, node: any) => 2,
+        },
+        margin: [0, 0, 0, 8],
+      },
+      // Antecedentes Laborales 2da parte
+      {
+        style: 'table',
+        table: {
+          widths: ['20%', '10%', '5%', '5%', '5%', '5%', '*'], // 7 columnas
+          body: [
+            // Fila principal con encabezado
+            [
+              { text: 'SUFRIÓ ALGÚN ACCIDENTE DE TRABAJO', style: 'tableCellBold', alignment: 'left', colSpan: 2 },
+              {}, // Segunda columna para el colSpan
+              { text: 'NO', style: 'tableCellBold', alignment: 'center' },
+              { text: 'XX', style: 'tableCell', alignment: 'center' },
+              { text: 'SI', style: 'tableCellBold', alignment: 'center' },
+              { text: 'XX', style: 'tableCell', alignment: 'center' },
+              { text: 'Niega haber sufrido algún accidente', style: 'tableCell', alignment: 'center' },
+            ],
+            // Fila para "Describa el daño"
+            [
+              { text: 'DESCRIBA EL DAÑO', style: 'tableCellBold', alignment: 'left' },
+              { text: 'Ninguno', colSpan: 6, style: 'tableCell', alignment: 'center' },
+              {}, {}, {}, {}, {},
+            ],
+            // Fila para "Secuelas"
+            [
+              { text: 'SECUELAS', style: 'tableCellBold', alignment: 'left' },
+              { text: 'Sin secuelas', colSpan: 6, style: 'tableCell', alignment: 'center' },
+              {}, {}, {}, {}, {},
+            ],
           ],
         },
         layout: {
@@ -246,14 +490,42 @@ export const historiaClinicaInforme = (
           vLineColor: '#9ca3af',
           paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
           paddingBottom: (i: number, node: any) => 0, // Reducir el espacio inferior
-          paddingLeft: (i: number, node: any) => 0, // Reducir el espacio izquierdo
-          paddingRight: (i: number, node: any) => 0, // Reducir el espacio derecho
+          paddingLeft: (i: number, node: any) => 2, // Reducir el espacio izquierdo
+          paddingRight: (i: number, node: any) => 2, // Reducir el espacio derecho
           hLineWidth: () => 1,
           vLineWidth: () => 1,
         },
-        margin: [0, 0, 0, 6],
+        margin: [0, 0, 0, 8],
       },
-
+      // Resumen Historia Clínica
+      {
+        style: 'table',
+        table: {
+          widths: ['30%', '70%'],
+          body: [
+            // Encabezado
+            [
+              { text: 'RESUMEN DE HISTORIA CLÍNICA', style: 'tableHeader', colSpan: 2, alignment: 'center' },
+              {}
+            ],
+            [
+              { text: 'Resumen', style: 'tableCellBold', alignment: 'center' },
+              { text: 'Se refiere actualmente asintomático', style: 'tableCell', alignment: 'center' },
+            ],
+          ],
+        },
+        layout: {
+          hLineColor: '#9ca3af',
+          vLineColor: '#9ca3af',
+          paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
+          paddingBottom: (i: number, node: any) => 0, // Reducir el espacio inferior
+          paddingLeft: (i: number, node: any) => 2, // Reducir el espacio izquierdo
+          paddingRight: (i: number, node: any) => 2, // Reducir el espacio derecho
+          hLineWidth: () => 1,
+          vLineWidth: () => 1,
+        },
+        margin: [0, 0, 0, 8],
+      },
     ],
     // Pie de pagina
     footer: {

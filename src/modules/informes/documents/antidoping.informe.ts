@@ -15,6 +15,7 @@ const styles: StyleDictionary = {
   },
   nombreEmpresa: {
     fontSize: 15,
+    bold: true,
     alignment: 'center',
     lineHeight: 1,
   },
@@ -150,7 +151,7 @@ export const antidopingInforme = (
           ],
         },
         layout: 'noBorders',
-        margin: [0, 0, 0, 5],
+        margin: [0, 0, 0, 0],
       },
       // Datos del trabajador
       {
