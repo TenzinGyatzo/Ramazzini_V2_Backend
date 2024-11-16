@@ -23,7 +23,7 @@ const styles: StyleDictionary = {
     alignment: 'right',
   },
   sectionHeader: {
-    fontSize: 10,
+    fontSize: 12,
     bold: true,
     alignment: 'center',
     margin: [3, 3, 3, 3],
@@ -34,12 +34,12 @@ const styles: StyleDictionary = {
     fillColor: '#262626',
     color: '#FFFFFF',
     bold: true,
-    fontSize: 11,
+    fontSize: 12,
     alignment: 'center',
     margin: [3, 3, 3, 3],
   },
   tableCell: {
-    fontSize: 10,
+    fontSize: 12,
     bold: true,
     alignment: 'center',
     margin: [3, 3, 3, 3],
@@ -82,6 +82,8 @@ const createConditionalTableCell = (text: string): Content => ({
 });
 
 // ==================== INTERFACES ====================
+
+
 interface Trabajador {
   nombre: string;
   edad: string;
@@ -102,6 +104,7 @@ interface Antidoping {
 
 // ==================== INFORME PRINCIPAL ====================
 export const antidopingInforme = (
+  nombreEmpresa: string,
   trabajador: Trabajador,
   antidoping: Antidoping,
 ): TDocumentDefinitions => {
@@ -120,7 +123,7 @@ export const antidopingInforme = (
           body: [
             [
               {
-                text: 'AGRICULTURE',
+                text: nombreEmpresa,
                 style: 'nombreEmpresa',
                 alignment: 'center',
                 margin: [0, 0, 0, 0],

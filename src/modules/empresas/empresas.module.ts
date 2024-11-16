@@ -10,5 +10,6 @@ import { EmpresasController } from './empresas.controller';
   ],
   controllers: [EmpresasController],
   providers: [EmpresasService],
+  exports: [EmpresasService],
 })
 export class EmpresasModule {}

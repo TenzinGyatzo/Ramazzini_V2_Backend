@@ -38,13 +38,13 @@ const styles: StyleDictionary = {
   },
 
   label: {
-    fontSize: 10,
+    fontSize: 9,
     lineHeight: 0.9,
     margin: [0, 0, 0, 0], // Reducir el margen superior e inferior
   },
   value: {
     bold: true, 
-    fontSize: 11,
+    fontSize: 10,
     lineHeight: 0.9,
     margin: [0, 0, 0, 0], // Reducir el margen superior e inferior
   },
@@ -82,7 +82,7 @@ const logo: Content = {
 };
 
 const headerText: Content = {
-  text: '                      REPORTE DE EVALUACIÓN DE SALUD Y APTITUD AL PUESTO\n',
+  text: '                                                                                                        HISTORIA CLÍNICA\n',
   style: 'header',
   alignment: 'right',
   margin: [0, 35, 40, 0],
@@ -116,34 +116,15 @@ interface Trabajador {
   hijos: number;
 }
 
-interface Aptitud {
-  fechaAptitudPuesto: Date;
-  evaluacionAdicional1: string;
-  fechaEvaluacionAdicional1: Date;
-  resultadosEvaluacionAdicional1: string;
-  evaluacionAdicional2: string;
-  fechaEvaluacionAdicional2: Date;
-  resultadosEvaluacionAdicional2: string;
-  evaluacionAdicional3: string;
-  fechaEvaluacionAdicional3: Date;
-  resultadosEvaluacionAdicional3: string;
-  evaluacionAdicional4: string;
-  fechaEvaluacionAdicional4: Date;
-  resultadosEvaluacionAdicional4: string;
-  evaluacionAdicional5: string;
-  fechaEvaluacionAdicional5: Date;
-  resultadosEvaluacionAdicional5: string;
-  aptitudPuesto: string;
-  alteracionesSalud: string;
-  resultados: string;
-  medidasPreventivas: string;
+interface HistoriaClinica {
+  fechaHistoriaClinica: Date;
 }
 
 // ==================== INFORME PRINCIPAL ====================
-export const aptitudPuestoInforme = (
+export const historiaClinicaInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
-  aptitud: Aptitud,
+  historiaClinica: HistoriaClinica,
 ): TDocumentDefinitions => {
   return {
     pageSize: 'LETTER',
@@ -169,7 +150,7 @@ export const aptitudPuestoInforme = (
                 text: [
                   { text: 'Fecha: ', style: 'fecha', bold: false },
                   {
-                    text: aptitud.fechaAptitudPuesto
+                    text: historiaClinica.fechaHistoriaClinica
                       .toLocaleDateString('es-ES', {
                         day: '2-digit',
                         month: '2-digit',
@@ -242,7 +223,7 @@ export const aptitudPuestoInforme = (
       {
         text: 'La evaluación médica para la aptitud ante el puesto está basada en la siguiente información:',
       },
-      // Resumen y/o alteraciones encontradas
+      // Antecedentes
       {
         style: 'table',
         table: {
@@ -257,27 +238,7 @@ export const aptitudPuestoInforme = (
               createTableCell('HISTORIA CLÍNICA LABORAL', 'sectionHeader', 'center'),
               createTableCell('11-09-2024', 'tableCell', 'center'),
               createTableCell('Se refiere actualmente asintomático', 'tableCell', 'center'),
-            ],
-            [
-              createTableCell('EXPLORACIÓN FÍSICA', 'sectionHeader', 'center'),
-              createTableCell('11-09-2024', 'tableCell', 'center'),
-              createTableCell('TA: 107/62 mmHg - Óptima, Se encuentra clínicamente sano', 'tableCell', 'center'),
-            ],
-            [
-              createTableCell('ADIPOSITDAD CORPORAL', 'sectionHeader', 'center'),
-              createTableCell('11-09-2024', 'tableCell', 'center'),
-              createTableCell('IMC: 26.87 - Sobrepeso, Circunferencia Cintura: 97cm - Riesgo Aumentado', 'tableCell', 'center'),
-            ],
-            [
-              createTableCell('EXAMEN VISUAL', 'sectionHeader', 'center'),
-              createTableCell('11-09-2024', 'tableCell', 'center'),
-              createTableCell('OI: 20/20, OD: 20/20 - Visión Normal, Ishihara: 100 % - Normal', 'tableCell', 'center'),
-            ],
-            [
-              createTableCell('ANTIDOPING', 'sectionHeader', 'center'),
-              createTableCell('11-09-2024', 'tableCell', 'center'),
-              createTableCell('Negativo a cinco parámetros', 'tableCell', 'center'),
-            ],
+            ]
           ],
         },
         layout: {
@@ -292,102 +253,7 @@ export const aptitudPuestoInforme = (
         },
         margin: [0, 0, 0, 6],
       },
-      // Aptitud al puesto
-      {
-        style: 'table',
-        table: {
-          widths: ['7%', '*'],
-          body: [
-            [
-              {
-                text: 'BASADO EN LA INFORMACIÓN ANTERIOR SE HA DETERMINADO:',
-                style: 'tableHeader',
-                alignment: 'center',
-                colSpan: 2,  // Aquí se indica que la celda debe abarcar dos columnas.
-              },
-              {},  // Esta celda debe permanecer vacía para que la combinación funcione.
-            ],
-            [
-              createTableCell('XX', 'sectionHeader', 'center'),
-              createTableCell('Apto sin restricciones. No tiene impedimentos para el puesto al que aspira o desempeña.', 'preset', 'left'),
-            ],
-            [
-              createTableCell('XX', 'sectionHeader', 'center'),
-              createTableCell('Apto con precaución. Requiere vigilancia médica más frecuente.', 'preset', 'left'),
-            ],
-            [
-              createTableCell('XX', 'sectionHeader', 'center'),
-              createTableCell('Apto con restricciones. Requiere adaptaciones razonables para asegurar la seguridad y salud.', 'preset', 'left'),
-            ],
-            [
-              createTableCell('XX', 'sectionHeader', 'center'),
-              createTableCell('No apto. No está permitido el desempeño del puesto al que aspira.', 'preset', 'left'),
-            ],
-            [
-              createTableCell('XX', 'sectionHeader', 'center'),
-              createTableCell('Evaluación no completada. Para concluir, requiere evaluaciones adicionales o tratamiento médico.', 'preset', 'left'),
-            ],
-          ],
-        },
-        layout: {
-          hLineColor: '#9ca3af',
-          vLineColor: '#9ca3af',
-          paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
-          paddingBottom: (i: number, node: any) => 0, // Reducir el espacio inferior
-          paddingLeft: (i: number, node: any) => 2, // Reducir el espacio izquierdo
-          paddingRight: (i: number, node: any) => 2, // Reducir el espacio derecho
-          hLineWidth: () => 1,
-          vLineWidth: () => 1,
-        },
-        margin: [0, 0, 0, 6],
-      },
-      // Conclusión y recomendaciones
-      {
-        style: 'table',
-        table: {
-          widths: ['15%', '*'],
-          body: [
-            [
-              {
-                text: 'CONCLUSIÓN Y RECOMENDACIONES',
-                style: 'tableHeader',
-                alignment: 'center',
-                colSpan: 2,  // Aquí se indica que la celda debe abarcar dos columnas.
-              },
-              {},  // Esta celda debe permanecer vacía para que la combinación funcione.
-            ],
-            [
-              createTableCell('Alteraciones a la Salud', 'sectionHeaderResume', 'center'),
-              createTableCell('El paciente presenta sobrepeso con un índice de masa corporal (IMC) de 26.87. Tiene una circunferencia de cintura de 97 cm por lo que tiene un riesgo aumentado de desarrollar enfermedades cardiometabólicas. Presenta presión arterial óptima, con una medición de 107/62 mmHg. Tiene una visión normal y tiene una visión cromática normal. Se refiere actualmente asintomático. Se encuentra clínicamente sano.', 'paragraph', 'justify'),
-            ],
-            [
-              createTableCell('Resultados', 'sectionHeaderResume', 'center'),
-              createTableCell('Posterior a efectuar el examen integral de salud ocupacional, se determina que actualmente se encuentra CLÍNICAMENTE SANO Y APTO PARA LABORAR SIN RESTRICCIONES en las actividades del puesto al que aspira. El trabajador parece demostrar actualmente los niveles adecuados de agilidad física, fuerza y capacidad cardiorespiratora requeridos para realizar de forma segura las tareas esenciales de su trabajo.Cabe señalar que la determinacion de la aptitud para el trabajo es solamante clínica, toda vez que no contamos con analisis de laboratorio en este momento.', 'paragraph', 'justify'),
-            ],
-            [
-              createTableCell('Medidas Preventivas Específicas', 'sectionHeaderResume', 'center'),
-              createTableCell('Es importante usar adecuadamente el EPP, mantener hábitos saludables como una alimentación balanceada, ejercicio regular y descanso adecuado, así como efectuar vigilancia médica con periodicidad anual, incluyendo exámenes generales de laboratorio y gabinete para una vigilancia integral de la salud.', 'paragraph', 'justify'),
-            ]
-          ],
-        },
-        layout: {
-          hLineColor: '#9ca3af',
-          vLineColor: '#9ca3af',
-          paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
-          paddingBottom: (i: number, node: any) => {
-            // Si es la primera fila (que suele ser el encabezado), no aplicar padding inferior
-            if (i === 0) {
-              return 0; // Sin padding inferior en la primera fila (tableHeader)
-            }
-            return 4; // Para el resto de las filas, aplicar padding inferior
-          },
-          paddingLeft: (i: number, node: any) => 2, // Reducir el espacio izquierdo
-          paddingRight: (i: number, node: any) => 2, // Reducir el espacio derecho
-          hLineWidth: () => 1,
-          vLineWidth: () => 1,
-        },
-        margin: [0, 0, 0, 5],
-      },
+
     ],
     // Pie de pagina
     footer: {
