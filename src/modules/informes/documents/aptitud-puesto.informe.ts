@@ -22,27 +22,55 @@ const styles: StyleDictionary = {
     fontSize: 11,
     alignment: 'right',
   },
-  sectionHeader: {
-    fontSize: 10,
+  sectionHeaderResume: {
+    fontSize: 11,
+    lineHeight: 0.8,
     bold: true,
     alignment: 'center',
-    margin: [3, 3, 3, 3],
+    margin: [0, 0, 0, 0],
   },
-  label: { fontSize: 11 },
-  value: { bold: true, fontSize: 11 },
+  sectionHeader: {
+    fontSize: 10,
+    lineHeight: 0.8,
+    bold: true,
+    alignment: 'center',
+    margin: [0, 0, 0, 0],
+  },
+
+  label: {
+    fontSize: 10,
+    lineHeight: 0.9,
+    margin: [0, 0, 0, 0], // Reducir el margen superior e inferior
+  },
+  value: {
+    bold: true, 
+    fontSize: 11,
+    lineHeight: 0.9,
+    margin: [0, 0, 0, 0], // Reducir el margen superior e inferior
+  },
+  preset: { 
+    fontSize: 10, 
+    lineHeight: 1,
+    margin: [0, 0, 0, 0], // Reducir el margen superior e inferior
+  },
+  paragraph: {
+    fontSize: 11,
+    lineHeight: 0.7,
+    margin: [0, 0, 0, 0], // Reducir el margen superior e inferior para menos padding
+  },
   tableHeader: {
     fillColor: '#262626',
     color: '#FFFFFF',
     bold: true,
     fontSize: 11,
     alignment: 'center',
-    margin: [3, 3, 3, 3],
+    margin: [0, 0, 0, 0],
   },
   tableCell: {
-    fontSize: 10,
-    bold: true,
+    fontSize: 9,
+    bold: false,
     alignment: 'center',
-    margin: [3, 3, 3, 3],
+    margin: [0, 0, 0, 0],
   },
 };
 
@@ -54,7 +82,7 @@ const logo: Content = {
 };
 
 const headerText: Content = {
-  text: '                                                                                                         ANTIDOPING\n',
+  text: '                      REPORTE DE EVALUACIÓN DE SALUD Y APTITUD AL PUESTO\n',
   style: 'header',
   alignment: 'right',
   margin: [0, 35, 40, 0],
@@ -66,29 +94,26 @@ const firma: Content = {
 };
 
 // ==================== FUNCIONES REUSABLES ====================
-const createTableCell = (text: string, style: string): Content => ({
+type Alignment = 'left' | 'center' | 'right' | 'justify';
+
+const createTableCell = (text: string, style: string, alignment: Alignment): Content => ({
   text,
   style,
-  alignment: 'center',
-  margin: [4, 4, 4, 4],
-});
-
-const createConditionalTableCell = (text: string): Content => ({
-  text: text.toUpperCase(),
-  style: 'tableCell',
-  alignment: 'center',
-  margin: [4, 4, 4, 4],
-  color: text.toUpperCase() === 'POSITIVO' ? 'red' : 'black', // Aplica rojo si es "POSITIVO"
+  alignment
 });
 
 // ==================== INTERFACES ====================
 interface Trabajador {
   nombre: string;
+  nacimiento: string;
+  escolaridad: string;
   edad: string;
   puesto: string;
   sexo: string;
-  escolaridad: string;
   antiguedad: string;
+  telefono: string;
+  estadoCivil: string;
+  hijos: number;
 }
 
 interface Aptitud {
@@ -121,7 +146,7 @@ export const aptitudPuestoInforme = (
 ): TDocumentDefinitions => {
   return {
     pageSize: 'LETTER',
-    pageMargins: [40, 70, 40, 80],
+    pageMargins: [40, 60, 40, 80],
     header: {
       columns: [logo, headerText],
     },
@@ -161,7 +186,7 @@ export const aptitudPuestoInforme = (
           ],
         },
         layout: 'noBorders',
-        margin: [0, 0, 0, 5],
+        margin: [0, 0, 0, 3],
       },
       // Datos del trabajador
       {
@@ -172,6 +197,12 @@ export const aptitudPuestoInforme = (
             [
               { text: 'NOMBRE', style: 'label' },
               { text: trabajador.nombre, style: 'value' },
+              { text: 'NACIMIENTO', style: 'label' },
+              { text: trabajador.nacimiento, style: 'value' },
+            ],
+            [
+              { text: 'ESCOLARIDAD', style: 'label' },
+              { text: trabajador.escolaridad, style: 'value' },
               { text: 'EDAD', style: 'label' },
               { text: trabajador.edad, style: 'value' },
             ],
@@ -182,66 +213,179 @@ export const aptitudPuestoInforme = (
               { text: trabajador.sexo, style: 'value' },
             ],
             [
-              { text: 'ESCOLARIDAD', style: 'label' },
-              { text: trabajador.escolaridad, style: 'value' },
               { text: 'ANTIGÜEDAD', style: 'label' },
               { text: trabajador.antiguedad, style: 'value' },
+              { text: 'TELEFONO', style: 'label' },
+              { text: trabajador.telefono, style: 'value' },
+            ],
+            [
+              { text: 'ESTADO CIVIL', style: 'label' },
+              { text: trabajador.estadoCivil, style: 'value' },
+              { text: 'HIJOS', style: 'label' },
+              { text: trabajador.hijos, style: 'value' },
             ],
           ],
         },
         layout: {
           hLineColor: '#9ca3af',
           vLineColor: '#9ca3af',
+          paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
+          paddingBottom: (i: number, node: any) => 0, // Reducir el espacio inferior
+          paddingLeft: (i: number, node: any) => 2, // Reducir el espacio izquierdo
+          paddingRight: (i: number, node: any) => 2, // Reducir el espacio derecho
           hLineWidth: () => 1,
           vLineWidth: () => 1,
         },
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, 6],
       },
-      // Tabla de resultados
+      {
+        text: 'La evaluación médica para la aptitud ante el puesto está basada en la siguiente información:',
+      },
+      // Resumen y/o alteraciones encontradas
       {
         style: 'table',
         table: {
-          widths: ['33.33%', '33.33%', '33.33%'],
+          widths: ['29%', '11%', '*'],
           body: [
             [
-              createTableCell('DROGAS DE ABUSO', 'tableHeader'),
-              createTableCell('RESULTADOS', 'tableHeader'),
-              createTableCell('VALOR DE REFERENCIA', 'tableHeader'),
+              createTableCell('INFORMACIÓN Y ESTUDIOS', 'tableHeader', 'center'),
+              createTableCell('FECHAS', 'tableHeader', 'center'),
+              createTableCell('RESUMEN Y/O ALTERACIONES ENCONTRADAS', 'tableHeader', 'center'),
             ],
             [
-              createTableCell('MARIHUANA', 'sectionHeader'),
-              createConditionalTableCell(aptitud.aptitudPuesto),
-              createTableCell('NEGATIVO', 'tableCell'),
+              createTableCell('HISTORIA CLÍNICA LABORAL', 'sectionHeader', 'center'),
+              createTableCell('11-09-2024', 'tableCell', 'center'),
+              createTableCell('Se refiere actualmente asintomático', 'tableCell', 'center'),
             ],
             [
-              createTableCell('COCAINA', 'sectionHeader'),
-              createConditionalTableCell(aptitud.alteracionesSalud),
-              createTableCell('NEGATIVO', 'tableCell'),
+              createTableCell('EXPLORACIÓN FÍSICA', 'sectionHeader', 'center'),
+              createTableCell('11-09-2024', 'tableCell', 'center'),
+              createTableCell('TA: 107/62 mmHg - Óptima, Se encuentra clínicamente sano', 'tableCell', 'center'),
             ],
             [
-              createTableCell('ANFETAMINAS', 'sectionHeader'),
-              createConditionalTableCell(aptitud.resultados),
-              createTableCell('NEGATIVO', 'tableCell'),
+              createTableCell('ADIPOSITDAD CORPORAL', 'sectionHeader', 'center'),
+              createTableCell('11-09-2024', 'tableCell', 'center'),
+              createTableCell('IMC: 26.87 - Sobrepeso, Circunferencia Cintura: 97cm - Riesgo Aumentado', 'tableCell', 'center'),
             ],
             [
-              createTableCell('METANFETAMINAS', 'sectionHeader'),
-              createConditionalTableCell(aptitud.medidasPreventivas),
-              createTableCell('NEGATIVO', 'tableCell'),
+              createTableCell('EXAMEN VISUAL', 'sectionHeader', 'center'),
+              createTableCell('11-09-2024', 'tableCell', 'center'),
+              createTableCell('OI: 20/20, OD: 20/20 - Visión Normal, Ishihara: 100 % - Normal', 'tableCell', 'center'),
             ],
             [
-              createTableCell('OPIACEOS', 'sectionHeader'),
-              createConditionalTableCell(aptitud.aptitudPuesto),
-              createTableCell('NEGATIVO', 'tableCell'),
+              createTableCell('ANTIDOPING', 'sectionHeader', 'center'),
+              createTableCell('11-09-2024', 'tableCell', 'center'),
+              createTableCell('Negativo a cinco parámetros', 'tableCell', 'center'),
             ],
           ],
         },
         layout: {
           hLineColor: '#9ca3af',
           vLineColor: '#9ca3af',
+          paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
+          paddingBottom: (i: number, node: any) => 0, // Reducir el espacio inferior
+          paddingLeft: (i: number, node: any) => 0, // Reducir el espacio izquierdo
+          paddingRight: (i: number, node: any) => 0, // Reducir el espacio derecho
           hLineWidth: () => 1,
           vLineWidth: () => 1,
         },
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, 6],
+      },
+      // Aptitud al puesto
+      {
+        style: 'table',
+        table: {
+          widths: ['7%', '*'],
+          body: [
+            [
+              {
+                text: 'BASADO EN LA INFORMACIÓN ANTERIOR SE HA DETERMINADO:',
+                style: 'tableHeader',
+                alignment: 'center',
+                colSpan: 2,  // Aquí se indica que la celda debe abarcar dos columnas.
+              },
+              {},  // Esta celda debe permanecer vacía para que la combinación funcione.
+            ],
+            [
+              createTableCell('XX', 'sectionHeader', 'center'),
+              createTableCell('Apto sin restricciones. No tiene impedimentos para el puesto al que aspira o desempeña.', 'preset', 'left'),
+            ],
+            [
+              createTableCell('XX', 'sectionHeader', 'center'),
+              createTableCell('Apto con precaución. Requiere vigilancia médica más frecuente.', 'preset', 'left'),
+            ],
+            [
+              createTableCell('XX', 'sectionHeader', 'center'),
+              createTableCell('Apto con restricciones. Requiere adaptaciones razonables para asegurar la seguridad y salud.', 'preset', 'left'),
+            ],
+            [
+              createTableCell('XX', 'sectionHeader', 'center'),
+              createTableCell('No apto. No está permitido el desempeño del puesto al que aspira.', 'preset', 'left'),
+            ],
+            [
+              createTableCell('XX', 'sectionHeader', 'center'),
+              createTableCell('Evaluación no completada. Para concluir, requiere evaluaciones adicionales o tratamiento médico.', 'preset', 'left'),
+            ],
+          ],
+        },
+        layout: {
+          hLineColor: '#9ca3af',
+          vLineColor: '#9ca3af',
+          paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
+          paddingBottom: (i: number, node: any) => 0, // Reducir el espacio inferior
+          paddingLeft: (i: number, node: any) => 2, // Reducir el espacio izquierdo
+          paddingRight: (i: number, node: any) => 2, // Reducir el espacio derecho
+          hLineWidth: () => 1,
+          vLineWidth: () => 1,
+        },
+        margin: [0, 0, 0, 6],
+      },
+      // Conclusión y recomendaciones
+      {
+        style: 'table',
+        table: {
+          widths: ['15%', '*'],
+          body: [
+            [
+              {
+                text: 'CONCLUSIÓN Y RECOMENDACIONES',
+                style: 'tableHeader',
+                alignment: 'center',
+                colSpan: 2,  // Aquí se indica que la celda debe abarcar dos columnas.
+              },
+              {},  // Esta celda debe permanecer vacía para que la combinación funcione.
+            ],
+            [
+              createTableCell('Alteraciones a la Salud', 'sectionHeaderResume', 'center'),
+              createTableCell('El paciente presenta sobrepeso con un índice de masa corporal (IMC) de 26.87. Tiene una circunferencia de cintura de 97 cm por lo que tiene un riesgo aumentado de desarrollar enfermedades cardiometabólicas. Presenta presión arterial óptima, con una medición de 107/62 mmHg. Tiene una visión normal y tiene una visión cromática normal. Se refiere actualmente asintomático. Se encuentra clínicamente sano.', 'paragraph', 'justify'),
+            ],
+            [
+              createTableCell('Resultados', 'sectionHeaderResume', 'center'),
+              createTableCell('Posterior a efectuar el examen integral de salud ocupacional, se determina que actualmente se encuentra CLÍNICAMENTE SANO Y APTO PARA LABORAR SIN RESTRICCIONES en las actividades del puesto al que aspira. El trabajador parece demostrar actualmente los niveles adecuados de agilidad física, fuerza y capacidad cardiorespiratora requeridos para realizar de forma segura las tareas esenciales de su trabajo.Cabe señalar que la determinacion de la aptitud para el trabajo es solamante clínica, toda vez que no contamos con analisis de laboratorio en este momento.', 'paragraph', 'justify'),
+            ],
+            [
+              createTableCell('Medidas Preventivas Específicas', 'sectionHeaderResume', 'center'),
+              createTableCell('Es importante usar adecuadamente el EPP, mantener hábitos saludables como una alimentación balanceada, ejercicio regular y descanso adecuado, así como efectuar vigilancia médica con periodicidad anual, incluyendo exámenes generales de laboratorio y gabinete para una vigilancia integral de la salud.', 'paragraph', 'justify'),
+            ]
+          ],
+        },
+        layout: {
+          hLineColor: '#9ca3af',
+          vLineColor: '#9ca3af',
+          paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
+          paddingBottom: (i: number, node: any) => {
+            // Si es la primera fila (que suele ser el encabezado), no aplicar padding inferior
+            if (i === 0) {
+              return 0; // Sin padding inferior en la primera fila (tableHeader)
+            }
+            return 4; // Para el resto de las filas, aplicar padding inferior
+          },
+          paddingLeft: (i: number, node: any) => 2, // Reducir el espacio izquierdo
+          paddingRight: (i: number, node: any) => 2, // Reducir el espacio derecho
+          hLineWidth: () => 1,
+          vLineWidth: () => 1,
+        },
+        margin: [0, 0, 0, 5],
       },
     ],
     // Pie de pagina

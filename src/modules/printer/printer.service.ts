@@ -4,10 +4,10 @@ import { TDocumentDefinitions } from 'pdfmake/interfaces';
 
 const fonts = {
     Roboto: { // Marca error si este no se llama Roboto, no sé por que
-        normal: 'fonts/Kanit-Regular.ttf',
-        bold: 'fonts/Kanit-Bold.ttf',
-        italics: 'fonts/Kanit-Italic.ttf',
-        bolditalics: 'fonts/Kanit-BoldItalic.ttf'
+        normal: 'fonts/Kanit-Light.ttf',
+        bold: 'fonts/Kanit-Medium.ttf',
+        italics: 'fonts/Kanit-LightItalic.ttf',
+        bolditalics: 'fonts/Kanit-MediumItalic.ttf'
     }
 }
 

@@ -19,11 +19,15 @@ export class InformesService {
 
         const datosTrabajador = {
           nombre: trabajador.nombre,
+          nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
+          escolaridad: trabajador.escolaridad,
           edad: `${calcularEdad(convertirFechaADDMMAAAA(trabajador.fechaNacimiento))} años`,
           puesto: trabajador.puesto,
           sexo: trabajador.sexo,
-          escolaridad: trabajador.escolaridad,
           antiguedad: calcularAntiguedad(convertirFechaADDMMAAAA(trabajador.fechaIngreso)),
+          telefono: trabajador.telefono,
+          estadoCivil: trabajador.estadoCivil,
+          hijos: trabajador.hijos
         };
 
         const antidoping = await this.expedientesService.findDocument('antidoping', antidopingId);
@@ -46,11 +50,15 @@ export class InformesService {
 
         const datosTrabajador = {
           nombre: trabajador.nombre,
+          nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
+          escolaridad: trabajador.escolaridad,
           edad: `${calcularEdad(convertirFechaADDMMAAAA(trabajador.fechaNacimiento))} años`,
           puesto: trabajador.puesto,
           sexo: trabajador.sexo,
-          escolaridad: trabajador.escolaridad,
           antiguedad: calcularAntiguedad(convertirFechaADDMMAAAA(trabajador.fechaIngreso)),
+          telefono: trabajador.telefono,
+          estadoCivil: trabajador.estadoCivil,
+          hijos: trabajador.hijos
         };
 
         const aptitud = await this.expedientesService.findDocument('aptitud', aptitudId);
