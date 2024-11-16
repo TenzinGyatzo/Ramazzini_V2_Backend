@@ -23,6 +23,7 @@ import { HistoriaClinica, HistoriaClinicaSchema } from './schemas/historia-clini
       { name: ExploracionFisica.name, schema: ExploracionFisicaSchema },
       { name: HistoriaClinica.name, schema: HistoriaClinicaSchema }
     ]),
-  ]
+  ],
+  exports: [ExpedientesService]
 })
 export class ExpedientesModule {}

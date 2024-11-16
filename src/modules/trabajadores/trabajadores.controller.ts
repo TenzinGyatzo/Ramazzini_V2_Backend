@@ -81,13 +81,13 @@ export class TrabajadoresController {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    const empresa = await this.trabajadoresService.findOne(id);
+    const trabajador = await this.trabajadoresService.findOne(id);
 
-    if (!empresa) {
+    if (!trabajador) {
       throw new NotFoundException('No se encontró el trabajador');
     }
 
-    return empresa;
+    return trabajador;
   }
 
   @Patch('/actualizar-trabajador/:id')

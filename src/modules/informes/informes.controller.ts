@@ -1,4 +1,4 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Param, Res } from '@nestjs/common';
 import { InformesService } from './informes.service';
 import { Response } from 'express';
 
@@ -6,9 +6,13 @@ import { Response } from 'express';
 export class InformesController {
   constructor(private readonly informesService: InformesService) {}
 
-  @Get('documento')
-  async getInforme(@Res() response: Response) {
-    const pdfDoc = await this.informesService.getInforme();
+  @Get('antidoping/:trabajadorId/:antidopingId')
+  async getInformeAntidoping(
+    @Res() response: Response,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('antidopingId') antidopingId: string,
+  ) {
+    const pdfDoc = await this.informesService.getInformeAntidoping(trabajadorId, antidopingId);
 
     response.setHeader('Content-Type', 'application/pdf');
     pdfDoc.info.Title = 'Informe';
@@ -16,11 +20,17 @@ export class InformesController {
     pdfDoc.end();
   }
 
-  /* @Get('documento')
-  async getInforme() {
-    return {
-      Hola: 'Mundo'
-    }    
-  } */
+  @Get('aptitud/:trabajadorId/:aptitudId')
+  async getInformeAptitudPuesto(
+    @Res() response: Response,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('aptitudId') aptitudId: string,
+  ) {
+    const pdfDoc = await this.informesService.getInformeAptitudPuesto(trabajadorId, aptitudId);
 
+    response.setHeader('Content-Type', 'application/pdf');
+    pdfDoc.info.Title = 'Informe';
+    pdfDoc.pipe(response);
+    pdfDoc.end();
+  }
 }

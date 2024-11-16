@@ -10,5 +10,6 @@ import { TrabajadoresController } from './trabajadores.controller';
   ],
   controllers: [TrabajadoresController],
   providers: [TrabajadoresService],
+  exports: [TrabajadoresService]
 })
 export class TrabajadoresModule {}

@@ -91,19 +91,33 @@ interface Trabajador {
   antiguedad: string;
 }
 
-interface Antidoping {
-  fechaAntidoping: Date;
-  marihuana: string;
-  cocaina: string;
-  anfetaminas: string;
-  metanfetaminas: string;
-  opiaceos: string;
+interface Aptitud {
+  fechaAptitudPuesto: Date;
+  evaluacionAdicional1: string;
+  fechaEvaluacionAdicional1: Date;
+  resultadosEvaluacionAdicional1: string;
+  evaluacionAdicional2: string;
+  fechaEvaluacionAdicional2: Date;
+  resultadosEvaluacionAdicional2: string;
+  evaluacionAdicional3: string;
+  fechaEvaluacionAdicional3: Date;
+  resultadosEvaluacionAdicional3: string;
+  evaluacionAdicional4: string;
+  fechaEvaluacionAdicional4: Date;
+  resultadosEvaluacionAdicional4: string;
+  evaluacionAdicional5: string;
+  fechaEvaluacionAdicional5: Date;
+  resultadosEvaluacionAdicional5: string;
+  aptitudPuesto: string;
+  alteracionesSalud: string;
+  resultados: string;
+  medidasPreventivas: string;
 }
 
 // ==================== INFORME PRINCIPAL ====================
-export const antidopingInforme = (
+export const aptitudPuestoInforme = (
   trabajador: Trabajador,
-  antidoping: Antidoping,
+  aptitud: Aptitud,
 ): TDocumentDefinitions => {
   return {
     pageSize: 'LETTER',
@@ -129,7 +143,7 @@ export const antidopingInforme = (
                 text: [
                   { text: 'Fecha: ', style: 'fecha', bold: false },
                   {
-                    text: antidoping.fechaAntidoping
+                    text: aptitud.fechaAptitudPuesto
                       .toLocaleDateString('es-ES', {
                         day: '2-digit',
                         month: '2-digit',
@@ -196,27 +210,27 @@ export const antidopingInforme = (
             ],
             [
               createTableCell('MARIHUANA', 'sectionHeader'),
-              createConditionalTableCell(antidoping.marihuana),
+              createConditionalTableCell(aptitud.aptitudPuesto),
               createTableCell('NEGATIVO', 'tableCell'),
             ],
             [
               createTableCell('COCAINA', 'sectionHeader'),
-              createConditionalTableCell(antidoping.cocaina),
+              createConditionalTableCell(aptitud.alteracionesSalud),
               createTableCell('NEGATIVO', 'tableCell'),
             ],
             [
               createTableCell('ANFETAMINAS', 'sectionHeader'),
-              createConditionalTableCell(antidoping.anfetaminas),
+              createConditionalTableCell(aptitud.resultados),
               createTableCell('NEGATIVO', 'tableCell'),
             ],
             [
               createTableCell('METANFETAMINAS', 'sectionHeader'),
-              createConditionalTableCell(antidoping.metanfetaminas),
+              createConditionalTableCell(aptitud.medidasPreventivas),
               createTableCell('NEGATIVO', 'tableCell'),
             ],
             [
               createTableCell('OPIACEOS', 'sectionHeader'),
-              createConditionalTableCell(antidoping.opiaceos),
+              createConditionalTableCell(aptitud.aptitudPuesto),
               createTableCell('NEGATIVO', 'tableCell'),
             ],
           ],

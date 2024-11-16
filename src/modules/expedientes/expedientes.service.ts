@@ -51,6 +51,14 @@ export class ExpedientesService {
     return model.find({ idTrabajador: trabajadorId }).exec();
   }
 
+  async findDocument(documentType: string, id: string): Promise<any> {
+    const model = this.models[documentType];
+    if (!model) {
+      throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
+    }
+    return model.findById(id).exec();
+  }
+
   async updateDocument(documentType: string, id: string, updateDto: any): Promise<any> {
     const model = this.models[documentType];
     if (!model) {

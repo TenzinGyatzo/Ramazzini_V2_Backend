@@ -82,6 +82,18 @@ export class ExpedientesController {
     return documents;
   }
 
+  @Get(':documentType/:id')
+  async findDocument(@Param('documentType') documentType: string, @Param('id') id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es valido');
+    }
+    const document = await this.expedientesService.findDocument(documentType, id);
+    if (!document) {
+      return { message: `No se encontró el documento de tipo ${documentType} con id ${id}` };
+    }
+    return document;
+  }
+
   @Patch(':documentType/actualizar/:id')
   async updateDocument(
     @Param('documentType') documentType: string,
