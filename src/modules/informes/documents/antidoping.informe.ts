@@ -180,8 +180,8 @@ export const antidopingInforme = (
           ],
         },
         layout: {
-          hLineColor: '#9ca3af',
-          vLineColor: '#9ca3af',
+          hLineColor: '#e5e7eb',
+          vLineColor: '#e5e7eb',
           hLineWidth: () => 1,
           vLineWidth: () => 1,
         },
@@ -226,8 +226,8 @@ export const antidopingInforme = (
           ],
         },
         layout: {
-          hLineColor: '#9ca3af',
-          vLineColor: '#9ca3af',
+          hLineColor: '#e5e7eb',
+          vLineColor: '#e5e7eb',
           hLineWidth: () => 1,
           vLineWidth: () => 1,
         },

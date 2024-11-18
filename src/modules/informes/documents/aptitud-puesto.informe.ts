@@ -229,8 +229,8 @@ export const aptitudPuestoInforme = (
           ],
         },
         layout: {
-          hLineColor: '#9ca3af',
-          vLineColor: '#9ca3af',
+          hLineColor: '#e5e7eb',
+          vLineColor: '#e5e7eb',
           paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
           paddingBottom: (i: number, node: any) => 0, // Reducir el espacio inferior
           paddingLeft: (i: number, node: any) => 2, // Reducir el espacio izquierdo
@@ -282,8 +282,8 @@ export const aptitudPuestoInforme = (
           ],
         },
         layout: {
-          hLineColor: '#9ca3af',
-          vLineColor: '#9ca3af',
+          hLineColor: '#e5e7eb',
+          vLineColor: '#e5e7eb',
           paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
           paddingBottom: (i: number, node: any) => 0, // Reducir el espacio inferior
           paddingLeft: (i: number, node: any) => 0, // Reducir el espacio izquierdo
@@ -331,8 +331,8 @@ export const aptitudPuestoInforme = (
           ],
         },
         layout: {
-          hLineColor: '#9ca3af',
-          vLineColor: '#9ca3af',
+          hLineColor: '#e5e7eb',
+          vLineColor: '#e5e7eb',
           paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
           paddingBottom: (i: number, node: any) => 0, // Reducir el espacio inferior
           paddingLeft: (i: number, node: any) => 2, // Reducir el espacio izquierdo
@@ -372,8 +372,8 @@ export const aptitudPuestoInforme = (
           ],
         },
         layout: {
-          hLineColor: '#9ca3af',
-          vLineColor: '#9ca3af',
+          hLineColor: '#e5e7eb',
+          vLineColor: '#e5e7eb',
           paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
           paddingBottom: (i: number, node: any) => {
             // Si es la primera fila (que suele ser el encabezado), no aplicar padding inferior

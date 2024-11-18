@@ -236,6 +236,9 @@ export class HistoriaClinica extends Document {
     @Prop({ enum: partosOpciones })
     partos: string;
 
+    @Prop({ enum: cesareasOpciones })
+    cesareas: string;
+
     @Prop({ enum: abortosOpciones })
     abortos: string;
 

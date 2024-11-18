@@ -89,7 +89,7 @@ export class CreateHistoriaClinicaDto {
 
     // Antecedentes Heredofamiliares
     @IsOptional()
-    @IsEnum( { message: 'nefropatias debe ser Si o No' })
+    @IsEnum(siONo, { message: 'nefropatias debe ser Si o No' })
     nefropatias: string;
 
     @IsOptional()
@@ -97,7 +97,7 @@ export class CreateHistoriaClinicaDto {
     nefropatiasEspecificar: string;
 
     @IsOptional()
-    @IsEnum( { message: 'diabeticos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'diabeticos debe ser Si o No' })
     diabeticos: string;
 
     @IsOptional()
@@ -105,7 +105,7 @@ export class CreateHistoriaClinicaDto {
     diabeticosEspecificar: string;
 
     @IsOptional()
-    @IsEnum({ message: 'hipertensivos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'hipertensivos debe ser Si o No' })
     hipertensivos: string;
 
     @IsOptional()
@@ -113,7 +113,7 @@ export class CreateHistoriaClinicaDto {
     hipertensivosEspecificar: string;
 
     @IsOptional()
-    @IsEnum({ message: 'cardiopaticos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'cardiopaticos debe ser Si o No' })
     cardiopaticos: string;
 
     @IsOptional()
@@ -121,7 +121,7 @@ export class CreateHistoriaClinicaDto {
     cardiopaticosEspecificar: string;
 
     @IsOptional()
-    @IsEnum({ message: 'neoplasicos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'neoplasicos debe ser Si o No' })
     neoplasicos: string;
 
     @IsOptional()
@@ -129,7 +129,7 @@ export class CreateHistoriaClinicaDto {
     neoplasicosEspecificar: string;
 
     @IsOptional()
-    @IsEnum({ message: 'psiquiatricos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'psiquiatricos debe ser Si o No' })
     psiquiatricos: string;
 
     @IsOptional()
@@ -137,7 +137,7 @@ export class CreateHistoriaClinicaDto {
     psiquiatricosEspecificar: string;
 
     @IsOptional()
-    @IsEnum({ message: 'epilepticos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'epilepticos debe ser Si o No' })
     epilepticos: string;
 
     @IsOptional()
@@ -145,7 +145,7 @@ export class CreateHistoriaClinicaDto {
     epilepticosEspecificar: string;
 
     @IsOptional()
-    @IsEnum({ message: 'leuticos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'leuticos debe ser Si o No' })
     leuticos: string;
 
     @IsOptional()
@@ -153,7 +153,7 @@ export class CreateHistoriaClinicaDto {
     leuticosEspecificar: string;
 
     @IsOptional()
-    @IsEnum({ message: 'fimicos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'fimicos debe ser Si o No' })
     fimicos: string;
 
     @IsOptional()
@@ -161,7 +161,7 @@ export class CreateHistoriaClinicaDto {
     fimicosEspecificar: string;
 
     @IsOptional()
-    @IsEnum({ message: 'hepatopatias debe ser Si o No' })
+    @IsEnum(siONo, { message: 'hepatopatias debe ser Si o No' })
     hepatopatias: string;
 
     @IsOptional()
@@ -171,7 +171,7 @@ export class CreateHistoriaClinicaDto {
 
     // Antecedentes Personales Patológicos (PP)
     @IsOptional()
-    @IsEnum({ message: 'lumbalgias debe ser Si o No' })
+    @IsEnum(siONo, { message: 'lumbalgias debe ser Si o No' })
     lumbalgias: string;
     
     @IsOptional()
@@ -179,7 +179,7 @@ export class CreateHistoriaClinicaDto {
     lumbalgiasEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'diabeticosPP debe ser Si o No' })
+    @IsEnum(siONo, { message: 'diabeticosPP debe ser Si o No' })
     diabeticosPP: string;
     
     @IsOptional()
@@ -187,7 +187,7 @@ export class CreateHistoriaClinicaDto {
     diabeticosPPEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'cardiopaticosPP debe ser Si o No' })
+    @IsEnum(siONo, { message: 'cardiopaticosPP debe ser Si o No' })
     cardiopaticosPP: string;
     
     @IsOptional()
@@ -195,7 +195,7 @@ export class CreateHistoriaClinicaDto {
     cardiopaticosPPEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'alergicos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'alergicos debe ser Si o No' })
     alergicos: string;
     
     @IsOptional()
@@ -203,7 +203,7 @@ export class CreateHistoriaClinicaDto {
     alergicosEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'hipertensivosPP debe ser Si o No' })
+    @IsEnum(siONo, { message: 'hipertensivosPP debe ser Si o No' })
     hipertensivosPP: string;
     
     @IsOptional()
@@ -211,7 +211,7 @@ export class CreateHistoriaClinicaDto {
     hipertensivosPPEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'obesidad debe ser Si o No' })
+    @IsEnum(siONo, { message: 'obesidad debe ser Si o No' })
     obesidad: string;
     
     @IsOptional()
@@ -219,7 +219,7 @@ export class CreateHistoriaClinicaDto {
     obesidadEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'epilepticosPP debe ser Si o No' })
+    @IsEnum(siONo, { message: 'epilepticosPP debe ser Si o No' })
     epilepticosPP: string;
     
     @IsOptional()
@@ -227,7 +227,7 @@ export class CreateHistoriaClinicaDto {
     epilepticosPPEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'accidentes debe ser Si o No' })
+    @IsEnum(siONo, { message: 'accidentes debe ser Si o No' })
     accidentes: string;
     
     @IsOptional()
@@ -235,7 +235,7 @@ export class CreateHistoriaClinicaDto {
     accidentesEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'quirurgicos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'quirurgicos debe ser Si o No' })
     quirurgicos: string;
     
     @IsOptional()
@@ -243,7 +243,7 @@ export class CreateHistoriaClinicaDto {
     quirurgicosEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'traumaticos debe ser Si o No' })
+    @IsEnum(siONo, { message: 'traumaticos debe ser Si o No' })
     traumaticos: string;
     
     @IsOptional()
@@ -253,7 +253,7 @@ export class CreateHistoriaClinicaDto {
 
     // Antecedentes Personales No Patológicos
     @IsOptional()
-    @IsEnum({ message: 'alcoholismo debe ser Si o No' })
+    @IsEnum(siONo, { message: 'alcoholismo debe ser Si o No' })
     alcoholismo: string;
     
     @IsOptional()
@@ -261,7 +261,7 @@ export class CreateHistoriaClinicaDto {
     alcoholismoEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'tabaquismo debe ser Si o No' })
+    @IsEnum(siONo, { message: 'tabaquismo debe ser Si o No' })
     tabaquismo: string;
     
     @IsOptional()
@@ -269,7 +269,7 @@ export class CreateHistoriaClinicaDto {
     tabaquismoEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'toxicomanias debe ser Si o No' })
+    @IsEnum(siONo, { message: 'toxicomanias debe ser Si o No' })
     toxicomanias: string;
     
     @IsOptional()
@@ -277,7 +277,7 @@ export class CreateHistoriaClinicaDto {
     toxicomaniasEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'alimentacionDeficiente debe ser Si o No' })
+    @IsEnum(siONo, { message: 'alimentacionDeficiente debe ser Si o No' })
     alimentacionDeficiente: string;
     
     @IsOptional()
@@ -285,7 +285,7 @@ export class CreateHistoriaClinicaDto {
     alimentacionDeficienteEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'actividadFisicaDeficiente debe ser Si o No' })
+    @IsEnum(siONo, { message: 'actividadFisicaDeficiente debe ser Si o No' })
     actividadFisicaDeficiente: string;
     
     @IsOptional()
@@ -293,7 +293,7 @@ export class CreateHistoriaClinicaDto {
     actividadFisicaDeficienteEspecificar: string;
     
     @IsOptional()
-    @IsEnum({ message: 'higienePersonalDeficiente debe ser Si o No' })
+    @IsEnum(siONo, { message: 'higienePersonalDeficiente debe ser Si o No' })
     higienePersonalDeficiente: string;
     
     @IsOptional()
@@ -321,6 +321,10 @@ export class CreateHistoriaClinicaDto {
     @IsOptional()
     @IsEnum( partosOpciones, { message: 'partos debe ser alguna de las siguientes opciones: ' + partosOpciones })
     partos: string;
+
+    @IsOptional()
+    @IsEnum( cesareasOpciones, { message: 'cesareas debe ser alguna de las siguientes opciones: ' + cesareasOpciones })
+    cesareas: string;
 
     @IsOptional()
     @IsEnum( abortosOpciones, { message: 'abortos debe ser alguna de las siguientes opciones: ' + abortosOpciones })
@@ -405,7 +409,7 @@ export class CreateHistoriaClinicaDto {
     agentesAnterior3: string;
 
     @IsOptional()
-    @IsEnum( { message: 'accidenteLaboral debe ser Si o No' })
+    @IsEnum(siONo, { message: 'accidenteLaboral debe ser Si o No' })
     accidenteLaboral: string;
 
     @IsOptional()

@@ -13,7 +13,22 @@ export class InformesController {
     @Param('trabajadorId') trabajadorId: string,
     @Param('antidopingId') antidopingId: string,
   ) {
-    const pdfDoc = await this.informesService.getInformeAntidoping(empresaId,trabajadorId, antidopingId);
+    const pdfDoc = await this.informesService.getInformeAntidoping(empresaId, trabajadorId, antidopingId);
+
+    response.setHeader('Content-Type', 'application/pdf');
+    pdfDoc.info.Title = 'Informe';
+    pdfDoc.pipe(response);
+    pdfDoc.end();
+  }
+
+  @Get('certificado/:empresaId/:trabajadorId/:certificadoId')
+  async getInformeCertificado(
+    @Res() response: Response,
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('certificadoId') certificadoId: string,
+  ) {
+    const pdfDoc = await this.informesService.getInformeCertificado(empresaId, trabajadorId, certificadoId);
 
     response.setHeader('Content-Type', 'application/pdf');
     pdfDoc.info.Title = 'Informe';
