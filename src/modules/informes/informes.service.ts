@@ -3,6 +3,7 @@ import { PrinterService } from '../printer/printer.service';
 import { antidopingInforme } from './documents/antidoping.informe';
 import { certificadoInforme } from './documents/certificado.informe';
 import { aptitudPuestoInforme } from './documents/aptitud-puesto.informe';
+import { examenVistaInforme } from './documents/examen-vista.informe';
 import { historiaClinicaInforme } from './documents/historia-clinica.informe';
 import { EmpresasService } from '../empresas/empresas.service';
 import { TrabajadoresService } from '../trabajadores/trabajadores.service';
@@ -173,6 +174,66 @@ export class InformesService {
       nombreEmpresa,
       datosTrabajador,
       fechaCertificado,
+    );
+    return this.printer.createPdf(docDefinition);
+  }
+
+  async getInformeExamenVista(
+    empresaId: string,
+    trabajadorId: string,
+    examenVistaId: string,
+  ): Promise<PDFKit.PDFDocument> {
+    const empresa = await this.empresasService.findOne(empresaId);
+
+    const nombreEmpresa = empresa.nombreComercial;
+
+    const trabajador = await this.trabajadoresService.findOne(trabajadorId);
+
+    const datosTrabajador = {
+      nombre: trabajador.nombre.toUpperCase(),
+      nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
+      escolaridad: trabajador.escolaridad,
+      edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
+      puesto: trabajador.puesto,
+      sexo: trabajador.sexo,
+      antiguedad: calcularAntiguedad(
+        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
+      ),
+      telefono: trabajador.telefono,
+      estadoCivil: trabajador.estadoCivil,
+      hijos: trabajador.hijos,
+    };
+
+    const examenVista = await this.expedientesService.findDocument(
+      'examenVista',
+      examenVistaId,
+    );
+
+    const datosExamenVista = {
+      fechaExamenVista: examenVista.fechaExamenVista,
+      ojoIzquierdoLejanaSinCorreccion: examenVista.ojoIzquierdoLejanaSinCorreccion,
+      ojoDerechoLejanaSinCorreccion: examenVista.ojoDerechoLejanaSinCorreccion,
+      sinCorreccionLejanaInterpretacion: examenVista.sinCorreccionLejanaInterpretacion,
+      requiereLentesUsoGeneral: examenVista.requiereLentesUsoGeneral,
+      ojoIzquierdoCercanaSinCorreccion: examenVista.ojoIzquierdoCercanaSinCorreccion,
+      ojoDerechoCercanaSinCorreccion: examenVista.ojoDerechoCercanaSinCorreccion,
+      sinCorreccionCercanaInterpretacion: examenVista.sinCorreccionCercanaInterpretacion,
+      requiereLentesParaLectura: examenVista.requiereLentesParaLectura,
+      ojoIzquierdoLejanaConCorreccion: examenVista.ojoIzquierdoLejanaConCorreccion,
+      ojoDerechoLejanaConCorreccion: examenVista.ojoDerechoLejanaConCorreccion,
+      conCorreccionLejanaInterpretacion: examenVista.conCorreccionLejanaInterpretacion,
+      ojoIzquierdoCercanaConCorreccion: examenVista.ojoIzquierdoCercanaConCorreccion,
+      ojoDerechoCercanaConCorreccion: examenVista.ojoDerechoCercanaConCorreccion,
+      conCorreccionCercanaInterpretacion: examenVista.conCorreccionCercanaInterpretacion,
+      placasCorrectas: examenVista.placasCorrectas,
+      porcentajeIshihara: examenVista.porcentajeIshihara,
+      interpretacionIshihara: examenVista.interpretacionIshihara
+    };
+
+    const docDefinition = examenVistaInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      datosExamenVista,
     );
     return this.printer.createPdf(docDefinition);
   }

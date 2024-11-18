@@ -1035,22 +1035,18 @@ export const historiaClinicaInforme = (
                 {
                   text: 'Dr. Jesús Manuel Coronel Valenzuela\n',
                   bold: true,
-                  italics: true,
                 },
                 {
                   text: 'Cédula Profesional Médico Cirujano No. 1379978\n',
                   bold: false,
-                  italics: true,
                 },
                 {
                   text: 'Cédula Especialidad Med. del Trab. No. 3181172\n',
                   bold: false,
-                  italics: true,
                 },
                 {
                   text: 'Certificado Consejo Mex. de Med. Trab. No.891',
                   bold: false,
-                  italics: true,
                 },
               ],
               fontSize: 8,

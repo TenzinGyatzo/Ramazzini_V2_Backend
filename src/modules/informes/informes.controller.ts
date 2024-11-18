@@ -21,6 +21,21 @@ export class InformesController {
     pdfDoc.end();
   }
 
+  @Get('aptitud/:empresaId/:trabajadorId/:aptitudId')
+  async getInformeAptitudPuesto(
+    @Res() response: Response,
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('aptitudId') aptitudId: string,
+  ) {
+    const pdfDoc = await this.informesService.getInformeAptitudPuesto(empresaId, trabajadorId, aptitudId);
+
+    response.setHeader('Content-Type', 'application/pdf');
+    pdfDoc.info.Title = 'Informe';
+    pdfDoc.pipe(response);
+    pdfDoc.end();
+  }
+
   @Get('certificado/:empresaId/:trabajadorId/:certificadoId')
   async getInformeCertificado(
     @Res() response: Response,
@@ -36,20 +51,21 @@ export class InformesController {
     pdfDoc.end();
   }
 
-  @Get('aptitud/:empresaId/:trabajadorId/:aptitudId')
-  async getInformeAptitudPuesto(
+  @Get('examenVista/:empresaId/:trabajadorId/:examenVistaId')
+  async getInformeExamenVista(
     @Res() response: Response,
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
-    @Param('aptitudId') aptitudId: string,
+    @Param('examenVistaId') examenVistaId: string,
   ) {
-    const pdfDoc = await this.informesService.getInformeAptitudPuesto(empresaId, trabajadorId, aptitudId);
+    const pdfDoc = await this.informesService.getInformeExamenVista(empresaId, trabajadorId, examenVistaId);
 
     response.setHeader('Content-Type', 'application/pdf');
     pdfDoc.info.Title = 'Informe';
     pdfDoc.pipe(response);
     pdfDoc.end();
   }
+
 
   @Get('historiaClinica/:empresaId/:trabajadorId/:historiaClinicaId')
   async getInformeHistoriaClinica(
