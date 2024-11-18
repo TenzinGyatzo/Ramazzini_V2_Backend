@@ -4,6 +4,7 @@ import { antidopingInforme } from './documents/antidoping.informe';
 import { certificadoInforme } from './documents/certificado.informe';
 import { aptitudPuestoInforme } from './documents/aptitud-puesto.informe';
 import { examenVistaInforme } from './documents/examen-vista.informe';
+import { exploracionFisicaInforme } from './documents/exploracion-fisica.informe';
 import { historiaClinicaInforme } from './documents/historia-clinica.informe';
 import { EmpresasService } from '../empresas/empresas.service';
 import { TrabajadoresService } from '../trabajadores/trabajadores.service';
@@ -238,6 +239,92 @@ export class InformesService {
     return this.printer.createPdf(docDefinition);
   }
 
+  async getInformeExploracionFisica(
+    empresaId: string,
+    trabajadorId: string,
+    exploracionFisicaId: string,
+  ): Promise<PDFKit.PDFDocument> {
+    const empresa = await this.empresasService.findOne(empresaId);
+
+    const nombreEmpresa = empresa.nombreComercial;
+
+    const trabajador = await this.trabajadoresService.findOne(trabajadorId);
+
+    const datosTrabajador = {
+      nombre: trabajador.nombre,
+      nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
+      escolaridad: trabajador.escolaridad,
+      edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
+      puesto: trabajador.puesto,
+      sexo: trabajador.sexo,
+      antiguedad: calcularAntiguedad(
+        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
+      ),
+      telefono: trabajador.telefono,
+      estadoCivil: trabajador.estadoCivil,
+      hijos: trabajador.hijos,
+    };
+
+    const exploracionFisica = await this.expedientesService.findDocument(
+      'exploracionFisica',
+      exploracionFisicaId,
+    );
+
+    const datosExploracionFisica = {
+      fechaExploracionFisica: exploracionFisica.fechaExploracionFisica,
+      peso: exploracionFisica.peso,
+      altura: exploracionFisica.altura,
+      indiceMasaCorporal: exploracionFisica.indiceMasaCorporal,
+      categoriaIMC: exploracionFisica.categoriaIMC,
+      circunferenciaCintura: exploracionFisica.circunferenciaCintura,
+      categoriaCircunferenciaCintura: exploracionFisica.categoriaCircunferenciaCintura,
+      tensionArterialSistolica: exploracionFisica.tensionArterialSistolica,
+      tensionArterialDiastolica: exploracionFisica.tensionArterialDiastolica,
+      categoriaTensionArterial: exploracionFisica.categoriaTensionArterial,
+      frecuenciaCardiaca: exploracionFisica.frecuenciaCardiaca,
+      categoriaFrecuenciaCardiaca: exploracionFisica.categoriaFrecuenciaCardiaca,
+      frecuenciaRespiratoria: exploracionFisica.frecuenciaRespiratoria,
+      categoriaFrecuenciaRespiratoria: exploracionFisica.categoriaFrecuenciaRespiratoria,
+      saturacionOxigeno: exploracionFisica.saturacionOxigeno,
+      categoriaSaturacionOxigeno: exploracionFisica.categoriaSaturacionOxigeno,
+      craneoCara: exploracionFisica.craneoCara,
+      ojos: exploracionFisica.ojos,
+      oidos: exploracionFisica.oidos,
+      nariz: exploracionFisica.nariz,
+      boca: exploracionFisica.boca,
+      cuello: exploracionFisica.cuello,
+      hombros: exploracionFisica.hombros,
+      codos: exploracionFisica.codos,
+      manos: exploracionFisica.manos,
+      neurologicoESuperiores: exploracionFisica.neurologicoESuperiores,
+      vascularESuperiores: exploracionFisica.vascularESuperiores,
+      torax: exploracionFisica.torax,
+      abdomen: exploracionFisica.abdomen,
+      cadera: exploracionFisica.cadera,
+      rodillas: exploracionFisica.rodillas,
+      tobillosPies: exploracionFisica.tobillosPies,
+      neurologicoEInferiores: exploracionFisica.neurologicoEInferiores,
+      vascularEInferiores: exploracionFisica.vascularEInferiores,
+      inspeccionColumna: exploracionFisica.inspeccionColumna,
+      movimientosColumna: exploracionFisica.movimientosColumna,
+      lesionesPiel: exploracionFisica.lesionesPiel,
+      cicatrices: exploracionFisica.cicatrices,
+      nevos: exploracionFisica.nevos,
+      coordinacion: exploracionFisica.coordinacion,
+      sensibilidad: exploracionFisica.sensibilidad,
+      equilibrio: exploracionFisica.equilibrio,
+      marcha: exploracionFisica.marcha,
+      resumenExploracionFisica: exploracionFisica.resumenExploracionFisica,
+    };
+
+    const docDefinition = exploracionFisicaInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      datosExploracionFisica,
+    );
+    return this.printer.createPdf(docDefinition);
+  }
+
   async getInformeHistoriaClinica(
     empresaId: string,
     trabajadorId: string,
@@ -370,6 +457,7 @@ export class InformesService {
     );
     return this.printer.createPdf(docDefinition);
   }
+
 
 
 }

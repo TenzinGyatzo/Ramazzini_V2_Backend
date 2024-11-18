@@ -67,6 +67,21 @@ export class InformesController {
   }
 
 
+  @Get('exploracionFisica/:empresaId/:trabajadorId/:exploracionFisicaId')
+  async getInformeExploracionFisica(
+    @Res() response: Response,
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('exploracionFisicaId') exploracionFisicaId: string,
+  ) {
+    const pdfDoc = await this.informesService.getInformeExploracionFisica(empresaId, trabajadorId, exploracionFisicaId);
+
+    response.setHeader('Content-Type', 'application/pdf');
+    pdfDoc.info.Title = 'Informe';
+    pdfDoc.pipe(response);
+    pdfDoc.end();
+  }
+
   @Get('historiaClinica/:empresaId/:trabajadorId/:historiaClinicaId')
   async getInformeHistoriaClinica(
     @Res() response: Response,
