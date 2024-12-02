@@ -14,6 +14,14 @@ export class CreateCertificadoDto {
     fechaCertificado: Date;
 
     @ApiProperty({
+        description: 'Impedimentos Físicos',
+        example: '671fe9cc00fcb5611b10686e',
+    })
+    @IsString({ message: 'Impedimentos Físicos debe ser un string' })
+    @IsNotEmpty({ message: 'Impedimentos Físicos no puede estar vacío' })
+    impedimentosFisicos: string;
+
+    @ApiProperty({
         description: 'El ID del trabajador',
         example: '671fe9cc00fcb5611b10686e',
     })

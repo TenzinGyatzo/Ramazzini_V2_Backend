@@ -9,12 +9,8 @@ import { historiaClinicaInforme } from './documents/historia-clinica.informe';
 import { EmpresasService } from '../empresas/empresas.service';
 import { TrabajadoresService } from '../trabajadores/trabajadores.service';
 import { ExpedientesService } from '../expedientes/expedientes.service';
-import {
-  convertirFechaADDMMAAAA,
-  convertirFechaAAAAAMMDD,
-  calcularEdad,
-  calcularAntiguedad,
-} from 'src/utils/dates';
+import { convertirFechaADDMMAAAA, convertirFechaAAAAAMMDD, calcularEdad, calcularAntiguedad } from 'src/utils/dates';
+import { findNearestDocument } from 'src/utils/findNearestDocuments';
 
 @Injectable()
 export class InformesService {
@@ -79,11 +75,9 @@ export class InformesService {
     aptitudId: string,
   ): Promise<PDFKit.PDFDocument> {
     const empresa = await this.empresasService.findOne(empresaId);
-
     const nombreEmpresa = empresa.nombreComercial;
 
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
-
     const datosTrabajador = {
       nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
@@ -99,11 +93,7 @@ export class InformesService {
       hijos: trabajador.hijos,
     };
 
-    const aptitud = await this.expedientesService.findDocument(
-      'aptitud',
-      aptitudId,
-    );
-
+    const aptitud = await this.expedientesService.findDocument('aptitud', aptitudId);
     const datosAptitud = {
       fechaAptitudPuesto: aptitud.fechaAptitudPuesto,
       evaluacionAdicional1: aptitud.evaluacionAdicional1,
@@ -130,10 +120,60 @@ export class InformesService {
       medidasPreventivas: aptitud.medidasPreventivas,
     };
 
+    const historiasClinicas = await this.expedientesService.findDocuments('historiaClinica', trabajadorId);
+    const nearestHistoriaClinica = findNearestDocument(historiasClinicas, aptitud.fechaAptitudPuesto, 'fechaHistoriaClinica');
+    const datosHistoriaClinica = {
+      fechaHistoriaClinica: nearestHistoriaClinica.fechaHistoriaClinica,
+      resumenHistoriaClinica: nearestHistoriaClinica.resumenHistoriaClinica,
+    };
+
+    const exploracionesFisicas = await this.expedientesService.findDocuments('exploracionFisica', trabajadorId);
+    const nearestExploracionFisica = findNearestDocument(exploracionesFisicas, aptitud.fechaAptitudPuesto, 'fechaExploracionFisica');
+    const datosExploracionFisica = {
+      fechaExploracionFisica: nearestExploracionFisica.fechaExploracionFisica,
+      tensionArterialSistolica: nearestExploracionFisica.tensionArterialSistolica,
+      tensionArterialDiastolica: nearestExploracionFisica.tensionArterialDiastolica,
+      categoriaTensionArterial: nearestExploracionFisica.categoriaTensionArterial,
+      indiceMasaCorporal: nearestExploracionFisica.indiceMasaCorporal,
+      categoriaIMC: nearestExploracionFisica.categoriaIMC,
+      circunferenciaCintura: nearestExploracionFisica.circunferenciaCintura,
+      categoriaCircunferenciaCintura: nearestExploracionFisica.categoriaCircunferenciaCintura,
+      resumenExploracionFisica: nearestExploracionFisica.resumenExploracionFisica,
+    }
+
+    const examenesVista = await this.expedientesService.findDocuments('examenVista', trabajadorId);
+    const nearestExamenVista = findNearestDocument(examenesVista, aptitud.fechaAptitudPuesto, 'fechaExamenVista');
+    const datosExamenVista = {
+      fechaExamenVista: nearestExamenVista.fechaExamenVista,
+      ojoIzquierdoLejanaSinCorreccion: nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
+      ojoDerechoLejanaSinCorreccion: nearestExamenVista.ojoDerechoLejanaSinCorreccion,
+      sinCorreccionLejanaInterpretacion: nearestExamenVista.sinCorreccionLejanaInterpretacion,
+      ojoIzquierdoLejanaConCorreccion: nearestExamenVista.ojoIzquierdoLejanaConCorreccion,
+      ojoDerechoLejanaConCorreccion: nearestExamenVista.ojoDerechoLejanaConCorreccion,
+      conCorreccionLejanaInterpretacion: nearestExamenVista.conCorreccionLejanaInterpretacion,
+      porcentajeIshihara: nearestExamenVista.porcentajeIshihara,
+      interpretacionIshihara: nearestExamenVista.interpretacionIshihara,
+    }
+
+    const antidopings = await this.expedientesService.findDocuments('antidoping', trabajadorId);
+    const nearestAntidoping = findNearestDocument(antidopings, aptitud.fechaAptitudPuesto, 'fechaAntidoping');
+    const datosAntidoping = {
+      fechaAntidoping: nearestAntidoping.fechaAntidoping,
+      marihuana: nearestAntidoping.marihuana,
+      cocaina: nearestAntidoping.cocaina,
+      anfetaminas: nearestAntidoping.anfetaminas,
+      metanfetaminas: nearestAntidoping.metanfetaminas,
+      opiaceos: nearestAntidoping.opiaceos,
+    }
+
     const docDefinition = aptitudPuestoInforme(
       nombreEmpresa,
       datosTrabajador,
       datosAptitud,
+      datosHistoriaClinica,
+      datosExploracionFisica,
+      datosExamenVista,
+      datosAntidoping
     );
     return this.printer.createPdf(docDefinition);
   }
@@ -144,11 +184,9 @@ export class InformesService {
     certificadoId: string,
   ): Promise<PDFKit.PDFDocument> {
     const empresa = await this.empresasService.findOne(empresaId);
-
     const nombreEmpresa = empresa.nombreComercial;
 
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
-
     const datosTrabajador = {
       nombre: trabajador.nombre.toUpperCase(),
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
@@ -164,17 +202,25 @@ export class InformesService {
       hijos: trabajador.hijos,
     };
 
-    const certificado = await this.expedientesService.findDocument(
-      'certificado',
-      certificadoId,
-    );
+    const certificado = await this.expedientesService.findDocument( 'certificado', certificadoId );
+    const datosCertificado = {
+      fechaCertificado: certificado.fechaCertificado,
+      impedimentosFisicos: certificado.impedimentosFisicos,
+    };
 
-    const fechaCertificado = certificado.fechaCertificado
+    const examenesVista = await this.expedientesService.findDocuments('examenVista', trabajadorId);
+    const nearestExamenVista = findNearestDocument(examenesVista, certificado.fechaCertificado, 'fechaExamenVista');
+    const datosExamenVista = {
+      fechaExamenVista: nearestExamenVista.fechaExamenVista,
+      ojoIzquierdoLejanaSinCorreccion: nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
+      ojoDerechoLejanaSinCorreccion: nearestExamenVista.ojoDerechoLejanaSinCorreccion,
+    }
 
     const docDefinition = certificadoInforme(
       nombreEmpresa,
       datosTrabajador,
-      fechaCertificado,
+      datosCertificado,
+      datosExamenVista
     );
     return this.printer.createPdf(docDefinition);
   }
@@ -457,7 +503,5 @@ export class InformesService {
     );
     return this.printer.createPdf(docDefinition);
   }
-
-
 
 }

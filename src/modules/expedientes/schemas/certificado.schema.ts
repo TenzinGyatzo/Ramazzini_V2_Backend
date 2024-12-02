@@ -7,6 +7,9 @@ import { User } from 'src/modules/users/entities/user.entity';
 export class Certificado extends Document {
     @Prop({ required: true })
     fechaCertificado: Date
+
+    @Prop({ required: true })
+    impedimentosFisicos: string
     
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
     idTrabajador: Trabajador;

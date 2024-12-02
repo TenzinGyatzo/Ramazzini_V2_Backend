@@ -3,6 +3,7 @@ import type {
   StyleDictionary,
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
+import { Interface } from 'readline';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -140,12 +141,142 @@ interface Aptitud {
   medidasPreventivas: string;
 }
 
+interface HistoriaClinica {
+  fechaHistoriaClinica: Date;
+  resumenHistoriaClinica: string;
+}
+
+interface ExploracionFisica {
+  fechaExploracionFisica: Date;
+  tensionArterialSistolica: number;
+  tensionArterialDiastolica: number;
+  categoriaTensionArterial: string;
+  indiceMasaCorporal: number;
+  categoriaIMC: string;
+  circunferenciaCintura: number;
+  categoriaCircunferenciaCintura: string;
+  resumenExploracionFisica: string;
+}
+
+interface ExamenVista {
+  fechaExamenVista: Date;
+  ojoIzquierdoLejanaSinCorreccion: number;
+  ojoDerechoLejanaSinCorreccion: number;
+  sinCorreccionLejanaInterpretacion: string;
+  ojoIzquierdoLejanaConCorreccion?: number;
+  ojoDerechoLejanaConCorreccion?: number;
+  conCorreccionLejanaInterpretacion?: string;
+  porcentajeIshihara: number;
+  interpretacionIshihara: string;
+}
+
+interface Antidoping {
+  fechaAntidoping: Date;
+  marihuana: string;
+  cocaina: string;
+  anfetaminas: string;
+  metanfetaminas: string;
+  opiaceos: string;
+}
+
 // ==================== INFORME PRINCIPAL ====================
 export const aptitudPuestoInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
   aptitud: Aptitud,
+  historiaClinica: HistoriaClinica,
+  exploracionFisica: ExploracionFisica,
+  examenVista: ExamenVista,
+  antidoping: Antidoping,
 ): TDocumentDefinitions => {
+
+  const examenVistaResumen =
+  (examenVista.ojoIzquierdoLejanaConCorreccion === 0 || examenVista.ojoIzquierdoLejanaConCorreccion == null) &&
+  (examenVista.ojoDerechoLejanaConCorreccion === 0 || examenVista.ojoDerechoLejanaConCorreccion == null)
+    ? `OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion} - ${examenVista.sinCorreccionLejanaInterpretacion}, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
+    : `OI: 20/${examenVista.ojoIzquierdoLejanaConCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaConCorreccion} - ${examenVista.conCorreccionLejanaInterpretacion} Corregida, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`;
+
+  const antidopingResumen =
+  antidoping.marihuana === 'Negativo' &&
+  antidoping.cocaina === 'Negativo' &&
+  antidoping.anfetaminas === 'Negativo' &&
+  antidoping.metanfetaminas === 'Negativo' &&
+  antidoping.opiaceos === 'Negativo'
+    ? 'Negativo a cinco parámetros'
+    : `Positivo a: ${
+        [
+          antidoping.marihuana !== 'Negativo' ? 'Marihuana' : null,
+          antidoping.cocaina !== 'Negativo' ? 'Cocaína' : null,
+          antidoping.anfetaminas !== 'Negativo' ? 'Anfetaminas' : null,
+          antidoping.metanfetaminas !== 'Negativo' ? 'Metanfetaminas' : null,
+          antidoping.opiaceos !== 'Negativo' ? 'Opiáceos' : null,
+        ]
+          .filter(Boolean) // Filtra los valores nulos o undefined
+          .join(', ') // Combina los nombres en una cadena separada por comas
+      }`; 
+
+    const resumenYAlteraciones = [
+      [
+        createTableCell('INFORMACIÓN Y ESTUDIOS', 'tableHeader', 'center'),
+        createTableCell('FECHAS', 'tableHeader', 'center'),
+        createTableCell('RESUMEN Y/O ALTERACIONES ENCONTRADAS', 'tableHeader', 'center'),
+      ],
+      [
+        createTableCell('HISTORIA CLÍNICA LABORAL', 'sectionHeader', 'center'),
+        createTableCell(historiaClinica.fechaHistoriaClinica.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'), 'tableCell', 'center'),
+        createTableCell(historiaClinica.resumenHistoriaClinica, 'tableCell', 'center'),
+      ],
+      [
+        createTableCell('EXPLORACIÓN FÍSICA', 'sectionHeader', 'center'),
+        createTableCell(exploracionFisica.fechaExploracionFisica.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'), 'tableCell', 'center'),
+        createTableCell(`TA: ${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg - ${exploracionFisica.categoriaTensionArterial}. ${exploracionFisica.resumenExploracionFisica}.`, 'tableCell', 'center'),
+      ],
+      [
+        createTableCell('ADIPOSITDAD CORPORAL', 'sectionHeader', 'center'),
+        createTableCell(exploracionFisica.fechaExploracionFisica.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'), 'tableCell', 'center'),
+        createTableCell(`IMC: ${exploracionFisica.indiceMasaCorporal} - ${exploracionFisica.categoriaIMC}, Circunferencia Cintura: ${exploracionFisica.circunferenciaCintura} - ${exploracionFisica.categoriaCircunferenciaCintura}`, 'tableCell', 'center'),
+      ],
+      [
+        createTableCell('EXAMEN VISUAL', 'sectionHeader', 'center'),
+        createTableCell(examenVista.fechaExamenVista.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'), 'tableCell', 'center'),
+        createTableCell(examenVistaResumen, 'tableCell', 'center'),
+      ],
+      [
+        createTableCell('ANTIDOPING', 'sectionHeader', 'center'),
+        createTableCell(antidoping.fechaAntidoping.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'), 'tableCell', 'center'),
+        createTableCell(antidopingResumen, 'tableCell', 'center'),
+      ],
+    ];
+    
+   // Agregar filas para cada evaluación adicional si existen los datos
+  for (let i = 1; i <= 6; i++) {
+    const evaluacion = aptitud[`evaluacionAdicional${i}`];
+    const fecha = aptitud[`fechaEvaluacionAdicional${i}`];
+    const resultados = aptitud[`resultadosEvaluacionAdicional${i}`];
+
+    if (evaluacion && fecha && resultados) {
+      resumenYAlteraciones.push([
+        createTableCell(evaluacion.toUpperCase(), 'sectionHeader', 'center'),
+        createTableCell(
+          fecha.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          }).replace(/\//g, '-'),
+          'tableCell',
+          'center'
+        ),
+        createTableCell(resultados, 'tableCell', 'center'),
+      ]);
+    }
+  }
+        
+  const aptitudPuesto = aptitud.aptitudPuesto;
+
+  // Función para determinar si se coloca 'XX' o un string vacío
+  const getXXForAptitud = (option: string): string => 
+    aptitudPuesto === option ? 'XX' : '';
+
   return {
     pageSize: 'LETTER',
     pageMargins: [40, 60, 40, 80],
@@ -248,38 +379,7 @@ export const aptitudPuestoInforme = (
         style: 'table',
         table: {
           widths: ['29%', '11%', '*'],
-          body: [
-            [
-              createTableCell('INFORMACIÓN Y ESTUDIOS', 'tableHeader', 'center'),
-              createTableCell('FECHAS', 'tableHeader', 'center'),
-              createTableCell('RESUMEN Y/O ALTERACIONES ENCONTRADAS', 'tableHeader', 'center'),
-            ],
-            [
-              createTableCell('HISTORIA CLÍNICA LABORAL', 'sectionHeader', 'center'),
-              createTableCell('11-09-2024', 'tableCell', 'center'),
-              createTableCell('Se refiere actualmente asintomático', 'tableCell', 'center'),
-            ],
-            [
-              createTableCell('EXPLORACIÓN FÍSICA', 'sectionHeader', 'center'),
-              createTableCell('11-09-2024', 'tableCell', 'center'),
-              createTableCell('TA: 107/62 mmHg - Óptima, Se encuentra clínicamente sano', 'tableCell', 'center'),
-            ],
-            [
-              createTableCell('ADIPOSITDAD CORPORAL', 'sectionHeader', 'center'),
-              createTableCell('11-09-2024', 'tableCell', 'center'),
-              createTableCell('IMC: 26.87 - Sobrepeso, Circunferencia Cintura: 97cm - Riesgo Aumentado', 'tableCell', 'center'),
-            ],
-            [
-              createTableCell('EXAMEN VISUAL', 'sectionHeader', 'center'),
-              createTableCell('11-09-2024', 'tableCell', 'center'),
-              createTableCell('OI: 20/20, OD: 20/20 - Visión Normal, Ishihara: 100 % - Normal', 'tableCell', 'center'),
-            ],
-            [
-              createTableCell('ANTIDOPING', 'sectionHeader', 'center'),
-              createTableCell('11-09-2024', 'tableCell', 'center'),
-              createTableCell('Negativo a cinco parámetros', 'tableCell', 'center'),
-            ],
-          ],
+          body: resumenYAlteraciones
         },
         layout: {
           hLineColor: '#e5e7eb',
@@ -309,23 +409,23 @@ export const aptitudPuestoInforme = (
               {},  // Esta celda debe permanecer vacía para que la combinación funcione.
             ],
             [
-              createTableCell('XX', 'sectionHeader', 'center'),
+              createTableCell(getXXForAptitud('Apto Sin Restricciones'), 'sectionHeader', 'center'),
               createTableCell('Apto sin restricciones. No tiene impedimentos para el puesto al que aspira o desempeña.', 'preset', 'left'),
             ],
             [
-              createTableCell('XX', 'sectionHeader', 'center'),
+              createTableCell(getXXForAptitud('Apto Con Precaución'), 'sectionHeader', 'center'),
               createTableCell('Apto con precaución. Requiere vigilancia médica más frecuente.', 'preset', 'left'),
             ],
             [
-              createTableCell('XX', 'sectionHeader', 'center'),
+              createTableCell(getXXForAptitud('Apto Con Restricciones'), 'sectionHeader', 'center'),
               createTableCell('Apto con restricciones. Requiere adaptaciones razonables para asegurar la seguridad y salud.', 'preset', 'left'),
             ],
             [
-              createTableCell('XX', 'sectionHeader', 'center'),
+              createTableCell(getXXForAptitud('No Apto'), 'sectionHeader', 'center'),
               createTableCell('No apto. No está permitido el desempeño del puesto al que aspira.', 'preset', 'left'),
             ],
             [
-              createTableCell('XX', 'sectionHeader', 'center'),
+              createTableCell(getXXForAptitud('Evaluación No Completada'), 'sectionHeader', 'center'),
               createTableCell('Evaluación no completada. Para concluir, requiere evaluaciones adicionales o tratamiento médico.', 'preset', 'left'),
             ],
           ],
@@ -359,15 +459,15 @@ export const aptitudPuestoInforme = (
             ],
             [
               createTableCell('Alteraciones a la Salud', 'sectionHeaderResume', 'center'),
-              createTableCell('El paciente presenta sobrepeso con un índice de masa corporal (IMC) de 26.87. Tiene una circunferencia de cintura de 97 cm por lo que tiene un riesgo aumentado de desarrollar enfermedades cardiometabólicas. Presenta presión arterial óptima, con una medición de 107/62 mmHg. Tiene una visión normal y tiene una visión cromática normal. Se refiere actualmente asintomático. Se encuentra clínicamente sano.', 'paragraph', 'justify'),
+              createTableCell(aptitud.alteracionesSalud, 'paragraph', 'justify'),
             ],
             [
               createTableCell('Resultados', 'sectionHeaderResume', 'center'),
-              createTableCell('Posterior a efectuar el examen integral de salud ocupacional, se determina que actualmente se encuentra CLÍNICAMENTE SANO Y APTO PARA LABORAR SIN RESTRICCIONES en las actividades del puesto al que aspira. El trabajador parece demostrar actualmente los niveles adecuados de agilidad física, fuerza y capacidad cardiorespiratora requeridos para realizar de forma segura las tareas esenciales de su trabajo.Cabe señalar que la determinacion de la aptitud para el trabajo es solamante clínica, toda vez que no contamos con analisis de laboratorio en este momento.', 'paragraph', 'justify'),
+              createTableCell(aptitud.resultados, 'paragraph', 'justify'),
             ],
             [
               createTableCell('Medidas Preventivas Específicas', 'sectionHeaderResume', 'center'),
-              createTableCell('Es importante usar adecuadamente el EPP, mantener hábitos saludables como una alimentación balanceada, ejercicio regular y descanso adecuado, así como efectuar vigilancia médica con periodicidad anual, incluyendo exámenes generales de laboratorio y gabinete para una vigilancia integral de la salud.', 'paragraph', 'justify'),
+              createTableCell(aptitud.medidasPreventivas, 'paragraph', 'justify'),
             ]
           ],
         },

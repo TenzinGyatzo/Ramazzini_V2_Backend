@@ -115,11 +115,23 @@ interface Trabajador {
   antiguedad: string;
 }
 
+interface Certificado {
+  fechaCertificado: Date;
+  impedimentosFisicos: string;
+}
+
+interface ExamenVista {
+  fechaExamenVista: Date;
+  ojoIzquierdoLejanaSinCorreccion: number;
+  ojoDerechoLejanaSinCorreccion: number;
+}
+
 // ==================== INFORME PRINCIPAL ====================
 export const certificadoInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
-  certificadoFecha: Date,
+  certificado: Certificado,
+  examenVista: ExamenVista,
 ): TDocumentDefinitions => {
   return {
     pageSize: 'LETTER',
@@ -145,7 +157,7 @@ export const certificadoInforme = (
                 text: [
                   { text: 'Fecha: ', style: 'fecha', bold: false },
                   {
-                    text: certificadoFecha
+                    text: certificado.fechaCertificado
                       .toLocaleDateString('es-ES', {
                         day: '2-digit',
                         month: '2-digit',
@@ -210,7 +222,7 @@ export const certificadoInforme = (
             text: 'de edad, lo encontré íntegro físicamente, sin defectos ni anomalías del aparato locomotor, ',
           },
           {
-            text: 'con agudeza visual campo visual, profundidad de campo, estereopsis y percepción cromática ',
+            text: `con agudeza visual OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion}, campo visual, profundidad de campo, estereopsis y percepción cromática `,
           },
           {
             text: 'sin alteraciones; agudeza auditiva, aparato respiratorio y aparato locomotor íntegros, el ',
@@ -223,12 +235,12 @@ export const certificadoInforme = (
       {
         text: [
           { text: 'Por lo anterior se establece que el C. ' },
-          { text: trabajador.nombre, bold: true },
+          { text: trabajador.nombre + ' ', bold: true },
           {
-            text: ' no presenta impedimento fisico para desarrollar el puesto que actualmente solicita. ',
+            text: certificado.impedimentosFisicos,
           },
           {
-            text: 'Este certificado de salud no implica ningún tipo de garantía de que el trabajador no se lesionará o enfermará en el futuro.',
+            text: ' Este certificado de salud no implica ninguna garantía de que el trabajador no se lesionará o enfermará en el futuro.',
           },
         ],
         style: 'paragraph',
