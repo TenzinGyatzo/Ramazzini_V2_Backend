@@ -1,3 +1,4 @@
+// Servicios para la generación de informes en PDF
 import { Injectable } from '@nestjs/common';
 import { PrinterService } from '../printer/printer.service';
 import { antidopingInforme } from './documents/antidoping.informe';

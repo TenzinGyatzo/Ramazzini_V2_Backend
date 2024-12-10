@@ -1,4 +1,4 @@
-// expedientes.service.ts
+// Servicios para gestionar la data que se almacena en la base de datos
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
