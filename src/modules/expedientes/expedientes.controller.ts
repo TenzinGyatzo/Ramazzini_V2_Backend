@@ -60,7 +60,7 @@ export class ExpedientesController {
     });
 
     try {
-      const document = await this.expedientesService.createDocument(documentType, dtoInstance);
+      const document = await this.expedientesService.createOrUpdateDocument(documentType, dtoInstance);
       return { message: `${documentType} creado exitosamente`, data: document };
     } catch (error) {
       console.error('Error detallado:', error);
