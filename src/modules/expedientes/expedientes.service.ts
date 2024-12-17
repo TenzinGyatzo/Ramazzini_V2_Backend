@@ -51,8 +51,9 @@ export class ExpedientesService {
     const dateField = this.dateFields[documentType];
 
     if (!model || !dateField) {
+      console.error('Model o dateField no definidos:', { model, dateField });
       throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
-    }
+    }    
 
     const fecha = createDto[dateField];
     const trabajadorId = createDto.idTrabajador;
@@ -74,18 +75,14 @@ export class ExpedientesService {
       [dateField]: { $gte: startDate, $lte: endDate },
     }).exec();
 
-    // console.log(`Buscando documento existente para tipo: ${documentType}, trabajador: ${trabajadorId}, fecha: ${fecha}`);
-
     if (existingDocument) {
-      // console.log(`Documento encontrado, actualizando: ${existingDocument._id}`);
-      // Si ya existe, actualízalo
-      return model.findByIdAndUpdate(existingDocument._id, createDto, { new: true }).exec();
+      const updatedDocument = await model.findByIdAndUpdate(existingDocument._id, createDto, { new: true }).exec();
+      return updatedDocument;
     }
 
-    // console.log('No se encontró documento existente, creando uno nuevo');
-    // Si no existe, crea uno nuevo
     const createdDocument = new model(createDto);
-    return createdDocument.save();
+    const savedDocument = await createdDocument.save();
+    return savedDocument;
   }
 
   async findDocuments(documentType: string, trabajadorId: string): Promise<any[]> {
@@ -132,7 +129,6 @@ export class ExpedientesService {
       [dateField]: { $gte: startDate, $lte: endDate },
     }).exec();
 
-    // console.log(`Buscando documento existente para tipo: ${documentType}, trabajador: ${trabajadorId}, fecha: ${fecha}`);
 
     if (existingDocument && existingDocument._id.toString() !== id) {
       throw new BadRequestException(
@@ -140,7 +136,6 @@ export class ExpedientesService {
       );
     }
 
-    // console.log(`Actualizando documento con ID: ${id}`);
     return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
   }
 

@@ -6,94 +6,64 @@ import { Response } from 'express';
 export class InformesController {
   constructor(private readonly informesService: InformesService) {}
 
-  @Get('antidoping/:empresaId/:trabajadorId/:antidopingId')
-  async getInformeAntidoping(
-    @Res() response: Response,
-    @Param('empresaId') empresaId: string,
-    @Param('trabajadorId') trabajadorId: string,
-    @Param('antidopingId') antidopingId: string,
-  ) {
-    const pdfDoc = await this.informesService.getInformeAntidoping(empresaId, trabajadorId, antidopingId);
-
-    response.setHeader('Content-Type', 'application/pdf');
-    pdfDoc.info.Title = 'Informe';
-    pdfDoc.pipe(response);
-    pdfDoc.end();
-  }
+@Get('antidoping/:empresaId/:trabajadorId/:antidopingId')
+async getInformeAntidoping(
+  @Param('empresaId') empresaId: string,
+  @Param('trabajadorId') trabajadorId: string,
+  @Param('antidopingId') antidopingId: string,
+) {
+  const rutaPDF = await this.informesService.getInformeAntidoping(empresaId, trabajadorId, antidopingId);
+  return { message: 'PDF generado exitosamente', ruta: rutaPDF };
+}
 
   @Get('aptitud/:empresaId/:trabajadorId/:aptitudId')
   async getInformeAptitudPuesto(
-    @Res() response: Response,
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('aptitudId') aptitudId: string,
   ) {
-    const pdfDoc = await this.informesService.getInformeAptitudPuesto(empresaId, trabajadorId, aptitudId);
-
-    response.setHeader('Content-Type', 'application/pdf');
-    pdfDoc.info.Title = 'Informe';
-    pdfDoc.pipe(response);
-    pdfDoc.end();
+    const rutaPDF = await this.informesService.getInformeAptitudPuesto(empresaId, trabajadorId, aptitudId);
+    return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
 
   @Get('certificado/:empresaId/:trabajadorId/:certificadoId')
   async getInformeCertificado(
-    @Res() response: Response,
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('certificadoId') certificadoId: string,
   ) {
-    const pdfDoc = await this.informesService.getInformeCertificado(empresaId, trabajadorId, certificadoId);
-
-    response.setHeader('Content-Type', 'application/pdf');
-    pdfDoc.info.Title = 'Informe';
-    pdfDoc.pipe(response);
-    pdfDoc.end();
+    const rutaPDF = await this.informesService.getInformeCertificado(empresaId, trabajadorId, certificadoId);
+    return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
 
   @Get('examenVista/:empresaId/:trabajadorId/:examenVistaId')
   async getInformeExamenVista(
-    @Res() response: Response,
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('examenVistaId') examenVistaId: string,
   ) {
-    const pdfDoc = await this.informesService.getInformeExamenVista(empresaId, trabajadorId, examenVistaId);
-
-    response.setHeader('Content-Type', 'application/pdf');
-    pdfDoc.info.Title = 'Informe';
-    pdfDoc.pipe(response);
-    pdfDoc.end();
+    const rutaPDF = await this.informesService.getInformeExamenVista(empresaId, trabajadorId, examenVistaId);
+    return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
 
 
   @Get('exploracionFisica/:empresaId/:trabajadorId/:exploracionFisicaId')
   async getInformeExploracionFisica(
-    @Res() response: Response,
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('exploracionFisicaId') exploracionFisicaId: string,
   ) {
-    const pdfDoc = await this.informesService.getInformeExploracionFisica(empresaId, trabajadorId, exploracionFisicaId);
-
-    response.setHeader('Content-Type', 'application/pdf');
-    pdfDoc.info.Title = 'Informe';
-    pdfDoc.pipe(response);
-    pdfDoc.end();
+    const rutaPDF = await this.informesService.getInformeExploracionFisica(empresaId, trabajadorId, exploracionFisicaId);
+    return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
 
   @Get('historiaClinica/:empresaId/:trabajadorId/:historiaClinicaId')
   async getInformeHistoriaClinica(
-    @Res() response: Response,
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('historiaClinicaId') historiaClinicaId: string,
   ) {
-    const pdfDoc = await this.informesService.getInformeHistoriaClinica(empresaId, trabajadorId, historiaClinicaId);
-
-    response.setHeader('Content-Type', 'application/pdf');
-    pdfDoc.info.Title = 'Informe';
-    pdfDoc.pipe(response);
-    pdfDoc.end();
+    const rutaPDF = await this.informesService.getInformeHistoriaClinica(empresaId, trabajadorId, historiaClinicaId);
+    return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
 }

@@ -10,8 +10,15 @@ import { historiaClinicaInforme } from './documents/historia-clinica.informe';
 import { EmpresasService } from '../empresas/empresas.service';
 import { TrabajadoresService } from '../trabajadores/trabajadores.service';
 import { ExpedientesService } from '../expedientes/expedientes.service';
-import { convertirFechaADDMMAAAA, convertirFechaAAAAAMMDD, calcularEdad, calcularAntiguedad } from 'src/utils/dates';
+import {
+  convertirFechaADDMMAAAA,
+  convertirFechaAAAAAMMDD,
+  calcularEdad,
+  calcularAntiguedad,
+} from 'src/utils/dates';
 import { findNearestDocument } from 'src/utils/findNearestDocuments';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class InformesService {
@@ -26,13 +33,11 @@ export class InformesService {
     empresaId: string,
     trabajadorId: string,
     antidopingId: string,
-  ): Promise<PDFKit.PDFDocument> {
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
-
     const nombreEmpresa = empresa.nombreComercial;
 
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
-
     const datosTrabajador = {
       nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
@@ -52,7 +57,6 @@ export class InformesService {
       'antidoping',
       antidopingId,
     );
-
     const datosAntidoping = {
       fechaAntidoping: antidoping.fechaAntidoping,
       marihuana: antidoping.marihuana,
@@ -62,19 +66,38 @@ export class InformesService {
       opiaceos: antidoping.opiaceos,
     };
 
+    // Formatear la fecha para el nombre del archivo
+    const fecha = convertirFechaADDMMAAAA(antidoping.fechaAntidoping)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Antidoping ${fecha}.pdf`;
+
+    // Obtener la ruta específica del documento
+    const rutaDirectorio = path.resolve(antidoping.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
+    }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
+
     const docDefinition = antidopingInforme(
       nombreEmpresa,
       datosTrabajador,
       datosAntidoping,
     );
-    return this.printer.createPdf(docDefinition);
+
+    // Generar y guardar el PDF
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+    console.log(`PDF guardado en: ${rutaCompleta}`);
+
+    return rutaCompleta; // Retorna la ruta del archivo generado
   }
-  
+
   async getInformeAptitudPuesto(
     empresaId: string,
     trabajadorId: string,
     aptitudId: string,
-  ): Promise<PDFKit.PDFDocument> {
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
 
@@ -94,7 +117,10 @@ export class InformesService {
       hijos: trabajador.hijos,
     };
 
-    const aptitud = await this.expedientesService.findDocument('aptitud', aptitudId);
+    const aptitud = await this.expedientesService.findDocument(
+      'aptitud',
+      aptitudId,
+    );
     const datosAptitud = {
       fechaAptitudPuesto: aptitud.fechaAptitudPuesto,
       evaluacionAdicional1: aptitud.evaluacionAdicional1,
@@ -121,43 +147,82 @@ export class InformesService {
       medidasPreventivas: aptitud.medidasPreventivas,
     };
 
-    const historiasClinicas = await this.expedientesService.findDocuments('historiaClinica', trabajadorId);
-    const nearestHistoriaClinica = findNearestDocument(historiasClinicas, aptitud.fechaAptitudPuesto, 'fechaHistoriaClinica');
+    const historiasClinicas = await this.expedientesService.findDocuments(
+      'historiaClinica',
+      trabajadorId,
+    );
+    const nearestHistoriaClinica = findNearestDocument(
+      historiasClinicas,
+      aptitud.fechaAptitudPuesto,
+      'fechaHistoriaClinica',
+    );
     const datosHistoriaClinica = {
       fechaHistoriaClinica: nearestHistoriaClinica.fechaHistoriaClinica,
       resumenHistoriaClinica: nearestHistoriaClinica.resumenHistoriaClinica,
     };
 
-    const exploracionesFisicas = await this.expedientesService.findDocuments('exploracionFisica', trabajadorId);
-    const nearestExploracionFisica = findNearestDocument(exploracionesFisicas, aptitud.fechaAptitudPuesto, 'fechaExploracionFisica');
+    const exploracionesFisicas = await this.expedientesService.findDocuments(
+      'exploracionFisica',
+      trabajadorId,
+    );
+    const nearestExploracionFisica = findNearestDocument(
+      exploracionesFisicas,
+      aptitud.fechaAptitudPuesto,
+      'fechaExploracionFisica',
+    );
     const datosExploracionFisica = {
       fechaExploracionFisica: nearestExploracionFisica.fechaExploracionFisica,
-      tensionArterialSistolica: nearestExploracionFisica.tensionArterialSistolica,
-      tensionArterialDiastolica: nearestExploracionFisica.tensionArterialDiastolica,
-      categoriaTensionArterial: nearestExploracionFisica.categoriaTensionArterial,
+      tensionArterialSistolica:
+        nearestExploracionFisica.tensionArterialSistolica,
+      tensionArterialDiastolica:
+        nearestExploracionFisica.tensionArterialDiastolica,
+      categoriaTensionArterial:
+        nearestExploracionFisica.categoriaTensionArterial,
       indiceMasaCorporal: nearestExploracionFisica.indiceMasaCorporal,
       categoriaIMC: nearestExploracionFisica.categoriaIMC,
       circunferenciaCintura: nearestExploracionFisica.circunferenciaCintura,
-      categoriaCircunferenciaCintura: nearestExploracionFisica.categoriaCircunferenciaCintura,
-      resumenExploracionFisica: nearestExploracionFisica.resumenExploracionFisica,
-    }
+      categoriaCircunferenciaCintura:
+        nearestExploracionFisica.categoriaCircunferenciaCintura,
+      resumenExploracionFisica:
+        nearestExploracionFisica.resumenExploracionFisica,
+    };
 
-    const examenesVista = await this.expedientesService.findDocuments('examenVista', trabajadorId);
-    const nearestExamenVista = findNearestDocument(examenesVista, aptitud.fechaAptitudPuesto, 'fechaExamenVista');
+    const examenesVista = await this.expedientesService.findDocuments(
+      'examenVista',
+      trabajadorId,
+    );
+    const nearestExamenVista = findNearestDocument(
+      examenesVista,
+      aptitud.fechaAptitudPuesto,
+      'fechaExamenVista',
+    );
     const datosExamenVista = {
       fechaExamenVista: nearestExamenVista.fechaExamenVista,
-      ojoIzquierdoLejanaSinCorreccion: nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
-      ojoDerechoLejanaSinCorreccion: nearestExamenVista.ojoDerechoLejanaSinCorreccion,
-      sinCorreccionLejanaInterpretacion: nearestExamenVista.sinCorreccionLejanaInterpretacion,
-      ojoIzquierdoLejanaConCorreccion: nearestExamenVista.ojoIzquierdoLejanaConCorreccion,
-      ojoDerechoLejanaConCorreccion: nearestExamenVista.ojoDerechoLejanaConCorreccion,
-      conCorreccionLejanaInterpretacion: nearestExamenVista.conCorreccionLejanaInterpretacion,
+      ojoIzquierdoLejanaSinCorreccion:
+        nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
+      ojoDerechoLejanaSinCorreccion:
+        nearestExamenVista.ojoDerechoLejanaSinCorreccion,
+      sinCorreccionLejanaInterpretacion:
+        nearestExamenVista.sinCorreccionLejanaInterpretacion,
+      ojoIzquierdoLejanaConCorreccion:
+        nearestExamenVista.ojoIzquierdoLejanaConCorreccion,
+      ojoDerechoLejanaConCorreccion:
+        nearestExamenVista.ojoDerechoLejanaConCorreccion,
+      conCorreccionLejanaInterpretacion:
+        nearestExamenVista.conCorreccionLejanaInterpretacion,
       porcentajeIshihara: nearestExamenVista.porcentajeIshihara,
       interpretacionIshihara: nearestExamenVista.interpretacionIshihara,
-    }
+    };
 
-    const antidopings = await this.expedientesService.findDocuments('antidoping', trabajadorId);
-    const nearestAntidoping = findNearestDocument(antidopings, aptitud.fechaAptitudPuesto, 'fechaAntidoping');
+    const antidopings = await this.expedientesService.findDocuments(
+      'antidoping',
+      trabajadorId,
+    );
+    const nearestAntidoping = findNearestDocument(
+      antidopings,
+      aptitud.fechaAptitudPuesto,
+      'fechaAntidoping',
+    );
     const datosAntidoping = {
       fechaAntidoping: nearestAntidoping.fechaAntidoping,
       marihuana: nearestAntidoping.marihuana,
@@ -165,7 +230,21 @@ export class InformesService {
       anfetaminas: nearestAntidoping.anfetaminas,
       metanfetaminas: nearestAntidoping.metanfetaminas,
       opiaceos: nearestAntidoping.opiaceos,
+    };
+
+    // Formatear la fecha para el nombre del archivo
+    const fecha = convertirFechaADDMMAAAA(aptitud.fechaAptitudPuesto)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Aptitud ${fecha}.pdf`;
+
+    // Obtener la ruta específica del documento
+    const rutaDirectorio = path.resolve(aptitud.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
     }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
 
     const docDefinition = aptitudPuestoInforme(
       nombreEmpresa,
@@ -174,16 +253,21 @@ export class InformesService {
       datosHistoriaClinica,
       datosExploracionFisica,
       datosExamenVista,
-      datosAntidoping
+      datosAntidoping,
     );
-    return this.printer.createPdf(docDefinition);
+
+    // Generar y guardar el PDF
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+    console.log(`PDF guardado en: ${rutaCompleta}`);
+
+    return rutaCompleta; // Retorna la ruta del archivo generado
   }
 
   async getInformeCertificado(
     empresaId: string,
     trabajadorId: string,
     certificadoId: string,
-  ): Promise<PDFKit.PDFDocument> {
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
 
@@ -203,34 +287,61 @@ export class InformesService {
       hijos: trabajador.hijos,
     };
 
-    const certificado = await this.expedientesService.findDocument( 'certificado', certificadoId );
+    const certificado = await this.expedientesService.findDocument(
+      'certificado',
+      certificadoId,
+    );
     const datosCertificado = {
       fechaCertificado: certificado.fechaCertificado,
       impedimentosFisicos: certificado.impedimentosFisicos,
     };
 
-    const examenesVista = await this.expedientesService.findDocuments('examenVista', trabajadorId);
-    const nearestExamenVista = findNearestDocument(examenesVista, certificado.fechaCertificado, 'fechaExamenVista');
+    const examenesVista = await this.expedientesService.findDocuments(
+      'examenVista',
+      trabajadorId,
+    );
+    const nearestExamenVista = findNearestDocument(
+      examenesVista,
+      certificado.fechaCertificado,
+      'fechaExamenVista',
+    );
     const datosExamenVista = {
       fechaExamenVista: nearestExamenVista.fechaExamenVista,
-      ojoIzquierdoLejanaSinCorreccion: nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
-      ojoDerechoLejanaSinCorreccion: nearestExamenVista.ojoDerechoLejanaSinCorreccion,
+      ojoIzquierdoLejanaSinCorreccion:
+        nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
+      ojoDerechoLejanaSinCorreccion:
+        nearestExamenVista.ojoDerechoLejanaSinCorreccion,
+    };
+
+    const fecha = convertirFechaADDMMAAAA(certificado.fechaCertificado)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Certificado ${fecha}.pdf`;
+
+    const rutaDirectorio = path.resolve(certificado.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
     }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
 
     const docDefinition = certificadoInforme(
       nombreEmpresa,
       datosTrabajador,
       datosCertificado,
-      datosExamenVista
+      datosExamenVista,
     );
-    return this.printer.createPdf(docDefinition);
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+    console.log(`PDF guardado en: ${rutaCompleta}`);
+
+    return rutaCompleta;
   }
 
   async getInformeExamenVista(
     empresaId: string,
     trabajadorId: string,
     examenVistaId: string,
-  ): Promise<PDFKit.PDFDocument> {
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
 
     const nombreEmpresa = empresa.nombreComercial;
@@ -238,7 +349,7 @@ export class InformesService {
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
 
     const datosTrabajador = {
-      nombre: trabajador.nombre.toUpperCase(),
+      nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
@@ -259,38 +370,63 @@ export class InformesService {
 
     const datosExamenVista = {
       fechaExamenVista: examenVista.fechaExamenVista,
-      ojoIzquierdoLejanaSinCorreccion: examenVista.ojoIzquierdoLejanaSinCorreccion,
+      ojoIzquierdoLejanaSinCorreccion:
+        examenVista.ojoIzquierdoLejanaSinCorreccion,
       ojoDerechoLejanaSinCorreccion: examenVista.ojoDerechoLejanaSinCorreccion,
-      sinCorreccionLejanaInterpretacion: examenVista.sinCorreccionLejanaInterpretacion,
+      sinCorreccionLejanaInterpretacion:
+        examenVista.sinCorreccionLejanaInterpretacion,
       requiereLentesUsoGeneral: examenVista.requiereLentesUsoGeneral,
-      ojoIzquierdoCercanaSinCorreccion: examenVista.ojoIzquierdoCercanaSinCorreccion,
-      ojoDerechoCercanaSinCorreccion: examenVista.ojoDerechoCercanaSinCorreccion,
-      sinCorreccionCercanaInterpretacion: examenVista.sinCorreccionCercanaInterpretacion,
+      ojoIzquierdoCercanaSinCorreccion:
+        examenVista.ojoIzquierdoCercanaSinCorreccion,
+      ojoDerechoCercanaSinCorreccion:
+        examenVista.ojoDerechoCercanaSinCorreccion,
+      sinCorreccionCercanaInterpretacion:
+        examenVista.sinCorreccionCercanaInterpretacion,
       requiereLentesParaLectura: examenVista.requiereLentesParaLectura,
-      ojoIzquierdoLejanaConCorreccion: examenVista.ojoIzquierdoLejanaConCorreccion,
+      ojoIzquierdoLejanaConCorreccion:
+        examenVista.ojoIzquierdoLejanaConCorreccion,
       ojoDerechoLejanaConCorreccion: examenVista.ojoDerechoLejanaConCorreccion,
-      conCorreccionLejanaInterpretacion: examenVista.conCorreccionLejanaInterpretacion,
-      ojoIzquierdoCercanaConCorreccion: examenVista.ojoIzquierdoCercanaConCorreccion,
-      ojoDerechoCercanaConCorreccion: examenVista.ojoDerechoCercanaConCorreccion,
-      conCorreccionCercanaInterpretacion: examenVista.conCorreccionCercanaInterpretacion,
+      conCorreccionLejanaInterpretacion:
+        examenVista.conCorreccionLejanaInterpretacion,
+      ojoIzquierdoCercanaConCorreccion:
+        examenVista.ojoIzquierdoCercanaConCorreccion,
+      ojoDerechoCercanaConCorreccion:
+        examenVista.ojoDerechoCercanaConCorreccion,
+      conCorreccionCercanaInterpretacion:
+        examenVista.conCorreccionCercanaInterpretacion,
       placasCorrectas: examenVista.placasCorrectas,
       porcentajeIshihara: examenVista.porcentajeIshihara,
-      interpretacionIshihara: examenVista.interpretacionIshihara
+      interpretacionIshihara: examenVista.interpretacionIshihara,
     };
+
+    const fecha = convertirFechaADDMMAAAA(examenVista.fechaExamenVista)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Examen Vista ${fecha}.pdf`;
+
+    const rutaDirectorio = path.resolve(examenVista.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
+    }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
 
     const docDefinition = examenVistaInforme(
       nombreEmpresa,
       datosTrabajador,
       datosExamenVista,
     );
-    return this.printer.createPdf(docDefinition);
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+    console.log(`PDF guardado en: ${rutaCompleta}`);
+
+    return rutaCompleta;
   }
 
   async getInformeExploracionFisica(
     empresaId: string,
     trabajadorId: string,
     exploracionFisicaId: string,
-  ): Promise<PDFKit.PDFDocument> {
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
 
     const nombreEmpresa = empresa.nombreComercial;
@@ -324,14 +460,17 @@ export class InformesService {
       indiceMasaCorporal: exploracionFisica.indiceMasaCorporal,
       categoriaIMC: exploracionFisica.categoriaIMC,
       circunferenciaCintura: exploracionFisica.circunferenciaCintura,
-      categoriaCircunferenciaCintura: exploracionFisica.categoriaCircunferenciaCintura,
+      categoriaCircunferenciaCintura:
+        exploracionFisica.categoriaCircunferenciaCintura,
       tensionArterialSistolica: exploracionFisica.tensionArterialSistolica,
       tensionArterialDiastolica: exploracionFisica.tensionArterialDiastolica,
       categoriaTensionArterial: exploracionFisica.categoriaTensionArterial,
       frecuenciaCardiaca: exploracionFisica.frecuenciaCardiaca,
-      categoriaFrecuenciaCardiaca: exploracionFisica.categoriaFrecuenciaCardiaca,
+      categoriaFrecuenciaCardiaca:
+        exploracionFisica.categoriaFrecuenciaCardiaca,
       frecuenciaRespiratoria: exploracionFisica.frecuenciaRespiratoria,
-      categoriaFrecuenciaRespiratoria: exploracionFisica.categoriaFrecuenciaRespiratoria,
+      categoriaFrecuenciaRespiratoria:
+        exploracionFisica.categoriaFrecuenciaRespiratoria,
       saturacionOxigeno: exploracionFisica.saturacionOxigeno,
       categoriaSaturacionOxigeno: exploracionFisica.categoriaSaturacionOxigeno,
       craneoCara: exploracionFisica.craneoCara,
@@ -364,19 +503,37 @@ export class InformesService {
       resumenExploracionFisica: exploracionFisica.resumenExploracionFisica,
     };
 
+    const fecha = convertirFechaADDMMAAAA(
+      exploracionFisica.fechaExploracionFisica,
+    )
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Exploracion Fisica ${fecha}.pdf`;
+
+    const rutaDirectorio = path.resolve(exploracionFisica.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
+    }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
+
     const docDefinition = exploracionFisicaInforme(
       nombreEmpresa,
       datosTrabajador,
       datosExploracionFisica,
     );
-    return this.printer.createPdf(docDefinition);
+
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+    console.log(`PDF guardado en: ${rutaCompleta}`);
+
+    return rutaCompleta;
   }
 
   async getInformeHistoriaClinica(
     empresaId: string,
     trabajadorId: string,
     historiaClinicaId: string,
-  ): Promise<PDFKit.PDFDocument> {
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
 
     const nombreEmpresa = empresa.nombreComercial;
@@ -456,11 +613,14 @@ export class InformesService {
       toxicomanias: historiaClinica.toxicomanias,
       toxicomaniasEspecificar: historiaClinica.toxicomaniasEspecificar,
       alimentacionDeficiente: historiaClinica.alimentacionDeficiente,
-      alimentacionDeficienteEspecificar: historiaClinica.alimentacionDeficienteEspecificar,
+      alimentacionDeficienteEspecificar:
+        historiaClinica.alimentacionDeficienteEspecificar,
       actividadFisicaDeficiente: historiaClinica.actividadFisicaDeficiente,
-      actividadFisicaDeficienteEspecificar: historiaClinica.actividadFisicaDeficienteEspecificar,
+      actividadFisicaDeficienteEspecificar:
+        historiaClinica.actividadFisicaDeficienteEspecificar,
       higienePersonalDeficiente: historiaClinica.higienePersonalDeficiente,
-      higienePersonalDeficienteEspecificar: historiaClinica.higienePersonalDeficienteEspecificar,
+      higienePersonalDeficienteEspecificar:
+        historiaClinica.higienePersonalDeficienteEspecificar,
       // Antecedentes Gineco-Obstetricos
       menarca: historiaClinica.menarca,
       duracionPromedio: historiaClinica.duracionPromedio,
@@ -497,12 +657,27 @@ export class InformesService {
       resumenHistoriaClinica: historiaClinica.resumenHistoriaClinica,
     };
 
+    const fecha = convertirFechaADDMMAAAA(historiaClinica.fechaHistoriaClinica)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Historia Clinica ${fecha}.pdf`;
+
+    const rutaDirectorio = path.resolve(historiaClinica.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
+    }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
+
     const docDefinition = historiaClinicaInforme(
       nombreEmpresa,
       datosTrabajador,
       datosHistoriaClinica,
     );
-    return this.printer.createPdf(docDefinition);
-  }
 
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+    console.log(`PDF guardado en: ${rutaCompleta}`);
+
+    return rutaCompleta;
+  }
 }
