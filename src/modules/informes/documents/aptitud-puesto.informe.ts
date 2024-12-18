@@ -104,6 +104,16 @@ const createTableCell = (text: string, style: string, alignment: Alignment): Con
   alignment
 });
 
+function formatearFechaUTC(fecha: Date): string {
+  if (!fecha || isNaN(fecha.getTime())) return '';
+
+  const dia = String(fecha.getUTCDate()).padStart(2, '0');
+  const mes = String(fecha.getUTCMonth() + 1).padStart(2, '0');
+  const año = fecha.getUTCFullYear();
+
+  return `${dia}-${mes}-${año}`;
+}
+
 // ==================== INTERFACES ====================
 interface Trabajador {
   nombre: string;
@@ -223,27 +233,27 @@ export const aptitudPuestoInforme = (
       ],
       [
         createTableCell('HISTORIA CLÍNICA LABORAL', 'sectionHeader', 'center'),
-        createTableCell(historiaClinica.fechaHistoriaClinica.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'), 'tableCell', 'center'),
+        createTableCell(formatearFechaUTC(historiaClinica.fechaHistoriaClinica), 'tableCell', 'center'),
         createTableCell(historiaClinica.resumenHistoriaClinica, 'tableCell', 'center'),
       ],
       [
         createTableCell('EXPLORACIÓN FÍSICA', 'sectionHeader', 'center'),
-        createTableCell(exploracionFisica.fechaExploracionFisica.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'), 'tableCell', 'center'),
+        createTableCell(formatearFechaUTC(exploracionFisica.fechaExploracionFisica), 'tableCell', 'center'),
         createTableCell(`TA: ${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg - ${exploracionFisica.categoriaTensionArterial}. ${exploracionFisica.resumenExploracionFisica}.`, 'tableCell', 'center'),
       ],
       [
         createTableCell('ADIPOSITDAD CORPORAL', 'sectionHeader', 'center'),
-        createTableCell(exploracionFisica.fechaExploracionFisica.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'), 'tableCell', 'center'),
+        createTableCell(formatearFechaUTC(exploracionFisica.fechaExploracionFisica), 'tableCell', 'center'),
         createTableCell(`IMC: ${exploracionFisica.indiceMasaCorporal} - ${exploracionFisica.categoriaIMC}, Circunferencia Cintura: ${exploracionFisica.circunferenciaCintura} - ${exploracionFisica.categoriaCircunferenciaCintura}`, 'tableCell', 'center'),
       ],
       [
         createTableCell('EXAMEN VISUAL', 'sectionHeader', 'center'),
-        createTableCell(examenVista.fechaExamenVista.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'), 'tableCell', 'center'),
+        createTableCell(formatearFechaUTC(examenVista.fechaExamenVista), 'tableCell', 'center'),
         createTableCell(examenVistaResumen, 'tableCell', 'center'),
       ],
       [
         createTableCell('ANTIDOPING', 'sectionHeader', 'center'),
-        createTableCell(antidoping.fechaAntidoping.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'), 'tableCell', 'center'),
+        createTableCell(formatearFechaUTC(antidoping.fechaAntidoping), 'tableCell', 'center'),
         createTableCell(antidopingResumen, 'tableCell', 'center'),
       ],
     ];
@@ -258,11 +268,7 @@ export const aptitudPuestoInforme = (
       resumenYAlteraciones.push([
         createTableCell(evaluacion.toUpperCase(), 'sectionHeader', 'center'),
         createTableCell(
-          fecha.toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-          }).replace(/\//g, '-'),
+          formatearFechaUTC(fecha),
           'tableCell',
           'center'
         ),
@@ -301,13 +307,7 @@ export const aptitudPuestoInforme = (
                 text: [
                   { text: 'Fecha: ', style: 'fecha', bold: false },
                   {
-                    text: aptitud.fechaAptitudPuesto
-                      .toLocaleDateString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                      })
-                      .replace(/\//g, '-'),
+                    text: formatearFechaUTC(aptitud.fechaAptitudPuesto),
                     style: 'fecha',
                     bold: true,
                     // decoration: 'underline',

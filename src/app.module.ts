@@ -1,8 +1,10 @@
 import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MulterModule } from '@nestjs/platform-express'; // Importa MulterModule
+import { MulterModule } from '@nestjs/platform-express';
 import * as multer from 'multer';
+import { ServeStaticModule } from '@nestjs/serve-static'; // Importar ServeStaticModule
+import { join } from 'path'; // Importar join para rutas
 import { EmpresasModule } from './modules/empresas/empresas.module';
 import { CentrosTrabajoModule } from './modules/centros-trabajo/centros-trabajo.module';
 import { TrabajadoresModule } from './modules/trabajadores/trabajadores.module';
@@ -12,7 +14,6 @@ import { ExamplesModule } from './modules/examples/examples.module';
 import { ExpedientesModule } from './modules/expedientes/expedientes.module';
 import { InformesModule } from './modules/informes/informes.module';
 import { PrinterModule } from './modules/printer/printer.module';
-
 
 @Module({
   imports: [
@@ -26,19 +27,25 @@ import { PrinterModule } from './modules/printer/printer.module';
         uri: configService.get<string>('MONGODB_URI'),
       }),
     }),
-    MulterModule.register({ // Configuración de Multer
+    MulterModule.register({
       dest: './uploads',
-      // storage: multer.memoryStorage(), // Almacena los archivos en memoria (temporal)
     }),
-    ExamplesModule, 
-    EmpresasModule, 
-    CentrosTrabajoModule, 
-    TrabajadoresModule, 
-    AuthModule, 
-    UsersModule, 
+
+    // Nuevo: Configuración para servir archivos estáticos
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'expedientes-medicos'), // Ruta a la carpeta de PDFs
+      serveRoot: '/expedientes-medicos', // Prefijo en la URL
+    }),
+
+    ExamplesModule,
+    EmpresasModule,
+    CentrosTrabajoModule,
+    TrabajadoresModule,
+    AuthModule,
+    UsersModule,
     ExpedientesModule,
     InformesModule,
-    PrinterModule 
-  ]
+    PrinterModule,
+  ],
 })
 export class AppModule {}

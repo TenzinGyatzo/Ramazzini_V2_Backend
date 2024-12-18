@@ -65,7 +65,7 @@ export class InformesService {
       metanfetaminas: antidoping.metanfetaminas,
       opiaceos: antidoping.opiaceos,
     };
-
+    
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(antidoping.fechaAntidoping)
       .replace(/\//g, '-')
@@ -88,7 +88,6 @@ export class InformesService {
 
     // Generar y guardar el PDF
     await this.printer.createPdf(docDefinition, rutaCompleta);
-    console.log(`PDF guardado en: ${rutaCompleta}`);
 
     return rutaCompleta; // Retorna la ruta del archivo generado
   }
@@ -258,7 +257,6 @@ export class InformesService {
 
     // Generar y guardar el PDF
     await this.printer.createPdf(docDefinition, rutaCompleta);
-    console.log(`PDF guardado en: ${rutaCompleta}`);
 
     return rutaCompleta; // Retorna la ruta del archivo generado
   }
@@ -332,7 +330,6 @@ export class InformesService {
       datosExamenVista,
     );
     await this.printer.createPdf(docDefinition, rutaCompleta);
-    console.log(`PDF guardado en: ${rutaCompleta}`);
 
     return rutaCompleta;
   }
@@ -417,7 +414,6 @@ export class InformesService {
       datosExamenVista,
     );
     await this.printer.createPdf(docDefinition, rutaCompleta);
-    console.log(`PDF guardado en: ${rutaCompleta}`);
 
     return rutaCompleta;
   }
@@ -524,7 +520,6 @@ export class InformesService {
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);
-    console.log(`PDF guardado en: ${rutaCompleta}`);
 
     return rutaCompleta;
   }
@@ -676,7 +671,6 @@ export class InformesService {
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);
-    console.log(`PDF guardado en: ${rutaCompleta}`);
 
     return rutaCompleta;
   }

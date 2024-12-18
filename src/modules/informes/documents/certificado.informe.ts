@@ -104,6 +104,16 @@ const createConditionalTableCell = (text: string): Content => ({
   color: text.toUpperCase() === 'POSITIVO' ? 'red' : 'black', // Aplica rojo si es "POSITIVO"
 });
 
+function formatearFechaUTC(fecha: Date): string {
+  if (!fecha || isNaN(fecha.getTime())) return '';
+
+  const dia = String(fecha.getUTCDate()).padStart(2, '0');
+  const mes = String(fecha.getUTCMonth() + 1).padStart(2, '0');
+  const año = fecha.getUTCFullYear();
+
+  return `${dia}-${mes}-${año}`;
+}
+
 // ==================== INTERFACES ====================
 
 interface Trabajador {
@@ -157,13 +167,7 @@ export const certificadoInforme = (
                 text: [
                   { text: 'Fecha: ', style: 'fecha', bold: false },
                   {
-                    text: certificado.fechaCertificado
-                      .toLocaleDateString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                      })
-                      .replace(/\//g, '-'),
+                    text: formatearFechaUTC(certificado.fechaCertificado),
                     style: 'fecha',
                     bold: true,
                     // decoration: 'underline',

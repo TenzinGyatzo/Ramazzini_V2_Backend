@@ -15,12 +15,13 @@ function convertirFechaADDMMAAAA(fecha: Date): string {
       throw new Error("La fecha proporcionada no es válida.");
   }
 
-  const dia = String(fecha.getDate()).padStart(2, '0'); // Obtiene el día con dos dígitos
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0, por eso se suma 1
-  const año = fecha.getFullYear(); // Obtiene el año completo
+  const dia = String(fecha.getUTCDate()).padStart(2, '0'); // Obtiene el día en UTC
+  const mes = String(fecha.getUTCMonth() + 1).padStart(2, '0'); // Mes en UTC
+  const año = fecha.getUTCFullYear(); // Año en UTC
 
   return `${dia}/${mes}/${año}`;
 }
+
 
 function convertirFechaISOaDDMMYYYY(dateString: string): string {
     const fecha = new Date(dateString);

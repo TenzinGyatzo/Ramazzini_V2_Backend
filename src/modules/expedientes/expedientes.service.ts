@@ -49,41 +49,46 @@ export class ExpedientesService {
   async createOrUpdateDocument(documentType: string, createDto: any): Promise<any> {
     const model = this.models[documentType];
     const dateField = this.dateFields[documentType];
-
+  
     if (!model || !dateField) {
-      console.error('Model o dateField no definidos:', { model, dateField });
       throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
-    }    
-
+    }
+  
     const fecha = createDto[dateField];
     const trabajadorId = createDto.idTrabajador;
-
+  
     if (!fecha) {
       throw new BadRequestException(`El campo ${dateField} es requerido para este documento`);
     }
-
+  
     if (!trabajadorId) {
       throw new BadRequestException('El campo idTrabajador es requerido');
     }
-
+  
+    // Si hay un _id en el DTO, intentamos actualizar el documento
+    if (createDto._id) {
+      const updatedDocument = await model.findByIdAndUpdate(createDto._id, createDto, { new: true }).exec();
+      if (updatedDocument) return updatedDocument;
+    }
+  
     const startDate = startOfDay(new Date(fecha));
     const endDate = endOfDay(new Date(fecha));
-
-    // Busca un documento existente para el tipo, trabajador y la fecha
+  
+    // Busca un documento existente para la fecha y trabajador
     const existingDocument = await model.findOne({
       idTrabajador: trabajadorId,
       [dateField]: { $gte: startDate, $lte: endDate },
     }).exec();
-
+  
     if (existingDocument) {
       const updatedDocument = await model.findByIdAndUpdate(existingDocument._id, createDto, { new: true }).exec();
       return updatedDocument;
     }
-
+  
+    // Si no existe, crea un nuevo documento
     const createdDocument = new model(createDto);
-    const savedDocument = await createdDocument.save();
-    return savedDocument;
-  }
+    return await createdDocument.save();
+  }  
 
   async findDocuments(documentType: string, trabajadorId: string): Promise<any[]> {
     const model = this.models[documentType];
