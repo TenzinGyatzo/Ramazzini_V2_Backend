@@ -22,19 +22,18 @@ function convertirFechaADDMMAAAA(fecha: Date): string {
   return `${dia}/${mes}/${año}`;
 }
 
-
-function convertirFechaISOaDDMMYYYY(dateString: string): string {
+  function convertirFechaISOaDDMMYYYY(dateString: string): string {
     const fecha = new Date(dateString);
-    
+  
     if (isNaN(fecha.getTime())) {
       throw new Error("La fecha proporcionada no es válida.");
     }
   
-    const dia = String(fecha.getDate()).padStart(2, '0'); // Obtiene el día con dos dígitos
-    const mes = String(fecha.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0, por eso se suma 1
-    const año = fecha.getFullYear(); // Obtiene el año completo
+    const dia = String(fecha.getUTCDate()).padStart(2, "0"); // Obtiene el día en UTC
+    const mes = String(fecha.getUTCMonth() + 1).padStart(2, "0"); // Mes en UTC (suma 1 porque empieza en 0)
+    const año = fecha.getUTCFullYear(); // Año en UTC
   
-    return `${dia}/${mes}/${año}`;
+    return `${dia}-${mes}-${año}`;
   }
 
 function convertirFechaISOaYYYYMMDD(dateString: string): string {
@@ -86,8 +85,6 @@ function calcularAntiguedad(dateString: string): string {
   const months = totalMonths % 12;
   return `${years} años, ${months} meses`;
 }
-
-  
 
   export { convertirFechaADDMMAAAA, convertirFechaAAAAAMMDD,convertirFechaISOaDDMMYYYY, convertirFechaISOaYYYYMMDD, calcularEdad, calcularAntiguedad };
   

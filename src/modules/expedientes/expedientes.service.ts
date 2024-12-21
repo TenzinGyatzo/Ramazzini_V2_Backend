@@ -39,7 +39,7 @@ export class ExpedientesService {
       antidoping: 'fechaAntidoping',
       aptitud: 'fechaAptitudPuesto',
       certificado: 'fechaCertificado',
-      documentoExterno: 'fechaDocumentoExterno',
+      documentoExterno: 'fechaDocumento',
       examenVista: 'fechaExamenVista',
       exploracionFisica: 'fechaExploracionFisica',
       historiaClinica: 'fechaHistoriaClinica'
@@ -52,11 +52,6 @@ export class ExpedientesService {
 
     if (!model || !dateField) {
       throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
-    }
-
-      // Manejar caso especial para documentos externos su campo de fecha es diferente
-    if (documentType === 'documentoExterno') {
-      dateField = 'fechaDocumento';
     }
 
     const fecha = createDto[dateField];
@@ -92,6 +87,45 @@ export class ExpedientesService {
     const createdDocument = new model(createDto);
     return createdDocument.save();
   }
+
+  async uploadDocument(createDto: any): Promise<any> {
+    const model = this.models['documentoExterno'];
+  
+    const fechaDocumento = createDto.fechaDocumento;
+    const nombreDocumento = createDto.nombreDocumento;
+    const trabajadorId = createDto.idTrabajador;
+  
+    if (!fechaDocumento) {
+      throw new BadRequestException(`El campo ${fechaDocumento} es requerido para este documento`);
+    }
+
+    if (!nombreDocumento) {
+      throw new BadRequestException('El campo nombreDocumento es requerido');
+    }
+  
+    if (!trabajadorId) {
+      throw new BadRequestException('El campo idTrabajador es requerido');
+    }
+
+    const startDate = startOfDay(new Date(fechaDocumento));
+    const endDate = endOfDay(new Date(fechaDocumento));
+  
+    // Busca un documento existente para el trabajador y la fecha
+    const existingDocument = await model.findOne({
+      idTrabajador: trabajadorId,
+      fechaDocumento: { $gte: startDate, $lte: endDate },
+      nombreDocumento: nombreDocumento
+    }).exec();
+  
+    if (existingDocument) {
+      // Si ya existe, actualízalo
+      return model.findByIdAndUpdate(existingDocument._id, createDto, { new: true }).exec();
+    }
+  
+    // Si no existe, crea uno nuevo
+    const createdDocument = new model(createDto);
+    return createdDocument.save();
+  } 
 
   async findDocuments(documentType: string, trabajadorId: string): Promise<any[]> {
     const model = this.models[documentType];
