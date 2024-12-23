@@ -1,5 +1,5 @@
 // Servicios para gestionar la data que se almacena en la base de datos
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Antidoping } from './schemas/antidoping.schema';
@@ -10,6 +10,9 @@ import { ExamenVista } from './schemas/examen-vista.schema';
 import { ExploracionFisica } from './schemas/exploracion-fisica.schema';
 import { HistoriaClinica } from './schemas/historia-clinica.schema';
 import { startOfDay, endOfDay } from 'date-fns';
+import { FilesService } from '../files/files.service';
+import { convertirFechaISOaDDMMYYYY } from 'src/utils/dates';
+import path from 'path';
 
 @Injectable()
 export class ExpedientesService {
@@ -23,7 +26,8 @@ export class ExpedientesService {
     @InjectModel(DocumentoExterno.name) private documentoExternoModel: Model<DocumentoExterno>,
     @InjectModel(ExamenVista.name) private examenVistaModel: Model<ExamenVista>,
     @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
-    @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>
+    @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>,
+    private readonly filesService: FilesService
   ) {
     this.models = {
       antidoping: this.antidopingModel,
@@ -146,49 +150,102 @@ export class ExpedientesService {
   async updateDocument(documentType: string, id: string, updateDto: any): Promise<any> {
     const model = this.models[documentType];
     const dateField = this.dateFields[documentType];
-
+  
     if (!model || !dateField) {
       throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
     }
-
-    const fecha = updateDto[dateField];
+  
+    const newFecha = updateDto[dateField];
     const trabajadorId = updateDto.idTrabajador;
-
-    if (!fecha) {
+  
+    if (!newFecha) {
       throw new BadRequestException(`El campo ${dateField} es requerido para este documento`);
     }
-
+  
     if (!trabajadorId) {
       throw new BadRequestException('El campo idTrabajador es requerido');
     }
-
-    const startDate = startOfDay(new Date(fecha));
-    const endDate = endOfDay(new Date(fecha));
-
-    // Busca un documento existente para el tipo, trabajador y la fecha
-    const existingDocument = await model.findOne({
+  
+    const startDate = startOfDay(new Date(newFecha));
+    const endDate = endOfDay(new Date(newFecha));
+  
+    // Busca un documento existente para el tipo, trabajador y la nueva fecha
+    const conflictingDocument = await model.findOne({
       idTrabajador: trabajadorId,
       [dateField]: { $gte: startDate, $lte: endDate },
     }).exec();
-
-    // console.log(`Buscando documento existente para tipo: ${documentType}, trabajador: ${trabajadorId}, fecha: ${fecha}`);
-
-    if (existingDocument && existingDocument._id.toString() !== id) {
+  
+    if (conflictingDocument && conflictingDocument._id.toString() !== id) {
       throw new BadRequestException(
-        `Ya existe un documento de tipo ${documentType} para la fecha ${fecha} y el trabajador ${trabajadorId}`
+        `Ya existe un documento de tipo ${documentType} para la fecha ${newFecha} y el trabajador ${trabajadorId}`
       );
     }
-
-    // console.log(`Actualizando documento con ID: ${id}`);
+  
+    // Busca el documento existente para verificar si la fecha cambió
+    const existingDocument = await model.findById(id).exec();
+    if (!existingDocument) {
+      throw new BadRequestException(`Documento con ID ${id} no encontrado`);
+    }
+  
+    const oldFecha = existingDocument[dateField];
+    const rutaPDF = existingDocument.rutaPDF;
+  
+    if (newFecha !== oldFecha) {
+      try {
+        // Construir la ruta del archivo anterior
+        const formattedOldFecha = convertirFechaISOaDDMMYYYY(oldFecha).replace(/\//g, '-');
+        const oldFileName = formatDocumentName(documentType, formattedOldFecha);
+        const oldFilePath = path.join(rutaPDF, oldFileName);
+  
+        console.log(`[DEBUG] Eliminando archivo anterior: ${oldFilePath}`);
+        await this.filesService.deleteFile(oldFilePath); // Usa FilesService para eliminar el archivo
+      } catch (error) {
+        console.error(`[ERROR] Error al eliminar el archivo anterior: ${error.message}`);
+      }
+    }
+  
+    // Actualizar el documento con los nuevos datos
     return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
   }
 
   async removeDocument(documentType: string, id: string): Promise<boolean> {
+    console.log(`[DEBUG] Inicio de removeDocument - documentType: ${documentType}, id: ${id}`);
     const model = this.models[documentType];
     if (!model) {
       throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
     }
+
+    const document = await model.findById(id).exec();
+    if (!document) {
+      throw new BadRequestException(`Documento con ID ${id} no encontrado`);
+    }
+
+    try {
+      let fullPath = document.rutaPDF;
+      if (!fullPath.includes('.pdf')) {
+        const fechaField = this.dateFields[documentType];
+        const fecha = convertirFechaISOaDDMMYYYY(document[fechaField]).replace(/\//g, '-');
+        const fileName = formatDocumentName(documentType, fecha);
+        fullPath = path.join(document.rutaPDF, fileName);
+      }
+
+      console.log(`[DEBUG] Intentando eliminar archivo PDF: ${fullPath}`);
+      await this.filesService.deleteFile(fullPath); // Usar FilesService
+    } catch (error) {
+      console.error(`[ERROR] Error al eliminar el archivo PDF: ${error.message}`);
+    }
+
     const result = await model.findByIdAndDelete(id).exec();
     return result !== null;
   }
+  
+}
+
+function formatDocumentName(documentType: string, fecha: string): string {
+  // Separar palabras (asumiendo camelCase o guiones bajos como delimitadores)
+  const words = documentType.split(/(?=[A-Z])|_/g);
+  // Capitalizar la primera letra de cada palabra
+  const capitalized = words.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+  // Unir las palabras con un espacio y agregar la fecha
+  return `${capitalized.join(' ')} ${fecha}.pdf`;
 }

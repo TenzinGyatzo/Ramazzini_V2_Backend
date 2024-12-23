@@ -10,6 +10,7 @@ import { historiaClinicaInforme } from './documents/historia-clinica.informe';
 import { EmpresasService } from '../empresas/empresas.service';
 import { TrabajadoresService } from '../trabajadores/trabajadores.service';
 import { ExpedientesService } from '../expedientes/expedientes.service';
+import { FilesService } from '../files/files.service';
 import {
   convertirFechaADDMMAAAA,
   convertirFechaAAAAAMMDD,
@@ -27,6 +28,7 @@ export class InformesService {
     private readonly empresasService: EmpresasService,
     private readonly trabajadoresService: TrabajadoresService,
     private readonly expedientesService: ExpedientesService,
+    private readonly filesService: FilesService,
   ) {}
 
   async getInformeAntidoping(
@@ -673,5 +675,10 @@ export class InformesService {
     await this.printer.createPdf(docDefinition, rutaCompleta);
 
     return rutaCompleta;
+  }
+
+  async eliminarInforme(filePath: string): Promise<void> {
+    console.log(`[DEBUG] InformesService: Eliminando archivo en ${filePath}`);
+    await this.filesService.deleteFile(filePath);
   }
 }

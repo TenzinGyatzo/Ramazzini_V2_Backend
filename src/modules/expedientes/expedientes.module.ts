@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ExpedientesService } from './expedientes.service';
 import { ExpedientesController } from './expedientes.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -9,6 +9,8 @@ import { DocumentoExterno, DocumentoExternoSchema } from './schemas/documento-ex
 import { ExamenVista, ExamenVistaSchema } from './schemas/examen-vista.schema';
 import { ExploracionFisica, ExploracionFisicaSchema } from './schemas/exploracion-fisica.schema';
 import { HistoriaClinica, HistoriaClinicaSchema } from './schemas/historia-clinica.schema';
+import { InformesModule } from '../informes/informes.module';
+import { FilesModule } from '../files/files.module';
 
 @Module({
   controllers: [ExpedientesController],
@@ -23,6 +25,8 @@ import { HistoriaClinica, HistoriaClinicaSchema } from './schemas/historia-clini
       { name: ExploracionFisica.name, schema: ExploracionFisicaSchema },
       { name: HistoriaClinica.name, schema: HistoriaClinicaSchema }
     ]),
+    forwardRef(() => InformesModule),
+    FilesModule, // Nuevo módulo
   ],
   exports: [ExpedientesService]
 })
