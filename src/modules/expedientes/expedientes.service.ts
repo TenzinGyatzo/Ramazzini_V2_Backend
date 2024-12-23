@@ -208,6 +208,70 @@ export class ExpedientesService {
     return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
   }
 
+  // Función para actualizar o crear un documento externo
+  async upsertDocumentoExterno(id: string | null, updateDto: any): Promise<any> {
+    const model = this.models.documentoExterno;
+    const dateField = 'fechaDocumento';
+  
+    if (!model) {
+      throw new BadRequestException('El modelo documentoExterno no está definido');
+    }
+  
+    const newFecha = updateDto[dateField];
+    const trabajadorId = updateDto.idTrabajador;
+    const newNombreDocumento = updateDto.nombreDocumento;
+  
+    if (!newFecha) {
+      throw new BadRequestException(`El campo ${dateField} es requerido para este documento`);
+    }
+  
+    if (!trabajadorId) {
+      throw new BadRequestException('El campo idTrabajador es requerido');
+    }
+  
+    const existingDocument = id ? await model.findById(id).exec() : null;
+  
+    if (existingDocument) {
+      const oldFecha = existingDocument[dateField];
+      const oldNombreDocumento = existingDocument.nombreDocumento;
+      const oldExtension = existingDocument.extension;
+      const rutaDocumento = existingDocument.rutaDocumento;
+  
+      // Detectar cambios en fecha o nombre del documento
+      if (newFecha !== oldFecha || newNombreDocumento !== oldNombreDocumento) {
+        try {
+          // Construir el nombre del archivo anterior
+          const formattedOldFecha = convertirFechaISOaDDMMYYYY(oldFecha).replace(/\//g, '-');
+          const oldFileName = `${oldNombreDocumento} ${formattedOldFecha}${oldExtension}`;
+          const oldFilePath = path.join(rutaDocumento, oldFileName);
+  
+          // Construir el nuevo nombre del archivo
+          const formattedNewFecha = convertirFechaISOaDDMMYYYY(newFecha).replace(/\//g, '-');
+          const newFileName = `${newNombreDocumento} ${formattedNewFecha}${oldExtension}`;
+          const newFilePath = path.join(rutaDocumento, newFileName);
+  
+          console.log(`[DEBUG] Renombrando archivo: ${oldFilePath} -> ${newFilePath}`);
+  
+          // Renombrar el archivo
+          await this.filesService.renameFile(oldFilePath, newFilePath);
+  
+          // Actualizar los campos en el DTO
+          updateDto.nombreDocumento = newNombreDocumento;
+          updateDto.fechaDocumento = newFecha;
+        } catch (error) {
+          console.error(`[ERROR] Error al renombrar el archivo: ${error.message}`);
+        }
+      }
+  
+      // Actualizar el documento existente
+      return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
+    }
+  
+    // Crear un nuevo documento si no existe
+    const newDocument = new model(updateDto);
+    return newDocument.save();
+  }  
+
   async removeDocument(documentType: string, id: string): Promise<boolean> {
     console.log(`[DEBUG] Inicio de removeDocument - documentType: ${documentType}, id: ${id}`);
     const model = this.models[documentType];
@@ -221,12 +285,23 @@ export class ExpedientesService {
     }
 
     try {
-      let fullPath = document.rutaPDF;
-      if (!fullPath.includes('.pdf')) {
-        const fechaField = this.dateFields[documentType];
-        const fecha = convertirFechaISOaDDMMYYYY(document[fechaField]).replace(/\//g, '-');
-        const fileName = formatDocumentName(documentType, fecha);
-        fullPath = path.join(document.rutaPDF, fileName);
+      let fullPath = '';
+      if(documentType === 'documentoExterno') {
+        fullPath = document.rutaDocumento;
+        if (!fullPath.includes('.pdf') || !fullPath.includes('.png') || !fullPath.includes('.jpg') || !fullPath.includes('.jpeg')) {
+          const fechaField = this.dateFields[documentType];
+          const fecha = convertirFechaISOaDDMMYYYY(document[fechaField]).replace(/\//g, '-');
+          const fileName = `${document.nombreDocumento} ${fecha}${document.extension}`
+          fullPath = path.join(document.rutaDocumento, fileName);
+        }  
+      } else {
+        fullPath = document.rutaPDF;
+        if (!fullPath.includes('.pdf')) {
+          const fechaField = this.dateFields[documentType];
+          const fecha = convertirFechaISOaDDMMYYYY(document[fechaField]).replace(/\//g, '-');
+          const fileName = formatDocumentName(documentType, fecha); 
+          fullPath = path.join(document.rutaPDF, fileName);
+        }
       }
 
       console.log(`[DEBUG] Intentando eliminar archivo PDF: ${fullPath}`);
@@ -242,8 +317,11 @@ export class ExpedientesService {
 }
 
 function formatDocumentName(documentType: string, fecha: string): string {
-  // Separar palabras (asumiendo camelCase o guiones bajos como delimitadores)
-  const words = documentType.split(/(?=[A-Z])|_/g);
+  // Separar palabras (asumiendo camelCase, guiones bajos, y preservando espacios existentes)
+  const words = documentType
+    .split(/(?=[A-Z])|_/g) // Separar por camelCase o guiones bajos
+    .flatMap(word => word.split(/\s+/)) // Dividir por espacios múltiples y limpiar
+    .filter(word => word.trim() !== ''); // Eliminar palabras vacías
   // Capitalizar la primera letra de cada palabra
   const capitalized = words.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
   // Unir las palabras con un espacio y agregar la fecha

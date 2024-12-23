@@ -16,4 +16,10 @@ export class FilesService {
       throw new Error(`No se pudo eliminar el archivo: ${filePath}`);
     }
   }
+
+  async renameFile(oldPath: string, newPath: string): Promise<void> {
+    const fs = require('fs').promises;
+    await fs.rename(oldPath, newPath);
+  }
+  
 }

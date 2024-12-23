@@ -36,23 +36,24 @@ function convertirFechaADDMMAAAA(fecha: Date): string {
     return `${dia}-${mes}-${año}`;
   }
 
-function convertirFechaISOaYYYYMMDD(dateString: string): string {
+  function convertirFechaISOaYYYYMMDD(dateString: string): string {
     if (!dateString) {
       return ""; // Retorna un string vacío si el parámetro es una cadena vacía
     }
-    
+  
     const fecha = new Date(dateString);
-    
+  
     if (isNaN(fecha.getTime())) {
       throw new Error("La fecha proporcionada no es válida.");
     }
   
-    const dia = String(fecha.getDate()).padStart(2, '0'); // Obtiene el día con dos dígitos
-    const mes = String(fecha.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0, por eso se suma 1
-    const año = fecha.getFullYear(); // Obtiene el año completo
+    const dia = String(fecha.getUTCDate()).padStart(2, "0"); // Obtiene el día en UTC con dos dígitos
+    const mes = String(fecha.getUTCMonth() + 1).padStart(2, "0"); // Los meses empiezan en 0, por eso se suma 1
+    const año = fecha.getUTCFullYear(); // Obtiene el año completo en UTC
   
     return `${año}-${mes}-${dia}`;
   }
+  
 
 function calcularEdad(dateString: string): number {
     const fechaNacimiento = new Date(dateString);

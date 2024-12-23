@@ -224,11 +224,19 @@ export class ExpedientesController {
       metatype: DtoClass,
     });
 
-    const updatedDocument = await this.expedientesService.updateDocument(
-      documentType,
-      id,
-      dtoInstance,
-    );
+    let updatedDocument = null;
+    if (documentType === 'documentoExterno') {
+      updatedDocument = await this.expedientesService.upsertDocumentoExterno(
+        id,
+        dtoInstance,
+      );
+    } else {
+      updatedDocument = await this.expedientesService.updateDocument(
+        documentType,
+        id,
+        dtoInstance,
+      );
+    }
 
     if (!updatedDocument) {
       return {
