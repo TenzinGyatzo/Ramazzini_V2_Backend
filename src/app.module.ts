@@ -14,6 +14,7 @@ import { ExamplesModule } from './modules/examples/examples.module';
 import { ExpedientesModule } from './modules/expedientes/expedientes.module';
 import { InformesModule } from './modules/informes/informes.module';
 import { PrinterModule } from './modules/printer/printer.module';
+import { DocumentMergerModule } from './modules/document-merger/document-merger.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { PrinterModule } from './modules/printer/printer.module';
     ExpedientesModule,
     InformesModule,
     PrinterModule,
+    DocumentMergerModule,
   ],
 })
 export class AppModule {}

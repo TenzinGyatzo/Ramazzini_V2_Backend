@@ -9,6 +9,9 @@ export class DocumentMergerService {
     try {
       const mergedPdf = await PDFDocument.create();
 
+      const letterWidth = 612; // Ancho de tamaño carta en puntos
+      const letterHeight = 792; // Altura de tamaño carta en puntos
+
       for (const filePath of filePaths) {
         const fileExt = path.extname(filePath).toLowerCase();
 
@@ -25,8 +28,26 @@ export class DocumentMergerService {
             ? await mergedPdf.embedPng(imageBytes)
             : await mergedPdf.embedJpg(imageBytes);
 
-          const page = mergedPdf.addPage([image.width, image.height]);
-          page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
+          // Escala la imagen para ajustarla al tamaño carta
+          const scale = Math.min(
+            letterWidth / image.width,
+            letterHeight / image.height
+          );
+          const scaledWidth = image.width * scale;
+          const scaledHeight = image.height * scale;
+
+          const page = mergedPdf.addPage([letterWidth, letterHeight]);
+
+          // Centra la imagen en la página
+          const x = (letterWidth - scaledWidth) / 2;
+          const y = (letterHeight - scaledHeight) / 2;
+
+          page.drawImage(image, {
+            x,
+            y,
+            width: scaledWidth,
+            height: scaledHeight,
+          });
         } else {
           throw new BadRequestException('Unsupported file type');
         }
