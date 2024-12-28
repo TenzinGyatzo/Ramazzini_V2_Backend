@@ -3,8 +3,14 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { LoggerMiddleware } from './logger/logger.middleware';
 import { AuthMiddleware } from './auth/auth.middleware';
+import { MongooseModule } from '@nestjs/mongoose';
+import { User } from './entities/user.entity';
+import { UserSchema } from './schemas/user.schema';
 
 @Module({
+  imports: [
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+  ],
   controllers: [UsersController],
   providers: [UsersService],
 })
@@ -23,7 +29,8 @@ export class UsersModule implements NestModule {
       .forRoutes(
         { path: 'users', method: RequestMethod.GET }
       )
-      .apply(AuthMiddleware) // Aplica un segundo middleware
+      .apply(AuthMiddleware)
+      .exclude({ path: 'users/register', method: RequestMethod.POST }) // Aplica un segundo middleware
       .forRoutes('users'); // A las rutas con prefijo users
   }
 }

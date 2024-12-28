@@ -9,28 +9,24 @@ import { ApiTags } from '@nestjs/swagger';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Post('register')
+  async register(@Body() createUserDto: CreateUserDto) {
+
+    const { username, password, role } = createUserDto;
+    // Evitar registros duplicados
+    const userExists = await this.usersService.findByUsername(username);
+    if (userExists) {
+      throw new Error('El usuario ya existe');
+    }
+
+    // Validar extensión del password
+    const MIN_PASSWORD_LENGTH = 8;
+    if (password.trim().length < MIN_PASSWORD_LENGTH) {
+      throw new Error(`El password debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`)
+    }
+
+    
+    return this.usersService.register(createUserDto);
   }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
-  }
 }
