@@ -1,10 +1,11 @@
-import { Controller, Post, Body, BadRequestException, ConflictException } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { UserDocument } from './schemas/user.schema';
+import { stat } from 'fs';
 
-@Controller('users')
+@Controller('api/users')
 @ApiTags('Usuarios')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -36,13 +37,13 @@ export class UsersController {
     // Revisar que el usuario exista
     const user: UserDocument | null = await this.usersService.findByUsername(username);
     if (!user) {
-      throw new BadRequestException('El usuario no existe');
+      throw new UnauthorizedException('El usuario no existe');
     }
 
     // Comprobar el password utilizando el método definido en el esquema
     const isPasswordValid = await user.checkPassword(password);
     if (!isPasswordValid) {
-      throw new BadRequestException('Contraseña incorrecta');
+      throw new UnauthorizedException('Contraseña incorrecta');
     }
 
     // Aquí puedes retornar un token o algún otro dato según sea necesario
