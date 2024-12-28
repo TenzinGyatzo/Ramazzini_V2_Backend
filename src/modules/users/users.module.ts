@@ -30,7 +30,10 @@ export class UsersModule implements NestModule {
         { path: 'users', method: RequestMethod.GET }
       )
       .apply(AuthMiddleware)
-      .exclude({ path: 'users/register', method: RequestMethod.POST }) // Aplica un segundo middleware
+      .exclude(
+        { path: 'users/register', method: RequestMethod.POST },
+        { path: 'users/login', method: RequestMethod.POST }
+      ) // Aplica un segundo middleware
       .forRoutes('users'); // A las rutas con prefijo users
   }
 }
