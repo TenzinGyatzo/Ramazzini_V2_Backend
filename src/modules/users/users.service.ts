@@ -17,8 +17,9 @@ export class UsersService {
     return this.userModel.findOne({ username }).exec();
   }
 
-  async login(user: UserDocument) {
-    // Implementar lógica como generar un JWT
-    return { message: 'Login exitoso', user };
-  }
+async findById(id: string, selectFields: string = ''): Promise<UserDocument | null> {
+  return this.userModel.findById(id).select(selectFields).exec();
+}
+
+
 }
