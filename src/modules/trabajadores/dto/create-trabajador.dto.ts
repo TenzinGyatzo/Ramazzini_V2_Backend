@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsDate, IsEnum, IsInt, IsMongoId, IsNotEmpty, IsString, Matches, Max, Min } from "class-validator";
+import { IsDate, IsEnum, IsInt, IsMongoId, IsNotEmpty, IsOptional, IsString, Matches, Max, Min } from "class-validator";
 
 const sexos = ["Masculino", "Femenino"];
 
@@ -82,12 +82,15 @@ export class CreateTrabajadorDto {
     fechaIngreso: Date;
 
     @ApiProperty({
-      description: 'Número de teléfono del trabajador',
-      example: '6681078205'
+      description: 'Número de teléfono del trabajador (opcional)',
+      example: '6681078205',
+      required: false, // Esto indica que es opcional en la documentación de Swagger
     })
+    @IsOptional() // Indica que el campo es opcional
     @IsString({ message: 'El teléfono debe ser un string' })
     @Matches(/^$|^[0-9]{10}$/, { message: 'El teléfono debe estar vacío o tener 10 dígitos' })
-    telefono: string;
+    telefono?: string; // El operador `?` también indica que es opcional en TypeScript
+    
 
     @ApiProperty({
       description: 'Estado Civil del trabajador',

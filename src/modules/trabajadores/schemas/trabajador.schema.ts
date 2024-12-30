@@ -45,7 +45,7 @@ export class Trabajador extends Document {
     @Prop({ required: true })
     fechaIngreso: Date;
 
-    @Prop({ required: true })
+    @Prop({ required: false })
     telefono: string;
 
     @Prop({ required: true, enum: estadosCiviles })

@@ -15,9 +15,16 @@ export class TrabajadoresService {
 
   async create(createTrabajadorDto: CreateTrabajadorDto): Promise<Trabajador> {
     const normalizedDto = normalizeTrabajadorData(createTrabajadorDto);
-    const createdTrabajador = new this.trabajadorModel(normalizedDto);
-    return await createdTrabajador.save();
+    try {
+      const createdTrabajador = new this.trabajadorModel(normalizedDto);
+      const savedTrabajador = await createdTrabajador.save();
+      return savedTrabajador;
+    } catch (error) {
+      console.error('Error al guardar el trabajador:', error); // Depuración: Error al guardar
+      throw error; // Re-lanzar el error para manejarlo en el controlador
+    }
   }
+  
 
   async findWorkersByCenter(id: string): Promise<Trabajador[]> {
     return await this.trabajadorModel.find({ idCentroTrabajo: id }).exec();

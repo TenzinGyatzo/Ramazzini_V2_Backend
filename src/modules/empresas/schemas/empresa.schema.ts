@@ -31,7 +31,7 @@ export class Empresa extends Document {
   })
   logotipoEmpresa: Logotipo
 
-  @Prop({ required: true, enum: basesOperaciones, default: "Pruebas"})
+  @Prop({ required: true, enum: basesOperaciones, default: "Los Mochis"})
   baseOperaciones: string;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
