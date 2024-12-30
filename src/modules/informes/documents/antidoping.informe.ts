@@ -49,7 +49,7 @@ const styles: StyleDictionary = {
 
 // ==================== CONTENIDO ====================
 const logo: Content = {
-  image: 'src/assets/AmesBrand.png',
+  image: 'assets/AmesBrand.png',
   width: 60,
   margin: [40, 25, 0, 0],
 };
@@ -62,7 +62,7 @@ const headerText: Content = {
 };
 
 const firma: Content = {
-  image: 'src/assets/Firma-Dr-Coronel.png',
+  image: 'assets/Firma-Dr-Coronel.png',
   width: 32,
 };
 

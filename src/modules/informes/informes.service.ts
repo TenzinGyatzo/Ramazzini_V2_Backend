@@ -36,9 +36,10 @@ export class InformesService {
     trabajadorId: string,
     antidopingId: string,
   ): Promise<string> {
+  
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
-
+  
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
     const datosTrabajador = {
       nombre: trabajador.nombre,
@@ -47,18 +48,13 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      antiguedad: calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso)),
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       hijos: trabajador.hijos,
     };
-
-    const antidoping = await this.expedientesService.findDocument(
-      'antidoping',
-      antidopingId,
-    );
+  
+    const antidoping = await this.expedientesService.findDocument('antidoping', antidopingId);
     const datosAntidoping = {
       fechaAntidoping: antidoping.fechaAntidoping,
       marihuana: antidoping.marihuana,
@@ -67,32 +63,34 @@ export class InformesService {
       metanfetaminas: antidoping.metanfetaminas,
       opiaceos: antidoping.opiaceos,
     };
-    
+  
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(antidoping.fechaAntidoping)
       .replace(/\//g, '-')
       .replace(/\\/g, '-');
     const nombreArchivo = `Antidoping ${fecha}.pdf`;
-
+  
     // Obtener la ruta específica del documento
     const rutaDirectorio = path.resolve(antidoping.rutaPDF);
     if (!fs.existsSync(rutaDirectorio)) {
       fs.mkdirSync(rutaDirectorio, { recursive: true });
     }
-
+  
     const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
-
-    const docDefinition = antidopingInforme(
-      nombreEmpresa,
-      datosTrabajador,
-      datosAntidoping,
-    );
-
+  
+    const docDefinition = antidopingInforme(nombreEmpresa, datosTrabajador, datosAntidoping);
+  
     // Generar y guardar el PDF
-    await this.printer.createPdf(docDefinition, rutaCompleta);
-
+    try {
+      await this.printer.createPdf(docDefinition, rutaCompleta);
+    } catch (error) {
+      console.error('[getInformeAntidoping] Error al generar el PDF:', error);
+      throw error;
+    }
+  
     return rutaCompleta; // Retorna la ruta del archivo generado
   }
+  
 
   async getInformeAptitudPuesto(
     empresaId: string,
@@ -678,7 +676,6 @@ export class InformesService {
   }
 
   async eliminarInforme(filePath: string): Promise<void> {
-    console.log(`[DEBUG] InformesService: Eliminando archivo en ${filePath}`);
     await this.filesService.deleteFile(filePath);
   }
 }

@@ -22,14 +22,23 @@ export class PrinterService {
     return new Promise((resolve, reject) => {
       try {
         const pdfDoc = this.printer.createPdfKitDocument(docDefinition);
+
         const writeStream = fs.createWriteStream(outputPath);
+
         pdfDoc.pipe(writeStream);
 
         pdfDoc.end();
 
-        writeStream.on('finish', () => resolve());
-        writeStream.on('error', (error) => reject(error));
+        writeStream.on('finish', () => {
+          resolve();
+        });
+
+        writeStream.on('error', (error) => {
+          console.error('[PrinterService] Error occurred during write stream:', error);
+          reject(error);
+        });
       } catch (error) {
+        console.error('[PrinterService] Unexpected error during PDF creation:', error);
         reject(error);
       }
     });

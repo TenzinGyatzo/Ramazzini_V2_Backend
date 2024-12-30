@@ -96,16 +96,16 @@ export class ExpedientesController {
       storage: diskStorage({
         destination: (req, file, cb) => {
           const dirPath = path.resolve(
-            __dirname,
-            '../../../',
+            process.env.EXPEDIENTES_DIR || '',
             req.body.rutaDocumento,
           );
-
+  
           try {
             if (!req.body.rutaDocumento) {
+              console.error('Error: rutaDocumento no está definida en req.body.');
               throw new Error('La rutaDocumento no está definida en req.body.');
             }
-
+  
             if (!existsSync(dirPath)) {
               mkdirSync(dirPath, { recursive: true });
             } else {
@@ -114,21 +114,20 @@ export class ExpedientesController {
             console.error('Error al procesar la ruta destino:', error.message);
             return cb(error, dirPath);
           }
-
-          // Pasa la ruta al callback
+  
           cb(null, dirPath);
         },
         filename: (req, file, cb) => {
-          const nombreDocumento = req.body.nombreDocumento; // Reemplaza espacios por guiones
+          const nombreDocumento = req.body.nombreDocumento || 'documento'; // Valor predeterminado si no se proporciona
           const fechaDocumento = convertirFechaISOaDDMMYYYY(
             req.body.fechaDocumento,
           );
           const extension = path.extname(file.originalname);
-          const uniqueFilename =
-            `${nombreDocumento} ${fechaDocumento}${extension}`.replace(
-              /[<>:"\/\\|?*]/g,
-              '-',
-            );
+          const uniqueFilename = `${nombreDocumento} ${fechaDocumento}${extension}`.replace(
+            /[<>:"\/\\|?*]/g,
+            '-',
+          );
+  
           cb(null, uniqueFilename);
         },
       }),
@@ -139,11 +138,7 @@ export class ExpedientesController {
     @Body() createDocumentoExternoDto: CreateDocumentoExternoDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-
-    if (!file) {
-      throw new BadRequestException('No se proporcionó un archivo');
-    }
-
+    
     try {
       const document = await this.expedientesService.uploadDocument(
         createDocumentoExternoDto,
@@ -153,7 +148,7 @@ export class ExpedientesController {
         data: document,
       };
     } catch (error) {
-      console.error('Error detallado:', error);
+      console.error('Error detallado durante uploadDocument:', error.message);
       throw new BadRequestException(
         'Error al crear el documento externo',
         error,
