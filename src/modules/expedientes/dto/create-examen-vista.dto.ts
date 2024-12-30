@@ -116,7 +116,7 @@ export class CreateExamenVistaDto {
         example: 20
     })
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(10)
+    @Min(0)
     @Max(200)
     @IsOptional()
     ojoIzquierdoLejanaConCorreccion: number
@@ -126,7 +126,7 @@ export class CreateExamenVistaDto {
         example: 20
     })
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(10)
+    @Min(0)
     @Max(200)
     @IsOptional()
     ojoDerechoLejanaConCorreccion: number

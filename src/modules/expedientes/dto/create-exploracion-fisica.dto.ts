@@ -69,7 +69,7 @@ export class CreateExploracionFisicaDto {
 
     // Somatometría
     @IsOptional()
-    @IsNumber({ maxDecimalPlaces: 0 })
+    @IsNumber({ maxDecimalPlaces: 1 })
     @Min(45)
     @Max(200)
     peso: number;
