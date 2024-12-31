@@ -197,7 +197,7 @@ export class ExpedientesService {
         const oldFileName = formatDocumentName(documentType, formattedOldFecha);
         const oldFilePath = path.join(rutaPDF, oldFileName);
   
-        console.log(`[DEBUG] Eliminando archivo anterior: ${oldFilePath}`);
+        // console.log(`[DEBUG] Eliminando archivo anterior: ${oldFilePath}`);
         await this.filesService.deleteFile(oldFilePath); // Usa FilesService para eliminar el archivo
       } catch (error) {
         console.error(`[ERROR] Error al eliminar el archivo anterior: ${error.message}`);
@@ -250,7 +250,7 @@ export class ExpedientesService {
           const newFileName = `${newNombreDocumento} ${formattedNewFecha}${oldExtension}`;
           const newFilePath = path.join(rutaDocumento, newFileName);
   
-          console.log(`[DEBUG] Renombrando archivo: ${oldFilePath} -> ${newFilePath}`);
+          // console.log(`[DEBUG] Renombrando archivo: ${oldFilePath} -> ${newFilePath}`);
   
           // Renombrar el archivo
           await this.filesService.renameFile(oldFilePath, newFilePath);
@@ -273,7 +273,7 @@ export class ExpedientesService {
   }  
 
   async removeDocument(documentType: string, id: string): Promise<boolean> {
-    console.log(`[DEBUG] Inicio de removeDocument - documentType: ${documentType}, id: ${id}`);
+    // console.log(`[DEBUG] Inicio de removeDocument - documentType: ${documentType}, id: ${id}`);
     const model = this.models[documentType];
     if (!model) {
       throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
@@ -304,10 +304,10 @@ export class ExpedientesService {
         }
       }
 
-      console.log(`[DEBUG] Intentando eliminar archivo PDF: ${fullPath}`);
+      // console.log(`[DEBUG] Intentando eliminar archivo PDF: ${fullPath}`);
       await this.filesService.deleteFile(fullPath); // Usar FilesService
     } catch (error) {
-      console.error(`[ERROR] Error al eliminar el archivo PDF: ${error.message}`);
+      // console.error(`[ERROR] Error al eliminar el archivo PDF: ${error.message}`);
     }
 
     const result = await model.findByIdAndDelete(id).exec();

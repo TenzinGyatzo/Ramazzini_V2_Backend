@@ -43,7 +43,7 @@ const headerText: Content = {
 const firma: Content = {
   image: 'assets/Firma-Dr-Coronel.png',
   width: 80,
-  absolutePosition: { x: 275, y: 505 },
+  absolutePosition: { x: 275, y: 520 }, // Antes 505
 };
 
 const campoFirma: Content = {
@@ -55,13 +55,13 @@ const campoFirma: Content = {
           type: 'line',
           x1: 120,
           y1: 0,
-          x2: 410,
+          x2: 380,
           y2: 0,
           lineWidth: 1,
           lineColor: '#000000',
         },
       ],
-      margin: [0, 20, 0, 0],
+      margin: [0, 10, 0, 0],
     },
     // Nombre y credenciales del médico
     {
@@ -82,10 +82,10 @@ const campoFirma: Content = {
         },
       ],
       alignment: 'center',
-      margin: [0, 2, 0, 0],
+      margin: [0, 0, 0, 0],
     },
   ],
-  margin: [0, 110, 0, 0],
+  absolutePosition: { x: 65, y: 610 }, 
 };
 
 // ==================== FUNCIONES REUSABLES ====================
@@ -141,7 +141,7 @@ export const certificadoInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
   certificado: Certificado,
-  examenVista: ExamenVista,
+  examenVista: ExamenVista | null,
 ): TDocumentDefinitions => {
   return {
     pageSize: 'LETTER',
@@ -226,7 +226,9 @@ export const certificadoInforme = (
             text: 'de edad, lo encontré íntegro físicamente, sin defectos ni anomalías del aparato locomotor, ',
           },
           {
-            text: `con agudeza visual OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion}, campo visual, profundidad de campo, estereopsis y percepción cromática `,
+            text: examenVista
+              ? `con agudeza visual OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion}, campo visual, profundidad de campo, estereopsis y percepción cromática `
+              : `con agudeza visual, campo visual, profundidad de campo, estereopsis y percepción cromática `,
           },
           {
             text: 'sin alteraciones; agudeza auditiva, aparato respiratorio y aparato locomotor íntegros, el ',

@@ -45,13 +45,13 @@ const styles: StyleDictionary = {
     margin: [0, 0, 0, 0], // Reducir el margen superior e inferior
   },
   value: {
-    bold: true, 
+    bold: true,
     fontSize: 11,
     lineHeight: 0.9,
     margin: [0, 0, 0, 0], // Reducir el margen superior e inferior
   },
-  preset: { 
-    fontSize: 10, 
+  preset: {
+    fontSize: 10,
     lineHeight: 1,
     margin: [0, 0, 0, 0], // Reducir el margen superior e inferior
   },
@@ -98,10 +98,14 @@ const firma: Content = {
 // ==================== FUNCIONES REUSABLES ====================
 type Alignment = 'left' | 'center' | 'right' | 'justify';
 
-const createTableCell = (text: string, style: string, alignment: Alignment): Content => ({
+const createTableCell = (
+  text: string,
+  style: string,
+  alignment: Alignment,
+): Content => ({
   text,
   style,
-  alignment
+  alignment,
 });
 
 function formatearFechaUTC(fecha: Date): string {
@@ -194,71 +198,112 @@ export const aptitudPuestoInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
   aptitud: Aptitud,
-  historiaClinica: HistoriaClinica,
-  exploracionFisica: ExploracionFisica,
-  examenVista: ExamenVista,
-  antidoping: Antidoping,
+  historiaClinica: HistoriaClinica | null,
+  exploracionFisica: ExploracionFisica | null,
+  examenVista: ExamenVista | null,
+  antidoping: Antidoping | null,
 ): TDocumentDefinitions => {
+  const examenVistaResumen = examenVista
+    ? (examenVista.ojoIzquierdoLejanaConCorreccion === 0 ||
+        examenVista.ojoIzquierdoLejanaConCorreccion == null) &&
+      (examenVista.ojoDerechoLejanaConCorreccion === 0 ||
+        examenVista.ojoDerechoLejanaConCorreccion == null)
+      ? `OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion} - ${examenVista.sinCorreccionLejanaInterpretacion}, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
+      : `OI: 20/${examenVista.ojoIzquierdoLejanaConCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaConCorreccion} - ${examenVista.conCorreccionLejanaInterpretacion} Corregida, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
+    : 'No se cuenta con examen visual';
 
-  const examenVistaResumen =
-  (examenVista.ojoIzquierdoLejanaConCorreccion === 0 || examenVista.ojoIzquierdoLejanaConCorreccion == null) &&
-  (examenVista.ojoDerechoLejanaConCorreccion === 0 || examenVista.ojoDerechoLejanaConCorreccion == null)
-    ? `OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion} - ${examenVista.sinCorreccionLejanaInterpretacion}, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
-    : `OI: 20/${examenVista.ojoIzquierdoLejanaConCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaConCorreccion} - ${examenVista.conCorreccionLejanaInterpretacion} Corregida, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`;
-
-  const antidopingResumen =
-  antidoping.marihuana === 'Negativo' &&
-  antidoping.cocaina === 'Negativo' &&
-  antidoping.anfetaminas === 'Negativo' &&
-  antidoping.metanfetaminas === 'Negativo' &&
-  antidoping.opiaceos === 'Negativo'
-    ? 'Negativo a cinco parámetros'
-    : `Positivo a: ${
-        [
-          antidoping.marihuana !== 'Negativo' ? 'Marihuana' : null,
-          antidoping.cocaina !== 'Negativo' ? 'Cocaína' : null,
-          antidoping.anfetaminas !== 'Negativo' ? 'Anfetaminas' : null,
-          antidoping.metanfetaminas !== 'Negativo' ? 'Metanfetaminas' : null,
-          antidoping.opiaceos !== 'Negativo' ? 'Opiáceos' : null,
+  const resumenYAlteraciones = [
+    [
+      createTableCell('INFORMACIÓN Y ESTUDIOS', 'tableHeader', 'center'),
+      createTableCell('FECHAS', 'tableHeader', 'center'),
+      createTableCell(
+        'RESUMEN Y/O ALTERACIONES ENCONTRADAS',
+        'tableHeader',
+        'center',
+      ),
+    ],
+    [
+      createTableCell('HISTORIA CLÍNICA LABORAL', 'sectionHeader', 'center'),
+      createTableCell(
+        historiaClinica
+          ? formatearFechaUTC(historiaClinica.fechaHistoriaClinica)
+          : '-',
+        'tableCell',
+        'center',
+      ),
+      createTableCell(
+        historiaClinica
+          ? historiaClinica.resumenHistoriaClinica
+          : 'No se cuenta con historia clínica laboral',
+        'tableCell',
+        'center',
+      ),
+    ],
+    [
+      createTableCell('EXPLORACIÓN FÍSICA', 'sectionHeader', 'center'),
+      createTableCell(
+        exploracionFisica
+          ? formatearFechaUTC(exploracionFisica.fechaExploracionFisica)
+          : '-',
+        'tableCell',
+        'center',
+      ),
+      createTableCell(
+        exploracionFisica
+          ? `TA: ${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg - ${exploracionFisica.categoriaTensionArterial}. ${exploracionFisica.resumenExploracionFisica}.`
+          : 'No se cuenta con exploración física',
+        'tableCell',
+        'center',
+      ),
+    ],
+    [
+      createTableCell('EXAMEN VISUAL', 'sectionHeader', 'center'),
+      createTableCell(
+        examenVista ? formatearFechaUTC(examenVista.fechaExamenVista) : '-',
+        'tableCell',
+        'center',
+      ),
+      createTableCell(examenVistaResumen, 'tableCell', 'center'),
+    ],
+    // ANTIDOPING solo se incluye si existen datos
+    ...(antidoping
+      ? [
+          [
+            createTableCell('ANTIDOPING', 'sectionHeader', 'center'),
+            createTableCell(
+              formatearFechaUTC(antidoping.fechaAntidoping),
+              'tableCell',
+              'center',
+            ),
+            createTableCell(
+              antidoping.marihuana === 'Negativo' &&
+                antidoping.cocaina === 'Negativo' &&
+                antidoping.anfetaminas === 'Negativo' &&
+                antidoping.metanfetaminas === 'Negativo' &&
+                antidoping.opiaceos === 'Negativo'
+                ? 'Negativo a cinco parámetros'
+                : `Positivo a: ${[
+                    antidoping.marihuana !== 'Negativo' ? 'Marihuana' : null,
+                    antidoping.cocaina !== 'Negativo' ? 'Cocaína' : null,
+                    antidoping.anfetaminas !== 'Negativo'
+                      ? 'Anfetaminas'
+                      : null,
+                    antidoping.metanfetaminas !== 'Negativo'
+                      ? 'Metanfetaminas'
+                      : null,
+                    antidoping.opiaceos !== 'Negativo' ? 'Opiáceos' : null,
+                  ]
+                    .filter(Boolean)
+                    .join(', ')}`,
+              'tableCell',
+              'center',
+            ),
+          ],
         ]
-          .filter(Boolean) // Filtra los valores nulos o undefined
-          .join(', ') // Combina los nombres en una cadena separada por comas
-      }`; 
+      : []),
+  ];
 
-    const resumenYAlteraciones = [
-      [
-        createTableCell('INFORMACIÓN Y ESTUDIOS', 'tableHeader', 'center'),
-        createTableCell('FECHAS', 'tableHeader', 'center'),
-        createTableCell('RESUMEN Y/O ALTERACIONES ENCONTRADAS', 'tableHeader', 'center'),
-      ],
-      [
-        createTableCell('HISTORIA CLÍNICA LABORAL', 'sectionHeader', 'center'),
-        createTableCell(formatearFechaUTC(historiaClinica.fechaHistoriaClinica), 'tableCell', 'center'),
-        createTableCell(historiaClinica.resumenHistoriaClinica, 'tableCell', 'center'),
-      ],
-      [
-        createTableCell('EXPLORACIÓN FÍSICA', 'sectionHeader', 'center'),
-        createTableCell(formatearFechaUTC(exploracionFisica.fechaExploracionFisica), 'tableCell', 'center'),
-        createTableCell(`TA: ${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg - ${exploracionFisica.categoriaTensionArterial}. ${exploracionFisica.resumenExploracionFisica}.`, 'tableCell', 'center'),
-      ],
-      [
-        createTableCell('ADIPOSITDAD CORPORAL', 'sectionHeader', 'center'),
-        createTableCell(formatearFechaUTC(exploracionFisica.fechaExploracionFisica), 'tableCell', 'center'),
-        createTableCell(`IMC: ${exploracionFisica.indiceMasaCorporal} - ${exploracionFisica.categoriaIMC}, Circunferencia Cintura: ${exploracionFisica.circunferenciaCintura} - ${exploracionFisica.categoriaCircunferenciaCintura}`, 'tableCell', 'center'),
-      ],
-      [
-        createTableCell('EXAMEN VISUAL', 'sectionHeader', 'center'),
-        createTableCell(formatearFechaUTC(examenVista.fechaExamenVista), 'tableCell', 'center'),
-        createTableCell(examenVistaResumen, 'tableCell', 'center'),
-      ],
-      [
-        createTableCell('ANTIDOPING', 'sectionHeader', 'center'),
-        createTableCell(formatearFechaUTC(antidoping.fechaAntidoping), 'tableCell', 'center'),
-        createTableCell(antidopingResumen, 'tableCell', 'center'),
-      ],
-    ];
-    
-   // Agregar filas para cada evaluación adicional si existen los datos
+  // Agregar filas para cada evaluación adicional si existen los datos
   for (let i = 1; i <= 6; i++) {
     const evaluacion = aptitud[`evaluacionAdicional${i}`];
     const fecha = aptitud[`fechaEvaluacionAdicional${i}`];
@@ -267,20 +312,16 @@ export const aptitudPuestoInforme = (
     if (evaluacion && fecha && resultados) {
       resumenYAlteraciones.push([
         createTableCell(evaluacion.toUpperCase(), 'sectionHeader', 'center'),
-        createTableCell(
-          formatearFechaUTC(fecha),
-          'tableCell',
-          'center'
-        ),
+        createTableCell(formatearFechaUTC(fecha), 'tableCell', 'center'),
         createTableCell(resultados, 'tableCell', 'center'),
       ]);
     }
   }
-        
+
   const aptitudPuesto = aptitud.aptitudPuesto;
 
   // Función para determinar si se coloca 'XX' o un string vacío
-  const getXXForAptitud = (option: string): string => 
+  const getXXForAptitud = (option: string): string =>
     aptitudPuesto === option ? 'XX' : '';
 
   return {
@@ -379,7 +420,7 @@ export const aptitudPuestoInforme = (
         style: 'table',
         table: {
           widths: ['29%', '11%', '*'],
-          body: resumenYAlteraciones
+          body: resumenYAlteraciones,
         },
         layout: {
           hLineColor: '#e5e7eb',
@@ -404,29 +445,69 @@ export const aptitudPuestoInforme = (
                 text: 'BASADO EN LA INFORMACIÓN ANTERIOR SE HA DETERMINADO:',
                 style: 'tableHeader',
                 alignment: 'center',
-                colSpan: 2,  // Aquí se indica que la celda debe abarcar dos columnas.
+                colSpan: 2, // Aquí se indica que la celda debe abarcar dos columnas.
               },
-              {},  // Esta celda debe permanecer vacía para que la combinación funcione.
+              {}, // Esta celda debe permanecer vacía para que la combinación funcione.
             ],
             [
-              createTableCell(getXXForAptitud('Apto Sin Restricciones'), 'sectionHeader', 'center'),
-              createTableCell('Apto sin restricciones. No tiene impedimentos para el puesto al que aspira o desempeña.', 'preset', 'left'),
+              createTableCell(
+                getXXForAptitud('Apto Sin Restricciones'),
+                'sectionHeader',
+                'center',
+              ),
+              createTableCell(
+                'Apto sin restricciones. No tiene impedimentos para el puesto al que aspira o desempeña.',
+                'preset',
+                'left',
+              ),
             ],
             [
-              createTableCell(getXXForAptitud('Apto Con Precaución'), 'sectionHeader', 'center'),
-              createTableCell('Apto con precaución. Requiere vigilancia médica más frecuente.', 'preset', 'left'),
+              createTableCell(
+                getXXForAptitud('Apto Con Precaución'),
+                'sectionHeader',
+                'center',
+              ),
+              createTableCell(
+                'Apto con precaución. Requiere vigilancia médica más frecuente.',
+                'preset',
+                'left',
+              ),
             ],
             [
-              createTableCell(getXXForAptitud('Apto Con Restricciones'), 'sectionHeader', 'center'),
-              createTableCell('Apto con restricciones. Requiere adaptaciones razonables para asegurar la seguridad y salud.', 'preset', 'left'),
+              createTableCell(
+                getXXForAptitud('Apto Con Restricciones'),
+                'sectionHeader',
+                'center',
+              ),
+              createTableCell(
+                'Apto con restricciones. Requiere adaptaciones razonables para asegurar la seguridad y salud.',
+                'preset',
+                'left',
+              ),
             ],
             [
-              createTableCell(getXXForAptitud('No Apto'), 'sectionHeader', 'center'),
-              createTableCell('No apto. No está permitido el desempeño del puesto al que aspira.', 'preset', 'left'),
+              createTableCell(
+                getXXForAptitud('No Apto'),
+                'sectionHeader',
+                'center',
+              ),
+              createTableCell(
+                'No apto. No está permitido el desempeño del puesto al que aspira.',
+                'preset',
+                'left',
+              ),
             ],
             [
-              createTableCell(getXXForAptitud('Evaluación No Completada'), 'sectionHeader', 'center'),
-              createTableCell('Evaluación no completada. Para concluir, requiere evaluaciones adicionales o tratamiento médico.', 'preset', 'left'),
+              createTableCell(
+                getXXForAptitud('Evaluación No Completada'),
+                'sectionHeader',
+                'center',
+              ),
+              createTableCell(
+                'Evaluación no completada. Para concluir, requiere evaluaciones adicionales o tratamiento médico.',
+                'preset',
+                'left',
+              ),
             ],
           ],
         },
@@ -453,22 +534,38 @@ export const aptitudPuestoInforme = (
                 text: 'CONCLUSIÓN Y RECOMENDACIONES',
                 style: 'tableHeader',
                 alignment: 'center',
-                colSpan: 2,  // Aquí se indica que la celda debe abarcar dos columnas.
+                colSpan: 2, // Aquí se indica que la celda debe abarcar dos columnas.
               },
-              {},  // Esta celda debe permanecer vacía para que la combinación funcione.
+              {}, // Esta celda debe permanecer vacía para que la combinación funcione.
             ],
             [
-              createTableCell('Alteraciones a la Salud', 'sectionHeaderResume', 'center'),
-              createTableCell(aptitud.alteracionesSalud, 'paragraph', 'justify'),
+              createTableCell(
+                'Alteraciones a la Salud',
+                'sectionHeaderResume',
+                'center',
+              ),
+              createTableCell(
+                aptitud.alteracionesSalud,
+                'paragraph',
+                'justify',
+              ),
             ],
             [
               createTableCell('Resultados', 'sectionHeaderResume', 'center'),
               createTableCell(aptitud.resultados, 'paragraph', 'justify'),
             ],
             [
-              createTableCell('Medidas Preventivas Específicas', 'sectionHeaderResume', 'center'),
-              createTableCell(aptitud.medidasPreventivas, 'paragraph', 'justify'),
-            ]
+              createTableCell(
+                'Medidas Preventivas Específicas',
+                'sectionHeaderResume',
+                'center',
+              ),
+              createTableCell(
+                aptitud.medidasPreventivas,
+                'paragraph',
+                'justify',
+              ),
+            ],
           ],
         },
         layout: {

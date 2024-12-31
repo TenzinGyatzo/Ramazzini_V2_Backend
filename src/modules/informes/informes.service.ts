@@ -36,10 +36,9 @@ export class InformesService {
     trabajadorId: string,
     antidopingId: string,
   ): Promise<string> {
-  
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
-  
+
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
     const datosTrabajador = {
       nombre: trabajador.nombre,
@@ -48,13 +47,18 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso)),
+      antiguedad: calcularAntiguedad(
+        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
+      ),
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       hijos: trabajador.hijos,
     };
-  
-    const antidoping = await this.expedientesService.findDocument('antidoping', antidopingId);
+
+    const antidoping = await this.expedientesService.findDocument(
+      'antidoping',
+      antidopingId,
+    );
     const datosAntidoping = {
       fechaAntidoping: antidoping.fechaAntidoping,
       marihuana: antidoping.marihuana,
@@ -63,23 +67,27 @@ export class InformesService {
       metanfetaminas: antidoping.metanfetaminas,
       opiaceos: antidoping.opiaceos,
     };
-  
+
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(antidoping.fechaAntidoping)
       .replace(/\//g, '-')
       .replace(/\\/g, '-');
     const nombreArchivo = `Antidoping ${fecha}.pdf`;
-  
+
     // Obtener la ruta específica del documento
     const rutaDirectorio = path.resolve(antidoping.rutaPDF);
     if (!fs.existsSync(rutaDirectorio)) {
       fs.mkdirSync(rutaDirectorio, { recursive: true });
     }
-  
+
     const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
-  
-    const docDefinition = antidopingInforme(nombreEmpresa, datosTrabajador, datosAntidoping);
-  
+
+    const docDefinition = antidopingInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      datosAntidoping,
+    );
+
     // Generar y guardar el PDF
     try {
       await this.printer.createPdf(docDefinition, rutaCompleta);
@@ -87,10 +95,9 @@ export class InformesService {
       console.error('[getInformeAntidoping] Error al generar el PDF:', error);
       throw error;
     }
-  
+
     return rutaCompleta; // Retorna la ruta del archivo generado
   }
-  
 
   async getInformeAptitudPuesto(
     empresaId: string,
@@ -150,86 +157,103 @@ export class InformesService {
       'historiaClinica',
       trabajadorId,
     );
-    const nearestHistoriaClinica = findNearestDocument(
-      historiasClinicas,
-      aptitud.fechaAptitudPuesto,
-      'fechaHistoriaClinica',
-    );
-    const datosHistoriaClinica = {
-      fechaHistoriaClinica: nearestHistoriaClinica.fechaHistoriaClinica,
-      resumenHistoriaClinica: nearestHistoriaClinica.resumenHistoriaClinica,
-    };
+    const nearestHistoriaClinica = historiasClinicas?.length
+      ? findNearestDocument(
+          historiasClinicas,
+          aptitud.fechaAptitudPuesto,
+          'fechaHistoriaClinica',
+        )
+      : null;
+    const datosHistoriaClinica = nearestHistoriaClinica
+      ? {
+          fechaHistoriaClinica: nearestHistoriaClinica.fechaHistoriaClinica,
+          resumenHistoriaClinica: nearestHistoriaClinica.resumenHistoriaClinica,
+        }
+      : null;
 
     const exploracionesFisicas = await this.expedientesService.findDocuments(
       'exploracionFisica',
       trabajadorId,
     );
-    const nearestExploracionFisica = findNearestDocument(
-      exploracionesFisicas,
-      aptitud.fechaAptitudPuesto,
-      'fechaExploracionFisica',
-    );
-    const datosExploracionFisica = {
-      fechaExploracionFisica: nearestExploracionFisica.fechaExploracionFisica,
-      tensionArterialSistolica:
-        nearestExploracionFisica.tensionArterialSistolica,
-      tensionArterialDiastolica:
-        nearestExploracionFisica.tensionArterialDiastolica,
-      categoriaTensionArterial:
-        nearestExploracionFisica.categoriaTensionArterial,
-      indiceMasaCorporal: nearestExploracionFisica.indiceMasaCorporal,
-      categoriaIMC: nearestExploracionFisica.categoriaIMC,
-      circunferenciaCintura: nearestExploracionFisica.circunferenciaCintura,
-      categoriaCircunferenciaCintura:
-        nearestExploracionFisica.categoriaCircunferenciaCintura,
-      resumenExploracionFisica:
-        nearestExploracionFisica.resumenExploracionFisica,
-    };
+    const nearestExploracionFisica = exploracionesFisicas?.length
+      ? findNearestDocument(
+          exploracionesFisicas,
+          aptitud.fechaAptitudPuesto,
+          'fechaExploracionFisica',
+        )
+      : null;
+    const datosExploracionFisica = nearestExploracionFisica
+      ? {
+          fechaExploracionFisica:
+            nearestExploracionFisica.fechaExploracionFisica,
+          tensionArterialSistolica:
+            nearestExploracionFisica.tensionArterialSistolica,
+          tensionArterialDiastolica:
+            nearestExploracionFisica.tensionArterialDiastolica,
+          categoriaTensionArterial:
+            nearestExploracionFisica.categoriaTensionArterial,
+          indiceMasaCorporal: nearestExploracionFisica.indiceMasaCorporal,
+          categoriaIMC: nearestExploracionFisica.categoriaIMC,
+          circunferenciaCintura: nearestExploracionFisica.circunferenciaCintura,
+          categoriaCircunferenciaCintura:
+            nearestExploracionFisica.categoriaCircunferenciaCintura,
+          resumenExploracionFisica:
+            nearestExploracionFisica.resumenExploracionFisica,
+        }
+      : null;
 
     const examenesVista = await this.expedientesService.findDocuments(
       'examenVista',
       trabajadorId,
     );
-    const nearestExamenVista = findNearestDocument(
-      examenesVista,
-      aptitud.fechaAptitudPuesto,
-      'fechaExamenVista',
-    );
-    const datosExamenVista = {
-      fechaExamenVista: nearestExamenVista.fechaExamenVista,
-      ojoIzquierdoLejanaSinCorreccion:
-        nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
-      ojoDerechoLejanaSinCorreccion:
-        nearestExamenVista.ojoDerechoLejanaSinCorreccion,
-      sinCorreccionLejanaInterpretacion:
-        nearestExamenVista.sinCorreccionLejanaInterpretacion,
-      ojoIzquierdoLejanaConCorreccion:
-        nearestExamenVista.ojoIzquierdoLejanaConCorreccion,
-      ojoDerechoLejanaConCorreccion:
-        nearestExamenVista.ojoDerechoLejanaConCorreccion,
-      conCorreccionLejanaInterpretacion:
-        nearestExamenVista.conCorreccionLejanaInterpretacion,
-      porcentajeIshihara: nearestExamenVista.porcentajeIshihara,
-      interpretacionIshihara: nearestExamenVista.interpretacionIshihara,
-    };
+    const nearestExamenVista = examenesVista?.length
+      ? findNearestDocument(
+          examenesVista,
+          aptitud.fechaAptitudPuesto,
+          'fechaExamenVista',
+        )
+      : null;
+    const datosExamenVista = nearestExamenVista
+      ? {
+          fechaExamenVista: nearestExamenVista.fechaExamenVista,
+          ojoIzquierdoLejanaSinCorreccion:
+            nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
+          ojoDerechoLejanaSinCorreccion:
+            nearestExamenVista.ojoDerechoLejanaSinCorreccion,
+          sinCorreccionLejanaInterpretacion:
+            nearestExamenVista.sinCorreccionLejanaInterpretacion,
+          ojoIzquierdoLejanaConCorreccion:
+            nearestExamenVista.ojoIzquierdoLejanaConCorreccion,
+          ojoDerechoLejanaConCorreccion:
+            nearestExamenVista.ojoDerechoLejanaConCorreccion,
+          conCorreccionLejanaInterpretacion:
+            nearestExamenVista.conCorreccionLejanaInterpretacion,
+          porcentajeIshihara: nearestExamenVista.porcentajeIshihara,
+          interpretacionIshihara: nearestExamenVista.interpretacionIshihara,
+        }
+      : null;
 
     const antidopings = await this.expedientesService.findDocuments(
       'antidoping',
       trabajadorId,
     );
-    const nearestAntidoping = findNearestDocument(
-      antidopings,
-      aptitud.fechaAptitudPuesto,
-      'fechaAntidoping',
-    );
-    const datosAntidoping = {
-      fechaAntidoping: nearestAntidoping.fechaAntidoping,
-      marihuana: nearestAntidoping.marihuana,
-      cocaina: nearestAntidoping.cocaina,
-      anfetaminas: nearestAntidoping.anfetaminas,
-      metanfetaminas: nearestAntidoping.metanfetaminas,
-      opiaceos: nearestAntidoping.opiaceos,
-    };
+    const nearestAntidoping = antidopings?.length
+      ? findNearestDocument(
+          antidopings,
+          aptitud.fechaAptitudPuesto,
+          'fechaAntidoping',
+        )
+      : null;
+    const datosAntidoping = nearestAntidoping
+      ? {
+          fechaAntidoping: nearestAntidoping.fechaAntidoping,
+          marihuana: nearestAntidoping.marihuana,
+          cocaina: nearestAntidoping.cocaina,
+          anfetaminas: nearestAntidoping.anfetaminas,
+          metanfetaminas: nearestAntidoping.metanfetaminas,
+          opiaceos: nearestAntidoping.opiaceos,
+        }
+      : null;
 
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(aptitud.fechaAptitudPuesto)
@@ -298,18 +322,23 @@ export class InformesService {
       'examenVista',
       trabajadorId,
     );
-    const nearestExamenVista = findNearestDocument(
-      examenesVista,
-      certificado.fechaCertificado,
-      'fechaExamenVista',
-    );
-    const datosExamenVista = {
-      fechaExamenVista: nearestExamenVista.fechaExamenVista,
-      ojoIzquierdoLejanaSinCorreccion:
-        nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
-      ojoDerechoLejanaSinCorreccion:
-        nearestExamenVista.ojoDerechoLejanaSinCorreccion,
-    };
+    const nearestExamenVista = examenesVista?.length
+      ? findNearestDocument(
+          examenesVista,
+          certificado.fechaCertificado,
+          'fechaExamenVista',
+        )
+      : null;
+
+    const datosExamenVista = nearestExamenVista
+      ? {
+          fechaExamenVista: nearestExamenVista.fechaExamenVista,
+          ojoIzquierdoLejanaSinCorreccion:
+            nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
+          ojoDerechoLejanaSinCorreccion:
+            nearestExamenVista.ojoDerechoLejanaSinCorreccion,
+        }
+      : null;
 
     const fecha = convertirFechaADDMMAAAA(certificado.fechaCertificado)
       .replace(/\//g, '-')

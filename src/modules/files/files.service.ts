@@ -10,9 +10,7 @@ export class FilesService {
       await fs.access(filePath);
       // Elimina el archivo
       await fs.unlink(filePath);
-      console.log(`[DEBUG] Archivo eliminado: ${filePath}`);
     } catch (error) {
-      console.error(`[ERROR] No se pudo eliminar el archivo: ${filePath} - ${error.message}`);
       throw new Error(`No se pudo eliminar el archivo: ${filePath}`);
     }
   }
