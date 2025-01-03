@@ -41,9 +41,9 @@ const headerText: Content = {
 };
 
 const firma: Content = {
-  image: 'assets/Firma-Dr-Coronel.png',
-  width: 80,
-  absolutePosition: { x: 275, y: 520 }, // Antes 505
+  image: 'assets/Firma-Coronel.png',
+  width: 250,
+  absolutePosition: { x: 180, y: 530 },
 };
 
 const campoFirma: Content = {
@@ -267,7 +267,7 @@ export const certificadoInforme = (
         margin: [0, 20, 0, 0],
       },
       // Firma del médico
-      campoFirma,
+      // campoFirma,
       firma,
     ],
     // Pie de pagina
