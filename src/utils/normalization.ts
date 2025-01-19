@@ -4,6 +4,10 @@ import { CreateCentrosTrabajoDto } from "src/modules/centros-trabajo/dto/create-
 import { UpdateCentrosTrabajoDto } from "src/modules/centros-trabajo/dto/update-centros-trabajo.dto";
 import { CreateTrabajadorDto } from "src/modules/trabajadores/dto/create-trabajador.dto";
 import { UpdateTrabajadorDto } from "src/modules/trabajadores/dto/update-trabajador.dto";
+import { CreateProveedoresSaludDto } from "src/modules/proveedores-salud/dto/create-proveedores-salud.dto";
+import { UpdateProveedoresSaludDto } from "src/modules/proveedores-salud/dto/update-proveedores-salud.dto";
+import { CreateConfiguracionesInformeDto } from "src/modules/configuraciones-informes/dto/create-configuraciones-informe.dto";
+import { UpdateConfiguracionesInformeDto } from "src/modules/configuraciones-informes/dto/update-configuraciones-informe.dto";
 
 export function normalizeEmpresaData(dto: CreateEmpresaDto | UpdateEmpresaDto) {
     return {
@@ -51,4 +55,53 @@ export function normalizeTrabajadorData(dto: CreateTrabajadorDto | UpdateTrabaja
       createdBy: dto.createdBy?.trim(),
       updatedBy: dto.updatedBy?.trim(),
     };
+}
+
+export function normalizeProveedorSaludData(dto: CreateProveedoresSaludDto | UpdateProveedoresSaludDto) {
+  return {
+    ...dto,
+    nombreComercial: dto.nombreComercial?.trim(),
+    razonSocial: dto.razonSocial?.trim(),
+    RFC: dto.RFC?.trim().toUpperCase(),
+    logotipoEmpresa: dto.logotipoEmpresa
+      ? {
+          data: dto.logotipoEmpresa.data.trim(),
+          contentType: dto.logotipoEmpresa.contentType.trim(),
+        }
+      : undefined,
+    direccion: dto.direccion?.trim(),
+    ciudad: dto.ciudad?.trim(),
+    municipio: dto.municipio?.trim(),
+    estado: dto.estado?.trim(),
+    codigoPostal: dto.codigoPostal?.trim(),
+    telefono: dto.telefono?.trim(),
+    correoElectronico: dto.correoElectronico?.trim(),
+    sitioWeb: dto.sitioWeb?.trim(),
+  };
+}
+
+export function normalizeConfiguracionInformeData(dto: CreateConfiguracionesInformeDto | UpdateConfiguracionesInformeDto) {
+  return {
+    ...dto,
+    nombreMedicoFirmante: dto.nombreMedicoFirmante?.trim(),
+    sexoMedicoFirmante: dto.sexoMedicoFirmante?.trim(),
+    numeroCedulaProfesional: dto.numeroCedulaProfesional?.trim(),
+    especialistaSaludTrabajo: dto.especialistaSaludTrabajo,
+    numeroCedulaEspecialista: dto.numeroCedulaEspecialista?.trim(),
+    nombreCredencialAdicional: dto.nombreCredencialAdicional?.trim(),
+    numeroCredencialAdicional: dto.numeroCredencialAdicional?.trim(),
+    firma: dto.firma
+      ? {
+          data: dto.firma.data.trim(),
+          contentType: dto.firma.contentType.trim(),
+        }
+      : undefined,
+    firmaConAntefirma: dto.firmaConAntefirma
+      ? {
+          data: dto.firmaConAntefirma.data.trim(),
+          contentType: dto.firmaConAntefirma.contentType.trim(),
+        }
+      : undefined,
+    idUser: dto.idUser?.trim(),
+  };
 }

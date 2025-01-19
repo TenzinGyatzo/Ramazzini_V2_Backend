@@ -10,9 +10,9 @@ interface Logotipo {
 export class ProveedorSalud extends Document {
   @Prop({ required: true })
   nombreComercial: string;
-  @Prop({ required: true })
+  @Prop()
   razonSocial: string;
-  @Prop({ required: true })
+  @Prop()
   RFC: string;
   @Prop({
     type: {
@@ -21,20 +21,22 @@ export class ProveedorSalud extends Document {
     },
   })
   logotipoEmpresa: Logotipo;
-  @Prop({ required: true })
+  @Prop()
   direccion: string;
-  @Prop({ required: true })
+  @Prop()
   ciudad: string;
-  @Prop({ required: true })
+  @Prop()
   municipio: string;
-  @Prop({ required: true })
+  @Prop()
   estado: string;
-  @Prop({ required: true })
+  @Prop()
   codigoPostal: string;
-  @Prop({ required: true })
+  @Prop()
   telefono: string;
-  @Prop({ required: true })
+  @Prop()
   correoElectronico: string;
   @Prop()
   sitioWeb: string;
 }
+
+export const ProveedorSaludSchema = SchemaFactory.createForClass(ProveedorSalud);

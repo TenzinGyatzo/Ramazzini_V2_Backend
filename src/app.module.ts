@@ -15,6 +15,8 @@ import { ExpedientesModule } from './modules/expedientes/expedientes.module';
 import { InformesModule } from './modules/informes/informes.module';
 import { PrinterModule } from './modules/printer/printer.module';
 import { DocumentMergerModule } from './modules/document-merger/document-merger.module';
+import { ProveedoresSaludModule } from './modules/proveedores-salud/proveedores-salud.module';
+import { ConfiguracionesInformesModule } from './modules/configuraciones-informes/configuraciones-informes.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { DocumentMergerModule } from './modules/document-merger/document-merger.
     InformesModule,
     PrinterModule,
     DocumentMergerModule,
+    ProveedoresSaludModule,
+    ConfiguracionesInformesModule,
   ],
 })
 export class AppModule {}
