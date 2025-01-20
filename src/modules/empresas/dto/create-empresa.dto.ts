@@ -45,7 +45,7 @@ export class CreateEmpresaDto {
   })
   @IsString({ message: 'El RFC debe ser un string' })
   @IsNotEmpty({ message: 'El RFC no puede estar vacío' })
-  @Matches(/^([A-ZÑ&]{3,4})\d{6}([A-Z0-9]{2}[A0-9])$/, {
+  @Matches(/^[A-ZÑ&]{3,4}\d{2}\d{2}\d{2}[A-Z\d]{3}$/, {
     message: 'El RFC debe de tener un formato válido',
   })
   RFC: string;

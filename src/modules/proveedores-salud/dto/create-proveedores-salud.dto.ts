@@ -20,9 +20,9 @@ export class CreateProveedoresSaludDto {
 
     @IsOptional()
     @IsString({ message: 'El RFC debe ser un string' })
-    @Matches(/^([A-ZÑ&]{3,4})\d{6}([A-Z0-9]{2}[A0-9])$/, {
+    /* @Matches(/^([A-ZÑ&]{3,4})\d{6}([A-Z0-9]{2}[A0-9])$/, {
       message: 'El RFC debe de tener un formato válido',
-    })
+    }) */
     RFC?: string;
 
     @IsOptional()
@@ -48,19 +48,19 @@ export class CreateProveedoresSaludDto {
 
     @IsOptional()
     @IsString({ message: 'El Código Postal debe ser un string' })
-    @Matches(/^[0-9]{5}$/, { message: 'El Código Postal debe de tener un formato válido o estar vacío' })
+    // @Matches(/^[0-9]{5}$/, { message: 'El Código Postal debe de tener un formato válido o estar vacío' })
     codigoPostal?: string
 
     @IsOptional()
     @IsString({ message: 'El teléfono debe ser un string' })
-    @Matches(/^$|^[0-9]{10}$/, { message: 'El teléfono debe estar vacío o tener 10 dígitos' })
+    // @Matches(/^$|^[0-9]{10}$/, { message: 'El teléfono debe estar vacío o tener 10 dígitos' })
     telefono?: string; // El operador `?` también indica que es opcional en TypeScript
 
     @IsOptional()
     @IsString({ message: 'El email debe ser un string' })
-    @Matches(/^$|^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/, {
+    /* @Matches(/^$|^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/, {
       message: 'El email debe de tener un formato válido o estar vacío',
-    })
+    }) */
     correoElectronico?: string; // El operador `?` es opcional en TypeScript
 
     @IsOptional()

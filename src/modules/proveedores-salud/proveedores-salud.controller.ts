@@ -129,14 +129,14 @@ export class ProveedoresSaludController {
   async update(
     @Param('id') id: string,
     @Body() updateProveedoresSaludDto: UpdateProveedoresSaludDto,
-    file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
     // Si se sube un archivo, se añade al DTO para actualizar el logotipo
     if (file) {
-      UpdateProveedoresSaludDto.logotipoEmpresa = {
+      updateProveedoresSaludDto.logotipoEmpresa = {
         data: file.filename,
         contentType: file.mimetype,
       };
@@ -154,7 +154,7 @@ export class ProveedoresSaludController {
     }
 
     return {
-      message: 'Proveedor de salud actualizado exitosamente',
+      message: 'Actualizado exitosamente',
       data: proveedorSalud,
     };
   }
