@@ -91,7 +91,7 @@ export function normalizeMedicoFirmanteData(
   return {
     ...dto,
     nombre: dto.nombre?.trim(),
-    sexo: dto.sexo?.trim(),
+    tituloProfesional: dto.tituloProfesional?.trim(),
     numeroCedulaProfesional: dto.numeroCedulaProfesional?.trim(),
     especialistaSaludTrabajo: dto.especialistaSaludTrabajo,
     numeroCedulaEspecialista: dto.numeroCedulaEspecialista?.trim(),

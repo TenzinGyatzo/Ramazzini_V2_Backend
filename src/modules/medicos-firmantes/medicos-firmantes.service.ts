@@ -24,6 +24,10 @@ export class MedicosFirmantesService {
     return this.medicoFirmanteModel.findById(id).exec();
   }
 
+  async findOneByUserId(idUsuario: string): Promise<MedicoFirmante> {
+    return this.medicoFirmanteModel.findOne({ idUsuario }).exec();
+  }
+
   async update(id: string, updateMedicoFirmanteDto: UpdateMedicoFirmanteDto): Promise<MedicoFirmante> {
     const normalizedDto = normalizeMedicoFirmanteData(updateMedicoFirmanteDto);
     return this.medicoFirmanteModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();

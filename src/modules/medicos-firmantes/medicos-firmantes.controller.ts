@@ -80,7 +80,9 @@ export class MedicosFirmantesController {
       );
       return { message: 'Configuración creada exitosamente', data: empresa };
     } catch (error) {
-      throw new BadRequestException('Error al crear al registrar datos del médico firmante');
+      throw new BadRequestException(
+        'Error al crear al registrar datos del médico firmante',
+      );
     }
   }
 
@@ -105,6 +107,29 @@ export class MedicosFirmantesController {
 
     if (!medico) {
       throw new NotFoundException('No se encontró el médico firmante');
+    }
+
+    return medico;
+  }
+
+  @Get('obtener-medico-por-usuario/:idUsuario')
+  async findOneByUserId(@Param('idUsuario') idUsuario: string) {
+    // Validar si el idUsuario es un ObjectId válido (si es necesario)
+    if (!isValidObjectId(idUsuario)) {
+      throw new BadRequestException(
+        'El ID de usuario proporcionado no es válido',
+      );
+    }
+
+    // Llamar al servicio para buscar por idUsuario
+    const medico =
+      await this.medicosFirmantesService.findOneByUserId(idUsuario);
+
+    // Si no se encuentra el médico, lanzar una excepción
+    if (!medico) {
+      throw new NotFoundException(
+        'No se encontró el médico firmante para el usuario proporcionado',
+      );
     }
 
     return medico;
@@ -167,7 +192,9 @@ export class MedicosFirmantesController {
     );
 
     if (!medico) {
-      return { message: `No se pudo actualziar el medico firmante con id ${id}` };
+      return {
+        message: `No se pudo actualziar el medico firmante con id ${id}`,
+      };
     }
 
     return {
@@ -182,8 +209,7 @@ export class MedicosFirmantesController {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    const deletedConfiguracion =
-      await this.medicosFirmantesService.remove(id);
+    const deletedConfiguracion = await this.medicosFirmantesService.remove(id);
 
     if (!deletedConfiguracion) {
       return {
