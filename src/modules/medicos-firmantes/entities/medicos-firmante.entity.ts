@@ -1,10 +1,10 @@
 import { Document } from "mongoose";
 import { User } from "src/modules/users/entities/user.entity";
 
-export class ConfiguracionInforme extends Document {
+export class MedicoFirmante extends Document {
     _id: string;
-    nombreMedicoFirmante: string;
-    sexoMedicoFirmante?: string;
+    nombre: string;
+    sexo?: string;
     numeroCedulaProfesional?: string;
     especialistaSaludTrabajo?: boolean;
     numeroCedulaEspecialista?: string;

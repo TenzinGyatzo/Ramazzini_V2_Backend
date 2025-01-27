@@ -1,6 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 
+// "¿Cuál de las siguientes opciones describe mejor el perfil del proveedor de salud ocupacional que estás registrando?"
+const perfiles = [
+  'Médico único de empresa',
+  'Médico independiente que brinda servicios a empresas',
+  'Empresa de salud ocupacional',
+  'Equipo Médico Interno de la Empresa',
+  'Otro',
+]
+
 interface Logotipo {
   data: string;
   contentType: string;
@@ -9,11 +18,11 @@ interface Logotipo {
 @Schema()
 export class ProveedorSalud extends Document {
   @Prop({ required: true })
-  nombreComercial: string;
-  @Prop()
-  razonSocial: string;
-  @Prop()
+  nombre: string;
+  @Prop({ required: true }) 
   RFC: string;
+  @Prop({ required: true, enum: perfiles })
+  perfilProveedorSalud: string;
   @Prop({
     type: {
       data: { type: String },
@@ -22,15 +31,13 @@ export class ProveedorSalud extends Document {
   })
   logotipoEmpresa: Logotipo;
   @Prop()
-  direccion: string;
-  @Prop()
-  ciudad: string;
+  estado: string;
   @Prop()
   municipio: string;
   @Prop()
-  estado: string;
-  @Prop()
   codigoPostal: string;
+  @Prop()
+  direccion: string;
   @Prop()
   telefono: string;
   @Prop()

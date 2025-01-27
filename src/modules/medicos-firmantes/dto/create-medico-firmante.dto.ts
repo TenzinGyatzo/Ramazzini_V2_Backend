@@ -19,15 +19,15 @@ class LogotipoDto {
   contentType: string;
 }
 
-export class CreateConfiguracionesInformeDto {
+export class CreateMedicoFirmanteDto {
   @IsString({ message: 'El nombre debe ser un string' })
   @IsNotEmpty({ message: 'El nombre no puede estar vacío' })
-  nombreMedicoFirmante: string;
+  nombre: string;
 
   @IsOptional()
   @IsString({ message: 'El sexo debe ser un string' })
   @IsEnum(sexos, { message: 'El sexo debe ser Masculino o Femenino' })
-  sexoMedicoFirmante?: string;
+  sexo?: string;
 
   @IsOptional()
   @IsString({ message: 'El numero de cédula profesional debe ser un string' })

@@ -11,21 +11,21 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfiguracionesInformesService } from './configuraciones-informes.service';
-import { CreateConfiguracionesInformeDto } from './dto/create-configuraciones-informe.dto';
-import { UpdateConfiguracionesInformeDto } from './dto/update-configuraciones-informe.dto';
+import { MedicosFirmantesService } from './medicos-firmantes.service';
+import { CreateMedicoFirmanteDto } from './dto/create-medico-firmante.dto';
+import { UpdateMedicoFirmanteDto } from './dto/update-medico-firmante.dto';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import path from 'path';
 import { isValidObjectId } from 'mongoose';
 
-@Controller('configuraciones-informes')
-export class ConfiguracionesInformesController {
+@Controller('medicos-firmantes')
+export class MedicosFirmantesController {
   constructor(
-    private readonly configuracionesInformesService: ConfiguracionesInformesService,
+    private readonly medicosFirmantesService: MedicosFirmantesService,
   ) {}
 
-  @Post('crear-configuracion')
+  @Post('registrar-medico')
   @UseInterceptors(
     FilesInterceptor('files', 2, {
       storage: diskStorage({
@@ -35,7 +35,7 @@ export class ConfiguracionesInformesController {
         ),
         filename: (req, file, callback) => {
           // Genera un nombre de archivo único basado en el nombre del médico firmante
-          const sanitizedDoctorName = req.body.nombreMedicoFirmante
+          const sanitizedDoctorName = req.body.nombre
             .replace(/\s+/g, '-') // Reemplaza espacios por guiones
             .replace(/[^a-zA-Z0-9\-]/g, '') // Elimina caracteres especiales
             .toLowerCase(); // Convierte a minúsculas
@@ -52,22 +52,22 @@ export class ConfiguracionesInformesController {
     }),
   )
   async create(
-    @Body() createConfiguracionesInformeDto: CreateConfiguracionesInformeDto,
+    @Body() createMedicoFirmanteDto: CreateMedicoFirmanteDto,
     @UploadedFile() files: Express.Multer.File[],
   ) {
     console.log('Archivos recibidos:', files);
-    console.log('Datos de la configuración:', createConfiguracionesInformeDto);
+    console.log('Datos del médico firmante:', createMedicoFirmanteDto);
 
     try {
       if (files && files.length > 0) {
         files.forEach((file) => {
           if (file.fieldname === 'firma') {
-            createConfiguracionesInformeDto.firma = {
+            createMedicoFirmanteDto.firma = {
               data: file.filename,
               contentType: file.mimetype,
             };
           } else if (file.fieldname === 'firmaConAntefirma') {
-            createConfiguracionesInformeDto.firmaConAntefirma = {
+            createMedicoFirmanteDto.firmaConAntefirma = {
               data: file.filename,
               contentType: file.mimetype,
             };
@@ -75,42 +75,42 @@ export class ConfiguracionesInformesController {
         });
       }
 
-      const empresa = await this.configuracionesInformesService.create(
-        createConfiguracionesInformeDto,
+      const empresa = await this.medicosFirmantesService.create(
+        createMedicoFirmanteDto,
       );
       return { message: 'Configuración creada exitosamente', data: empresa };
     } catch (error) {
-      throw new BadRequestException('Error al crear la configuración');
+      throw new BadRequestException('Error al crear al registrar datos del médico firmante');
     }
   }
 
-  @Get('obtener-configuraciones')
+  @Get('obtener-medicos')
   async findAll() {
-    const configuraciones = await this.configuracionesInformesService.findAll();
+    const medicos = await this.medicosFirmantesService.findAll();
 
-    if (!configuraciones || configuraciones.length === 0) {
-      return { message: 'No se encontraron configuraciones' };
+    if (!medicos || medicos.length === 0) {
+      return { message: 'No se encontraron medicos' };
     }
 
-    return configuraciones;
+    return medicos;
   }
 
-  @Get('obtener-configuracion/:id')
+  @Get('obtener-medico/:id')
   async findOne(@Param('id') id: string) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    const configuracion = await this.configuracionesInformesService.findOne(id);
+    const medico = await this.medicosFirmantesService.findOne(id);
 
-    if (!configuracion) {
-      throw new NotFoundException('No se encontró la configuración');
+    if (!medico) {
+      throw new NotFoundException('No se encontró el médico firmante');
     }
 
-    return configuracion;
+    return medico;
   }
 
-  @Patch('actualizar-configuracion/:id')
+  @Patch('actualizar-medico/:id')
   @UseInterceptors(
     FilesInterceptor('files', 2, {
       storage: diskStorage({
@@ -120,7 +120,7 @@ export class ConfiguracionesInformesController {
         ),
         filename: (req, file, callback) => {
           // Genera un nombre de archivo único basado en el nombre del médico firmante
-          const sanitizedDoctorName = req.body.nombreMedicoFirmante
+          const sanitizedDoctorName = req.body.nombre
             .replace(/\s+/g, '-') // Reemplaza espacios por guiones
             .replace(/[^a-zA-Z0-9\-]/g, '') // Elimina caracteres especiales
             .toLowerCase(); // Convierte a minúsculas
@@ -138,7 +138,7 @@ export class ConfiguracionesInformesController {
   )
   async update(
     @Param('id') id: string,
-    @Body() updateConfiguracionesInformeDto: UpdateConfiguracionesInformeDto,
+    @Body() updateMedicoFirmanteDto: UpdateMedicoFirmanteDto,
     @UploadedFile() files: Express.Multer.File[],
   ) {
     if (!isValidObjectId(id)) {
@@ -148,12 +148,12 @@ export class ConfiguracionesInformesController {
     if (files && files.length > 0) {
       files.forEach((file) => {
         if (file.fieldname === 'firma') {
-          updateConfiguracionesInformeDto.firma = {
+          updateMedicoFirmanteDto.firma = {
             data: file.filename,
             contentType: file.mimetype,
           };
         } else if (file.fieldname === 'firmaConAntefirma') {
-          updateConfiguracionesInformeDto.firmaConAntefirma = {
+          updateMedicoFirmanteDto.firmaConAntefirma = {
             data: file.filename,
             contentType: file.mimetype,
           };
@@ -161,33 +161,33 @@ export class ConfiguracionesInformesController {
       });
     }
 
-    const configuracion = await this.configuracionesInformesService.update(
+    const medico = await this.medicosFirmantesService.update(
       id,
-      updateConfiguracionesInformeDto,
+      updateMedicoFirmanteDto,
     );
 
-    if (!configuracion) {
-      return { message: `No se pudo actualziar la configuración con id ${id}` };
+    if (!medico) {
+      return { message: `No se pudo actualziar el medico firmante con id ${id}` };
     }
 
     return {
       message: 'Configuración actualizada exitosamente',
-      data: configuracion,
+      data: medico,
     };
   }
 
-  @Delete('eliminar-configuracion/:id')
+  @Delete('eliminar-medico/:id')
   async remove(@Param('id') id: string) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
     const deletedConfiguracion =
-      await this.configuracionesInformesService.remove(id);
+      await this.medicosFirmantesService.remove(id);
 
     if (!deletedConfiguracion) {
       return {
-        message: `La configuración con ID ${id} no existe o ya ha sido eliminada.`,
+        message: `El médico firmante con ID ${id} no existe o ya ha sido eliminada.`,
       };
     }
 

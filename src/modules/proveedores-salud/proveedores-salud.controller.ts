@@ -34,13 +34,13 @@ export class ProveedoresSaludController {
           `../../../../${process.env.PROVIDERS_UPLOADS_DIR}`,
         ),
         filename: (req, file, callback) => {
-          // Genera un nombre de archivo único basado en el nombre comercial del proveedor.
-          const sanitizedCompanyName = req.body.nombreComercial
+          // Genera un nombre de archivo único basado en el nombre del proveedor.
+          const sanitizedCompanyName = req.body.nombre
             .replace(/\s+/g, '-') // Reemplaza espacios por guiones
             .replace(/[^a-zA-Z0-9\-]/g, '') // Elimina caracteres especiales para evitar problemas en el nombre de archivo
             .toLowerCase(); // Convierte el nombre a minúsculas
 
-          // Forma el nombre del archivo con el nombre comercial y la extensión original del archivo
+          // Forma el nombre del archivo con el nombre y la extensión original del archivo
           const uniqueFilename = `${sanitizedCompanyName}-logo${path.extname(file.originalname)}`;
 
           callback(null, uniqueFilename);
@@ -114,7 +114,7 @@ export class ProveedoresSaludController {
         ),
         filename: (req, file, callback) => {
           // Genera un nombre de archivo único basado en el nombre comercial de la empresa.
-          const sanitizedCompanyName = req.body.nombreComercial
+          const sanitizedCompanyName = req.body.nombre
             .replace(/\s+/g, '-') // Reemplaza espacios por guiones
             .replace(/[^a-zA-Z0-9\-]/g, '') // Elimina caracteres especiales para evitar problemas en el nombre de archivo
             .toLowerCase(); // Convierte el nombre a minúsculas

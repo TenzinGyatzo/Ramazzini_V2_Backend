@@ -16,7 +16,7 @@ import { InformesModule } from './modules/informes/informes.module';
 import { PrinterModule } from './modules/printer/printer.module';
 import { DocumentMergerModule } from './modules/document-merger/document-merger.module';
 import { ProveedoresSaludModule } from './modules/proveedores-salud/proveedores-salud.module';
-import { ConfiguracionesInformesModule } from './modules/configuraciones-informes/configuraciones-informes.module';
+import { MedicosFirmantesModule } from './modules/medicos-firmantes/medicos-firmantes.module';
 
 @Module({
   imports: [
@@ -51,7 +51,7 @@ import { ConfiguracionesInformesModule } from './modules/configuraciones-informe
     PrinterModule,
     DocumentMergerModule,
     ProveedoresSaludModule,
-    ConfiguracionesInformesModule,
+    MedicosFirmantesModule,
   ],
 })
 export class AppModule {}
