@@ -4,7 +4,7 @@ import { User } from "src/modules/users/entities/user.entity";
 export class MedicoFirmante extends Document {
     _id: string;
     nombre: string;
-    sexo?: string;
+    tituloProfesional?: string;
     numeroCedulaProfesional?: string;
     especialistaSaludTrabajo?: boolean;
     numeroCedulaEspecialista?: string;

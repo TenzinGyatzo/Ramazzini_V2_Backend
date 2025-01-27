@@ -9,7 +9,7 @@ import {
   IsOptional,
 } from 'class-validator';
 
-const sexos = ['Masculino', 'Femenino'];
+const titulos = ['Dr.', 'Dra.'];
 
 class LogotipoDto {
   @IsString({ message: 'El "data" del logotipo debe ser un string' })
@@ -25,9 +25,9 @@ export class CreateMedicoFirmanteDto {
   nombre: string;
 
   @IsOptional()
-  @IsString({ message: 'El sexo debe ser un string' })
-  @IsEnum(sexos, { message: 'El sexo debe ser Masculino o Femenino' })
-  sexo?: string;
+  @IsString({ message: 'El título profesional debe ser un string' })
+  @IsEnum(titulos, { message: 'El título profesional debe ser Dr. o Dra.' })
+  tituloProfesional?: string;
 
   @IsOptional()
   @IsString({ message: 'El numero de cédula profesional debe ser un string' })

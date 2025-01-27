@@ -12,7 +12,7 @@ export class MedicoFirmante extends Document {
     @Prop({ required: true })
     nombre: string;
     @Prop()
-    sexo?: string;
+    tituloProfesional?: string;
     @Prop()
     numeroCedulaProfesional?: string;
     @Prop()
