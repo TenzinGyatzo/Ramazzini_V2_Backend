@@ -127,9 +127,7 @@ export class MedicosFirmantesController {
 
     // Si no se encuentra el médico, lanzar una excepción
     if (!medico) {
-      throw new NotFoundException(
-        'No se encontró el médico firmante para el usuario proporcionado',
-      );
+      return { message: 'No se encontró el médico firmante', data: null };
     }
 
     return medico;
