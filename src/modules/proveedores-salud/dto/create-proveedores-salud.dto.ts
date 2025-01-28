@@ -35,7 +35,7 @@ export class CreateProveedoresSaludDto {
     perfilProveedorSalud: string;
 
     @IsOptional()
-    @ValidateNested()
+    // @ValidateNested()
     @Type(() => LogotipoDto)
     logotipoEmpresa?: LogotipoDto;
 

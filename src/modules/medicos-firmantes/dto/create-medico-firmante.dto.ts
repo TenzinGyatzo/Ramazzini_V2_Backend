@@ -5,11 +5,11 @@ import {
   ValidateNested,
   IsEnum,
   IsMongoId,
-  IsBoolean,
   IsOptional,
 } from 'class-validator';
 
 const titulos = ['Dr.', 'Dra.'];
+const siONo = ['Si', 'No'];
 
 class LogotipoDto {
   @IsString({ message: 'El "data" del logotipo debe ser un string' })
@@ -26,7 +26,7 @@ export class CreateMedicoFirmanteDto {
 
   @IsOptional()
   @IsString({ message: 'El título profesional debe ser un string' })
-  @IsEnum(titulos, { message: 'El título profesional debe ser Dr. o Dra.' })
+  // @IsEnum(titulos, { message: 'El título profesional debe ser Dr. o Dra.' })
   tituloProfesional?: string;
 
   @IsOptional()
@@ -34,8 +34,8 @@ export class CreateMedicoFirmanteDto {
   numeroCedulaProfesional?: string;
 
   @IsOptional()
-  @IsBoolean({ message: 'El estado debe ser un booleano' })
-  especialistaSaludTrabajo?: boolean;
+  // @IsEnum(siONo, { message: 'especialistaSaludTrabajo debe ser Si o No' })
+  especialistaSaludTrabajo?: string;
 
   @IsOptional()
   @IsString({
@@ -54,12 +54,12 @@ export class CreateMedicoFirmanteDto {
   numeroCredencialAdicional?: string;
 
   @IsOptional()
-  @ValidateNested()
+  // @ValidateNested()
   @Type(() => LogotipoDto)
   firma?: LogotipoDto;
 
   @IsOptional()
-  @ValidateNested()
+  // @ValidateNested()
   @Type(() => LogotipoDto)
   firmaConAntefirma?: LogotipoDto;
 

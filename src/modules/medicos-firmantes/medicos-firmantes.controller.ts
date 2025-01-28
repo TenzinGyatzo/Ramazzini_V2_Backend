@@ -75,10 +75,10 @@ export class MedicosFirmantesController {
         });
       }
 
-      const empresa = await this.medicosFirmantesService.create(
+      const medico = await this.medicosFirmantesService.create(
         createMedicoFirmanteDto,
       );
-      return { message: 'Configuración creada exitosamente', data: empresa };
+      return { message: 'Creado exitosamente', data: medico };
     } catch (error) {
       throw new BadRequestException(
         'Error al crear al registrar datos del médico firmante',
@@ -112,18 +112,18 @@ export class MedicosFirmantesController {
     return medico;
   }
 
-  @Get('obtener-medico-por-usuario/:idUsuario')
-  async findOneByUserId(@Param('idUsuario') idUsuario: string) {
-    // Validar si el idUsuario es un ObjectId válido (si es necesario)
-    if (!isValidObjectId(idUsuario)) {
+  @Get('obtener-medico-por-usuario/:idUser')
+  async findOneByUserId(@Param('idUser') idUser: string) {
+    // Validar si el idUser es un ObjectId válido (si es necesario)
+    if (!isValidObjectId(idUser)) {
       throw new BadRequestException(
         'El ID de usuario proporcionado no es válido',
       );
     }
 
-    // Llamar al servicio para buscar por idUsuario
+    // Llamar al servicio para buscar por idUser
     const medico =
-      await this.medicosFirmantesService.findOneByUserId(idUsuario);
+      await this.medicosFirmantesService.findOneByUserId(idUser);
 
     // Si no se encuentra el médico, lanzar una excepción
     if (!medico) {
@@ -196,7 +196,7 @@ export class MedicosFirmantesController {
     }
 
     return {
-      message: 'Configuración actualizada exitosamente',
+      message: 'Actualizado exitosamente',
       data: medico,
     };
   }
@@ -207,16 +207,16 @@ export class MedicosFirmantesController {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    const deletedConfiguracion = await this.medicosFirmantesService.remove(id);
+    const deletedMedicoFirmante = await this.medicosFirmantesService.remove(id);
 
-    if (!deletedConfiguracion) {
+    if (!deletedMedicoFirmante) {
       return {
         message: `El médico firmante con ID ${id} no existe o ya ha sido eliminada.`,
       };
     }
 
     return {
-      message: 'Configuración eliminada exitosamente',
+      message: 'Médico firmante eliminado exitosamente',
     };
   }
 }
