@@ -6,6 +6,7 @@ import { EmpresasModule } from '../empresas/empresas.module';
 import { TrabajadoresModule } from '../trabajadores/trabajadores.module';
 import { ExpedientesModule } from '../expedientes/expedientes.module';
 import { FilesModule } from '../files/files.module';
+import { MedicosFirmantesModule } from '../medicos-firmantes/medicos-firmantes.module';
 
 @Module({
   controllers: [InformesController],
@@ -15,7 +16,8 @@ import { FilesModule } from '../files/files.module';
     EmpresasModule, 
     TrabajadoresModule, 
     forwardRef(() => ExpedientesModule),
-    FilesModule, // Nuevo módulo
+    FilesModule,
+    MedicosFirmantesModule,
   ],
   exports: [InformesService],
 })

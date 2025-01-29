@@ -14,7 +14,7 @@ import {
 import { MedicosFirmantesService } from './medicos-firmantes.service';
 import { CreateMedicoFirmanteDto } from './dto/create-medico-firmante.dto';
 import { UpdateMedicoFirmanteDto } from './dto/update-medico-firmante.dto';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import path from 'path';
 import { isValidObjectId } from 'mongoose';
@@ -27,7 +27,7 @@ export class MedicosFirmantesController {
 
   @Post('registrar-medico')
   @UseInterceptors(
-    FilesInterceptor('files', 2, {
+    FileInterceptor('firma', {
       storage: diskStorage({
         destination: path.resolve(
           __dirname,
@@ -53,26 +53,17 @@ export class MedicosFirmantesController {
   )
   async create(
     @Body() createMedicoFirmanteDto: CreateMedicoFirmanteDto,
-    @UploadedFile() files: Express.Multer.File[],
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    console.log('Archivos recibidos:', files);
+    console.log('Archivo recibidos:', file);
     console.log('Datos del médico firmante:', createMedicoFirmanteDto);
 
     try {
-      if (files && files.length > 0) {
-        files.forEach((file) => {
-          if (file.fieldname === 'firma') {
-            createMedicoFirmanteDto.firma = {
-              data: file.filename,
-              contentType: file.mimetype,
-            };
-          } else if (file.fieldname === 'firmaConAntefirma') {
-            createMedicoFirmanteDto.firmaConAntefirma = {
-              data: file.filename,
-              contentType: file.mimetype,
-            };
-          }
-        });
+      if (file) {
+        createMedicoFirmanteDto.firma = {
+          data: file.filename,
+          contentType: file.mimetype,
+        };
       }
 
       const medico = await this.medicosFirmantesService.create(
@@ -135,7 +126,7 @@ export class MedicosFirmantesController {
 
   @Patch('actualizar-medico/:id')
   @UseInterceptors(
-    FilesInterceptor('files', 2, {
+    FileInterceptor('firma', {
       storage: diskStorage({
         destination: path.resolve(
           __dirname,
@@ -162,26 +153,17 @@ export class MedicosFirmantesController {
   async update(
     @Param('id') id: string,
     @Body() updateMedicoFirmanteDto: UpdateMedicoFirmanteDto,
-    @UploadedFile() files: Express.Multer.File[],
+    @UploadedFile() file: Express.Multer.File,
   ) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
     // Si se sube un archivo, se añade al DTO para actualizar el logotipo
-    if (files && files.length > 0) {
-      files.forEach((file) => {
-        if (file.fieldname === 'firma') {
-          updateMedicoFirmanteDto.firma = {
-            data: file.filename,
-            contentType: file.mimetype,
-          };
-        } else if (file.fieldname === 'firmaConAntefirma') {
-          updateMedicoFirmanteDto.firmaConAntefirma = {
-            data: file.filename,
-            contentType: file.mimetype,
-          };
-        }
-      });
+    if (file) {
+      updateMedicoFirmanteDto.firma = {
+        data: file.filename,
+        contentType: file.mimetype,
+      };
     }
 
     const medico = await this.medicosFirmantesService.update(

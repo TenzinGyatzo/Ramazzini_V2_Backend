@@ -6,15 +6,16 @@ import { Response } from 'express';
 export class InformesController {
   constructor(private readonly informesService: InformesService) {}
 
-  @Get('antidoping/:empresaId/:trabajadorId/:antidopingId')
+  @Get('antidoping/:empresaId/:trabajadorId/:antidopingId/:userId')
   async getInformeAntidoping(
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('antidopingId') antidopingId: string,
+    @Param('userId') userId: string,
   ) {
   
     try {
-      const rutaPDF = await this.informesService.getInformeAntidoping(empresaId, trabajadorId, antidopingId);
+      const rutaPDF = await this.informesService.getInformeAntidoping(empresaId, trabajadorId, antidopingId, userId);
       return { message: 'PDF generado exitosamente', ruta: rutaPDF };
     } catch (error) {
       console.error('[getInformeAntidoping] Error al generar el informe antidoping:', error);

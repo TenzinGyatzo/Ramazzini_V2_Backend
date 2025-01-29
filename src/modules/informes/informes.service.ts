@@ -20,6 +20,7 @@ import {
 import { findNearestDocument } from 'src/utils/findNearestDocuments';
 import * as path from 'path';
 import * as fs from 'fs';
+import { MedicosFirmantesService } from '../medicos-firmantes/medicos-firmantes.service';
 
 @Injectable()
 export class InformesService {
@@ -29,12 +30,14 @@ export class InformesService {
     private readonly trabajadoresService: TrabajadoresService,
     private readonly expedientesService: ExpedientesService,
     private readonly filesService: FilesService,
+    private readonly medicosFirmantesService: MedicosFirmantesService,
   ) {}
 
   async getInformeAntidoping(
     empresaId: string,
     trabajadorId: string,
     antidopingId: string,
+    userId: string,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -67,6 +70,17 @@ export class InformesService {
       metanfetaminas: antidoping.metanfetaminas,
       opiaceos: antidoping.opiaceos,
     };
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = {
+      nombre: medicoFirmante.nombre,
+      tituloProfesional: medicoFirmante.tituloProfesional,
+      numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+      especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+      numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+      nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+      numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
+      firma: medicoFirmante.firma,
+    };
 
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(antidoping.fechaAntidoping)
@@ -86,6 +100,7 @@ export class InformesService {
       nombreEmpresa,
       datosTrabajador,
       datosAntidoping,
+      datosMedicoFirmante,
     );
 
     // Generar y guardar el PDF

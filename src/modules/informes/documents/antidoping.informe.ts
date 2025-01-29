@@ -112,11 +112,23 @@ interface Antidoping {
   opiaceos: string;
 }
 
+interface MedicoFirmante {
+  nombre: string;
+  tituloProfesional: string;
+  numeroCedulaProfesional: string;
+  especialistaSaludTrabajo: string;
+  numeroCedulaEspecialista: string;
+  nombreCredencialAdicional: string;
+  numeroCredencialAdicional: string;
+  firma: object;
+}
+
 // ==================== INFORME PRINCIPAL ====================
 export const antidopingInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
   antidoping: Antidoping,
+  medicoFirmante: MedicoFirmante,
 ): TDocumentDefinitions => {
   return {
     pageSize: 'LETTER',
@@ -267,19 +279,19 @@ export const antidopingInforme = (
             {
               text: [
                 {
-                  text: 'Dr. Jesús Manuel Coronel Valenzuela\n',
+                  text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}\n`,
                   bold: true,
                 },
                 {
-                  text: 'Cédula Profesional Médico Cirujano No. 1379978\n',
+                  text: `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`,
                   bold: false,
                 },
                 {
-                  text: 'Cédula Especialidad Med. del Trab. No. 3181172\n',
+                  text: `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                   bold: false,
                 },
                 {
-                  text: 'Certificado Consejo Mex. de Med. Trab. No.891',
+                  text: `${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}\n`,
                   bold: false,
                 },
               ],
