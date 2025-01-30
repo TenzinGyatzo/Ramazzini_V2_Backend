@@ -21,6 +21,7 @@ import { findNearestDocument } from 'src/utils/findNearestDocuments';
 import * as path from 'path';
 import * as fs from 'fs';
 import { MedicosFirmantesService } from '../medicos-firmantes/medicos-firmantes.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class InformesService {
@@ -31,6 +32,7 @@ export class InformesService {
     private readonly expedientesService: ExpedientesService,
     private readonly filesService: FilesService,
     private readonly medicosFirmantesService: MedicosFirmantesService,
+    private readonly usersService: UsersService,
   ) {}
 
   async getInformeAntidoping(
@@ -81,6 +83,13 @@ export class InformesService {
       numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
       firma: medicoFirmante.firma as { data: string; contentType: string },
     };
+
+    /*
+    const usuario = await this.usersService.findById(userId);
+     const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+    */
 
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(antidoping.fechaAntidoping)
