@@ -102,6 +102,13 @@ function formatearFechaUTC(fecha: Date): string {
   return `${dia}-${mes}-${año}`;
 }
 
+function formatearTelefono(telefono: string): string {
+  if (!telefono || telefono.length !== 10) {
+    return 'Teléfono inválido';  // Mensaje de error si el número no tiene 10 dígitos
+  }
+  return `(${telefono.slice(0, 3)}) ${telefono.slice(3, 6)} ${telefono.slice(6)}`;
+}
+
 // ==================== INTERFACES ====================
 
 interface Trabajador {
@@ -165,17 +172,13 @@ export const certificadoInforme = (
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
 
-  const firma: Content = {
-    image: `assets/signatories/${medicoFirmante.firma.data}`,
-    width: 150,
-    absolutePosition: { x: 230, y: 530 },
-  };
+  const firma: Content = medicoFirmante.firma?.data
+  ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 150, absolutePosition: { x: 230, y: 530 } }
+  : { text: '' };
 
-  const logo: Content = {
-    image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
-    width: 55,
-    margin: [40, 20, 0, 0],
-  };
+  const logo: Content = proveedorSalud.logotipoEmpresa?.data
+  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
+  : { text: '' };
 
   return {
     pageSize: 'LETTER',
@@ -333,18 +336,26 @@ export const certificadoInforme = (
         {
           text: [
             {
-              text: 'Ángel Flores No. 2072 Norte, Fracc Las Fuentes. Los Mochis, Ahome, Sinaloa. Tel. (668) 136 3973\n',
+              text: [
+                proveedorSalud.direccion,
+                proveedorSalud.municipio,
+                proveedorSalud.estado,
+              ]
+                .filter(item => item)  // Elimina valores faltantes
+                .join(', ') + '.' + (proveedorSalud.telefono ? ` Tel. ${formatearTelefono(proveedorSalud.telefono)}` : ''),  // Aplica el formato al teléfono
               bold: false,
               italics: true,
             },
-            {
-              text: 'www.ames.org.mx',
-              bold: false,
-              link: 'https://www.ames.org.mx',
-              italics: true,
-              color: 'blue',
-            },
-          ],
+            proveedorSalud.sitioWeb
+              ? {
+                  text: `${proveedorSalud.sitioWeb}`,
+                  bold: false,
+                  link: `https://${proveedorSalud.sitioWeb}`,
+                  italics: true,
+                  color: 'blue',
+                }
+              : null,
+          ].filter(item => item !== null),  // Filtra elementos nulos          
           alignment: 'center',
           fontSize: 8,
           margin: [0, 0, 0, 0],

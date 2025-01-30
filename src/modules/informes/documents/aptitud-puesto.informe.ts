@@ -78,7 +78,7 @@ const styles: StyleDictionary = {
 
 // ==================== CONTENIDO ====================
 const headerText: Content = {
-  text: '                    REPORTE DE EVALUACIÓN DE SALUD Y APTITUD AL PUESTO\n',
+  text: '                                            EVALUACIÓN DE SALUD Y APTITUD AL PUESTO\n',
   style: 'header',
   alignment: 'right',
   margin: [0, 35, 40, 0],
@@ -105,6 +105,13 @@ function formatearFechaUTC(fecha: Date): string {
   const año = fecha.getUTCFullYear();
 
   return `${dia}-${mes}-${año}`;
+}
+
+function formatearTelefono(telefono: string): string {
+  if (!telefono || telefono.length !== 10) {
+    return 'Teléfono inválido';  // Mensaje de error si el número no tiene 10 dígitos
+  }
+  return `(${telefono.slice(0, 3)}) ${telefono.slice(3, 6)} ${telefono.slice(6)}`;
 }
 
 // ==================== INTERFACES ====================
@@ -226,16 +233,29 @@ export const aptitudPuestoInforme = (
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
 
-  const firma: Content = {
-    image: `assets/signatories/${medicoFirmante.firma.data}`,
-    width: 65,
-  };
+  const firma: Content = medicoFirmante.firma?.data
+  ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 65 }
+  : { text: '' };
 
-  const logo: Content = {
-    image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
-    width: 55,
-    margin: [40, 20, 0, 0],
-  };
+  const logo: Content = proveedorSalud.logotipoEmpresa?.data
+  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
+  : { text: '' };
+
+  const header: Content = proveedorSalud.logotipoEmpresa?.data
+  ? {
+      columns: [logo, headerText],
+    }
+  : {
+      columns: [
+        {
+          width: '*',
+          text: headerText.text, // Mantén el texto pero ajusta márgenes y alineación
+          style: 'header',
+          alignment: 'right', // Alineación central para ocupar todo el espacio disponible
+          margin: [0, 35, 40, 0], // Reducir márgenes laterales
+        },
+      ],
+    };
 
   const examenVistaResumen = examenVista
     ? (examenVista.ojoIzquierdoLejanaConCorreccion === 0 ||
@@ -361,9 +381,7 @@ export const aptitudPuestoInforme = (
   return {
     pageSize: 'LETTER',
     pageMargins: [40, 60, 40, 80],
-    header: {
-      columns: [logo, headerText],
-    },
+    header: header,
     content: [
       // Nombre de la empresa y fecha
       {
@@ -651,23 +669,34 @@ export const aptitudPuestoInforme = (
           columns: [
             {
               text: [
-                {
-                  text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}\n`,
-                  bold: true,
-                },
-                {
-                  text: `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`,
-                  bold: false,
-                },
-                {
-                  text: `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
-                  bold: false,
-                },
-                {
-                  text: `${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}\n`,
-                  bold: false,
-                },
-              ],
+                medicoFirmante.tituloProfesional && medicoFirmante.nombre
+                  ? {
+                      text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}\n`,
+                      bold: true,
+                    }
+                  : null,
+              
+                medicoFirmante.numeroCedulaProfesional
+                  ? {
+                      text: `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`,
+                      bold: false,
+                    }
+                  : null,
+              
+                medicoFirmante.numeroCedulaEspecialista
+                  ? {
+                      text: `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      bold: false,
+                    }
+                  : null,
+              
+                medicoFirmante.nombreCredencialAdicional && medicoFirmante.numeroCredencialAdicional
+                  ? {
+                      text: `${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}\n`,
+                      bold: false,
+                    }
+                  : null,
+              ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
@@ -677,29 +706,40 @@ export const aptitudPuestoInforme = (
             },
             {
               text: [
-                {
-                  text: `${proveedorSalud.nombre}\n`,
-                  bold: true,
-                  italics: true,
-                },
-                {
-                  text: `${proveedorSalud.direccion}\n` ,
-                  bold: false,
-                  italics: true,
-                },
-                {
-                  text: `${proveedorSalud.codigoPostal} ${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${proveedorSalud.telefono}\n`,
-                  bold: false,
-                  italics: true,
-                },
-                {
-                  text: `${proveedorSalud.sitioWeb}`,
-                  bold: false,
-                  link: `https://${proveedorSalud.sitioWeb}`,
-                  italics: true,
-                  color: 'blue',
-                },
-              ],
+                proveedorSalud.nombre
+                  ? {
+                      text: `${proveedorSalud.nombre}\n`,
+                      bold: true,
+                      italics: true,
+                    }
+                  : null,
+              
+                proveedorSalud.direccion
+                  ? {
+                      text: `${proveedorSalud.direccion}\n`,
+                      bold: false,
+                      italics: true,
+                    }
+                  : null,
+              
+                (proveedorSalud.codigoPostal && proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+                  ? {
+                      text: `${proveedorSalud.codigoPostal} ${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
+                      bold: false,
+                      italics: true,
+                    }
+                  : null,
+              
+                proveedorSalud.sitioWeb
+                  ? {
+                      text: `${proveedorSalud.sitioWeb}`,
+                      bold: false,
+                      link: `https://${proveedorSalud.sitioWeb}`,
+                      italics: true,
+                      color: 'blue',
+                    }
+                  : null,
+              ].filter(item => item !== null),  // Elimina los elementos nulos
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],
