@@ -61,18 +61,13 @@ export class EmpresasController {
     }
   }
   
-  @Get('empresas')
+  @Get('empresas/:idProveedorSalud')
   @ApiOperation({ summary: 'Obtiene todas las empresas' })
   @ApiResponse({ status: 200, description: 'Empresas obtenidas exitosamente' })
-  async findAll() {
+  async findAll(@Param('idProveedorSalud') idProveedorSalud: string) {
 
-    const empresas = await this.empresasService.findAll();
-
-    if (!empresas || empresas.length === 0) {
-      return { message: 'No se encontraron empresas' }
-    }
-
-    return empresas;
+    const empresas = await this.empresasService.findAll(idProveedorSalud);
+    return empresas || [];
   }
 
   @Get(':id')

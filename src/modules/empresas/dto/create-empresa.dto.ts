@@ -90,4 +90,8 @@ export class CreateEmpresaDto {
   @IsMongoId({ message: 'El ID de "updatedBy" no es válido' })
   @IsNotEmpty({ message: 'El ID de "updatedBy" no puede estar vacío' })
   updatedBy: string;
+
+  @IsMongoId({ message: 'El ID de "idProveedorSalud" no es válido' })
+  @IsNotEmpty({ message: 'El ID de "idProveedorSalud" no puede estar vacío' })
+  idProveedorSalud: string;
 }

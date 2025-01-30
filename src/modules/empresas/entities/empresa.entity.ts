@@ -1,5 +1,6 @@
 import { Document } from "mongoose";
 import { User } from "src/modules/users/entities/user.entity";
+import { ProveedoresSalud } from "src/modules/proveedores-salud/entities/proveedores-salud.entity";
 
 export class Empresa extends Document {
     _id: string;
@@ -14,4 +15,5 @@ export class Empresa extends Document {
     }
     createdBy: User | string;
     updatedBy: User | string;
+    idProveedorSalud: ProveedoresSalud | string;
 }

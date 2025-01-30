@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { User } from 'src/modules/users/entities/user.entity';
+import { ProveedoresSalud } from 'src/modules/proveedores-salud/entities/proveedores-salud.entity';
 
 const basesOperaciones = ["Pruebas", "Los Mochis"];
 
@@ -39,6 +40,9 @@ export class Empresa extends Document {
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   updatedBy: User;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProveedoresSalud' })
+  idProveedorSalud: ProveedoresSalud
 }
 
 export const EmpresaSchema = SchemaFactory.createForClass(Empresa).set('timestamps', true);
