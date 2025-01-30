@@ -142,6 +142,7 @@ export class InformesService {
     empresaId: string,
     trabajadorId: string,
     aptitudId: string,
+    userId: string,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -294,6 +295,37 @@ export class InformesService {
         }
       : null;
 
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = {
+      nombre: medicoFirmante.nombre,
+      tituloProfesional: medicoFirmante.tituloProfesional,
+      numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+      especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+      numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+      nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+      numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
+      firma: medicoFirmante.firma as { data: string; contentType: string },
+    };
+
+    const usuario = await this.usersService.findById(userId);
+      const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = {
+      nombre: proveedorSalud.nombre,
+      RFC: proveedorSalud.RFC,
+      perfilProveedorSalud: proveedorSalud.perfilProveedorSalud,
+      logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string },
+      estado: proveedorSalud.estado,
+      municipio: proveedorSalud.municipio,
+      codigoPostal: proveedorSalud.codigoPostal,
+      direccion: proveedorSalud.direccion,
+      telefono: proveedorSalud.telefono,
+      correoElectronico: proveedorSalud.correoElectronico,
+      sitioWeb: proveedorSalud.sitioWeb,
+    };
+
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(aptitud.fechaAptitudPuesto)
       .replace(/\//g, '-')
@@ -316,6 +348,8 @@ export class InformesService {
       datosExploracionFisica,
       datosExamenVista,
       datosAntidoping,
+      datosMedicoFirmante,
+      datosProveedorSalud,
     );
 
     // Generar y guardar el PDF
@@ -328,6 +362,7 @@ export class InformesService {
     empresaId: string,
     trabajadorId: string,
     certificadoId: string,
+    userId: string,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -379,6 +414,37 @@ export class InformesService {
         }
       : null;
 
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = {
+      nombre: medicoFirmante.nombre,
+      tituloProfesional: medicoFirmante.tituloProfesional,
+      numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+      especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+      numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+      nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+      numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
+      firma: medicoFirmante.firma as { data: string; contentType: string },
+    };
+
+    const usuario = await this.usersService.findById(userId);
+      const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = {
+      nombre: proveedorSalud.nombre,
+      RFC: proveedorSalud.RFC,
+      perfilProveedorSalud: proveedorSalud.perfilProveedorSalud,
+      logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string },
+      estado: proveedorSalud.estado,
+      municipio: proveedorSalud.municipio,
+      codigoPostal: proveedorSalud.codigoPostal,
+      direccion: proveedorSalud.direccion,
+      telefono: proveedorSalud.telefono,
+      correoElectronico: proveedorSalud.correoElectronico,
+      sitioWeb: proveedorSalud.sitioWeb,
+    };
+
     const fecha = convertirFechaADDMMAAAA(certificado.fechaCertificado)
       .replace(/\//g, '-')
       .replace(/\\/g, '-');
@@ -396,6 +462,8 @@ export class InformesService {
       datosTrabajador,
       datosCertificado,
       datosExamenVista,
+      datosMedicoFirmante,
+      datosProveedorSalud,
     );
     await this.printer.createPdf(docDefinition, rutaCompleta);
 
@@ -406,6 +474,7 @@ export class InformesService {
     empresaId: string,
     trabajadorId: string,
     examenVistaId: string,
+    userId: string,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
 
@@ -464,6 +533,37 @@ export class InformesService {
       interpretacionIshihara: examenVista.interpretacionIshihara,
     };
 
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = {
+      nombre: medicoFirmante.nombre,
+      tituloProfesional: medicoFirmante.tituloProfesional,
+      numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+      especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+      numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+      nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+      numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
+      firma: medicoFirmante.firma as { data: string; contentType: string },
+    };
+
+    const usuario = await this.usersService.findById(userId);
+     const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = {
+      nombre: proveedorSalud.nombre,
+      RFC: proveedorSalud.RFC,
+      perfilProveedorSalud: proveedorSalud.perfilProveedorSalud,
+      logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string },
+      estado: proveedorSalud.estado,
+      municipio: proveedorSalud.municipio,
+      codigoPostal: proveedorSalud.codigoPostal,
+      direccion: proveedorSalud.direccion,
+      telefono: proveedorSalud.telefono,
+      correoElectronico: proveedorSalud.correoElectronico,
+      sitioWeb: proveedorSalud.sitioWeb,
+    };
+
     const fecha = convertirFechaADDMMAAAA(examenVista.fechaExamenVista)
       .replace(/\//g, '-')
       .replace(/\\/g, '-');
@@ -480,6 +580,8 @@ export class InformesService {
       nombreEmpresa,
       datosTrabajador,
       datosExamenVista,
+      datosMedicoFirmante,
+      datosProveedorSalud,
     );
     await this.printer.createPdf(docDefinition, rutaCompleta);
 
@@ -490,6 +592,7 @@ export class InformesService {
     empresaId: string,
     trabajadorId: string,
     exploracionFisicaId: string,
+    userId: string,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
 
@@ -567,6 +670,37 @@ export class InformesService {
       resumenExploracionFisica: exploracionFisica.resumenExploracionFisica,
     };
 
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = {
+      nombre: medicoFirmante.nombre,
+      tituloProfesional: medicoFirmante.tituloProfesional,
+      numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+      especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+      numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+      nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+      numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
+      firma: medicoFirmante.firma as { data: string; contentType: string },
+    };
+
+    const usuario = await this.usersService.findById(userId);
+     const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = {
+      nombre: proveedorSalud.nombre,
+      RFC: proveedorSalud.RFC,
+      perfilProveedorSalud: proveedorSalud.perfilProveedorSalud,
+      logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string },
+      estado: proveedorSalud.estado,
+      municipio: proveedorSalud.municipio,
+      codigoPostal: proveedorSalud.codigoPostal,
+      direccion: proveedorSalud.direccion,
+      telefono: proveedorSalud.telefono,
+      correoElectronico: proveedorSalud.correoElectronico,
+      sitioWeb: proveedorSalud.sitioWeb,
+    };
+
     const fecha = convertirFechaADDMMAAAA(
       exploracionFisica.fechaExploracionFisica,
     )
@@ -585,6 +719,8 @@ export class InformesService {
       nombreEmpresa,
       datosTrabajador,
       datosExploracionFisica,
+      datosMedicoFirmante,
+      datosProveedorSalud,
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);
@@ -596,6 +732,7 @@ export class InformesService {
     empresaId: string,
     trabajadorId: string,
     historiaClinicaId: string,
+    userId: string,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
 
@@ -720,6 +857,37 @@ export class InformesService {
       resumenHistoriaClinica: historiaClinica.resumenHistoriaClinica,
     };
 
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = {
+      nombre: medicoFirmante.nombre,
+      tituloProfesional: medicoFirmante.tituloProfesional,
+      numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+      especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+      numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+      nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+      numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
+      firma: medicoFirmante.firma as { data: string; contentType: string },
+    };
+
+    const usuario = await this.usersService.findById(userId);
+     const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = {
+      nombre: proveedorSalud.nombre,
+      RFC: proveedorSalud.RFC,
+      perfilProveedorSalud: proveedorSalud.perfilProveedorSalud,
+      logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string },
+      estado: proveedorSalud.estado,
+      municipio: proveedorSalud.municipio,
+      codigoPostal: proveedorSalud.codigoPostal,
+      direccion: proveedorSalud.direccion,
+      telefono: proveedorSalud.telefono,
+      correoElectronico: proveedorSalud.correoElectronico,
+      sitioWeb: proveedorSalud.sitioWeb,
+    };
+
     const fecha = convertirFechaADDMMAAAA(historiaClinica.fechaHistoriaClinica)
       .replace(/\//g, '-')
       .replace(/\\/g, '-');
@@ -736,6 +904,8 @@ export class InformesService {
       nombreEmpresa,
       datosTrabajador,
       datosHistoriaClinica,
+      datosMedicoFirmante,
+      datosProveedorSalud,
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);

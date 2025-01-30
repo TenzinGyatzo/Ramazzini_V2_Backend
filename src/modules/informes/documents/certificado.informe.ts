@@ -27,23 +27,11 @@ const styles: StyleDictionary = {
 };
 
 // ==================== CONTENIDO ====================
-const logo: Content = {
-  image: 'assets/AmesBrand.png',
-  width: 60,
-  margin: [40, 25, 0, 0],
-};
-
 const headerText: Content = {
-  text: '            CERTIFICADO MÉDICO DE NO IMPEDIMENTO FÍSICO (SALUD FÍSICA)\n',
+  text: '          CERTIFICADO MÉDICO DE NO IMPEDIMENTO FÍSICO (SALUD FÍSICA)\n',
   style: 'header',
   alignment: 'right',
   margin: [0, 35, 40, 0],
-};
-
-const firma: Content = {
-  image: 'assets/Firma-Coronel.png',
-  width: 250,
-  absolutePosition: { x: 180, y: 530 },
 };
 
 const campoFirma: Content = {
@@ -136,13 +124,59 @@ interface ExamenVista {
   ojoDerechoLejanaSinCorreccion: number;
 }
 
+interface MedicoFirmante {
+  nombre: string;
+  tituloProfesional: string;
+  numeroCedulaProfesional: string;
+  especialistaSaludTrabajo: string;
+  numeroCedulaEspecialista: string;
+  nombreCredencialAdicional: string;
+  numeroCredencialAdicional: string;
+  firma: {
+    data: string;
+    contentType: string;
+  }
+}
+
+interface ProveedorSalud {
+  nombre: string;
+  RFC: string;
+  perfilProveedorSalud: string;
+  logotipoEmpresa: {
+    data: string;
+    contentType: string;
+  };
+  estado: string;
+  municipio: string;
+  codigoPostal: string;
+  direccion: string;
+  telefono: string;
+  correoElectronico: string;
+  sitioWeb: string;
+}
+
 // ==================== INFORME PRINCIPAL ====================
 export const certificadoInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
   certificado: Certificado,
   examenVista: ExamenVista | null,
+  medicoFirmante: MedicoFirmante,
+  proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
+
+  const firma: Content = {
+    image: `assets/signatories/${medicoFirmante.firma.data}`,
+    width: 150,
+    absolutePosition: { x: 230, y: 530 },
+  };
+
+  const logo: Content = {
+    image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+    width: 55,
+    margin: [40, 20, 0, 0],
+  };
+
   return {
     pageSize: 'LETTER',
     pageMargins: [40, 70, 40, 60],

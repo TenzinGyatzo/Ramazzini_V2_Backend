@@ -24,54 +24,59 @@ export class InformesController {
   }
   
 
-  @Get('aptitud/:empresaId/:trabajadorId/:aptitudId')
+  @Get('aptitud/:empresaId/:trabajadorId/:aptitudId/:userId')
   async getInformeAptitudPuesto(
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('aptitudId') aptitudId: string,
+    @Param('userId') userId: string,
   ) {
-    const rutaPDF = await this.informesService.getInformeAptitudPuesto(empresaId, trabajadorId, aptitudId);
+    const rutaPDF = await this.informesService.getInformeAptitudPuesto(empresaId, trabajadorId, aptitudId, userId);
     return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
 
-  @Get('certificado/:empresaId/:trabajadorId/:certificadoId')
+  @Get('certificado/:empresaId/:trabajadorId/:certificadoId/:userId')
   async getInformeCertificado(
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('certificadoId') certificadoId: string,
+    @Param('userId') userId: string
   ) {
-    const rutaPDF = await this.informesService.getInformeCertificado(empresaId, trabajadorId, certificadoId);
+    const rutaPDF = await this.informesService.getInformeCertificado(empresaId, trabajadorId, certificadoId, userId);
     return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
 
-  @Get('examenVista/:empresaId/:trabajadorId/:examenVistaId')
+  @Get('examenVista/:empresaId/:trabajadorId/:examenVistaId/:userId')
   async getInformeExamenVista(
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('examenVistaId') examenVistaId: string,
+    @Param('userId') userId: string
   ) {
-    const rutaPDF = await this.informesService.getInformeExamenVista(empresaId, trabajadorId, examenVistaId);
+    const rutaPDF = await this.informesService.getInformeExamenVista(empresaId, trabajadorId, examenVistaId, userId);
     return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
 
 
-  @Get('exploracionFisica/:empresaId/:trabajadorId/:exploracionFisicaId')
+  @Get('exploracionFisica/:empresaId/:trabajadorId/:exploracionFisicaId/:userId')
   async getInformeExploracionFisica(
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('exploracionFisicaId') exploracionFisicaId: string,
+    @Param('userId') userId: string
   ) {
-    const rutaPDF = await this.informesService.getInformeExploracionFisica(empresaId, trabajadorId, exploracionFisicaId);
+    const rutaPDF = await this.informesService.getInformeExploracionFisica(empresaId, trabajadorId, exploracionFisicaId, userId);
     return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
 
-  @Get('historiaClinica/:empresaId/:trabajadorId/:historiaClinicaId')
+  @Get('historiaClinica/:empresaId/:trabajadorId/:historiaClinicaId/:userId')
   async getInformeHistoriaClinica(
     @Param('empresaId') empresaId: string,
     @Param('trabajadorId') trabajadorId: string,
     @Param('historiaClinicaId') historiaClinicaId: string,
+    @Param('userId') userId: string
   ) {
-    const rutaPDF = await this.informesService.getInformeHistoriaClinica(empresaId, trabajadorId, historiaClinicaId);
+    const rutaPDF = await this.informesService.getInformeHistoriaClinica(empresaId, trabajadorId, historiaClinicaId, userId);
     return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
 }

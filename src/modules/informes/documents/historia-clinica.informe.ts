@@ -81,22 +81,11 @@ const styles: StyleDictionary = {
 };
 
 // ==================== CONTENIDO ====================
-const logo: Content = {
-  image: 'assets/AmesBrand.png',
-  width: 60,
-  margin: [40, 25, 0, 0],
-};
-
 const headerText: Content = {
-  text: '                                                                                                        HISTORIA CLÍNICA\n',
+  text: '                                                                                                     HISTORIA CLÍNICA\n',
   style: 'header',
   alignment: 'right',
   margin: [0, 35, 40, 0],
-};
-
-const firma: Content = {
-  image: 'assets/Firma-Dr-Coronel.png',
-  width: 32,
 };
 
 // ==================== FUNCIONES REUSABLES ====================
@@ -238,12 +227,57 @@ interface HistoriaClinica {
   resumenHistoriaClinica?: string;
 }
 
+interface MedicoFirmante {
+  nombre: string;
+  tituloProfesional: string;
+  numeroCedulaProfesional: string;
+  especialistaSaludTrabajo: string;
+  numeroCedulaEspecialista: string;
+  nombreCredencialAdicional: string;
+  numeroCredencialAdicional: string;
+  firma: {
+    data: string;
+    contentType: string;
+  }
+}
+
+interface ProveedorSalud {
+  nombre: string;
+  RFC: string;
+  perfilProveedorSalud: string;
+  logotipoEmpresa: {
+    data: string;
+    contentType: string;
+  };
+  estado: string;
+  municipio: string;
+  codigoPostal: string;
+  direccion: string;
+  telefono: string;
+  correoElectronico: string;
+  sitioWeb: string;
+}
+
 // ==================== INFORME PRINCIPAL ====================
 export const historiaClinicaInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
   historiaClinica: HistoriaClinica,
+  medicoFirmante: MedicoFirmante,
+  proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
+
+  const firma: Content = {
+    image: `assets/signatories/${medicoFirmante.firma.data}`,
+    width: 65,
+  };
+
+  const logo: Content = {
+    image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+    width: 55,
+    margin: [40, 20, 0, 0],
+  };
+
   const motivoExamen = historiaClinica.motivoExamen;
   const motivoTexto = [
     { text: 'Ingreso (', style: 'fecha' },
@@ -417,10 +451,11 @@ export const historiaClinicaInforme = (
       body: [
         [
           {
-            text: nombreEmpresa,
+            text: "      " + nombreEmpresa,  // Usa 6 espacios literales
             style: 'nombreEmpresa',
             alignment: 'center',
             margin: [0, 0, 0, 0],
+            preserveLeadingSpaces: true,  // IMPORTANTE: Forza a pdfMake a respetar los espacios
           },
           {
             text: motivoTexto,
@@ -1037,47 +1072,50 @@ export const historiaClinicaInforme = (
             {
               text: [
                 {
-                  text: 'Dr. Jesús Manuel Coronel Valenzuela\n',
+                  text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}\n`,
                   bold: true,
                 },
                 {
-                  text: 'Cédula Profesional Médico Cirujano No. 1379978\n',
+                  text: `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`,
                   bold: false,
                 },
                 {
-                  text: 'Cédula Especialidad Med. del Trab. No. 3181172\n',
+                  text: `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                   bold: false,
                 },
                 {
-                  text: 'Certificado Consejo Mex. de Med. Trab. No.891',
+                  text: `${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}\n`,
                   bold: false,
                 },
               ],
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
-            firma,
+            {
+              ...firma,
+              margin: [0, -3, 0, 0],  // Mueve el elemento más arriba
+            },
             {
               text: [
                 {
-                  text: 'Asesoría Médico Empresarial de Sinaloa\n',
+                  text: `${proveedorSalud.nombre}\n`,
                   bold: true,
                   italics: true,
                 },
                 {
-                  text: 'Ángel Flores No. 2072 Norte, Fracc Las Fuentes.\n',
+                  text: `${proveedorSalud.direccion}\n` ,
                   bold: false,
                   italics: true,
                 },
                 {
-                  text: 'Los Mochis, Ahome, Sinaloa. Tel. (668) 136 3973\n',
+                  text: `${proveedorSalud.codigoPostal} ${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${proveedorSalud.telefono}\n`,
                   bold: false,
                   italics: true,
                 },
                 {
-                  text: 'www.ames.org.mx',
+                  text: `${proveedorSalud.sitioWeb}`,
                   bold: false,
-                  link: 'https://www.ames.org.mx',
+                  link: `https://${proveedorSalud.sitioWeb}`,
                   italics: true,
                   color: 'blue',
                 },
