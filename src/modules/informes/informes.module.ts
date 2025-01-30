@@ -7,6 +7,8 @@ import { TrabajadoresModule } from '../trabajadores/trabajadores.module';
 import { ExpedientesModule } from '../expedientes/expedientes.module';
 import { FilesModule } from '../files/files.module';
 import { MedicosFirmantesModule } from '../medicos-firmantes/medicos-firmantes.module';
+import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   controllers: [InformesController],
@@ -18,6 +20,8 @@ import { MedicosFirmantesModule } from '../medicos-firmantes/medicos-firmantes.m
     forwardRef(() => ExpedientesModule),
     FilesModule,
     MedicosFirmantesModule,
+    ProveedoresSaludModule,
+    UsersModule
   ],
   exports: [InformesService],
 })

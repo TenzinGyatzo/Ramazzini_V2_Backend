@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 import bcrypt from 'bcrypt';
+import { ProveedoresSalud } from 'src/modules/proveedores-salud/entities/proveedores-salud.entity';
 
 // Define el tipo del documento que extiende los métodos personalizados
 export type UserDocument = User & Document;
@@ -10,6 +11,12 @@ export class User {
   @Prop({ required: true, trim: true, lowercase: true })
   username: string;
 
+  @Prop({ required: true, trim: true, lowercase: true })
+  email: string;
+
+  @Prop({ required: true, trim: true })
+  phone: string;
+
   @Prop({ required: true, trim: true })
   password: string;
 
@@ -18,6 +25,9 @@ export class User {
 
   @Prop({ required: true, default: () => Date.now().toString(32) + Math.random().toString(32).substring(2) })
   token: string;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProveedoresSalud', required: true })
+  idProveedorSalud: string;
 
   async checkPassword(inputPassword: string): Promise<boolean> {
     return bcrypt.compare(inputPassword, this.password);

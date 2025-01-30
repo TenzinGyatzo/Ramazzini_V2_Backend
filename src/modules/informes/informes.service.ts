@@ -20,8 +20,9 @@ import {
 import { findNearestDocument } from 'src/utils/findNearestDocuments';
 import * as path from 'path';
 import * as fs from 'fs';
-import { MedicosFirmantesService } from '../medicos-firmantes/medicos-firmantes.service';
 import { UsersService } from '../users/users.service';
+import { MedicosFirmantesService } from '../medicos-firmantes/medicos-firmantes.service';
+import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.service';
 
 @Injectable()
 export class InformesService {
@@ -31,8 +32,9 @@ export class InformesService {
     private readonly trabajadoresService: TrabajadoresService,
     private readonly expedientesService: ExpedientesService,
     private readonly filesService: FilesService,
-    private readonly medicosFirmantesService: MedicosFirmantesService,
     private readonly usersService: UsersService,
+    private readonly medicosFirmantesService: MedicosFirmantesService,
+    private readonly proveedoresSaludService: ProveedoresSaludService,
   ) {}
 
   async getInformeAntidoping(
@@ -84,12 +86,24 @@ export class InformesService {
       firma: medicoFirmante.firma as { data: string; contentType: string },
     };
 
-    /*
     const usuario = await this.usersService.findById(userId);
      const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
     } 
-    */
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = {
+      nombre: proveedorSalud.nombre,
+      RFC: proveedorSalud.RFC,
+      perfilProveedorSalud: proveedorSalud.perfilProveedorSalud,
+      logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string },
+      estado: proveedorSalud.estado,
+      municipio: proveedorSalud.municipio,
+      codigoPostal: proveedorSalud.codigoPostal,
+      direccion: proveedorSalud.direccion,
+      telefono: proveedorSalud.telefono,
+      correoElectronico: proveedorSalud.correoElectronico,
+      sitioWeb: proveedorSalud.sitioWeb,
+    };
 
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(antidoping.fechaAntidoping)
@@ -110,6 +124,7 @@ export class InformesService {
       datosTrabajador,
       datosAntidoping,
       datosMedicoFirmante,
+      datosProveedorSalud,
     );
 
     // Generar y guardar el PDF

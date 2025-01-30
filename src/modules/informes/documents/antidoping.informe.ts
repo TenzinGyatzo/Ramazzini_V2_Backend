@@ -48,14 +48,8 @@ const styles: StyleDictionary = {
 };
 
 // ==================== CONTENIDO ====================
-const logo: Content = {
-  image: 'assets/AmesBrand.png',
-  width: 60,
-  margin: [40, 25, 0, 0],
-};
-
 const headerText: Content = {
-  text: '                                                                                                         ANTIDOPING\n',
+  text: '                                                                                                              ANTIDOPING\n',
   style: 'header',
   alignment: 'right',
   margin: [0, 35, 40, 0],
@@ -121,17 +115,41 @@ interface MedicoFirmante {
   }
 }
 
+interface ProveedorSalud {
+  nombre: string;
+  RFC: string;
+  perfilProveedorSalud: string;
+  logotipoEmpresa: {
+    data: string;
+    contentType: string;
+  };
+  estado: string;
+  municipio: string;
+  codigoPostal: string;
+  direccion: string;
+  telefono: string;
+  correoElectronico: string;
+  sitioWeb: string;
+}
+
 // ==================== INFORME PRINCIPAL ====================
 export const antidopingInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
   antidoping: Antidoping,
   medicoFirmante: MedicoFirmante,
+  proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
 
   const firma: Content = {
     image: `assets/signatories/${medicoFirmante.firma.data}`,
     width: 65,
+  };
+
+  const logo: Content = {
+    image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+    width: 55,
+    margin: [40, 20, 0, 0],
   };
 
   return {
@@ -309,24 +327,24 @@ export const antidopingInforme = (
             {
               text: [
                 {
-                  text: 'Asesoría Médico Empresarial de Sinaloa\n',
+                  text: `${proveedorSalud.nombre}\n`,
                   bold: true,
                   italics: true,
                 },
                 {
-                  text: 'Ángel Flores No. 2072 Norte, Fracc Las Fuentes.\n',
+                  text: `${proveedorSalud.direccion}\n` ,
                   bold: false,
                   italics: true,
                 },
                 {
-                  text: 'Los Mochis, Ahome, Sinaloa. Tel. (668) 136 3973\n',
+                  text: `${proveedorSalud.codigoPostal} ${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${proveedorSalud.telefono}\n`,
                   bold: false,
                   italics: true,
                 },
                 {
-                  text: 'www.ames.org.mx',
+                  text: `${proveedorSalud.sitioWeb}`,
                   bold: false,
-                  link: 'https://www.ames.org.mx',
+                  link: `https://${proveedorSalud.sitioWeb}`,
                   italics: true,
                   color: 'blue',
                 },
