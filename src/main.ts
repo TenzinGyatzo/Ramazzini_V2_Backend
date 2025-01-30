@@ -7,9 +7,20 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Servir el directorio de archivos estáticos
+  app.useStaticAssets(join(__dirname, '..', 'assets', 'signatories'), {
+    prefix: '/assets/signatories',
+  });
+
+  app.useStaticAssets(join(__dirname, '..', 'assets', 'providers-logos'), {
+    prefix: '/assets/providers-logos',
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

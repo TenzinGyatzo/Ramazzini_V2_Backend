@@ -61,11 +61,6 @@ const headerText: Content = {
   margin: [0, 35, 40, 0],
 };
 
-const firma: Content = {
-  image: 'assets/Firma-Dr-Coronel.png',
-  width: 32,
-};
-
 // ==================== FUNCIONES REUSABLES ====================
 const createTableCell = (text: string, style: string): Content => ({
   text,
@@ -120,7 +115,10 @@ interface MedicoFirmante {
   numeroCedulaEspecialista: string;
   nombreCredencialAdicional: string;
   numeroCredencialAdicional: string;
-  firma: object;
+  firma: {
+    data: string;
+    contentType: string;
+  }
 }
 
 // ==================== INFORME PRINCIPAL ====================
@@ -130,6 +128,12 @@ export const antidopingInforme = (
   antidoping: Antidoping,
   medicoFirmante: MedicoFirmante,
 ): TDocumentDefinitions => {
+
+  const firma: Content = {
+    image: `assets/signatories/${medicoFirmante.firma.data}`,
+    width: 65,
+  };
+
   return {
     pageSize: 'LETTER',
     pageMargins: [40, 70, 40, 80],
@@ -298,7 +302,10 @@ export const antidopingInforme = (
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
-            firma,
+            {
+              ...firma,
+              margin: [0, -3, 0, 0],  // Mueve el elemento más arriba
+            },
             {
               text: [
                 {

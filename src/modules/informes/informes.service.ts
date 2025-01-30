@@ -79,7 +79,7 @@ export class InformesService {
       numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
       nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
       numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
-      firma: medicoFirmante.firma,
+      firma: medicoFirmante.firma as { data: string; contentType: string },
     };
 
     // Formatear la fecha para el nombre del archivo
