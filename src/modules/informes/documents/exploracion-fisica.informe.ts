@@ -866,12 +866,12 @@ export const exploracionFisicaInforme = (
                     }
                   : null,
               
-                medicoFirmante.nombreCredencialAdicional && medicoFirmante.numeroCredencialAdicional
-                  ? {
-                      text: `${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}\n`,
-                      bold: false,
-                    }
-                  : null,
+              medicoFirmante.nombreCredencialAdicional && medicoFirmante.numeroCredencialAdicional
+              ? {
+                  text: `${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).substring(0, 60)}${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                  bold: false,
+                }
+              : null,
               ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe   
               fontSize: 8,
               margin: [40, 0, 0, 0],

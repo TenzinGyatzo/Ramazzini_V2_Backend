@@ -222,20 +222,49 @@ export const certificadoInforme = (
       {
         text: [
           {
-            text: 'El suscrito Médico Cirujano, con cédula profesional número ',
+            text: medicoFirmante.tituloProfesional === 'Dra.'
+              ? 'La suscrita Médica Cirujano, con cédula profesional número '
+              : 'El suscrito Médico Cirujano, con cédula profesional número ',
           },
-          { text: '137997. ', bold: true },
-          { text: 'Especialista en Medicina del Trabajo, ' },
-          { text: 'Dr. Jesús Manuel Coronel Valenzuela, ', bold: true },
           {
-            text: 'legalmente autorizado por la Dirección General de Profesiones para ejercer la Especialidad en Medicina del Trabajo con cédula profesional número ',
+            text: `${medicoFirmante.numeroCedulaProfesional}. `,
+            bold: true,
           },
-          { text: '3181172 ', bold: true },
+          medicoFirmante.especialistaSaludTrabajo === 'Si'
+          ? { text: 'Especialista en Medicina del Trabajo, ' }
+          : { text: 'Con formación en Medicina y dedicado a la práctica en el ámbito de la salud laboral, ' },        
+        
           {
-            text: 'Certificado ante el Consejo Mexicano de Medicina del Trabajo con número ',
+            text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}${medicoFirmante.especialistaSaludTrabajo === 'Si' ? '' : '.'}`,  // Sin espacio antes del punto
+            bold: true,
           },
-          { text: '891. ', bold: true },
-        ],
+        
+          medicoFirmante.especialistaSaludTrabajo === 'Si'
+            ? {
+                text: `, legalmente ${medicoFirmante.tituloProfesional === 'Dr.' ? 'autorizado' : 'autorizada'} por la Dirección General de Profesiones para ejercer la Especialidad en Medicina del Trabajo con cédula profesional número `,
+              }
+            : null,
+        
+          medicoFirmante.especialistaSaludTrabajo === 'Si'
+            ? {
+                text: `${medicoFirmante.numeroCedulaEspecialista}. `,
+                bold: true,
+              }
+            : null,
+        
+          medicoFirmante.nombreCredencialAdicional
+            ? {
+                text: ` ${medicoFirmante.nombreCredencialAdicional} con número `,
+              }
+            : null,
+        
+          medicoFirmante.nombreCredencialAdicional
+            ? {
+                text: `${medicoFirmante.numeroCredencialAdicional}. `,
+                bold: true,
+              }
+            : null,
+        ].filter(item => item !== null),  // Filtra elementos nulos        
         style: 'paragraph',
         margin: [0, 20, 0, 0],
       },
@@ -348,7 +377,7 @@ export const certificadoInforme = (
             },
             proveedorSalud.sitioWeb
               ? {
-                  text: `${proveedorSalud.sitioWeb}`,
+                  text: `\n${proveedorSalud.sitioWeb}`,
                   bold: false,
                   link: `https://${proveedorSalud.sitioWeb}`,
                   italics: true,
