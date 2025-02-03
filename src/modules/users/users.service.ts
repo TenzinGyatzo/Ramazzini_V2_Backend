@@ -17,9 +17,16 @@ export class UsersService {
     return this.userModel.findOne({ username }).exec();
   }
 
-async findById(id: string, selectFields: string = ''): Promise<UserDocument | null> {
-  return this.userModel.findById(id).select(selectFields).exec();
+  async findByEmail(email: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ email }).exec();
+  }
+
+  async findByToken(token: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ token }).exec();
+  }
+
+  async findById(id: string, selectFields: string = ''): Promise<UserDocument | null> {
+    return this.userModel.findById(id).select(selectFields).exec();
+  }
 }
 
-
-}

@@ -17,6 +17,7 @@ import { PrinterModule } from './modules/printer/printer.module';
 import { DocumentMergerModule } from './modules/document-merger/document-merger.module';
 import { ProveedoresSaludModule } from './modules/proveedores-salud/proveedores-salud.module';
 import { MedicosFirmantesModule } from './modules/medicos-firmantes/medicos-firmantes.module';
+import { EmailsModule } from './modules/emails/emails.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { MedicosFirmantesModule } from './modules/medicos-firmantes/medicos-firm
     DocumentMergerModule,
     ProveedoresSaludModule,
     MedicosFirmantesModule,
+    EmailsModule
   ],
 })
 export class AppModule {}

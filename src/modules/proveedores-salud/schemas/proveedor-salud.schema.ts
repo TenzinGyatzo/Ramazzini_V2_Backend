@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 
-// "¿Cuál de las siguientes opciones describe mejor el perfil del proveedor de salud ocupacional que estás registrando?"
 const perfiles = [
   'Médico único de empresa',
   'Médico independiente que brinda servicios a empresas',

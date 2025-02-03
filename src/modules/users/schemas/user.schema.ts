@@ -8,10 +8,10 @@ export type UserDocument = User & Document;
 
 @Schema()
 export class User {
-  @Prop({ required: true, trim: true, lowercase: true })
+  @Prop({ required: true, trim: true })
   username: string;
 
-  @Prop({ required: true, trim: true, lowercase: true })
+  @Prop({ required: true, trim: true, lowercase: true, unique: true })
   email: string;
 
   @Prop({ required: true, trim: true })
@@ -20,14 +20,17 @@ export class User {
   @Prop({ required: true, trim: true })
   password: string;
 
-  @Prop({ required: true, enum: ['administrador', 'medico', 'medico especialista', 'enfermero(a)', 'observer'] })
+  @Prop({ required: true, enum: ['Principal', 'Secundario'] })
   role: string;
 
-  @Prop({ required: true, default: () => Date.now().toString(32) + Math.random().toString(32).substring(2) })
+  @Prop({ default: () => Date.now().toString(32) + Math.random().toString(32).substring(2) })
   token: string;
 
+  @Prop({ default: false, })
+  verified: boolean
+
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProveedoresSalud', required: true })
-  idProveedorSalud: string;
+  idProveedorSalud: string
 
   async checkPassword(inputPassword: string): Promise<boolean> {
     return bcrypt.compare(inputPassword, this.password);

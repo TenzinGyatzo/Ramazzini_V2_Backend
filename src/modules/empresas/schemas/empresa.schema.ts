@@ -3,8 +3,6 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { User } from 'src/modules/users/entities/user.entity';
 import { ProveedoresSalud } from 'src/modules/proveedores-salud/entities/proveedores-salud.entity';
 
-const basesOperaciones = ["Pruebas", "Los Mochis"];
-
 interface Logotipo {
     data: string;
     contentType: string;
@@ -32,16 +30,13 @@ export class Empresa extends Document {
   })
   logotipoEmpresa: Logotipo
 
-  @Prop({ required: true, enum: basesOperaciones, default: "Los Mochis"})
-  baseOperaciones: string;
-
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   createdBy: User;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   updatedBy: User;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProveedoresSalud' })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProveedoresSalud', required: true })
   idProveedorSalud: ProveedoresSalud
 }
 

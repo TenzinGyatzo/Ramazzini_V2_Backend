@@ -16,6 +16,7 @@ import { UserDocument } from './schemas/user.schema';
 import { generateJWT } from 'src/utils/jwt';
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { EmailsService } from '../emails/emails.service';
 
 interface JwtPayload {
   id: string;
@@ -24,16 +25,35 @@ interface JwtPayload {
 @Controller('auth/users')
 @ApiTags('Usuarios')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly emailsService: EmailsService,
+  ) {}
 
   @Post('register')
-  async register(@Body() createUserDto: CreateUserDto) {
-    const { username, password } = createUserDto;
+  async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
+    const { username, email, password } = createUserDto;
+
+    // Validar extensión del username
+    const MIN_USERNAME_LENGTH = 5;
+    if (password.trim().length < MIN_USERNAME_LENGTH) {
+      throw new BadRequestException(
+        `El username debe tener al menos ${MIN_USERNAME_LENGTH} caracteres`,
+      );
+    }
 
     // Evitar registros duplicados
-    const userExists = await this.usersService.findByUsername(username);
+    const userExists = await this.usersService.findByEmail(email);
     if (userExists) {
-      throw new ConflictException('El usuario ya existe');
+      throw new ConflictException(`${email} ya está registrado en Ramazzini`);
+    }
+
+    // Validar longitud de telefono
+    const PHONE_LENGTH = 10;
+    if (password.trim().length == PHONE_LENGTH) {
+      throw new BadRequestException(
+        `El phone debe ser de ${PHONE_LENGTH} dígitos`,
+      );
     }
 
     // Validar extensión del password
@@ -45,20 +65,64 @@ export class UsersController {
     }
 
     // Si todo está bien, registra el usuario
-    return this.usersService.register(createUserDto);
+    const user = await this.usersService.register(createUserDto);
+
+    this.emailsService.sendEmailVerification({
+      username: user.username,
+      email: user.email,
+      token: user.token,
+    });
+
+    // Respuesta al cliente
+    res.json({
+      msg: 'El usuario se creó correctamente, revisa el email',
+      user: {
+        username: user.username,
+        email: user.email,
+      },
+    });
+
+    return user;
+  }
+
+  @Get('verify/:token')
+  async verifyAccount(@Req() req: Request, @Res() res: Response) {
+    const { token } = req.params
+
+    const user = await this.usersService.findByToken(token)
+    if(!user) {
+      const error = new Error ('Hubo un error, token no válido')
+      return res.status(401).json({msg: error.message})
+    }
+
+    // Si el token es válido, confirmar la cuenta
+    try {
+      user.verified = true;
+      user.token = '';
+      await user.save()
+      return res.json({msg: 'Usuario confirmado correctamente'})
+    } catch (error) {
+      console.log(error)
+    }
+
   }
 
   @Post('login')
   async login(
-    @Body() loginData: { username: string; password: string },
+    @Body() loginData: { email: string; password: string },
     @Res() res: Response,
   ) {
-    const { username, password } = loginData;
+    const { email, password } = loginData;
     // Revisar que el usuario exista
     const user: UserDocument | null =
-      await this.usersService.findByUsername(username);
+      await this.usersService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('El usuario no existe');
+    }
+
+    // Revisar si el usuario confirmo su cuenta
+    if(!user.verified) {
+      throw new UnauthorizedException('Tu cuenta no ha sido confirmada aún, revisa tu email');
     }
 
     // Comprobar el password utilizando el método definido en el esquema
@@ -103,5 +167,4 @@ export class UsersController {
       res.status(401).json({ msg: error.message });
     }
   }
-
 }
