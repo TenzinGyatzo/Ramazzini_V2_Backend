@@ -24,7 +24,7 @@ export class EmailsService {
         <h1 style="font-size: 24px; color: #2c3e50;">Confirma tu Cuenta</h1>
         <p>Hola <strong>${username}</strong>, confirma tu cuenta en Ramazzini.</p>
         <p>Tu cuenta está casi lista, solo debes confirmarla haciendo clic en el siguiente enlace:</p>
-        <p><a href="${process.env.FRONTEND_URL_DOMAIN}/auth/users/verify/${token}" style="background-color: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Confirmar Cuenta</a></p>
+        <p><a href="${process.env.FRONTEND_URL_DOMAIN}/auth/confirmar-cuenta/${token}" style="background-color: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Confirmar Cuenta</a></p>
         <p>Si tú no creaste esta cuenta, puedes ignorar este mensaje.</p>
         <hr style="border: 1px solid #ddd;">
         <p style="font-size: 12px; color: #999;">Este es un correo automático, por favor no respondas a este mensaje.</p>
