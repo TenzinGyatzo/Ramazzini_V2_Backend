@@ -8,6 +8,8 @@ import {
   UnauthorizedException,
   Res,
   Req,
+  NotFoundException,
+  Param,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -135,6 +137,78 @@ export class UsersController {
       // return token;
     }
   }
+
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() body: { email: string },
+    @Res() res: Response,
+  ) {
+    const { email } = body;
+    // Comprobar si existe el usuario
+    const user = await this.usersService.findByEmail(email);
+
+    if(!user) {
+      const error = new Error('El usuario no existe')
+      return res.status(404).json({msg: error.message})
+    }
+
+    try {
+      user.token = Date.now().toString(32) + Math.random().toString(32).substring(2)
+      const result = await user.save()
+
+      this.emailsService.sendEmailPasswordReset({
+        username: result.username,
+        email: result.email,
+        token: result.token
+      });
+
+      res.json({msg: 'Hemos enviado un email con las instrucciones'})
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  @Get('forgot-password/:token')
+  async verifyPasswordResetToken(
+    @Param('token') token: string,
+    @Res() res: Response,
+  ) {
+    // Comprobar si existe el usuario
+    const user = await this.usersService.findByToken(token);
+
+    if(!user) {
+      const error = new Error('Hubo un error, token no válido')
+      return res.status(404).json({msg: error.message})
+    }
+
+    res.json({msg: 'Token válido'})
+  }
+
+  @Post('forgot-password/:token')
+  async updatePassword(
+    @Param('token') token: string,
+    @Body() body: { password: string },
+    @Res() res: Response,
+  ) {
+    // Comprobar si existe el usuario
+    const user = await this.usersService.findByToken(token);
+    
+    if(!user) {
+      const error = new Error('Hubo un error, token no válido')
+      return res.status(404).json({msg: error.message})
+    }
+    
+    const { password } = body;
+    try {
+      user.token = '';
+      user.password = password;
+      await user.save()
+      res.json({msg: 'Contraseña actualizada correctamente'})
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
 
   // Área Privada - Requiere un JWT
   @Get('user')
