@@ -28,5 +28,9 @@ export class UsersService {
   async findById(id: string, selectFields: string = ''): Promise<UserDocument | null> {
     return this.userModel.findById(id).select(selectFields).exec();
   }
+
+  async findByProveedorSaludId(idProveedorSalud: string): Promise<UserDocument[] | null> {
+    return this.userModel.find({ idProveedorSalud }).exec();
+  }
 }
 

@@ -89,24 +89,23 @@ export class UsersController {
 
   @Get('verify/:token')
   async verifyAccount(@Req() req: Request, @Res() res: Response) {
-    const { token } = req.params
+    const { token } = req.params;
 
-    const user = await this.usersService.findByToken(token)
-    if(!user) {
-      const error = new Error ('Hubo un error, token no válido')
-      return res.status(401).json({msg: error.message})
+    const user = await this.usersService.findByToken(token);
+    if (!user) {
+      const error = new Error('Hubo un error, token no válido');
+      return res.status(401).json({ msg: error.message });
     }
 
     // Si el token es válido, confirmar la cuenta
     try {
       user.verified = true;
       user.token = '';
-      await user.save()
-      return res.json({msg: 'Usuario confirmado correctamente'})
+      await user.save();
+      return res.json({ msg: 'Usuario confirmado correctamente' });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-
   }
 
   @Post('login')
@@ -123,8 +122,10 @@ export class UsersController {
     }
 
     // Revisar si el usuario confirmo su cuenta
-    if(!user.verified) {
-      throw new UnauthorizedException('Tu cuenta no ha sido confirmada aún, revisa tu email');
+    if (!user.verified) {
+      throw new UnauthorizedException(
+        'Tu cuenta no ha sido confirmada aún, revisa tu email',
+      );
     }
 
     // Comprobar el password utilizando el método definido en el esquema
@@ -139,32 +140,30 @@ export class UsersController {
   }
 
   @Post('forgot-password')
-  async forgotPassword(
-    @Body() body: { email: string },
-    @Res() res: Response,
-  ) {
+  async forgotPassword(@Body() body: { email: string }, @Res() res: Response) {
     const { email } = body;
     // Comprobar si existe el usuario
     const user = await this.usersService.findByEmail(email);
 
-    if(!user) {
-      const error = new Error('El usuario no existe')
-      return res.status(404).json({msg: error.message})
+    if (!user) {
+      const error = new Error('El usuario no existe');
+      return res.status(404).json({ msg: error.message });
     }
 
     try {
-      user.token = Date.now().toString(32) + Math.random().toString(32).substring(2)
-      const result = await user.save()
+      user.token =
+        Date.now().toString(32) + Math.random().toString(32).substring(2);
+      const result = await user.save();
 
       this.emailsService.sendEmailPasswordReset({
         username: result.username,
         email: result.email,
-        token: result.token
+        token: result.token,
       });
 
-      res.json({msg: 'Hemos enviado un email con las instrucciones'})
+      res.json({ msg: 'Hemos enviado un email con las instrucciones' });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
@@ -176,12 +175,12 @@ export class UsersController {
     // Comprobar si existe el usuario
     const user = await this.usersService.findByToken(token);
 
-    if(!user) {
-      const error = new Error('Hubo un error, token no válido')
-      return res.status(404).json({msg: error.message})
+    if (!user) {
+      const error = new Error('Hubo un error, token no válido');
+      return res.status(404).json({ msg: error.message });
     }
 
-    res.json({msg: 'Token válido'})
+    res.json({ msg: 'Token válido' });
   }
 
   @Post('forgot-password/:token')
@@ -192,23 +191,36 @@ export class UsersController {
   ) {
     // Comprobar si existe el usuario
     const user = await this.usersService.findByToken(token);
-    
-    if(!user) {
-      const error = new Error('Hubo un error, token no válido')
-      return res.status(404).json({msg: error.message})
+
+    if (!user) {
+      const error = new Error('Hubo un error, token no válido');
+      return res.status(404).json({ msg: error.message });
     }
-    
+
     const { password } = body;
     try {
       user.token = '';
       user.password = password;
-      await user.save()
-      res.json({msg: 'Contraseña actualizada correctamente'})
+      await user.save();
+      res.json({ msg: 'Contraseña actualizada correctamente' });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
+  @Get('get-users/:idProveedorSalud')
+  async getUsersByProveedorId(
+    @Param('idProveedorSalud') idProveedorSalud: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const users =
+        await this.usersService.findByProveedorSaludId(idProveedorSalud);
+      res.json(users);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   // Área Privada - Requiere un JWT
   @Get('user')
