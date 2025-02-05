@@ -32,5 +32,9 @@ export class UsersService {
   async findByProveedorSaludId(idProveedorSalud: string): Promise<UserDocument[] | null> {
     return this.userModel.find({ idProveedorSalud }).exec();
   }
+
+  async removeUserByEmail(email: string): Promise<UserDocument | null> {
+    return this.userModel.findOneAndDelete({ email }).exec();
+  }
 }
 

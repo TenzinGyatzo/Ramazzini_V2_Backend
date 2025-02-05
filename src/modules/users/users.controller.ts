@@ -10,6 +10,7 @@ import {
   Req,
   NotFoundException,
   Param,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -217,6 +218,16 @@ export class UsersController {
       const users =
         await this.usersService.findByProveedorSaludId(idProveedorSalud);
       res.json(users);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  @Delete('delete-user/:email')
+  async removeUserByEmail(@Param('email') email: string, @Res() res: Response) {
+    try {
+      const user = await this.usersService.removeUserByEmail(email);
+      res.json(user);
     } catch (error) {
       console.log(error);
     }
