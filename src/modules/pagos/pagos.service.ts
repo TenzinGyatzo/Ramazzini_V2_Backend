@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from 'mercadopago';
+import { MercadoPagoConfig, PreApproval } from 'mercadopago';
 
 @Injectable()
 export class PagosService {
-  private preApprovalPlan: PreApprovalPlan;
   private preApproval: PreApproval;
 
   constructor() {
@@ -11,26 +10,12 @@ export class PagosService {
     const client = new MercadoPagoConfig({
       accessToken:
         process.env.MERCADOPAGO_ACCESS_TOKEN ||
-        'TEST-4969243530752080-020520-de02f3ec1ee5a61d843153966894f824-202557314',
+        'APP_USR-7511097887532725-020623-9a55ea3357976dcc3313d4a21568910f-2250541213',
     });
 
-    // Inicializamos las APIs de PreApproval y PreApprovalPlan
-    this.preApprovalPlan = new PreApprovalPlan(client);
+    // Inicializamos las APIs de PreApproval
     this.preApproval = new PreApproval(client);
   }
-
-  // Método para crear un plan de suscripción
-  async crearPlanSuscripcion(planData: any): Promise<any> {
-    try {
-      console.log('Datos del plan de suscripción enviados:', planData);
-      
-      const response = await this.preApprovalPlan.create({ body: planData });
-      return response;
-    } catch (error) {
-      console.error('Error al crear el plan de suscripción:', error);
-      throw new Error('No se pudo crear el plan de suscripción.');
-    }
-  }   
 
   // Método para crear una suscripción
   async crearSuscripcion(subscriptionData: any): Promise<any> {
@@ -45,3 +30,5 @@ export class PagosService {
     }
   }
 }
+
+

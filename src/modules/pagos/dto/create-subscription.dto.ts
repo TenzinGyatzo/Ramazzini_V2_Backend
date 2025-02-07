@@ -1,58 +1,59 @@
-import { IsEmail, IsString, IsNumber, ValidateNested, IsDateString } from 'class-validator';
+import { IsEmail, IsOptional } from 'class-validator';
 
 class FreeTrialDto {
-  @IsNumber()
+  @IsOptional()
   frequency: number;
 
-  @IsString()
+  @IsOptional()
   frequency_type: string;
 }
 
 class AutoRecurringDto {
-  @IsNumber()
+  @IsOptional()
   frequency: number;
 
-  @IsString()
+  @IsOptional()
   frequency_type: string;
 
-  @IsDateString()
+  @IsOptional()
   start_date: string;
 
-  @IsDateString()
+  @IsOptional()
   end_date: string;
 
-  @IsNumber()
+  @IsOptional()
   transaction_amount: number;
 
-  @IsString()
+  @IsOptional()
   currency_id: string;
 
-  @ValidateNested()
+  @IsOptional()
   free_trial: FreeTrialDto;
 }
 
 export class CreateSubscriptionDto {
-  @IsString()
+  @IsOptional()
   preapproval_plan_id: string;
 
-  @IsString()
+  @IsOptional()
   reason: string;
 
-  @IsString()
+  @IsOptional()
   external_reference: string;
 
+  @IsOptional()
   @IsEmail()
   payer_email: string;
 
-  @IsString()
+  @IsOptional()
   card_token_id: string;
 
-  @ValidateNested()
+  @IsOptional()
   auto_recurring: AutoRecurringDto;
 
-  @IsString()
+  @IsOptional()
   back_url: string;
 
-  @IsString()
+  @IsOptional()
   status: string;
 }
