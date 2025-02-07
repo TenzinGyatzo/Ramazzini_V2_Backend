@@ -10,7 +10,6 @@ import { CentrosTrabajoModule } from './modules/centros-trabajo/centros-trabajo.
 import { TrabajadoresModule } from './modules/trabajadores/trabajadores.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
-import { ExamplesModule } from './modules/examples/examples.module';
 import { ExpedientesModule } from './modules/expedientes/expedientes.module';
 import { InformesModule } from './modules/informes/informes.module';
 import { PrinterModule } from './modules/printer/printer.module';
@@ -18,6 +17,7 @@ import { DocumentMergerModule } from './modules/document-merger/document-merger.
 import { ProveedoresSaludModule } from './modules/proveedores-salud/proveedores-salud.module';
 import { MedicosFirmantesModule } from './modules/medicos-firmantes/medicos-firmantes.module';
 import { EmailsModule } from './modules/emails/emails.module';
+import { PagosModule } from './modules/pagos/pagos.module';
 
 @Module({
   imports: [
@@ -41,7 +41,6 @@ import { EmailsModule } from './modules/emails/emails.module';
       serveRoot: '/expedientes-medicos', // Prefijo en la URL
     }),
 
-    ExamplesModule,
     EmpresasModule,
     CentrosTrabajoModule,
     TrabajadoresModule,
@@ -53,7 +52,8 @@ import { EmailsModule } from './modules/emails/emails.module';
     DocumentMergerModule,
     ProveedoresSaludModule,
     MedicosFirmantesModule,
-    EmailsModule
+    EmailsModule,
+    PagosModule
   ],
 })
 export class AppModule {}
