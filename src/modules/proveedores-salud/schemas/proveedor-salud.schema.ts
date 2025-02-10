@@ -57,7 +57,7 @@ export class ProveedorSalud extends Document {
   @Prop({ default: 'pending' }) 
   estadoSuscripcion: string; // 'pending', 'authorized'
 
-  @Prop({ default: new Date() }) 
+  @Prop() 
   fechaInicioTrial: Date; // Fecha de inicio de los 15 días de prueba
 
   @Prop({ default: false }) 

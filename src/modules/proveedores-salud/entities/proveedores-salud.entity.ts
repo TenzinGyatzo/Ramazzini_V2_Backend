@@ -1,5 +1,10 @@
 import { Document } from 'mongoose';
 
+export interface AddOn {
+  tipo: string; // 'usuario_adicional', 'empresas_extra', u otros
+  cantidad: number;
+}
+
 export class ProveedoresSalud extends Document {
   _id: string;
   nombre: string;
@@ -16,4 +21,13 @@ export class ProveedoresSalud extends Document {
   telefono?: string;
   correoElectronico?: string;
   sitioWeb?: string;
+  referenciaPlan?: string;
+  maxUsuariosPermitidos?: number;
+  maxEmpresasPermitidas?: number;
+  estadoSuscripcion?: string;
+  fechaInicioTrial?: Date;
+  periodoDePruebaFinalizado?: boolean;
+  addOns?: AddOn[];
+  mercadoPagoSubscriptionId?: string;
+  payerEmail?: string;
 }

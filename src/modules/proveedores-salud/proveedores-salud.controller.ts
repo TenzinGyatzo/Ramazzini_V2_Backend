@@ -18,6 +18,7 @@ import { diskStorage } from 'multer';
 import path from 'path';
 import { BadRequestException } from '@nestjs/common';
 import { isValidObjectId } from 'mongoose';
+import { isAfter, addDays } from 'date-fns';
 
 @Controller('proveedores-salud')
 export class ProveedoresSaludController {
@@ -175,6 +176,55 @@ export class ProveedoresSaludController {
 
     return {
       message: 'Proveedor de salud eliminado exitosamente',
+    };
+  }
+
+  @Get('verificar-periodo-prueba/:id')
+  async verificarPeriodoDePrueba(@Param('id') id: string) {
+    console.log('controller')
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    const proveedorSalud = await this.proveedoresSaludService.findOne(id);
+
+    if (!proveedorSalud) {
+      throw new NotFoundException('No se encontró el proveedor de salud');
+    }
+
+    const fechaLimite = addDays(new Date(proveedorSalud.fechaInicioTrial), 1); // Día siguiente a la fecha de inicio
+
+    // Verificar si la fecha actual es posterior a la fecha límite
+    if (isAfter(new Date(), fechaLimite)) {
+      console.log('El periodo de prueba ha finalizado');
+      // Si el periodo ha finalizado y no está marcado, actualizarlo
+      if (!proveedorSalud.periodoDePruebaFinalizado) {
+        const updatedProveedorSalud = await this.proveedoresSaludService.update(
+          id,
+          { 
+            periodoDePruebaFinalizado: true,
+            fechaInicioTrial: proveedorSalud.fechaInicioTrial
+          },
+        );
+
+        if (!updatedProveedorSalud) {
+          return {
+            message: 'No se pudo actualizar el proveedor de salud',
+          };
+        }
+
+        return {
+          message: 'El proveedor de salud ha finalizado su periodo de prueba',
+          data: updatedProveedorSalud,
+        };
+      }
+    } else {
+      console.log('El periodo de prueba sigue activo');
+    }
+
+    return {
+      message: 'El proveedor de salud no se encuentra en periodo de prueba',
+      data: proveedorSalud,
     };
   }
 }
