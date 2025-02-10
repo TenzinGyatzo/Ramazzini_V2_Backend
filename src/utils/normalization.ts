@@ -69,12 +69,14 @@ export function normalizeProveedorSaludData(
     nombre: dto.nombre?.trim(),
     RFC: dto.RFC?.trim().toUpperCase(),
     perfilProveedorSalud: dto.perfilProveedorSalud?.trim(),
+
     logotipoEmpresa: dto.logotipoEmpresa
       ? {
           data: dto.logotipoEmpresa.data.trim(),
           contentType: dto.logotipoEmpresa.contentType.trim(),
         }
       : undefined,
+
     estado: dto.estado?.trim(),
     municipio: dto.municipio?.trim(),
     codigoPostal: dto.codigoPostal?.trim(),
@@ -82,6 +84,23 @@ export function normalizeProveedorSaludData(
     telefono: dto.telefono?.trim(),
     correoElectronico: dto.correoElectronico?.trim(),
     sitioWeb: dto.sitioWeb?.trim(),
+
+    // **Campos relacionados con la suscripción y planes**
+    referenciaPlan: dto.referenciaPlan?.trim(),
+    maxUsuariosPermitidos: dto.maxUsuariosPermitidos ?? 1,
+    maxEmpresasPermitidas: dto.maxEmpresasPermitidas ?? 10,
+    estadoSuscripcion: dto.estadoSuscripcion?.trim() ?? 'pending',
+    fechaInicioTrial: dto.fechaInicioTrial ?? new Date(),
+    periodoDePruebaFinalizado: dto.periodoDePruebaFinalizado ?? false,
+
+    addOns: dto.addOns?.map((addOn) => ({
+      tipo: addOn.tipo.trim(),
+      cantidad: addOn.cantidad,
+    })) ?? [],
+
+    // **Campos vinculados a MercadoPago**
+    mercadoPagoSubscriptionId: dto.mercadoPagoSubscriptionId?.trim(),
+    payerEmail: dto.payerEmail?.trim(),
   };
 }
 

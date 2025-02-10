@@ -8,7 +8,6 @@ export class Empresa extends Document {
     razonSocial: string;
     RFC: string;
     giroDeEmpresa: string;
-    baseOperaciones: string;
     logotipo:{
         data: string;
         contentType: string

@@ -66,16 +66,6 @@ export class CreateEmpresaDto {
   logotipoEmpresa?: LogotipoDto;
 
   @ApiProperty({
-    description: 'Base de operaciones de la empresa',
-    enum: basesOperaciones,
-    example: 'Los Mochis',
-  })
-  @IsString({ message: 'La base de operaciones debe ser un string' })
-  @IsNotEmpty({ message: 'La base de operaciones no puede estar vacía' })
-  @IsEnum(basesOperaciones, { message: 'La base de operaciones no es válida' })
-  baseOperaciones: string;
-
-  @ApiProperty({
     description: 'El ID del usuario que creó este registro',
     example: '60d9f70fc39b3c1b8f0d6c0b',
   })

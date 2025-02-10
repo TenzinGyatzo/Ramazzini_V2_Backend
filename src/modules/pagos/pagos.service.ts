@@ -29,6 +29,18 @@ export class PagosService {
       throw new Error('No se pudo crear la suscripción.');
     }
   }
+
+  // Método para eliminar una suscripción
+  async eliminarSuscripcion(subscriptionId: string): Promise<any> {
+    try {
+      // const response = await this.preApproval.cancel(subscriptionId);
+      // return response;
+      console.log('subscriptionId:', subscriptionId);
+    } catch (error) {
+      console.error('Error al eliminar la suscripción:', error);
+      throw new Error('No se pudo eliminar la suscripción.');
+    }
+  }
 }
 
 

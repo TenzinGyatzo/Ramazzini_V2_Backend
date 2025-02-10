@@ -104,7 +104,7 @@ export class ProveedoresSaludController {
     return proveedorSalud;
   }
 
-  @Patch('actualizar-proveedor-salud/:id')
+  @Post('actualizar-proveedor-salud/:id')
   @UseInterceptors(
     FileInterceptor('logotipoEmpresa', {
       storage: diskStorage({
