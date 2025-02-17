@@ -24,10 +24,30 @@ export class ProveedoresSaludService {
     return this.proveedoresSaludModel.findById(id).exec();
   }
 
-  async update(id: string, updateProveedoresSaludDto: UpdateProveedoresSaludDto): Promise<ProveedorSalud> {
+  // **Método para actualizar un proveedor de salud**
+  /* async update(id: string, updateProveedoresSaludDto: UpdateProveedoresSaludDto): Promise<ProveedorSalud> {
     const normalizedDto = normalizeProveedorSaludData(updateProveedoresSaludDto);
     return this.proveedoresSaludModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();
+  } */
+
+  // **Método para actualizar los campos de uno por uno**
+  async update(id: string, updateProveedoresSaludDto: UpdateProveedoresSaludDto): Promise<ProveedorSalud> {
+    const proveedor = await this.proveedoresSaludModel.findById(id);
+  
+    if (!proveedor) {
+      throw new Error('Proveedor de salud no encontrado');
+    }
+  
+    // Actualizar solo los campos proporcionados en el DTO
+    Object.keys(updateProveedoresSaludDto).forEach(key => {
+      if (updateProveedoresSaludDto[key] !== undefined) {
+        proveedor[key] = updateProveedoresSaludDto[key];
+      }
+    });
+  
+    return proveedor.save();
   }
+  
 
   async remove(id: string): Promise<boolean> {
     const result = await this.proveedoresSaludModel.findByIdAndDelete(id).exec();

@@ -85,22 +85,17 @@ export function normalizeProveedorSaludData(
     correoElectronico: dto.correoElectronico?.trim(),
     sitioWeb: dto.sitioWeb?.trim(),
 
-    // **Campos relacionados con la suscripción y planes**
-    referenciaPlan: dto.referenciaPlan?.trim(),
-    maxUsuariosPermitidos: dto.maxUsuariosPermitidos ?? 1,
-    maxEmpresasPermitidas: dto.maxEmpresasPermitidas ?? 10,
-    estadoSuscripcion: dto.estadoSuscripcion?.trim() ?? 'pending',
+    // **Campos relacionados con el periodo de prueba y limites**
     fechaInicioTrial: dto.fechaInicioTrial ?? new Date(),
     periodoDePruebaFinalizado: dto.periodoDePruebaFinalizado ?? false,
+    maxUsuariosPermitidos: dto.maxUsuariosPermitidos ?? 1,
+    maxEmpresasPermitidas: dto.maxEmpresasPermitidas ?? 10,
 
     addOns: dto.addOns?.map((addOn) => ({
       tipo: addOn.tipo.trim(),
       cantidad: addOn.cantidad,
     })) ?? [],
 
-    // **Campos vinculados a MercadoPago**
-    mercadoPagoSubscriptionId: dto.mercadoPagoSubscriptionId?.trim(),
-    payerEmail: dto.payerEmail?.trim(),
   };
 }
 

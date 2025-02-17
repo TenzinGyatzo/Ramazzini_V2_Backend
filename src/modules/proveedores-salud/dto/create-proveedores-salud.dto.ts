@@ -71,11 +71,15 @@ export class CreateProveedoresSaludDto {
   @IsString({ message: 'El sitio web debe ser un string' })
   sitioWeb?: string;
 
-  // **Campos relacionados con la suscripción y planes**
+  // **Campos de periodo de prueba y límites**
   @IsOptional()
-  @IsString({ message: 'La referencia del plan debe ser un string' })
-  referenciaPlan?: string; // INDIVIDUAL, PROFESIONAL, EMPRESARIAL
+  @Type(() => Date)
+  fechaInicioTrial?: Date;
 
+  @IsOptional()
+  @IsBoolean({ message: 'El campo periodoDePruebaFinalizado debe ser un booleano' })
+  periodoDePruebaFinalizado?: boolean;
+  
   @IsOptional()
   @IsNumber({}, { message: 'El número máximo de usuarios permitidos debe ser un número' })
   maxUsuariosPermitidos?: number;
@@ -85,29 +89,52 @@ export class CreateProveedoresSaludDto {
   maxEmpresasPermitidas?: number;
 
   @IsOptional()
-  @IsString({ message: 'El estado de la suscripción debe ser un string' })
-  estadoSuscripcion?: string; // pending, authorized
-
-  @IsOptional()
-  @Type(() => Date)
-  fechaInicioTrial?: Date;
-
-  @IsOptional()
-  @IsBoolean({ message: 'El campo periodoDePruebaFinalizado debe ser un booleano' })
-  periodoDePruebaFinalizado?: boolean;
-
-  @IsOptional()
   @IsArray({ message: 'El campo addOns debe ser un arreglo' })
   @ValidateNested({ each: true })
   @Type(() => AddOnDto)
   addOns?: AddOnDto[];
 
-  // **Campos vinculados a MercadoPago**
+
+  // **Campos de suscripción**
   @IsOptional()
   @IsString({ message: 'El mercadoPagoSubscriptionId debe ser un string' })
   mercadoPagoSubscriptionId?: string;
 
   @IsOptional()
+  @IsString({ message: 'El estado de la suscripción debe ser un string' })
+  subscriptionStatus?: string; // pending, authorized, cancelled
+
+  @IsOptional()
+  @IsString({ message: 'La referencia del plan debe ser un string' })
+  reason?: string; // INDIVIDUAL, PROFESIONAL, EMPRESARIAL
+
+  @IsOptional()
   @IsString({ message: 'El payerEmail debe ser un string' })
   payerEmail?: string;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'El monto de transacción debe ser un número' })
+  transactionAmount?: number;
+
+
+  // **Campos de pago**
+  @IsOptional()
+  @IsString({ message: 'El ID de pago de MercadoPago debe ser un string' })
+  mercadoPagoPaymentId?: string;
+
+  @IsOptional()
+  @IsString({ message: 'El estado del pago debe ser un string' })
+  paymentStatus?: string; // processed, 
+
+  @IsOptional()
+  @IsNumber({}, { message: 'El número de intentos de reintento debe ser un número' })
+  retryAttempt?: number;
+
+  @IsOptional()
+  @Type(() => Date)
+  nextRetryDate?: Date;
+
+  @IsOptional()
+  @IsString({ message: 'El ID del método de pago debe ser un string' })
+  paymentMethodId?: string;
 }
