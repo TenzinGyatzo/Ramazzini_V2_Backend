@@ -45,8 +45,8 @@ export class ProveedorSalud extends Document {
   sitioWeb: string;
 
   // **Información de suscripción y límites**
-  @Prop({ default: 'INDIVIDUAL' })
-  referenciaPlan: string; // Plan base: INDIVIDUAL, PROFESIONAL, EMPRESARIAL
+  @Prop({ default: 'BÁSICO' })
+  referenciaPlan: string; // Plan base: BÁSICO, PROFESIONAL, EMPRESARIAL
 
   @Prop({ default: 1 })
   maxUsuariosPermitidos: number; // Inicialmente 1 para el Plan Individual
@@ -57,7 +57,7 @@ export class ProveedorSalud extends Document {
   @Prop({ default: 'pending' }) 
   estadoSuscripcion: string; // 'pending', 'authorized'
 
-  @Prop() 
+  @Prop({ default: new Date() }) 
   fechaInicioTrial: Date; // Fecha de inicio de los 15 días de prueba
 
   @Prop({ default: false }) 

@@ -192,7 +192,7 @@ export class ProveedoresSaludController {
       throw new NotFoundException('No se encontró el proveedor de salud');
     }
 
-    const fechaLimite = addDays(new Date(proveedorSalud.fechaInicioTrial), 1); // Día siguiente a la fecha de inicio
+    const fechaLimite = addDays(new Date(proveedorSalud.fechaInicioTrial), 15); // Día siguiente a la fecha de inicio
 
     // Verificar si la fecha actual es posterior a la fecha límite
     if (isAfter(new Date(), fechaLimite)) {

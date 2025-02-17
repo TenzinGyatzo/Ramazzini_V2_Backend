@@ -1,6 +1,7 @@
-import { Body, Controller, Param, Post, } from '@nestjs/common';
+import { Body, Controller, Param, Post, Put, } from '@nestjs/common';
 import { PagosService } from './pagos.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 
 @Controller('pagos')
 export class PagosController {
@@ -16,9 +17,28 @@ export class PagosController {
     return await this.pagosService.eliminarSuscripcion(id);
   }
 
-  @Post('pago-info')
+  @Post('webhook-mercadopago')
   async recibirInformacionPago(@Body() body: any) {
-    console.log('body:', body);
-    return body;
+    console.log('Webhook de Mercado Pago:', body);
+
+    const eventType = body.type; // subscription_preapproval or authorized_payment
+    const eventId = body.data.id; // ID del recurso asociado al evento
+
+    try {
+      if (eventType === 'subscription_preapproval') {
+        // Crear una suscripción en la base de datos
+        await this.pagosService.procesarPreapproval(eventId);
+      } else if (eventType === 'subscription_authorized_payment') {
+        // Procesar un pago autorizado
+        await this.pagosService.procesarAuthorizedPayment(eventId);
+      } else {
+        console.log('Tipo de evento no manejado:', eventType);
+      }
+      
+    } catch (error) {
+      console.error('Error al procesar el webhook:', error);
+    }
+
+    return { message: 'Webhook recibido correctamente.' };
   }
 }
