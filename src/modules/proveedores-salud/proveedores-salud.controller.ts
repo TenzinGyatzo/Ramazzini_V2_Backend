@@ -181,7 +181,6 @@ export class ProveedoresSaludController {
 
   @Get('verificar-periodo-prueba/:id')
   async verificarPeriodoDePrueba(@Param('id') id: string) {
-    console.log('controller')
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
@@ -196,7 +195,7 @@ export class ProveedoresSaludController {
 
     // Verificar si la fecha actual es posterior a la fecha límite
     if (isAfter(new Date(), fechaLimite)) {
-      console.log('El periodo de prueba ha finalizado');
+      console.log(`El periodo de prueba de ${proveedorSalud.nombre} ha finalizado el ${fechaLimite}`);
       // Si el periodo ha finalizado y no está marcado, actualizarlo
       if (!proveedorSalud.periodoDePruebaFinalizado) {
         const updatedProveedorSalud = await this.proveedoresSaludService.update(
@@ -219,7 +218,7 @@ export class ProveedoresSaludController {
         };
       }
     } else {
-      console.log('El periodo de prueba sigue activo');
+      // console.log('El periodo de prueba sigue activo');
     }
 
     return {

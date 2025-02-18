@@ -69,10 +69,8 @@ export class ProveedorSalud extends Document {
   })
   addOns: { tipo: string; cantidad: number }[];
 
-
-  // **Información de la suscripcion**
   @Prop()
-  suscripcionesActivas: String[]; // Array de ids de suscripciones activas
+  suscripcionActiva: string; // id de la suscripcion con estado 'authorized'
 
   @Prop() 
   estadoSuscripcion: string; // 'pending', 'authorized', 'cancelled'

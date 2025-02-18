@@ -43,31 +43,42 @@ export class PagosService {
   }
 
   async saveSubscription(subscriptionPayload: any): Promise<any> {
-    const existingSubscription = await this.subscriptionModel.findById(subscriptionPayload.id);
-
-    if (existingSubscription) {
-      await this.subscriptionModel.findByIdAndUpdate(subscriptionPayload.id, subscriptionPayload);
-    } else {
-      await new this.subscriptionModel(subscriptionPayload).save();
-    }
-
     const proveedor = await this.proveedorSaludModel.findById(subscriptionPayload.idProveedorSalud);
-
-    if (!proveedor) {
-      throw new Error('Proveedor de salud no encontrado');
-    }
+    if (!proveedor) throw new Error('Proveedor de salud no encontrado');
 
     if (subscriptionPayload.status === 'authorized') {
-      if (!proveedor.suscripcionesActivas.includes(subscriptionPayload.subscription_id)) {
-        proveedor.suscripcionesActivas.push(subscriptionPayload.subscription_id);
+      if (proveedor.suscripcionActiva && proveedor.suscripcionActiva !== subscriptionPayload.subscription_id) {
+        await this.cancelarSuscripcion(proveedor.suscripcionActiva);
       }
-    } else {
-      proveedor.suscripcionesActivas = proveedor.suscripcionesActivas.filter(id => id !== subscriptionPayload.subscription_id);
+      proveedor.suscripcionActiva = subscriptionPayload.subscription_id;
+      proveedor.estadoSuscripcion = 'authorized';
+    } else if (subscriptionPayload.status === 'cancelled') {
+      if (proveedor.suscripcionActiva === subscriptionPayload.subscription_id) {
+        proveedor.suscripcionActiva = null;
+        proveedor.estadoSuscripcion = 'inactive';
+      }
     }
 
-    proveedor.estadoSuscripcion = proveedor.suscripcionesActivas.length > 0 ? 'authorized' : 'inactive';
+    await this.subscriptionModel.findOneAndUpdate(
+      { subscription_id: subscriptionPayload.subscription_id },
+      subscriptionPayload,
+      { upsert: true }
+    );
 
     await proveedor.save();
+  }
+
+  async cancelarSuscripcion(subscriptionId: string): Promise<void> {
+    try {
+      await this.preApproval.update({ id: subscriptionId, body: { status: 'cancelled' } });
+      await this.subscriptionModel.findOneAndUpdate(
+        { subscription_id: subscriptionId },
+        { status: 'cancelled' }
+      );
+    } catch (error) {
+      console.error('Error al cancelar la suscripción:', error);
+      throw error;
+    }
   }
 
   async savePayment(paymentPayload: any): Promise<any> {
@@ -84,7 +95,7 @@ export class PagosService {
   async procesarPreapproval(preapprovalId: string): Promise<any> {
     try {
       const preapprovalDetails = await this.preApproval.get({ id: preapprovalId });
-      console.log('Detalles de la suscripcion:', preapprovalDetails);
+      // console.log('Detalles de la suscripcion:', preapprovalDetails);
 
       // Buscar el usuario por su email para obtener el idProveedorSalud
       const payer_email = preapprovalDetails.external_reference;
@@ -109,6 +120,13 @@ export class PagosService {
       // Guardar suscripcion en la base de datos referenciando el idProveedorSalud
       await this.saveSubscription(subscriptionPayload);
 
+      console.log('Resumen de suscripcion que se manda a guardar:', {
+        subscription_id: preapprovalDetails.id,
+        idProveedorSalud: user.idProveedorSalud,
+        payer_email: preapprovalDetails.external_reference,
+        status: preapprovalDetails.status,
+      });
+
     } catch (error) {
       console.error('Error al obtener los detalles de la suscripción:', error);
       throw error;
@@ -128,7 +146,7 @@ export class PagosService {
       });
 
       const paymentDetails = response.data;
-      console.log('Detalles del pago:', paymentDetails);
+      // console.log('Detalles del pago:', paymentDetails);
 
       // Buscar el usuario por su email
       const payer_email = paymentDetails.external_reference;
@@ -154,6 +172,15 @@ export class PagosService {
 
       // Guardar pago en la base de datos referenciando el idProveedorSalud
       await this.savePayment(paymentPayload);
+
+      console.log('Resumen de pago que se manda a guardar:', {
+        payment_id: paymentDetails.id,
+        preapproval_id: paymentDetails.preapproval_id,
+        proveedorSaludId: user.idProveedorSalud,
+        status: paymentDetails.status,
+        payment: paymentDetails.payment,
+        transaction_amount: paymentDetails.transaction_amount,
+      });
 
     } catch (error) {
       console.error('Error al obtener los detalles del pago:', error);
