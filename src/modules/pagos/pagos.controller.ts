@@ -12,11 +12,6 @@ export class PagosController {
     return await this.pagosService.crearSuscripcion(createSubscriptionDto);
   }
 
-  @Post('eliminar-suscripcion/:id')
-  async eliminarSuscripcion(@Param('id') id: string) {
-    return await this.pagosService.eliminarSuscripcion(id);
-  }
-
   @Post('webhook-mercadopago')
   async recibirInformacionPago(@Body() body: any) {
     console.log('Webhook de Mercado Pago:', body);

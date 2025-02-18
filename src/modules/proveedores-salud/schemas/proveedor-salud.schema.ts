@@ -72,36 +72,11 @@ export class ProveedorSalud extends Document {
 
   // **Información de la suscripcion**
   @Prop()
-  mercadoPagoSubscriptionId: string; // ID de la suscripción en MercadoPago
+  suscripcionesActivas: String[]; // Array de ids de suscripciones activas
 
   @Prop() 
-  subscriptionStatus: string; // 'pending', 'authorized', 'cancelled'
+  estadoSuscripcion: string; // 'pending', 'authorized', 'cancelled'
 
-  @Prop()
-  reason: string; // Plan base: Ramazzini: Plan Básico, Ramazzini: Plan Profesional, Ramazzini: Plan Empresarial
-
-  @Prop()
-  payerEmail: string; // Opcional: email del usuario principal vinculado a la suscripción
-
-  @Prop()
-  transactionAmount: number; // Opcional: monto de la transacción
-
-  
-  // **Información del pago**
-  @Prop()
-  mercadoPagoPaymentId: string; // ID del pago en MercadoPago
-
-  @Prop()
-  paymentStatus: string; // 'processed', 'recycling' ¿Debería manejar mejor los estados de payment? (approved, rejected)
-
-  @Prop()
-  retryAttempt: number; // Número de intentos de pago
-
-  @Prop()
-  nextRetryDate: Date; // Fecha del próximo intento de pago
-
-  @Prop()
-  paymentMethodId: string; // ID del método de pago
 }
 
 export const ProveedorSaludSchema = SchemaFactory.createForClass(ProveedorSalud);

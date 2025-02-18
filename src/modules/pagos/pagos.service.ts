@@ -1,8 +1,12 @@
 import axios from 'axios';
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { MercadoPagoConfig, PreApproval } from 'mercadopago';
 import { UsersService } from '../users/users.service';
-import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.service';
+import { Suscripcion } from './schemas/suscripcion.schema';
+import { Pago } from './schemas/pago.schema';
+import { ProveedorSalud } from '../proveedores-salud/schemas/proveedor-salud.schema';
 
 @Injectable()
 export class PagosService {
@@ -10,7 +14,9 @@ export class PagosService {
 
   constructor(
     private usersService: UsersService,
-    private proveedoresSaludService: ProveedoresSaludService,
+    @InjectModel(Suscripcion.name) private subscriptionModel: Model<Suscripcion>,
+    @InjectModel(Pago.name) private paymentModel: Model<Pago>,
+    @InjectModel(ProveedorSalud.name) private proveedorSaludModel: Model<ProveedorSalud>
   ) {
     // Inicializamos el cliente de Mercado Pago
     const client = new MercadoPagoConfig({
@@ -36,15 +42,41 @@ export class PagosService {
     }
   }
 
-  // Método para eliminar una suscripción
-  async eliminarSuscripcion(subscriptionId: string): Promise<any> {
-    try {
-      // const response = await this.preApproval.cancel(subscriptionId);
-      // return response;
-      console.log('subscriptionId:', subscriptionId);
-    } catch (error) {
-      console.error('Error al eliminar la suscripción:', error);
-      throw new Error('No se pudo eliminar la suscripción.');
+  async saveSubscription(subscriptionPayload: any): Promise<any> {
+    const existingSubscription = await this.subscriptionModel.findById(subscriptionPayload.id);
+
+    if (existingSubscription) {
+      await this.subscriptionModel.findByIdAndUpdate(subscriptionPayload.id, subscriptionPayload);
+    } else {
+      await new this.subscriptionModel(subscriptionPayload).save();
+    }
+
+    const proveedor = await this.proveedorSaludModel.findById(subscriptionPayload.idProveedorSalud);
+
+    if (!proveedor) {
+      throw new Error('Proveedor de salud no encontrado');
+    }
+
+    if (subscriptionPayload.status === 'authorized') {
+      if (!proveedor.suscripcionesActivas.includes(subscriptionPayload.subscription_id)) {
+        proveedor.suscripcionesActivas.push(subscriptionPayload.subscription_id);
+      }
+    } else {
+      proveedor.suscripcionesActivas = proveedor.suscripcionesActivas.filter(id => id !== subscriptionPayload.subscription_id);
+    }
+
+    proveedor.estadoSuscripcion = proveedor.suscripcionesActivas.length > 0 ? 'authorized' : 'inactive';
+
+    await proveedor.save();
+  }
+
+  async savePayment(paymentPayload: any): Promise<any> {
+    const existingPayment = await this.paymentModel.findById(paymentPayload.id);
+
+    if (existingPayment) {
+      await this.paymentModel.findByIdAndUpdate(paymentPayload.id, paymentPayload);
+    } else {
+      await new this.paymentModel(paymentPayload).save();
     }
   }
 
@@ -52,38 +84,30 @@ export class PagosService {
   async procesarPreapproval(preapprovalId: string): Promise<any> {
     try {
       const preapprovalDetails = await this.preApproval.get({ id: preapprovalId });
-      // console.log('Detalles de la suscripcion:', preapprovalDetails);
-      
-      // Actualizar proveedorSalud en la base de datos usando esos datos obtenidos
-      const subscriptionId = preapprovalDetails.id;
-      const reason = preapprovalDetails.reason;
+      console.log('Detalles de la suscripcion:', preapprovalDetails);
+
+      // Buscar el usuario por su email para obtener el idProveedorSalud
       const payer_email = preapprovalDetails.external_reference;
-      const transaction_amount = preapprovalDetails.auto_recurring.transaction_amount;
-      const status = preapprovalDetails.status; // pending, authorized, cancelled
-
-      console.log('------------------------------------------------');
-      console.log('subscriptionId:', subscriptionId);
-      console.log('reason:', reason);
-      console.log('payer_email:', payer_email);
-      console.log('transaction_amount:', transaction_amount);
-      console.log('status:', status);
-      console.log('------------------------------------------------');
-
-      // Buscar el usuario por su email
       const user = await this.usersService.findByEmail(payer_email);
-      const proveedorSaludId = user.idProveedorSalud;
 
-      const proveedorSaludPayload = {
-        mercadoPagoSubscriptionId: subscriptionId,
-        subscriptionStatus: status,
-        reason: reason,
-        payerEmail: payer_email,
-        transactionAmount: transaction_amount
+      const subscriptionPayload = {
+        subscription_id: preapprovalDetails.id,
+        idProveedorSalud: user.idProveedorSalud,
+        payer_id: preapprovalDetails.payer_id,
+        payer_email: preapprovalDetails.external_reference,
+        back_url: preapprovalDetails.back_url,
+        status: preapprovalDetails.status,
+        reason: preapprovalDetails.reason,
+        date_created: preapprovalDetails.date_created,
+        last_modified: preapprovalDetails.last_modified,
+        init_point: preapprovalDetails.init_point,
+        auto_recurring: preapprovalDetails.auto_recurring,
+        next_payment_date: preapprovalDetails.next_payment_date,
+        payment_method_id: preapprovalDetails.payment_method_id
       };
-      // Actualizar proveedorSalud usando su id
-      const proveedorSalud = await this.proveedoresSaludService.update(proveedorSaludId, proveedorSaludPayload);
       
-      console.log('proveedorSalud Actualziado:', proveedorSalud);
+      // Guardar suscripcion en la base de datos referenciando el idProveedorSalud
+      await this.saveSubscription(subscriptionPayload);
 
     } catch (error) {
       console.error('Error al obtener los detalles de la suscripción:', error);
@@ -106,37 +130,30 @@ export class PagosService {
       const paymentDetails = response.data;
       console.log('Detalles del pago:', paymentDetails);
 
-      // Actualizar estadoSuscripcion de proveedorSalud usando el const status
-      const status = paymentDetails.status;
-      const retry_attempt = paymentDetails.retry_attempt;
-      const next_retry_date = paymentDetails.next_retry_date;
-      const payment_method_id = paymentDetails.payment_method_id;
-      const payer_email = paymentDetails.external_reference;
-
-      console.log('------------------------------------------------');
-      console.log('paymentId:', paymentId);
-      console.log('status:', status);
-      console.log('retry_attempt:', retry_attempt);
-      console.log('next_retry_date:', next_retry_date);
-      console.log('payment_method_id:', payment_method_id);
-      console.log('payer_email', payer_email);
-      console.log('------------------------------------------------');
-
       // Buscar el usuario por su email
+      const payer_email = paymentDetails.external_reference;
       const user = await this.usersService.findByEmail(payer_email);
-      const proveedorSaludId = user.idProveedorSalud;
 
-      const proveedorSaludPayload = {
-        mercadoPagoPaymentId: paymentId,
-        paymentStatus: status,
-        retryAttempt: retry_attempt,
-        nextRetryDate: next_retry_date,
-        paymentMethodId: payment_method_id
+      const paymentPayload = {
+        payment_id: paymentDetails.id,
+        preapproval_id: paymentDetails.preapproval_id,
+        proveedorSaludId: user.idProveedorSalud,
+        type: paymentDetails.type,
+        status: paymentDetails.status,
+        date_created: paymentDetails.date_created,
+        last_modified: paymentDetails.last_modified,
+        transaction_amount: paymentDetails.transaction_amount,
+        currency_id: paymentDetails.currency_id,
+        reason: paymentDetails.reason,
+        external_reference: paymentDetails.external_reference, // email del usuario
+        payment: paymentDetails.payment, // id, status, status_detail
+        retry_attempt: paymentDetails.retry_attempt,
+        next_retry_date: paymentDetails.next_retry_date,
+        payment_method_id: paymentDetails.payment_method_id
       };
-      // Actualizar proveedorSalud usando su id
-      const proveedorSalud = await this.proveedoresSaludService.update(proveedorSaludId, proveedorSaludPayload);
-      
-      console.log('proveedorSalud Actualziado:', proveedorSalud);
+
+      // Guardar pago en la base de datos referenciando el idProveedorSalud
+      await this.savePayment(paymentPayload);
 
     } catch (error) {
       console.error('Error al obtener los detalles del pago:', error);
