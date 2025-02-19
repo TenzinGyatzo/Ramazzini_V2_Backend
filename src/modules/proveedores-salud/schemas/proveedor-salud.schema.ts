@@ -73,8 +73,10 @@ export class ProveedorSalud extends Document {
   suscripcionActiva: string; // id de la suscripcion con estado 'authorized'
 
   @Prop() 
-  estadoSuscripcion: string; // 'pending', 'authorized', 'cancelled'
+  estadoSuscripcion: string; // 'inactive', 'authorized', 'cancelled'
 
+  @Prop()
+  finDeSuscripcion: Date; // Fecha hasta la cual el usuario mantiene acceso tras cancelar
 }
 
 export const ProveedorSaludSchema = SchemaFactory.createForClass(ProveedorSalud);

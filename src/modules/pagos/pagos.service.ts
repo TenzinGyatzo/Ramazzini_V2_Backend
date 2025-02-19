@@ -45,28 +45,49 @@ export class PagosService {
   async saveSubscription(subscriptionPayload: any): Promise<any> {
     const proveedor = await this.proveedorSaludModel.findById(subscriptionPayload.idProveedorSalud);
     if (!proveedor) throw new Error('Proveedor de salud no encontrado');
-
+  
+    // Si la suscripción está autorizada
     if (subscriptionPayload.status === 'authorized') {
-      if (proveedor.suscripcionActiva && proveedor.suscripcionActiva !== subscriptionPayload.subscription_id) {
-        await this.cancelarSuscripcion(proveedor.suscripcionActiva);
+      // Verificar que la suscripción anterior no esté ya cancelada antes de intentar cancelarla
+      if (
+        proveedor.suscripcionActiva &&
+        proveedor.suscripcionActiva !== subscriptionPayload.subscription_id
+      ) {
+        const suscripcionAnterior = await this.subscriptionModel.findOne({
+          subscription_id: proveedor.suscripcionActiva,
+        });
+  
+        if (suscripcionAnterior && suscripcionAnterior.status !== 'cancelled') {
+          try {
+            await this.cancelarSuscripcion(proveedor.suscripcionActiva);
+          } catch (error) {
+            console.warn('No se pudo cancelar la suscripción anterior, ya estaba cancelada.');
+          }
+        }
       }
+  
       proveedor.suscripcionActiva = subscriptionPayload.subscription_id;
       proveedor.estadoSuscripcion = 'authorized';
-    } else if (subscriptionPayload.status === 'cancelled') {
+      proveedor.finDeSuscripcion = subscriptionPayload.next_payment_date;
+    } 
+    // Si la suscripción es cancelada
+    else if (subscriptionPayload.status === 'cancelled') {
       if (proveedor.suscripcionActiva === subscriptionPayload.subscription_id) {
-        proveedor.suscripcionActiva = null;
-        proveedor.estadoSuscripcion = 'inactive';
+        proveedor.estadoSuscripcion = 'cancelled';
+        proveedor.finDeSuscripcion = subscriptionPayload.next_payment_date;
+        proveedor.suscripcionActiva = ''; // Aquí aseguramos que se vacíe
       }
     }
-
+  
     await this.subscriptionModel.findOneAndUpdate(
       { subscription_id: subscriptionPayload.subscription_id },
       subscriptionPayload,
       { upsert: true }
     );
-
+  
     await proveedor.save();
   }
+  
 
   async cancelarSuscripcion(subscriptionId: string): Promise<void> {
     try {
@@ -88,6 +109,18 @@ export class PagosService {
       await this.paymentModel.findByIdAndUpdate(paymentPayload.id, paymentPayload);
     } else {
       await new this.paymentModel(paymentPayload).save();
+    }
+
+    if (paymentPayload.status === 'rejected' && paymentPayload.retry_attempt < 3) {
+      console.warn('Pago fallido, se intentará nuevamente.');
+    } else if (paymentPayload.status === 'rejected' && paymentPayload.retry_attempt >= 3) {
+      const proveedor = await this.proveedorSaludModel.findById(paymentPayload.proveedorSaludId);
+      if (proveedor && proveedor.suscripcionActiva === paymentPayload.preapproval_id) {
+        proveedor.estadoSuscripcion = 'inactive';
+        proveedor.finDeSuscripcion = null;
+        await proveedor.save();
+        console.warn('Pago fallido después de múltiples intentos, acceso revocado.');
+      }
     }
   }
 

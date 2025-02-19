@@ -97,44 +97,15 @@ export class CreateProveedoresSaludDto {
 
   // **Campos de suscripción**
   @IsOptional()
-  @IsString({ message: 'El mercadoPagoSubscriptionId debe ser un string' })
-  mercadoPagoSubscriptionId?: string;
+  @IsString({ message: 'La suscripcion activa debe ser un string' })
+  suscripcionActiva?: string;
 
   @IsOptional()
   @IsString({ message: 'El estado de la suscripción debe ser un string' })
-  subscriptionStatus?: string; // pending, authorized, cancelled
-
-  @IsOptional()
-  @IsString({ message: 'La referencia del plan debe ser un string' })
-  reason?: string; // INDIVIDUAL, PROFESIONAL, EMPRESARIAL
-
-  @IsOptional()
-  @IsString({ message: 'El payerEmail debe ser un string' })
-  payerEmail?: string;
-
-  @IsOptional()
-  @IsNumber({}, { message: 'El monto de transacción debe ser un número' })
-  transactionAmount?: number;
-
-
-  // **Campos de pago**
-  @IsOptional()
-  @IsString({ message: 'El ID de pago de MercadoPago debe ser un string' })
-  mercadoPagoPaymentId?: string;
-
-  @IsOptional()
-  @IsString({ message: 'El estado del pago debe ser un string' })
-  paymentStatus?: string; // processed, 
-
-  @IsOptional()
-  @IsNumber({}, { message: 'El número de intentos de reintento debe ser un número' })
-  retryAttempt?: number;
+  estadoSuscripcion?: string; // pending, authorized, cancelled
 
   @IsOptional()
   @Type(() => Date)
-  nextRetryDate?: Date;
+  finDeSuscripcion?: Date;
 
-  @IsOptional()
-  @IsString({ message: 'El ID del método de pago debe ser un string' })
-  paymentMethodId?: string;
 }
