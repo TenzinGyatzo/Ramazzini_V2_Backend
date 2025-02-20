@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Put, } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, } from '@nestjs/common';
 import { PagosService } from './pagos.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
@@ -10,6 +10,11 @@ export class PagosController {
   @Post('crear-suscripcion')
   async crearSuscripcion(@Body() createSubscriptionDto: CreateSubscriptionDto) {
     return await this.pagosService.crearSuscripcion(createSubscriptionDto);
+  }
+
+  @Get('obtener-suscripcion/:id')
+  async obtenerSuscripcion(@Param('id') id: string) {
+    return await this.pagosService.obtenerSuscripcion(id);
   }
 
   @Post('webhook-mercadopago')

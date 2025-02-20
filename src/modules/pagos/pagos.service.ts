@@ -42,6 +42,25 @@ export class PagosService {
     }
   }
 
+  async obtenerSuscripcion(subscriptionId: string): Promise<any> {
+    try {
+      const url = `https://api.mercadopago.com/preapproval/${subscriptionId}`;
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN ||
+            'APP_USR-7511097887532725-020623-9a55ea3357976dcc3313d4a21568910f-2250541213'}`,
+        },
+      })
+
+      return response.data;
+
+    } catch (error) {
+      console.error('Error al obtener la suscripción:', error);
+      throw new Error('No se pudo obtener la suscripción.');
+    }
+  }
+
   async saveSubscription(subscriptionPayload: any): Promise<any> {
     const proveedor = await this.proveedorSaludModel.findById(subscriptionPayload.idProveedorSalud);
     if (!proveedor) throw new Error('Proveedor de salud no encontrado');
