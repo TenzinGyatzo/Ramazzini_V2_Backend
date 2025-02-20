@@ -54,7 +54,7 @@ export class ProveedorSalud extends Document {
   @Prop({ default: 1 })
   maxUsuariosPermitidos: number; // Inicialmente 1 para el Plan Individual
 
-  @Prop({ default: 10 })
+  @Prop({ default: 5 })
   maxEmpresasPermitidas: number; // Inicialmente 10 para el Plan Individual
 
   // **Add-ons dinámicos**
