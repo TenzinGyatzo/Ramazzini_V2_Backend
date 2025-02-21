@@ -12,9 +12,14 @@ export class PagosController {
     return await this.pagosService.crearSuscripcion(createSubscriptionDto);
   }
 
-  @Get('obtener-suscripcion/:id')
-  async obtenerSuscripcion(@Param('id') id: string) {
-    return await this.pagosService.obtenerSuscripcion(id);
+  @Get('obtener-suscripcion-api/:id')
+  async obtenerSuscripcionDeAPI(@Param('id') id: string) {
+    return await this.pagosService.obtenerSuscripcionDeAPI(id);
+  }
+
+  @Get('obtener-suscripcion-db/:id')
+  async obtenerSuscripcionDeBaseDatos(@Param('id') id: string) {
+    return await this.pagosService.obtenerSuscripcionDeBaseDatos(id);
   }
 
   @Post('webhook-mercadopago')

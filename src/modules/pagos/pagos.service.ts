@@ -42,7 +42,7 @@ export class PagosService {
     }
   }
 
-  async obtenerSuscripcion(subscriptionId: string): Promise<any> {
+  async obtenerSuscripcionDeAPI(subscriptionId: string): Promise<any> {
     try {
       const url = `https://api.mercadopago.com/preapproval/${subscriptionId}`;
 
@@ -59,6 +59,10 @@ export class PagosService {
       console.error('Error al obtener la suscripción:', error);
       throw new Error('No se pudo obtener la suscripción.');
     }
+  }
+
+  async obtenerSuscripcionDeBaseDatos(subscriptionId: string): Promise<any> {
+    return this.subscriptionModel.findOne({ subscription_id: subscriptionId });
   }
 
   async saveSubscription(subscriptionPayload: any): Promise<any> {
