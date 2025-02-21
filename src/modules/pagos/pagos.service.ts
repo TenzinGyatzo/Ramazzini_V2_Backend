@@ -64,49 +64,65 @@ export class PagosService {
   async saveSubscription(subscriptionPayload: any): Promise<any> {
     const proveedor = await this.proveedorSaludModel.findById(subscriptionPayload.idProveedorSalud);
     if (!proveedor) throw new Error('Proveedor de salud no encontrado');
-  
-    // Si la suscripción está autorizada
+
+    // Si la suscripción está autorizada, actualizar límites
     if (subscriptionPayload.status === 'authorized') {
-      // Verificar que la suscripción anterior no esté ya cancelada antes de intentar cancelarla
-      if (
-        proveedor.suscripcionActiva &&
-        proveedor.suscripcionActiva !== subscriptionPayload.subscription_id
-      ) {
-        const suscripcionAnterior = await this.subscriptionModel.findOne({
-          subscription_id: proveedor.suscripcionActiva,
-        });
-  
-        if (suscripcionAnterior && suscripcionAnterior.status !== 'cancelled') {
-          try {
-            await this.cancelarSuscripcion(proveedor.suscripcionActiva);
-          } catch (error) {
-            console.warn('No se pudo cancelar la suscripción anterior, ya estaba cancelada.');
-          }
+        // Verificar que la suscripción anterior no esté ya cancelada antes de intentar cancelarla
+        if (
+            proveedor.suscripcionActiva &&
+            proveedor.suscripcionActiva !== subscriptionPayload.subscription_id
+        ) {
+            const suscripcionAnterior = await this.subscriptionModel.findOne({
+                subscription_id: proveedor.suscripcionActiva,
+            });
+
+            if (suscripcionAnterior && suscripcionAnterior.status !== 'cancelled') {
+                try {
+                    await this.cancelarSuscripcion(proveedor.suscripcionActiva);
+                } catch (error) {
+                    console.warn('No se pudo cancelar la suscripción anterior, ya estaba cancelada.');
+                }
+            }
         }
-      }
-  
-      proveedor.suscripcionActiva = subscriptionPayload.subscription_id;
-      proveedor.estadoSuscripcion = 'authorized';
-      proveedor.finDeSuscripcion = subscriptionPayload.next_payment_date;
+
+        proveedor.suscripcionActiva = subscriptionPayload.subscription_id;
+        proveedor.estadoSuscripcion = 'authorized';
+        proveedor.finDeSuscripcion = subscriptionPayload.next_payment_date;
+
+        // Obtener el plan correspondiente a la suscripción
+        const selectedPlan = this.getPlanDetails(subscriptionPayload.reason);
+        if (selectedPlan) {
+            proveedor.maxUsuariosPermitidos = selectedPlan.users + proveedor.addOns.find(a => a.tipo === 'usuario_adicional')?.cantidad || 0;
+            proveedor.maxEmpresasPermitidas = selectedPlan.companies + proveedor.addOns.find(a => a.tipo === 'empresas_extra')?.cantidad || 0;
+        }
     } 
     // Si la suscripción es cancelada
     else if (subscriptionPayload.status === 'cancelled') {
-      if (proveedor.suscripcionActiva === subscriptionPayload.subscription_id) {
-        proveedor.estadoSuscripcion = 'cancelled';
-        proveedor.finDeSuscripcion = subscriptionPayload.next_payment_date;
-        proveedor.suscripcionActiva = ''; // Aquí aseguramos que se vacíe
-      }
+        if (proveedor.suscripcionActiva === subscriptionPayload.subscription_id) {
+            proveedor.estadoSuscripcion = 'cancelled';
+            proveedor.finDeSuscripcion = subscriptionPayload.next_payment_date;
+            proveedor.suscripcionActiva = ''; // Aquí aseguramos que se vacíe
+        }
     }
-  
+
     await this.subscriptionModel.findOneAndUpdate(
-      { subscription_id: subscriptionPayload.subscription_id },
-      subscriptionPayload,
-      { upsert: true }
+        { subscription_id: subscriptionPayload.subscription_id },
+        subscriptionPayload,
+        { upsert: true }
     );
-  
+
     await proveedor.save();
   }
-  
+
+  // Nueva función para obtener detalles del plan desde la razón de la suscripción
+  getPlanDetails(reason: string) {
+      const plans = [
+          { name: "Ramazzini: Plan Básico", users: 1, companies: 10 },
+          { name: "Ramazzini: Plan Profesional", users: 5, companies: 50 },
+          { name: "Ramazzini: Plan Empresarial", users: 15, companies: 150 },
+      ];
+      return plans.find(plan => reason.includes(plan.name)) || null;
+  }
 
   async cancelarSuscripcion(subscriptionId: string): Promise<void> {
     try {
