@@ -112,32 +112,40 @@ export class TrabajadoresController {
   }
 
   @Post('importar-trabajadores')
-    @UseInterceptors(FileInterceptor('file'))
-    async importarTrabajadores(
-        @UploadedFile() file: Express.Multer.File, 
-        @Param('centroId') centroId: string,
-        @Body('createdBy') createdBy: string
-    ) {
-        if (!file) {
-            throw new BadRequestException('No se proporcionó un archivo');
-        }
-
-        // Procesa el archivo Excel
-        const workbook = xlsx.read(file.buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const data = xlsx.utils.sheet_to_json(worksheet);
-
-        // Llama al servicio para importar trabajadores y pasarle los datos procesados
-        const result = await this.trabajadoresService.importarTrabajadores(data, centroId, createdBy);
-        return {
+  @UseInterceptors(FileInterceptor('file'))
+  async importarTrabajadores(
+      @UploadedFile() file: Express.Multer.File, 
+      @Param('centroId') centroId: string,
+      @Body('createdBy') createdBy: string
+  ) {
+      if (!file) {
+          throw new BadRequestException('No se proporcionó un archivo');
+      }
+  
+      // Procesa el archivo Excel
+      const workbook = xlsx.read(file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = xlsx.utils.sheet_to_json(worksheet);
+  
+      // Llama al servicio para importar trabajadores
+      const result = await this.trabajadoresService.importarTrabajadores(data, centroId, createdBy);
+  
+      const hasErrors = result.data.some((r) => !r.success);
+  
+      if (hasErrors) {
+          throw new BadRequestException({
+              message: 'Los trabajadores no pudieron ser importados',
+              errors: result.data.filter((r) => !r.success),
+          });
+      }
+  
+      return {
           status: 200,
           message: 'Trabajadores importados exitosamente',
           data: result.data
       };
-    }
-
-
+  }
   
   @Delete('/eliminar-trabajador/:id')
   @ApiOperation({ summary: 'Elimina un trabajador' })

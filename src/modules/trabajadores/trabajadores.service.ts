@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Trabajador } from './entities/trabajador.entity';
@@ -62,27 +62,34 @@ export class TrabajadoresService {
 
   // Método para importar trabajadores
   async importarTrabajadores(data: any[], idCentroTrabajo: string, createdBy: string) {
-      const resultados = [];
-      
-      for (const worker of data) {
-          // Procesa cada trabajador usando `processWorkerData`
-          const processedWorker = this.processWorkerData({
-              ...worker,
-              idCentroTrabajo,
-              createdBy,
-              updatedBy: createdBy
-          });
+    const resultados = [];
 
-          try {
-              const nuevoTrabajador = await this.create(processedWorker);
-              resultados.push({ success: true, worker: nuevoTrabajador });
-          } catch (error) {
-              console.error(`Error al crear el trabajador ${worker.nombre}:`, error.message);
-              resultados.push({ success: false, error: error.message, worker });
-          }
-      }
+    for (const worker of data) {
+        const processedWorker = this.processWorkerData({
+            ...worker,
+            idCentroTrabajo,
+            createdBy,
+            updatedBy: createdBy
+        });
 
-      return { message: 'Trabajadores importados exitosamente', data: resultados };
+        try {
+            const nuevoTrabajador = await this.create(processedWorker);
+            resultados.push({ success: true, worker: nuevoTrabajador });
+        } catch (error) {
+            console.error(`Error al crear el trabajador ${worker.nombre}:`, error.message);
+            resultados.push({ success: false, error: error.message, worker });
+        }
+    }
+
+    const hasErrors = resultados.some((r) => !r.success);
+    if (hasErrors) {
+        throw new BadRequestException({
+            message: 'Hubo un error, por favor utilice la plantilla.',
+            data: resultados.filter((r) => !r.success),
+        });
+    }
+
+    return { message: 'Trabajadores importados exitosamente', data: resultados };
   }
 
   async remove(id: string): Promise<boolean> {

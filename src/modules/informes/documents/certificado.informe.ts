@@ -289,9 +289,6 @@ export const certificadoInforme = (
             text: ' de edad, lo encontré íntegro físicamente, sin defectos ni anomalías del aparato locomotor, ',
           },
           {
-            text: 'de edad, lo encontré íntegro físicamente, sin defectos ni anomalías del aparato locomotor, ',
-          },
-          {
             text: examenVista
               ? `con agudeza visual OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion}, campo visual, profundidad de campo, estereopsis y percepción cromática `
               : `con agudeza visual, campo visual, profundidad de campo, estereopsis y percepción cromática `,
@@ -299,7 +296,7 @@ export const certificadoInforme = (
           {
             text: 'sin alteraciones; agudeza auditiva, aparato respiratorio y aparato locomotor íntegros, el ',
           },
-          { text: 'examen neurológico revelo buena coordinación y reflejos.' },
+          { text: 'examen neurológico reveló buena coordinación y reflejos.' },
         ],
         style: 'paragraph',
         margin: [0, 20, 0, 0],
@@ -312,7 +309,7 @@ export const certificadoInforme = (
             text: certificado.impedimentosFisicos,
           },
           {
-            text: ' Este certificado de salud no implica ninguna garantía de que el trabajador no se lesionará o enfermará en el futuro.',
+            text: '. Este certificado de salud no implica ninguna garantía de que el trabajador no se lesionará o enfermará en el futuro.',
           },
         ],
         style: 'paragraph',
