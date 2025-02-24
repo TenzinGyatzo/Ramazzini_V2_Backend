@@ -42,6 +42,19 @@ export class PagosService {
     }
   }
 
+  async actualizarSuscripcion(subscriptionId: string, subscriptionData: any): Promise<any> {
+    try {
+      const response = await this.preApproval.update({
+        id: subscriptionId,
+        body: subscriptionData,
+      });
+      return response;
+    } catch (error) {
+      console.error('Error al actualizar la suscripción:', error);
+      throw new Error('No se pudo actualizar la suscripción.');
+    }
+  }
+
   async obtenerSuscripcionDeAPI(subscriptionId: string): Promise<any> {
     try {
       const url = `https://api.mercadopago.com/preapproval/${subscriptionId}`;
@@ -192,6 +205,8 @@ export class PagosService {
       // Guardar suscripcion en la base de datos referenciando el idProveedorSalud
       await this.saveSubscription(subscriptionPayload);
 
+      // console.log('preapprovalDetails:', preapprovalDetails);
+
       console.log('Resumen de suscripcion que se manda a guardar:', {
         subscription_id: preapprovalDetails.id,
         idProveedorSalud: user.idProveedorSalud,
@@ -244,6 +259,8 @@ export class PagosService {
 
       // Guardar pago en la base de datos referenciando el idProveedorSalud
       await this.savePayment(paymentPayload);
+
+      // console.log('paymentDetails:', paymentDetails);
 
       console.log('Resumen de pago que se manda a guardar:', {
         payment_id: paymentDetails.id,

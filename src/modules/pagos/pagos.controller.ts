@@ -12,6 +12,11 @@ export class PagosController {
     return await this.pagosService.crearSuscripcion(createSubscriptionDto);
   }
 
+  @Put('actualizar-suscripcion/:id')
+  async actualizarSuscripcion(@Param('id') id: string, @Body() updateSubscriptionDto: UpdateSubscriptionDto) {
+    return await this.pagosService.actualizarSuscripcion(id, updateSubscriptionDto);
+  }
+
   @Get('obtener-suscripcion-api/:id')
   async obtenerSuscripcionDeAPI(@Param('id') id: string) {
     return await this.pagosService.obtenerSuscripcionDeAPI(id);
