@@ -52,10 +52,10 @@ export class ProveedorSalud extends Document {
   periodoDePruebaFinalizado: boolean; // Indica si han pasado los 15 días de prueba
 
   @Prop({ default: 1 })
-  maxUsuariosPermitidos: number; // Inicialmente 1 para el Plan Individual
+  maxUsuariosPermitidos: number; // Inicialmente 1 para periodo de prueba
 
   @Prop({ default: 5 })
-  maxEmpresasPermitidas: number; // Inicialmente 10 para el Plan Individual
+  maxEmpresasPermitidas: number; // Inicialmente 5 para periodo de prueba
 
   // **Add-ons dinámicos**
   @Prop({
