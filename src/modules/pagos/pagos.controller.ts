@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { Body, Controller, Get, Param, Post, Put, Query, Headers } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, Headers, Delete } from '@nestjs/common';
 import { PagosService } from './pagos.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
@@ -26,6 +26,11 @@ export class PagosController {
   @Get('obtener-suscripcion-db/:id')
   async obtenerSuscripcionDeBaseDatos(@Param('id') id: string) {
     return await this.pagosService.obtenerSuscripcionDeBaseDatos(id);
+  }
+
+  @Put('cancelar-suscripcion/:id')
+  async cancelarSuscripcion(@Param('id') id: string) {
+    return await this.pagosService.cancelarSuscripcion(id);
   }
 
   /* @Post('webhook-mercadopago')

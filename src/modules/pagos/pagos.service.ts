@@ -149,6 +149,9 @@ export class PagosService {
             proveedor.estadoSuscripcion = 'cancelled';
             proveedor.finDeSuscripcion = subscriptionPayload.next_payment_date;
             proveedor.suscripcionActiva = ''; // Aquí aseguramos que se vacíe
+            proveedor.maxUsuariosPermitidos = 1;
+            proveedor.maxEmpresasPermitidas = 0;
+            proveedor.addOns = [];
         }
     }
 
