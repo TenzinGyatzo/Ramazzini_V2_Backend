@@ -226,4 +226,53 @@ export class ProveedoresSaludController {
       data: proveedorSalud,
     };
   }
+
+  @Get('verificar-fin-suscripcion/:id')
+  async verificarFinSuscripcion(@Param('id') id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    const proveedorSalud = await this.proveedoresSaludService.findOne(id);
+
+    if (!proveedorSalud) {
+      throw new NotFoundException('No se encontró el proveedor de salud');
+    }
+
+    const finDeSuscripcion = proveedorSalud.finDeSuscripcion; // Quince días después de la fecha de inicio del periodo de prueba
+
+    // Verificar si la fecha actual es posterior a la fecha límite
+    if (isAfter(new Date(), finDeSuscripcion)) {
+      console.log(`La suscripción ha finalizado el ${finDeSuscripcion}`);
+      // Si el periodo ha finalizado hay que actualizar los límites
+      if (!proveedorSalud.finDeSuscripcion) {
+        const updatedProveedorSalud = await this.proveedoresSaludService.update(
+          id,
+          { 
+            maxUsuariosPermitidos: 1,
+            maxEmpresasPermitidas: 0,
+            addOns: [],
+          },
+        );
+
+        if (!updatedProveedorSalud) {
+          return {
+            message: 'No se pudo actualizar el proveedor de salud',
+          };
+        }
+
+        return {
+          message: 'El proveedor de salud ha finalizado su periodo de prueba',
+          data: updatedProveedorSalud,
+        };
+      }
+    } else {
+      console.log('La suscripción sigue activa');
+    }
+
+    return {
+      message: 'El proveedor de salud no se encuentra en periodo de prueba',
+      data: proveedorSalud,
+    };
+  }
 }

@@ -149,9 +149,11 @@ export class PagosService {
             proveedor.estadoSuscripcion = 'cancelled';
             proveedor.finDeSuscripcion = subscriptionPayload.next_payment_date;
             proveedor.suscripcionActiva = ''; // Aquí aseguramos que se vacíe
-            proveedor.maxUsuariosPermitidos = 1;
-            proveedor.maxEmpresasPermitidas = 0;
-            proveedor.addOns = [];
+
+            // Estos 3 se ajustarán cuando acabe el ciclo de suscripción
+            // proveedor.maxUsuariosPermitidos = 1;
+            // proveedor.maxEmpresasPermitidas = 0;
+            // proveedor.addOns = [];
         }
     }
 
@@ -181,6 +183,28 @@ export class PagosService {
         { subscription_id: subscriptionId },
         { status: 'cancelled' }
       );
+
+      // Obtener suscripcion
+      const subscriptionDetails = await this.subscriptionModel.findOne({ subscription_id: subscriptionId });
+
+      // Obtener proveedor de salud
+      const proveedor = await this.proveedorSaludModel.findById(subscriptionDetails.idProveedorSalud);
+
+      // Crear emailData
+      const emailData = {
+        email: subscriptionDetails.payer_email,
+        nombrePlan: subscriptionDetails.reason,
+        inicioSuscripcion: formatDate(subscriptionDetails.date_created),
+        fechaCancelacion: formatDate(new Date()),
+        montoMensual: formatCurrency(subscriptionDetails.auto_recurring.transaction_amount),
+        fechaFinDeSuscripcion: formatDate(subscriptionDetails.next_payment_date),
+        usuariosDisponibles: proveedor.maxUsuariosPermitidos,
+        empresasDisponibles: proveedor.maxEmpresasPermitidas,
+      }
+
+      // Enviar email de cancelación de suscripción
+      await this.emailsService.sendCancellationConfirmation(emailData);
+
     } catch (error) {
       console.error('Error al cancelar la suscripción:', error);
       throw error;
