@@ -70,11 +70,11 @@ export class UsersController {
     // Si todo está bien, registra el usuario
     const user = await this.usersService.register(createUserDto);
 
-    /* this.emailsService.sendEmailVerification({
+    this.emailsService.sendEmailVerification({
       username: user.username,
       email: user.email,
       token: user.token,
-    }); */
+    });
 
     // Respuesta al cliente
     res.json({

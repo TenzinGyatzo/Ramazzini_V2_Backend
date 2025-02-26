@@ -7,6 +7,17 @@ import { UsersService } from '../users/users.service';
 import { Suscripcion } from './schemas/suscripcion.schema';
 import { Pago } from './schemas/pago.schema';
 import { ProveedorSalud } from '../proveedores-salud/schemas/proveedor-salud.schema';
+import { EmailsService } from '../emails/emails.service';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+const formatDate = (dateString) => {
+  return dateString ? format(new Date(dateString), "dd 'de' MMMM 'de' yyyy", { locale: es }) : 'No disponible';
+};
+
+const formatCurrency = (amount) => {
+  return amount.toLocaleString("en-US");
+};
 
 @Injectable()
 export class PagosService {
@@ -14,6 +25,7 @@ export class PagosService {
 
   constructor(
     private usersService: UsersService,
+    private readonly emailsService: EmailsService,
     @InjectModel(Suscripcion.name) private subscriptionModel: Model<Suscripcion>,
     @InjectModel(Pago.name) private paymentModel: Model<Pago>,
     @InjectModel(ProveedorSalud.name) private proveedorSaludModel: Model<ProveedorSalud>
@@ -48,7 +60,9 @@ export class PagosService {
         id: subscriptionId,
         body: subscriptionData,
       });
+
       return response;
+
     } catch (error) {
       console.error('Error al actualizar la suscripción:', error);
       throw new Error('No se pudo actualizar la suscripción.');
@@ -112,6 +126,22 @@ export class PagosService {
             proveedor.maxUsuariosPermitidos = selectedPlan.users + proveedor.addOns.find(a => a.tipo === 'usuario_adicional')?.cantidad || 0;
             proveedor.maxEmpresasPermitidas = selectedPlan.companies + proveedor.addOns.find(a => a.tipo === 'empresas_extra')?.cantidad || 0;
         }
+
+        // Enviar email con detalles de la suscripción
+        const emailData = {
+          email: subscriptionPayload.external_reference,
+          nombrePlan: subscriptionPayload.reason,
+          inicioSuscripcion: formatDate(subscriptionPayload.date_created),
+          fechaActualizacion: formatDate(subscriptionPayload.last_modified),
+          montoMensual: formatCurrency(subscriptionPayload.auto_recurring.transaction_amount),
+          fechaProximoPago: formatDate(subscriptionPayload.next_payment_date),
+          usuariosDisponibles: proveedor.maxUsuariosPermitidos,
+          empresasDisponibles: proveedor.maxEmpresasPermitidas,
+        };
+
+        const isNewSubscription = subscriptionPayload.date_created === subscriptionPayload.last_modified;
+        await this.emailsService[isNewSubscription ? 'sendNewSubscriptionDetails' : 'sendUpdatedSubscriptionDetails'](emailData);
+
     } 
     // Si la suscripción es cancelada
     else if (subscriptionPayload.status === 'cancelled') {

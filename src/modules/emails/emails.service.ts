@@ -15,8 +15,9 @@ export class EmailsService {
 
     // Enviar el email
     const info = await transporter.sendMail({
-      from: 'Ramazzini',
+      from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
       to: email,
+      bcc: process.env.EMAIL_USER, // Copia oculta al remitente
       subject: 'Ramazzini - Confirma tu cuenta',
       text: 'Ramazzini - Confirma tu cuenta',
       html: `
@@ -44,8 +45,9 @@ export class EmailsService {
 
     // Enviar el email
     const info = await transporter.sendMail({
-      from: 'Ramazzini',
+      from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
       to: email,
+      bcc: process.env.EMAIL_USER, // Copia oculta al remitente
       subject: 'Ramazzini - Reestablece tu contraseña',
       text: 'Ramazzini - Reestablece tu contraseña',
       html: `
@@ -60,6 +62,129 @@ export class EmailsService {
     </div>`,
     });
 
+    console.log('Mensaje enviado', info.messageId);
+  }
+
+  async sendNewSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, usuariosDisponibles, empresasDisponibles }) {
+    const transporter = createTransport(
+      process.env.EMAIL_HOST,
+      process.env.EMAIL_PORT,
+      process.env.EMAIL_USER,
+      process.env.EMAIL_PASS,
+    );
+  
+    // Enviar el email
+    const info = await transporter.sendMail({
+      from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
+      // to: email,
+      to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
+      bcc: process.env.EMAIL_USER, // Copia oculta al remitente
+      subject: 'Bienvenido a Ramazzini - Detalles de tu Nueva Suscripción',
+      text: 'Detalles de tu Nueva Suscripción - Ramazzini',
+      html: `
+      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+          <!-- Header -->
+          <div style="background-color: #2c3e50; padding: 20px; text-align: center; border-radius: 5px 5px 0 0;">
+              <h1 style="font-size: 24px; color: #fff; margin: 0;">¡Bienvenido a Ramazzini!</h1>
+          </div>
+  
+          <!-- Body -->
+          <div style="padding: 20px; background-color: #f8f9fa; border-radius: 0 0 5px 5px;">
+              <p style="font-size: 16px;">Hola,</p>
+              <p style="font-size: 16px;">¡Gracias por unirte a <strong>Ramazzini</strong>! Aquí tienes los detalles de tu nueva suscripción:</p>
+  
+              <!-- Detalles de la suscripción -->
+              <div style="background-color: #fff; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ddd;">
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Plan Contratado:</strong> ${nombrePlan}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Fecha de Inicio:</strong> ${inicioSuscripcion}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Monto Mensual:</strong> $${montoMensual}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Próximo Pago:</strong> ${fechaProximoPago}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Usuarios Disponibles:</strong> ${usuariosDisponibles}</p>
+                  <p style="font-size: 16px; margin: 0;"><strong>Empresas Disponibles:</strong> ${empresasDisponibles}</p>
+              </div>
+  
+              <!-- Llamado a la acción -->
+              <p style="font-size: 16px; text-align: center; margin: 20px 0;">
+                  <a href="${process.env.FRONTEND_URL_DOMAIN}/suscripcion-activa" 
+                     style="background-color: #27ae60; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">
+                     Acceder a Mi Cuenta
+                  </a>
+              </p>
+  
+              <!-- Mensaje de bienvenida -->
+              <p style="font-size: 16px;">Estamos emocionados de tenerte con nosotros. Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
+          </div>
+  
+          <!-- Footer -->
+          <div style="text-align: center; font-size: 12px; color: #999; margin-top: 20px;">
+              <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+              <p>&copy; ${new Date().getFullYear()} Ramazzini. Todos los derechos reservados.</p>
+          </div>
+      </div>`,
+    });
+  
+    console.log('Mensaje enviado', info.messageId);
+  }
+
+  async sendUpdatedSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, usuariosDisponibles, empresasDisponibles }) {
+    const transporter = createTransport(
+      process.env.EMAIL_HOST,
+      process.env.EMAIL_PORT,
+      process.env.EMAIL_USER,
+      process.env.EMAIL_PASS,
+    );
+  
+    // Enviar el email
+    const info = await transporter.sendMail({
+      from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
+      // to: email,
+      to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
+      bcc: process.env.EMAIL_USER, // Copia oculta al remitente
+      subject: 'Actualización de tu Suscripción',
+      text: 'Detalles de Suscripción - Ramazzini',
+      html: `
+      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+          <!-- Header -->
+          <div style="background-color: #2c3e50; padding: 20px; text-align: center; border-radius: 5px 5px 0 0;">
+              <h1 style="font-size: 24px; color: #fff; margin: 0;">Detalles de tu Suscripción</h1>
+          </div>
+  
+          <!-- Body -->
+          <div style="padding: 20px; background-color: #f8f9fa; border-radius: 0 0 5px 5px;">
+              <p style="font-size: 16px;">Hola,</p>
+              <p style="font-size: 16px;">Aquí tienes los detalles actualizados de tu suscripción en <strong>Ramazzini</strong>:</p>
+  
+              <!-- Detalles de la suscripción -->
+              <div style="background-color: #fff; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ddd;">
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Plan Actual:</strong> ${nombrePlan}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Fecha de Inicio:</strong> ${inicioSuscripcion}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Última Actualización:</strong> ${fechaActualizacion}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Monto Mensual:</strong> $${montoMensual}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Próximo Pago:</strong> ${fechaProximoPago}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Usuarios Disponibles:</strong> ${usuariosDisponibles}</p>
+                  <p style="font-size: 16px; margin: 0;"><strong>Empresas Disponibles:</strong> ${empresasDisponibles}</p>
+              </div>
+  
+              <!-- Llamado a la acción -->
+              <p style="font-size: 16px; text-align: center; margin: 20px 0;">
+                  <a href="${process.env.FRONTEND_URL_DOMAIN}/suscripcion-activa" 
+                     style="background-color: #27ae60; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">
+                     Ver Mi Cuenta
+                  </a>
+              </p>
+  
+              <!-- Mensaje de agradecimiento -->
+              <p style="font-size: 16px;">Gracias por confiar en <strong>Ramazzini</strong>. Si tienes alguna pregunta, no dudes en contactarnos.</p>
+          </div>
+  
+          <!-- Footer -->
+          <div style="text-align: center; font-size: 12px; color: #999; margin-top: 20px;">
+              <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+              <p>&copy; ${new Date().getFullYear()} Ramazzini. Todos los derechos reservados.</p>
+          </div>
+      </div>`,
+    });
+  
     console.log('Mensaje enviado', info.messageId);
   }
 }

@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Suscripcion, SuscripcionSchema } from './schemas/suscripcion.schema';
 import { Pago, PagoSchema } from './schemas/pago.schema';
 import { ProveedorSalud, ProveedorSaludSchema } from '../proveedores-salud/schemas/proveedor-salud.schema';
+import { EmailsModule } from '../emails/emails.module';
 
 @Module({
   providers: [PagosService],
@@ -14,6 +15,7 @@ import { ProveedorSalud, ProveedorSaludSchema } from '../proveedores-salud/schem
   imports: [
     UsersModule, 
     ProveedoresSaludModule,
+    EmailsModule,
     MongooseModule.forFeature([
       { name: Suscripcion.name, schema: SuscripcionSchema },
       { name: Pago.name, schema: PagoSchema },
