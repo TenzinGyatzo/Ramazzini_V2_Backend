@@ -199,7 +199,8 @@ export class EmailsService {
     // Enviar el email
     const info = await transporter.sendMail({
       from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
-      to: email, // Cambiar por email del usuario
+      // to: email,
+      to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
       bcc: process.env.EMAIL_USER, // Copia oculta al remitente
       subject: 'Confirmación de Cancelación de Suscripción',
       text: 'Confirmación de cancelación',
