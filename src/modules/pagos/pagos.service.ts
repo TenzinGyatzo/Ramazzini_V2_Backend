@@ -96,6 +96,16 @@ export class PagosService {
     const proveedor = await this.proveedorSaludModel.findById(subscriptionPayload.idProveedorSalud);
     if (!proveedor) throw new Error('Proveedor de salud no encontrado');
 
+    // Buscar la suscripción en la base de datos
+    const existingSubscription = await this.subscriptionModel.findOne({
+        subscription_id: subscriptionPayload.subscription_id,
+    });
+
+    // Determinar si es una nueva suscripción
+    const isNewSubscription = 
+      !existingSubscription || // No existe en la base de datos
+      (existingSubscription.status === 'pending' && subscriptionPayload.status === 'authorized'); // Pasa de pending a authorized
+
     // Si la suscripción está autorizada, actualizar límites
     if (subscriptionPayload.status === 'authorized') {
         // Verificar que la suscripción anterior no esté ya cancelada antes de intentar cancelarla
@@ -139,7 +149,6 @@ export class PagosService {
           empresasDisponibles: proveedor.maxEmpresasPermitidas,
         };
 
-        const isNewSubscription = subscriptionPayload.date_created === subscriptionPayload.last_modified;
         await this.emailsService[isNewSubscription ? 'sendNewSubscriptionDetails' : 'sendUpdatedSubscriptionDetails'](emailData);
 
     } 

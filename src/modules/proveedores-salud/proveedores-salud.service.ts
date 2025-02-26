@@ -48,7 +48,6 @@ export class ProveedoresSaludService {
     return proveedor.save();
   }
   
-
   async remove(id: string): Promise<boolean> {
     const result = await this.proveedoresSaludModel.findByIdAndDelete(id).exec();
     return result !== null;

@@ -140,7 +140,7 @@ export class EmailsService {
       // to: email,
       to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
       bcc: process.env.EMAIL_USER, // Copia oculta al remitente
-      subject: 'Actualización de tu Suscripción',
+      subject: 'Suscripción Actualizada',
       text: 'Detalles de Suscripción - Ramazzini',
       html: `
       <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
@@ -202,8 +202,8 @@ export class EmailsService {
       // to: email,
       to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
       bcc: process.env.EMAIL_USER, // Copia oculta al remitente
-      subject: 'Confirmación de Cancelación de Suscripción',
-      text: 'Confirmación de cancelación',
+      subject: 'Suscripción Cancelada',
+      text: 'Detalles de cancelación',
       html: `
       <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
           <!-- Header -->
@@ -234,10 +234,10 @@ export class EmailsService {
   
               <!-- Llamado a la acción -->
               <p style="font-size: 16px; text-align: center; margin: 20px 0;">
-                  Si cambias de opinión o necesitas ayuda, puedes reactivar tu suscripción en cualquier momento:
+                  Si cambias de opinión o necesitas ayuda, puedes solicitar una nueva suscripción en cualquier momento:
                   <a href="${process.env.FRONTEND_URL_DOMAIN}/suscripcion" 
                      style="background-color: #27ae60; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px; display: inline-block; margin-top: 10px;">
-                     Reactivar Suscripción
+                     Solicitar Nueva Suscripción
                   </a>
               </p>
   
