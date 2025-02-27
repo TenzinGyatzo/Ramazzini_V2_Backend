@@ -97,7 +97,7 @@ export class EmailsService {
               <div style="background-color: #fff; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ddd;">
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Plan Contratado:</strong> ${nombrePlan}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Fecha de Inicio:</strong> ${inicioSuscripcion}</p>
-                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Monto Mensual:</strong> $${montoMensual}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Monto Mensual:</strong> $${montoMensual} MXN</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Próximo Pago:</strong> ${fechaProximoPago}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Usuarios Disponibles:</strong> ${usuariosDisponibles}</p>
                   <p style="font-size: 16px; margin: 0;"><strong>Empresas Disponibles:</strong> ${empresasDisponibles}</p>
@@ -159,7 +159,7 @@ export class EmailsService {
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Plan Actual:</strong> ${nombrePlan}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Fecha de Inicio:</strong> ${inicioSuscripcion}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Última Actualización:</strong> ${fechaActualizacion}</p>
-                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Monto Mensual:</strong> $${montoMensual}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Monto Mensual:</strong> $${montoMensual} MXN</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Próximo Pago:</strong> ${fechaProximoPago}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Usuarios Disponibles:</strong> ${usuariosDisponibles}</p>
                   <p style="font-size: 16px; margin: 0;"><strong>Empresas Disponibles:</strong> ${empresasDisponibles}</p>
