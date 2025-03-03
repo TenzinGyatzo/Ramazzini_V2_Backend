@@ -76,8 +76,8 @@ export class EmailsService {
     // Enviar el email
     const info = await transporter.sendMail({
       from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
-      // to: email,
-      to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
+      to: email,
+      // to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
       bcc: process.env.EMAIL_USER, // Copia oculta al remitente
       subject: 'Bienvenido a Ramazzini - Detalles de tu Nueva Suscripción',
       text: 'Detalles de tu Nueva Suscripción - Ramazzini',
@@ -137,8 +137,8 @@ export class EmailsService {
     // Enviar el email
     const info = await transporter.sendMail({
       from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
-      // to: email,
-      to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
+      to: email,
+      // to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
       bcc: process.env.EMAIL_USER, // Copia oculta al remitente
       subject: 'Suscripción Actualizada',
       text: 'Detalles de Suscripción - Ramazzini',
@@ -199,8 +199,8 @@ export class EmailsService {
     // Enviar el email
     const info = await transporter.sendMail({
       from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
-      // to: email,
-      to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
+      to: email,
+      // to: 'edgarcoronel66@gmail.com', // Cambiar por email del usuario
       bcc: process.env.EMAIL_USER, // Copia oculta al remitente
       subject: 'Suscripción Cancelada',
       text: 'Detalles de cancelación',
