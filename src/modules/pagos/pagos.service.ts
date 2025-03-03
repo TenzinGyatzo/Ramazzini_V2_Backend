@@ -33,8 +33,7 @@ export class PagosService {
     // Inicializamos el cliente de Mercado Pago
     const client = new MercadoPagoConfig({
       accessToken:
-        process.env.MERCADOPAGO_ACCESS_TOKEN ||
-        'APP_USR-7511097887532725-020623-9a55ea3357976dcc3313d4a21568910f-2250541213',
+        process.env.MERCADOPAGO_ACCESS_TOKEN,
     });
 
     // Inicializamos las APIs de PreApproval
@@ -75,8 +74,7 @@ export class PagosService {
 
       const response = await axios.get(url, {
         headers: {
-          Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN ||
-            'APP_USR-7511097887532725-020623-9a55ea3357976dcc3313d4a21568910f-2250541213'}`,
+          Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
         },
       })
 

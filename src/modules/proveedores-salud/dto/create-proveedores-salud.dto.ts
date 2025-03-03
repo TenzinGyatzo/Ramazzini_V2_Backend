@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, IsBoolean, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, IsBoolean, IsArray, ValidateNested, IsDate } from 'class-validator';
 
 const perfiles = [
   'Médico único de empresa',
@@ -70,6 +70,15 @@ export class CreateProveedoresSaludDto {
   @IsOptional()
   @IsString({ message: 'El sitio web debe ser un string' })
   sitioWeb?: string;
+
+  @IsBoolean({ message: 'El campo termsAccepted debe ser un booleano' })
+  termsAccepted: boolean;
+
+  @IsString({ message: 'El campo acceptedAt debe ser una fecha' })
+  acceptedAt: String;
+
+  @IsString({ message: 'El campo termsVersion debe ser un string' })
+  termsVersion: string;
 
   // **Campos de periodo de prueba y límites**
   @IsOptional()

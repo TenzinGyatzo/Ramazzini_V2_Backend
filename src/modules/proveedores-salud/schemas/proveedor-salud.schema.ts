@@ -43,6 +43,12 @@ export class ProveedorSalud extends Document {
   correoElectronico: string;
   @Prop()
   sitioWeb: string;
+  @Prop()
+  termsAccepted: boolean;
+  @Prop()
+  acceptedAt: string;
+  @Prop()
+  termsVersion: string;
 
   // **Información de periodo de prueba y límites**
   @Prop({ default: new Date() }) 
