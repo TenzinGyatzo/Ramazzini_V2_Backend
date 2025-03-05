@@ -107,6 +107,12 @@ export class UsersController {
     @Res() res: Response,
   ) {
     const { email, password } = loginData;
+    // Revisar que si sea un email
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(email)) {
+      throw new BadRequestException('El email ingresado no es válido');
+    }
+
     // Revisar que el usuario exista
     const user: UserDocument | null =
       await this.usersService.findByEmail(email);
