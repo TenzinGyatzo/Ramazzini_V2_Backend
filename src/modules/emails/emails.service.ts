@@ -358,13 +358,13 @@ export class EmailsService {
         lines.forEach((line) => {
           const values = line.trim().split(/\s+/);
           if (values.length === 3) {
-            const device = values[0].replace(':', ''); // Elimina ":" extra en Windows
-            const free = parseInt(values[1], 10); // Espacio libre en bytes
-            const size = parseInt(values[2], 10); // Tamaño total en bytes
-            const used = size - free; // Espacio usado en bytes
-            const usedGB = (used / 1e9).toFixed(2); // Convertir a GB
+            const device = values[0].replace(':', '');
+            const free = parseInt(values[1], 10);
+            const size = parseInt(values[2], 10);
+            const used = size - free;
+            const usedGB = (used / 1e9).toFixed(2);
             const sizeGB = (size / 1e9).toFixed(2);
-            const usagePercentage = ((used / size) * 100).toFixed(2); // Calcular %
+            const usagePercentage = ((used / size) * 100).toFixed(2);
   
             result += `📂 **${device}:** ${usedGB} GB usados de ${sizeGB} GB (${usagePercentage}% ocupado)\n`;
           }
@@ -372,25 +372,39 @@ export class EmailsService {
   
         return result.trim();
       } else {
+        // Verificar si df está disponible antes de ejecutarlo
+        try {
+          execSync("which df");
+        } catch {
+          return "⚠️ df no está instalado. Usa `sudo apt install coreutils`.";
+        }
+  
         return execSync("df -h | awk 'NR>1 {print $1, $3, $4, $5}'").toString().trim();
       }
     } catch (error) {
       return '⚠️ No se pudo obtener información del disco.';
     }
-  }  
+  } 
 
   async getCpuUsage(): Promise<string> {
     try {
       if (os.platform() === 'win32') {
         return Promise.resolve(execSync('wmic cpu get loadpercentage').toString().trim());
       } else {
+        // Verificar si mpstat está instalado antes de ejecutarlo
+        try {
+          execSync("which mpstat");
+        } catch {
+          return "⚠️ mpstat no está instalado. Usa `sudo apt install sysstat`.";
+        }
+  
         return Promise.resolve(execSync("mpstat 1 1 | awk 'NR==4 {print 100-$NF}'").toString().trim() + " %");
       }
     } catch (error) {
       return Promise.resolve('⚠️ No se pudo obtener información de CPU.');
     }
   }
-
+  
   async checkServiceStatus(service: string): Promise<string> {
     try {
       return os.platform() === 'win32'
