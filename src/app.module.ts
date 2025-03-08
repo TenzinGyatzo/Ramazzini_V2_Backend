@@ -18,6 +18,7 @@ import { ProveedoresSaludModule } from './modules/proveedores-salud/proveedores-
 import { MedicosFirmantesModule } from './modules/medicos-firmantes/medicos-firmantes.module';
 import { EmailsModule } from './modules/emails/emails.module';
 import { PagosModule } from './modules/pagos/pagos.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -53,7 +54,8 @@ import { PagosModule } from './modules/pagos/pagos.module';
     ProveedoresSaludModule,
     MedicosFirmantesModule,
     EmailsModule,
-    PagosModule
+    PagosModule,
+    ScheduleModule.forRoot(),
   ],
 })
 export class AppModule {}

@@ -2,6 +2,13 @@
 import { Injectable } from '@nestjs/common';
 import { createTransport } from './emails.config';
 import { text } from 'stream/consumers';
+import path from 'path';
+import * as fs from 'fs';
+import { Cron } from '@nestjs/schedule';
+import * as os from 'os';
+import pidusage from 'pidusage';
+import { execSync } from 'child_process';
+import { get } from 'mongoose';
 
 @Injectable()
 export class EmailsService {
@@ -255,4 +262,295 @@ export class EmailsService {
   
     console.log('Mensaje enviado', info.messageId);
   }
+
+  //// Funciones para el reporte de uso del servidor ////
+
+  private readonly METRICS_FILE = process.env.METRICS_FILE || path.join(__dirname, 'server_metrics.json');
+
+  async saveMetric() {
+    const timestamp = new Date().toISOString();
+    const totalMemory = os.totalmem();
+    const freeMemory = os.freemem();
+    const usedMemory = totalMemory - freeMemory;
+    const memoryUsagePercentage = (usedMemory / totalMemory) * 100;
+    const pidStats = await pidusage(process.pid);
+    const cpuUsage = pidStats.cpu;
+    const diskStats = await this.getDiskUsage();
+  
+    const newMetric = {
+      timestamp,
+      memoryUsagePercentage,
+      cpuUsage,
+      diskStats,
+    };
+  
+    let metrics = [];
+  
+    if (fs.existsSync(this.METRICS_FILE)) {
+      metrics = JSON.parse(fs.readFileSync(this.METRICS_FILE, 'utf8'));
+    }
+  
+    metrics.push(newMetric);
+  
+    // Mantener solo los últimos 2 días de datos
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    metrics = metrics.filter((m) => new Date(m.timestamp) >= twoDaysAgo);
+  
+    fs.writeFileSync(this.METRICS_FILE, JSON.stringify(metrics, null, 2));
+  }  
+
+  async getMetricsSummary(): Promise<string> {
+    if (!fs.existsSync(this.METRICS_FILE)) {
+      return "⚠️ No hay datos históricos suficientes.";
+    }
+  
+    const metrics = JSON.parse(fs.readFileSync(this.METRICS_FILE, 'utf8'));
+  
+    const cpuUsages = metrics.map((m) => m.cpuUsage);
+    const memoryUsages = metrics.map((m) => m.memoryUsagePercentage);
+  
+    const avgCpu = (cpuUsages.reduce((a, b) => a + b, 0) / cpuUsages.length).toFixed(2);
+    const peakCpu = Math.max(...cpuUsages).toFixed(2);
+  
+    const avgMemory = (memoryUsages.reduce((a, b) => a + b, 0) / memoryUsages.length).toFixed(2);
+    const peakMemory = Math.max(...memoryUsages).toFixed(2);
+  
+    return `
+  📊 **Resumen de las Últimas 11 Horas (Horario Pico)**
+  ─────────────────────────────
+  🔹 **CPU Promedio:** ${avgCpu}%
+  🔹 **CPU Máximo:** ${peakCpu}%
+  🔹 **Memoria Promedio:** ${avgMemory}%
+  🔹 **Memoria Máxima:** ${peakMemory}%
+  `;
+  }  
+
+  async generateAlerts(): Promise<string> {
+    if (!fs.existsSync(this.METRICS_FILE)) {
+      return "⚠️ No hay datos históricos para generar alertas.";
+    }
+  
+    const metrics = JSON.parse(fs.readFileSync(this.METRICS_FILE, 'utf8'));
+  
+    const highCpuUsage = metrics.filter((m) => m.cpuUsage > 80);
+    const highMemoryUsage = metrics.filter((m) => m.memoryUsagePercentage > 90);
+  
+    let alerts = [];
+  
+    if (highCpuUsage.length > 6) {
+      alerts.push("⚠️ **CPU ha estado sobre 80% por más de 1 hora.**");
+    }
+    if (highMemoryUsage.length > 3) {
+      alerts.push("⚠️ **Memoria ha estado sobre 90% por más de 30 minutos.**");
+    }
+  
+    return alerts.length > 0 ? alerts.join("\n") : "✅ **No se detectaron problemas críticos.**";
+  }
+
+  async getDiskUsage(): Promise<string> {
+    try {
+      if (os.platform() === 'win32') {
+        const output = execSync('wmic logicaldisk get deviceid, freespace, size').toString().trim();
+        const lines = output.split('\n').slice(1);
+        let result = '';
+  
+        lines.forEach((line) => {
+          const values = line.trim().split(/\s+/);
+          if (values.length === 3) {
+            const device = values[0].replace(':', ''); // Elimina ":" extra en Windows
+            const free = parseInt(values[1], 10); // Espacio libre en bytes
+            const size = parseInt(values[2], 10); // Tamaño total en bytes
+            const used = size - free; // Espacio usado en bytes
+            const usedGB = (used / 1e9).toFixed(2); // Convertir a GB
+            const sizeGB = (size / 1e9).toFixed(2);
+            const usagePercentage = ((used / size) * 100).toFixed(2); // Calcular %
+  
+            result += `📂 **${device}:** ${usedGB} GB usados de ${sizeGB} GB (${usagePercentage}% ocupado)\n`;
+          }
+        });
+  
+        return result.trim();
+      } else {
+        return execSync("df -h | awk 'NR>1 {print $1, $3, $4, $5}'").toString().trim();
+      }
+    } catch (error) {
+      return '⚠️ No se pudo obtener información del disco.';
+    }
+  }  
+
+  async getCpuUsage(): Promise<string> {
+    try {
+      if (os.platform() === 'win32') {
+        return Promise.resolve(execSync('wmic cpu get loadpercentage').toString().trim());
+      } else {
+        return Promise.resolve(execSync("mpstat 1 1 | awk 'NR==4 {print 100-$NF}'").toString().trim() + " %");
+      }
+    } catch (error) {
+      return Promise.resolve('⚠️ No se pudo obtener información de CPU.');
+    }
+  }
+
+  async checkServiceStatus(service: string): Promise<string> {
+    try {
+      return os.platform() === 'win32'
+        ? '⚠️ No disponible en Windows'
+        : execSync(`systemctl is-active ${service}`).toString().trim() === 'active'
+        ? `✅ ${service} está activo`
+        : `⚠️ ${service} está detenido`;
+    } catch (error) {
+      return `⚠️ Error al verificar ${service}`;
+    }
+  }
+
+  async getActiveConnections(): Promise<string> {
+    try {
+      return os.platform() === 'win32'
+        ? '⚠️ No disponible en Windows'
+        : execSync("netstat -an | grep ESTABLISHED | wc -l").toString().trim() + " conexiones activas";
+    } catch (error) {
+      return '⚠️ No se pudo obtener conexiones activas.';
+    }
+  }
+
+  async saveUsageHistory(report: string) {
+    const historyPath = path.join(__dirname, 'usage_history.txt');
+    fs.writeFileSync(historyPath, report, 'utf8');
+  }
+
+  async getPreviousUsage(): Promise<string> {
+    const historyPath = path.join(__dirname, 'usage_history.txt');
+    return fs.existsSync(historyPath) ? fs.readFileSync(historyPath, 'utf8') : '📊 No hay historial previo.';
+  }
+  
+  //// Generar el reporte de uso del servidor ////
+
+  async generateServerReport(): Promise<string> {
+    // Obtener información del sistema en tiempo real
+    const totalMemory = os.totalmem();
+    const freeMemory = os.freemem();
+    const usedMemory = totalMemory - freeMemory;
+    const memoryUsagePercentage = (usedMemory / totalMemory) * 100;
+  
+    const pidStats = await pidusage(process.pid);
+    const cpuUsage = pidStats.cpu;
+    const memoryUsedByNode = pidStats.memory;
+  
+    const totalCpuUsage = await this.getCpuUsage();
+    const loadAvg = os.loadavg();
+    const diskStats = await this.getDiskUsage();
+    const runningProcesses = execSync("ps aux | wc -l").toString().trim();
+  
+    const dbStatus = await this.checkServiceStatus('mongod');
+    const nginxStatus = await this.checkServiceStatus('nginx');
+    const activeConnections = await this.getActiveConnections();
+  
+    // Obtener promedios y picos durante el horario pico
+    const peakMetrics = await this.getMetricsSummary();
+  
+    // Obtener alertas avanzadas basadas en tendencias
+    const alertMessages = await this.generateAlerts();
+  
+    // Obtener historial de las últimas 24 horas
+    const previousUsage = await this.getPreviousUsage();
+  
+    // 📌 Reporte Formateado
+    const reportContent = `
+  ═════════════════════════════
+  📊 𝗥𝗘𝗣𝗢𝗥𝗧𝗘 𝗗𝗘 𝗦𝗘𝗥𝗩𝗜𝗗𝗢𝗥 - 𝗥𝗔𝗠𝗔𝗭𝗭𝗜𝗡𝗜
+  ═════════════════════════════
+  
+  💾 **𝗠𝗘𝗠𝗢𝗥𝗜𝗔**
+  ─────────────────────────────
+  🟢 Total:        ${(totalMemory / 1e9).toFixed(2)} GB
+  🟡 Usada:        ${(usedMemory / 1e9).toFixed(2)} GB (${memoryUsagePercentage.toFixed(2)}%)
+  🔵 Libre:        ${(freeMemory / 1e9).toFixed(2)} GB
+  🟣 Node.js:      ${(memoryUsedByNode / 1e6).toFixed(2)} MB
+  
+  🖥️ **𝗖𝗣𝗨**
+  ─────────────────────────────
+  🟠 CPU (Node.js): ${cpuUsage.toFixed(2)}%
+  🔴 CPU Total:     ${totalCpuUsage}
+  
+  📊 **𝗖𝗔𝗥𝗚𝗔 𝗗𝗘𝗟 𝗦𝗜𝗦𝗧𝗘𝗠𝗔**
+  ─────────────────────────────
+  ⏳ Último minuto:        ${loadAvg[0].toFixed(2)}
+  ⏳ Últimos 5 minutos:    ${loadAvg[1].toFixed(2)}
+  ⏳ Últimos 15 minutos:   ${loadAvg[2].toFixed(2)}
+  
+  📊 **𝗦𝗨𝗠𝗔𝗥𝗜𝗢 𝗗𝗘𝗟 𝗛𝗢𝗥𝗔𝗥𝗜𝗢 𝗣𝗜𝗖𝗢 (7 AM - 6 PM)**
+  ─────────────────────────────
+  ${peakMetrics}
+  
+  💽 **𝗘𝗦𝗧𝗔𝗗𝗜́𝗦𝗧𝗜𝗖𝗔𝗦 𝗗𝗘 𝗗𝗜𝗦𝗖𝗢**
+  ─────────────────────────────
+  ${diskStats}
+  
+  ⚙️ **𝗣𝗥𝗢𝗖𝗘𝗦𝗢𝗦 𝗬 𝗖𝗢𝗡𝗘𝗫𝗜𝗢𝗡𝗘𝗦**
+  ─────────────────────────────
+  📌 Procesos en Ejecución:  ${runningProcesses}
+  🌐 Conexiones Activas:    ${activeConnections}
+  
+  🔧 **𝗘𝗦𝗧𝗔𝗗𝗢 𝗗𝗘 𝗦𝗘𝗥𝗩𝗜𝗖𝗜𝗢𝗦**
+  ─────────────────────────────
+  ✅ ${dbStatus}
+  ✅ ${nginxStatus}
+  
+  📜 **𝗛𝗜𝗦𝗧𝗢𝗥𝗜𝗔𝗟 𝗗𝗘 𝗟𝗔𝗦 𝗨́𝗟𝗧𝗜𝗠𝗔𝗦 𝟮𝟰 𝗛𝗢𝗥𝗔𝗦**
+  ─────────────────────────────
+  ${previousUsage}
+  
+  🚨 **𝗔𝗟𝗘𝗥𝗧𝗔𝗦 𝗬 𝗥𝗘𝗖𝗢𝗠𝗘𝗡𝗗𝗔𝗖𝗜𝗢𝗡𝗘𝗦**
+  ═════════════════════════════
+  ${alertMessages}
+  `;
+  
+    // Guardar el historial del reporte
+    await this.saveUsageHistory(reportContent);
+  
+    return reportContent;
+  }
+  
+  async sendServerReport() {
+    const transporter = createTransport(
+      process.env.EMAIL_HOST,
+      process.env.EMAIL_PORT,
+      process.env.EMAIL_USER,
+      process.env.EMAIL_PASS,
+    );
+
+    const reportContent = await this.generateServerReport();
+
+    // Generar el reporte (puede ser un archivo PDF, CSV, etc.)
+    const reportPath = path.join(__dirname, 'reporte.txt');
+    fs.writeFileSync(reportPath, reportContent, 'utf8');
+  
+    // Enviar el email
+    const info = await transporter.sendMail({
+      from: `"Reportes Ramazzini" <${process.env.EMAIL_USER}>`,
+      to: "edgarcoronel66@gmail.com",
+      bcc: process.env.EMAIL_USER, // Copia oculta al remitente
+      subject: '📊 Reporte de Uso del Servidor',
+      // text: 'Adjunto el reporte generado automáticamente',
+      text: reportContent,
+      // attachments: [{ filename: 'Salud de Servidor Ramazzini.txt', path: reportPath }], // Adjuntar respaldo simple
+      html: `<pre>${reportContent}</pre>`,
+    });
+  
+    console.log('Mensaje enviado', info.messageId);
+  }
+
+  @Cron('*/10 7-19 * * *')
+  async trackMetrics() {
+    console.log('📊 Guardando métricas de servidor...');
+    await this.saveMetric();
+  }
+
+  // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM
+  @Cron('0 19 * * *')
+  async handleCron() {
+    console.log('⏳ Enviando reporte diario a las 7pm ...');
+    await this.sendServerReport();
+  }
+
 }

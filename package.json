@@ -26,8 +26,10 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/mongoose": "^10.0.10",
     "@nestjs/platform-express": "^10.4.5",
+    "@nestjs/schedule": "^5.0.1",
     "@nestjs/serve-static": "^4.0.2",
     "@nestjs/swagger": "^7.4.2",
+    "@types/pidusage": "^2.0.5",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
@@ -42,6 +44,7 @@
     "nodemailer": "^6.10.0",
     "pdf-lib": "^1.17.1",
     "pdfmake": "^0.2.18",
+    "pidusage": "^4.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "xlsx": "^0.18.5"
