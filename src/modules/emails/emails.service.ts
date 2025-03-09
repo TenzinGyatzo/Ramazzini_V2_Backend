@@ -554,16 +554,16 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  @Cron('*/10 7-19 * * *')
+  @Cron('*/10 14-2 * * *')
   async trackMetrics() {
-    console.log('📊 Guardando métricas de servidor...');
+    console.log(`📊 Guardando métricas de servidor a las ${new Date().toLocaleString()} (hora local)`);
     await this.saveMetric();
   }
 
   // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM
-  @Cron('0 19 * * *')
+  @Cron('0 2 * * *')
   async handleCron() {
-    console.log('⏳ Enviando reporte diario a las 7pm ...');
+    console.log(`⏳ Enviando reporte diario a las ${new Date().toLocaleString()} (hora local)`);
     await this.sendServerReport();
   }
 

@@ -32,7 +32,7 @@ const styles: StyleDictionary = {
   label: { fontSize: 11 },
   value: { bold: true, fontSize: 11 },
   tableHeader: {
-    fillColor: '#262626',
+    fillColor: '#343A40',
     color: '#FFFFFF',
     bold: true,
     fontSize: 12,

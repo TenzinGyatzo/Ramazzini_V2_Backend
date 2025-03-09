@@ -49,7 +49,7 @@ const styles: StyleDictionary = {
     margin: [0, 0, 0, 0], // Reducir el margen superior e inferior
   },
   tableHeader: {
-    fillColor: '#262626',
+    fillColor: '#343A40',
     color: '#FFFFFF',
     bold: true,
     fontSize: 9,

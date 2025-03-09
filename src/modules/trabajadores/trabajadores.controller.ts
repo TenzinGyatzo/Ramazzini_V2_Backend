@@ -53,7 +53,7 @@ export class TrabajadoresController {
   
 
   @Get('/trabajadores')
-  @ApiOperation({ summary: 'Obtiene todos los trabajadores de una empresa' })
+  @ApiOperation({ summary: 'Obtiene todos los trabajadores de un centro de trabajo' })
   @ApiResponse({ status: 200, description: 'Trabajadores encontrados exitosamente | Este centro de trabajo no tiene trabajadores registrados' })
   @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido' })
   async findWorkersByCenter(@Param('empresaId') empresaId: string, @Param('centroId') centroId: string) {

@@ -61,8 +61,22 @@ const styles: StyleDictionary = {
     margin: [0, 0, 0, 0], // Reducir el margen superior e inferior para menos padding
   },
   tableHeader: {
-    fillColor: '#262626',
-    color: '#FFFFFF',
+    // fillColor: '#262626', // Casi Negro
+    // fillColor: '#007BFF' // Azul profesional
+    // fillColor: '#004085' // Azul Oscuro
+    // fillColor: '#28A745' // Verde médico
+    // fillColor: '#1E7E34' // Verde Oscuro
+    // fillColor: '#6C757D' // Gris
+    // fillColor: '#F8F9FA' // Gris Muy Claro
+    // fillColor: '#DC3545' // Rojo Médico
+    // fillColor: '#C82333' // Rojo Oscuro
+    // fillColor: '#17A2B8' // Turquesa
+    // fillColor: '#138496' // Turquesa Oscuro
+    // fillColor: '#E0A800' // Oro (Se ve bien con texto blanco y texto negro)
+    // fillColor: '' // 
+    fillColor: '#343A40', // Gris Oscuro
+    color: 'white',
+    /* color: '#FFFFFF', */
     bold: true,
     fontSize: 11,
     alignment: 'center',
@@ -91,11 +105,29 @@ const createTableCell = (
   text: string,
   style: string,
   alignment: Alignment,
+  color?: string
 ): Content => ({
   text,
   style,
   alignment,
+  color,
 });
+
+const getColorForAptitud = (aptitudPuesto: string): string | undefined => {
+  switch (aptitudPuesto) {
+    case 'Apto Sin Restricciones':
+      return undefined; // 'green'
+    case 'Apto Con Precaución':
+      return undefined; // 'orange'
+    case 'Apto Con Restricciones':
+      return undefined; // 'orange'
+    case 'No Apto':
+      return undefined; // 'red'
+    case 'Evaluación No Completada':
+    default:
+      return undefined; // No cambia el color
+  }
+};
 
 function formatearFechaUTC(fecha: Date): string {
   if (!fecha || isNaN(fecha.getTime())) return '';
@@ -373,6 +405,7 @@ export const aptitudPuestoInforme = (
   }
 
   const aptitudPuesto = aptitud.aptitudPuesto;
+  const aptitudColor = getColorForAptitud(aptitudPuesto);
 
   // Función para determinar si se coloca 'XX' o un string vacío
   const getXXForAptitud = (option: string): string =>
@@ -506,11 +539,13 @@ export const aptitudPuestoInforme = (
                 getXXForAptitud('Apto Sin Restricciones'),
                 'sectionHeader',
                 'center',
+                aptitudPuesto === 'Apto Sin Restricciones' ? aptitudColor : undefined
               ),
               createTableCell(
                 'Apto sin restricciones. No tiene impedimentos para el puesto al que aspira o desempeña.',
                 'preset',
                 'left',
+                aptitudPuesto === 'Apto Sin Restricciones' ? aptitudColor : undefined
               ),
             ],
             [
@@ -518,11 +553,13 @@ export const aptitudPuestoInforme = (
                 getXXForAptitud('Apto Con Precaución'),
                 'sectionHeader',
                 'center',
+                aptitudPuesto === 'Apto Con Precaución' ? aptitudColor : undefined
               ),
               createTableCell(
                 'Apto con precaución. Requiere vigilancia médica más frecuente.',
                 'preset',
                 'left',
+                aptitudPuesto === 'Apto Con Precaución' ? aptitudColor : undefined
               ),
             ],
             [
@@ -530,11 +567,13 @@ export const aptitudPuestoInforme = (
                 getXXForAptitud('Apto Con Restricciones'),
                 'sectionHeader',
                 'center',
+                aptitudPuesto === 'Apto Con Restricciones' ? aptitudColor : undefined
               ),
               createTableCell(
                 'Apto con restricciones. Requiere adaptaciones razonables para asegurar la seguridad y salud.',
                 'preset',
                 'left',
+                aptitudPuesto === 'Apto Con Restricciones' ? aptitudColor : undefined
               ),
             ],
             [
@@ -542,11 +581,13 @@ export const aptitudPuestoInforme = (
                 getXXForAptitud('No Apto'),
                 'sectionHeader',
                 'center',
+                aptitudPuesto === 'No Apto' ? aptitudColor : undefined
               ),
               createTableCell(
                 'No apto. No está permitido el desempeño del puesto al que aspira.',
                 'preset',
                 'left',
+                aptitudPuesto === 'No Apto' ? aptitudColor : undefined
               ),
             ],
             [
@@ -554,11 +595,13 @@ export const aptitudPuestoInforme = (
                 getXXForAptitud('Evaluación No Completada'),
                 'sectionHeader',
                 'center',
+                aptitudPuesto === 'Evaluación No Completada' ? aptitudColor : undefined
               ),
               createTableCell(
                 'Evaluación no completada. Para concluir, requiere evaluaciones adicionales o tratamiento médico.',
                 'preset',
                 'left',
+                aptitudPuesto === 'Evaluación No Completada' ? aptitudColor : undefined
               ),
             ],
           ],
