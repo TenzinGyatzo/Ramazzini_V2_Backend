@@ -554,7 +554,8 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  @Cron('*/10 14-2 * * *')
+  @Cron('*/10 14-23 * * *') // De 7 AM a 11:50 PM UTC-7 (convertido a 2 PM - 11 PM UTC)
+  @Cron('*/10 0-2 * * *')   // De 12 AM a 2 AM UTC-7 (convertido a 12 AM - 2 AM UTC)
   async trackMetrics() {
     console.log(`📊 Guardando métricas de servidor a las ${new Date().toLocaleString()} (hora local)`);
     await this.saveMetric();
