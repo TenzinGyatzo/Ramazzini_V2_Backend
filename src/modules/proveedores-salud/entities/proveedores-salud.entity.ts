@@ -24,6 +24,7 @@ export class ProveedoresSalud extends Document {
   referenciaPlan?: string;
   maxUsuariosPermitidos?: number;
   maxEmpresasPermitidas?: number;
+  maxTrabajadoresPermitidos?: number;
   estadoSuscripcion?: string;
   fechaInicioTrial?: Date;
   periodoDePruebaFinalizado?: boolean;

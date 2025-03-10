@@ -90,6 +90,7 @@ export function normalizeProveedorSaludData(
     periodoDePruebaFinalizado: dto.periodoDePruebaFinalizado ?? false,
     maxUsuariosPermitidos: dto.maxUsuariosPermitidos ?? 1,
     maxEmpresasPermitidas: dto.maxEmpresasPermitidas ?? 5,
+    maxTrabajadoresPermitidos: dto.maxTrabajadoresPermitidos ?? 25,
 
     addOns: dto.addOns?.map((addOn) => ({
       tipo: addOn.tipo.trim(),

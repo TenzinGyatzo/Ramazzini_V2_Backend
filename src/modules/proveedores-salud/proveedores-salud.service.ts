@@ -3,7 +3,7 @@ import { CreateProveedoresSaludDto } from './dto/create-proveedores-salud.dto';
 import { UpdateProveedoresSaludDto } from './dto/update-proveedores-salud.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ProveedorSalud } from './schemas/proveedor-salud.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { normalizeProveedorSaludData } from 'src/utils/normalization';
 
 @Injectable()
@@ -51,5 +51,56 @@ export class ProveedoresSaludService {
   async remove(id: string): Promise<boolean> {
     const result = await this.proveedoresSaludModel.findByIdAndDelete(id).exec();
     return result !== null;
+  }
+
+  async getTopEmpresasByWorkers(idProveedorSalud: string, limit = 3) {
+    return await this.proveedoresSaludModel.aggregate([
+      {
+        $match: { _id: new Types.ObjectId(idProveedorSalud) } // Filtrar solo por el proveedor de salud
+      },
+      {
+        $lookup: {
+          from: 'empresas', // Unir con las empresas del proveedor
+          localField: '_id',
+          foreignField: 'idProveedorSalud', // Relación con proveedor
+          as: 'empresas'
+        }
+      },
+      {
+        $unwind: { path: '$empresas', preserveNullAndEmptyArrays: true } // Descomponer las empresas
+      },
+      {
+        $lookup: {
+          from: 'centrotrabajos', // Unir con los centros de trabajo
+          localField: 'empresas._id',
+          foreignField: 'idEmpresa',
+          as: 'centros'
+        }
+      },
+      {
+        $unwind: { path: '$centros', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'trabajadors', // Unir con los trabajadores
+          localField: 'centros._id',
+          foreignField: 'idCentroTrabajo',
+          as: 'trabajadores'
+        }
+      },
+      {
+        $group: {
+          _id: '$empresas._id', // Agrupar por empresa
+          nombreComercial: { $first: '$empresas.nombreComercial' }, // Tomar el nombre de la empresa
+          totalTrabajadores: { $sum: { $size: '$trabajadores' } } // Contar los trabajadores
+        }
+      },
+      {
+        $sort: { totalTrabajadores: -1 }
+      },
+      {
+        $limit: limit
+      }
+    ]);
   }
 }

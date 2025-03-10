@@ -63,6 +63,9 @@ export class ProveedorSalud extends Document {
   @Prop({ default: 5 })
   maxEmpresasPermitidas: number; // Inicialmente 5 para periodo de prueba
 
+  @Prop({ default: 25})
+  maxTrabajadoresPermitidos: number; // Inicialmente 50 para periodo de prueba
+
   // **Add-ons dinámicos**
   @Prop({
     type: [

@@ -80,6 +80,7 @@ export class CreateProveedoresSaludDto {
   @IsString({ message: 'El campo termsVersion debe ser un string' })
   termsVersion: string;
 
+
   // **Campos de periodo de prueba y límites**
   @IsOptional()
   @Type(() => Date)
@@ -96,6 +97,10 @@ export class CreateProveedoresSaludDto {
   @IsOptional()
   @IsNumber({}, { message: 'El número máximo de empresas permitidas debe ser un número' })
   maxEmpresasPermitidas?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'El número máximo de trabajadores permitidos debe ser un número' })
+  maxTrabajadoresPermitidos?: number;
 
   @IsOptional()
   @IsArray({ message: 'El campo addOns debe ser un arreglo' })

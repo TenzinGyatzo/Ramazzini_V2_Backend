@@ -72,7 +72,7 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  async sendNewSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, usuariosDisponibles, empresasDisponibles }) {
+  async sendNewSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, usuariosDisponibles, empresasDisponibles, trabajadoresDisponibles }) {
     const transporter = createTransport(
       process.env.EMAIL_HOST,
       process.env.EMAIL_PORT,
@@ -108,6 +108,7 @@ export class EmailsService {
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Próximo Pago:</strong> ${fechaProximoPago}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Usuarios Disponibles:</strong> ${usuariosDisponibles}</p>
                   <p style="font-size: 16px; margin: 0;"><strong>Empresas Disponibles:</strong> ${empresasDisponibles}</p>
+                  <p style="font-size: 16px; margin: 0;"><strong>Límite de Trabajadores por Empresa:</strong> ${trabajadoresDisponibles}</p>
               </div>
   
               <!-- Llamado a la acción -->
@@ -133,7 +134,7 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  async sendUpdatedSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, usuariosDisponibles, empresasDisponibles }) {
+  async sendUpdatedSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, usuariosDisponibles, empresasDisponibles, trabajadoresDisponibles }) {
     const transporter = createTransport(
       process.env.EMAIL_HOST,
       process.env.EMAIL_PORT,
@@ -170,6 +171,8 @@ export class EmailsService {
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Próximo Pago:</strong> ${fechaProximoPago}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Usuarios Disponibles:</strong> ${usuariosDisponibles}</p>
                   <p style="font-size: 16px; margin: 0;"><strong>Empresas Disponibles:</strong> ${empresasDisponibles}</p>
+                  <p style="font-size: 16px; margin: 0;"><strong>Límite de Trabajadores por Empresa:</strong> ${trabajadoresDisponibles}</p>
+
               </div>
   
               <!-- Llamado a la acción -->
@@ -195,7 +198,7 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  async sendCancellationConfirmation({ email, nombrePlan, inicioSuscripcion, fechaCancelacion, montoMensual, fechaFinDeSuscripcion, usuariosDisponibles, empresasDisponibles }) {
+  async sendCancellationConfirmation({ email, nombrePlan, inicioSuscripcion, fechaCancelacion, montoMensual, fechaFinDeSuscripcion, usuariosDisponibles, empresasDisponibles, trabajadoresDisponibles }) {
     const transporter = createTransport(
       process.env.EMAIL_HOST,
       process.env.EMAIL_PORT,
@@ -232,6 +235,7 @@ export class EmailsService {
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Acceso hasta:</strong> ${fechaFinDeSuscripcion}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Usuarios Disponibles:</strong> ${usuariosDisponibles} (hasta el fin del periodo)</p>
                   <p style="font-size: 16px; margin: 0;"><strong>Empresas Disponibles:</strong> ${empresasDisponibles} (hasta el fin del periodo)</p>
+                  <p style="font-size: 16px; margin: 0;"><strong>Límite de Trabajadores por Empresa:</strong> ${trabajadoresDisponibles}</p>
               </div>
   
               <!-- Mensaje importante -->
@@ -474,47 +478,47 @@ export class EmailsService {
   📊 𝗥𝗘𝗣𝗢𝗥𝗧𝗘 𝗗𝗘 𝗦𝗘𝗥𝗩𝗜𝗗𝗢𝗥 - 𝗥𝗔𝗠𝗔𝗭𝗭𝗜𝗡𝗜
   ═════════════════════════════
   
-  💾 **𝗠𝗘𝗠𝗢𝗥𝗜𝗔**
+  💾 𝗠𝗘𝗠𝗢𝗥𝗜𝗔
   ─────────────────────────────
   🟢 Total:        ${(totalMemory / 1e9).toFixed(2)} GB
   🟡 Usada:        ${(usedMemory / 1e9).toFixed(2)} GB (${memoryUsagePercentage.toFixed(2)}%)
   🔵 Libre:        ${(freeMemory / 1e9).toFixed(2)} GB
   🟣 Node.js:      ${(memoryUsedByNode / 1e6).toFixed(2)} MB
   
-  🖥️ **𝗖𝗣𝗨**
+  🖥️ 𝗖𝗣𝗨
   ─────────────────────────────
   🟠 CPU (Node.js): ${cpuUsage.toFixed(2)}%
   🔴 CPU Total:     ${totalCpuUsage}
   
-  📊 **𝗖𝗔𝗥𝗚𝗔 𝗗𝗘𝗟 𝗦𝗜𝗦𝗧𝗘𝗠𝗔**
+  📊 𝗖𝗔𝗥𝗚𝗔 𝗗𝗘𝗟 𝗦𝗜𝗦𝗧𝗘𝗠𝗔
   ─────────────────────────────
   ⏳ Último minuto:        ${loadAvg[0].toFixed(2)}
   ⏳ Últimos 5 minutos:    ${loadAvg[1].toFixed(2)}
   ⏳ Últimos 15 minutos:   ${loadAvg[2].toFixed(2)}
   
-  📊 **𝗦𝗨𝗠𝗔𝗥𝗜𝗢 𝗗𝗘𝗟 𝗛𝗢𝗥𝗔𝗥𝗜𝗢 𝗣𝗜𝗖𝗢 (7 AM - 6 PM)**
+  📊 𝗦𝗨𝗠𝗔𝗥𝗜𝗢 𝗗𝗘𝗟 𝗛𝗢𝗥𝗔𝗥𝗜𝗢 𝗣𝗜𝗖𝗢 (7 AM - 7 PM)
   ─────────────────────────────
   ${peakMetrics}
   
-  💽 **𝗘𝗦𝗧𝗔𝗗𝗜́𝗦𝗧𝗜𝗖𝗔𝗦 𝗗𝗘 𝗗𝗜𝗦𝗖𝗢**
+  💽 𝗘𝗦𝗧𝗔𝗗𝗜́𝗦𝗧𝗜𝗖𝗔𝗦 𝗗𝗘 𝗗𝗜𝗦𝗖𝗢
   ─────────────────────────────
   ${diskStats}
   
-  ⚙️ **𝗣𝗥𝗢𝗖𝗘𝗦𝗢𝗦 𝗬 𝗖𝗢𝗡𝗘𝗫𝗜𝗢𝗡𝗘𝗦**
+  ⚙️ 𝗣𝗥𝗢𝗖𝗘𝗦𝗢𝗦 𝗬 𝗖𝗢𝗡𝗘𝗫𝗜𝗢𝗡𝗘𝗦
   ─────────────────────────────
   📌 Procesos en Ejecución:  ${runningProcesses}
   🌐 Conexiones Activas:    ${activeConnections}
   
-  🔧 **𝗘𝗦𝗧𝗔𝗗𝗢 𝗗𝗘 𝗦𝗘𝗥𝗩𝗜𝗖𝗜𝗢𝗦**
+  🔧 𝗘𝗦𝗧𝗔𝗗𝗢 𝗗𝗘 𝗦𝗘𝗥𝗩𝗜𝗖𝗜𝗢𝗦
   ─────────────────────────────
   ✅ ${dbStatus}
   ✅ ${nginxStatus}
   
-  📜 **𝗛𝗜𝗦𝗧𝗢𝗥𝗜𝗔𝗟 𝗗𝗘 𝗟𝗔𝗦 𝗨́𝗟𝗧𝗜𝗠𝗔𝗦 𝟮𝟰 𝗛𝗢𝗥𝗔𝗦**
+  📜 𝗛𝗜𝗦𝗧𝗢𝗥𝗜𝗔𝗟 𝗗𝗘 𝗟𝗔𝗦 𝗨́𝗟𝗧𝗜𝗠𝗔𝗦 𝟮𝟰 𝗛𝗢𝗥𝗔𝗦
   ─────────────────────────────
   ${previousUsage}
   
-  🚨 **𝗔𝗟𝗘𝗥𝗧𝗔𝗦 𝗬 𝗥𝗘𝗖𝗢𝗠𝗘𝗡𝗗𝗔𝗖𝗜𝗢𝗡𝗘𝗦**
+  🚨 𝗔𝗟𝗘𝗥𝗧𝗔𝗦 𝗬 𝗥𝗘𝗖𝗢𝗠𝗘𝗡𝗗𝗔𝗖𝗜𝗢𝗡𝗘𝗦
   ═════════════════════════════
   ${alertMessages}
   `;
@@ -536,8 +540,8 @@ export class EmailsService {
     const reportContent = await this.generateServerReport();
 
     // Generar el reporte (puede ser un archivo PDF, CSV, etc.)
-    const reportPath = path.join(__dirname, 'reporte.txt');
-    fs.writeFileSync(reportPath, reportContent, 'utf8');
+    // const reportPath = path.join(__dirname, 'reporte.txt');
+    // fs.writeFileSync(reportPath, reportContent, 'utf8');
   
     // Enviar el email
     const info = await transporter.sendMail({
@@ -554,15 +558,14 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  @Cron('*/10 14-23 * * *') // De 7 AM a 11:50 PM UTC-7 (convertido a 2 PM - 11 PM UTC)
-  @Cron('*/10 0-2 * * *')   // De 12 AM a 2 AM UTC-7 (convertido a 12 AM - 2 AM UTC)
+  @Cron('*/10 7-19 * * *')   // De 12 AM a 2 AM UTC-7 (convertido a 12 AM - 2 AM UTC)
   async trackMetrics() {
     console.log(`📊 Guardando métricas de servidor a las ${new Date().toLocaleString()} (hora local)`);
     await this.saveMetric();
   }
 
   // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM
-  @Cron('0 2 * * *')
+  @Cron('0 19 * * *')
   async handleCron() {
     console.log(`⏳ Enviando reporte diario a las ${new Date().toLocaleString()} (hora local)`);
     await this.sendServerReport();

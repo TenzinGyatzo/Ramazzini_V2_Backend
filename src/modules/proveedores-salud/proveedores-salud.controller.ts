@@ -251,6 +251,7 @@ export class ProveedoresSaludController {
           { 
             maxUsuariosPermitidos: 1,
             maxEmpresasPermitidas: 0,
+            maxTrabajadoresPermitidos: 0,
             addOns: [],
           },
         );
@@ -274,5 +275,10 @@ export class ProveedoresSaludController {
       message: 'La suscripción sigue activa',
       data: proveedorSalud,
     };
+  }
+
+  @Get('/top-empresas-por-trabajadores/:idProveedorSalud')
+  async getTopEmpresas(@Param('idProveedorSalud') idProveedorSalud: string) {
+    return this.proveedoresSaludService.getTopEmpresasByWorkers(idProveedorSalud);
   }
 }
