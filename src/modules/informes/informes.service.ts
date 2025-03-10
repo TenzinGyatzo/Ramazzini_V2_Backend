@@ -1067,6 +1067,15 @@ export class InformesService {
     return rutaCompleta;
   }
 
+  async getInformeNotaMedica(empresaId, trabajadorId, notaMedicaId, userId): Promise<string> {
+    console.log('Generando informe de Nota Médica');
+    console.log('Empresa:', empresaId);
+    console.log('Trabajador:', trabajadorId);
+    console.log('Nota Médica:', notaMedicaId);
+    console.log('Usuario:', userId);
+    return '';
+  }
+
   async eliminarInforme(filePath: string): Promise<void> {
     await this.filesService.deleteFile(filePath);
   }

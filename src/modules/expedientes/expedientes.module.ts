@@ -9,6 +9,7 @@ import { DocumentoExterno, DocumentoExternoSchema } from './schemas/documento-ex
 import { ExamenVista, ExamenVistaSchema } from './schemas/examen-vista.schema';
 import { ExploracionFisica, ExploracionFisicaSchema } from './schemas/exploracion-fisica.schema';
 import { HistoriaClinica, HistoriaClinicaSchema } from './schemas/historia-clinica.schema';
+import { NotaMedica, NotaMedicaSchema } from './schemas/nota-medica.schema';
 import { InformesModule } from '../informes/informes.module';
 import { FilesModule } from '../files/files.module';
 
@@ -23,7 +24,8 @@ import { FilesModule } from '../files/files.module';
       { name: DocumentoExterno.name, schema: DocumentoExternoSchema },
       { name: ExamenVista.name, schema: ExamenVistaSchema },
       { name: ExploracionFisica.name, schema: ExploracionFisicaSchema },
-      { name: HistoriaClinica.name, schema: HistoriaClinicaSchema }
+      { name: HistoriaClinica.name, schema: HistoriaClinicaSchema },
+      { name: NotaMedica.name, schema: NotaMedicaSchema },
     ]),
     forwardRef(() => InformesModule),
     FilesModule, // Nuevo módulo

@@ -321,7 +321,7 @@ export class EmailsService {
     const peakMemory = Math.max(...memoryUsages).toFixed(2);
   
     return `
-  📊 **Resumen de las Últimas 11 Horas (Horario Pico)**
+  📊 **Resumen de las Últimas 12 Horas (Horario Pico)**
   ─────────────────────────────
   🔹 **CPU Promedio:** ${avgCpu}%
   🔹 **CPU Máximo:** ${peakCpu}%

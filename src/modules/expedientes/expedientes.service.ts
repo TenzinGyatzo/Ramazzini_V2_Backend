@@ -9,6 +9,7 @@ import { DocumentoExterno } from './schemas/documento-externo.schema';
 import { ExamenVista } from './schemas/examen-vista.schema';
 import { ExploracionFisica } from './schemas/exploracion-fisica.schema';
 import { HistoriaClinica } from './schemas/historia-clinica.schema';
+import { NotaMedica } from './schemas/nota-medica.schema';
 import { startOfDay, endOfDay } from 'date-fns';
 import { FilesService } from '../files/files.service';
 import { convertirFechaISOaDDMMYYYY } from 'src/utils/dates';
@@ -27,6 +28,7 @@ export class ExpedientesService {
     @InjectModel(ExamenVista.name) private examenVistaModel: Model<ExamenVista>,
     @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
     @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>,
+    @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
     private readonly filesService: FilesService
   ) {
     this.models = {
@@ -36,7 +38,8 @@ export class ExpedientesService {
       documentoExterno: this.documentoExternoModel,
       examenVista: this.examenVistaModel,
       exploracionFisica: this.exploracionFisicaModel,
-      historiaClinica: this.historiaClinicaModel
+      historiaClinica: this.historiaClinicaModel,
+      notaMedica: this.notaMedicaModel
     };
 
     this.dateFields = {
@@ -46,7 +49,8 @@ export class ExpedientesService {
       documentoExterno: 'fechaDocumento',
       examenVista: 'fechaExamenVista',
       exploracionFisica: 'fechaExploracionFisica',
-      historiaClinica: 'fechaHistoriaClinica'
+      historiaClinica: 'fechaHistoriaClinica',
+      notaMedica: 'fechaNotaMedica'
     };
   }
 

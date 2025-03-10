@@ -79,4 +79,21 @@ export class InformesController {
     const rutaPDF = await this.informesService.getInformeHistoriaClinica(empresaId, trabajadorId, historiaClinicaId, userId);
     return { message: 'PDF generado exitosamente', ruta: rutaPDF };
   }
+
+  @Get('notaMedica/:empresaId/:trabajadorId/:notaMedicaId/:userId')
+  async getInformeNotaMedica(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('notaMedicaId') notaMedicaId: string,
+    @Param('userId') userId: string,
+  ) {
+  
+    try {
+      const rutaPDF = await this.informesService.getInformeNotaMedica(empresaId, trabajadorId, notaMedicaId, userId);
+      return { message: 'PDF generado exitosamente', ruta: rutaPDF };
+    } catch (error) {
+      console.error('[getInformeNotaMedica] Error al generar el informe nota médica:', error);
+      throw error;
+    }
+  }
 }
