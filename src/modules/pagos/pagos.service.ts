@@ -178,9 +178,9 @@ export class PagosService {
   // Nueva función para obtener detalles del plan desde la razón de la suscripción
   getPlanDetails(reason: string) {
       const plans = [
-          { name: "Ramazzini: Plan Básico", users: 1, companies: 10, workers: 200 },
+          { name: "Ramazzini: Plan Básico", users: 1, companies: 10, workers: 100 },
           { name: "Ramazzini: Plan Profesional", users: 5, companies: 50, workers: 500 },
-          { name: "Ramazzini: Plan Empresarial", users: 15, companies: 150, workers: 1200 },
+          { name: "Ramazzini: Plan Empresarial", users: 15, companies: 150, workers: 1500 },
       ];
       return plans.find(plan => reason.includes(plan.name)) || null;
   }

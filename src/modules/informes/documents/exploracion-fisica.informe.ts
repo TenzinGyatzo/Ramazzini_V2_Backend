@@ -274,6 +274,24 @@ export const exploracionFisicaInforme = (
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
 
+  ///////////// ESPECÍFICO PARA EL DR. GARCÍA //////////////
+  // Verificar si el RFC es el especificado
+  const isRFCMatch = proveedorSalud.RFC === 'ECS171130Q41';
+
+  // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
+  const updatedStyles: StyleDictionary = { ...styles };
+
+  updatedStyles.tableHeader = {
+    ...updatedStyles.tableHeader,
+    fillColor: isRFCMatch ? '#2BB9D9' : '#343A40', // Azul del logo
+  };
+
+  updatedStyles.tableHeaderLg = {
+    ...updatedStyles.tableHeaderLg, 
+    fillColor: isRFCMatch ? '#2BB9D9' : '#343A40', // Azul del logo
+  };
+  //////////////////////////////////////////////////////////
+
   const firma: Content = medicoFirmante.firma?.data
   ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 65 }
   : { text: '' };
@@ -925,6 +943,6 @@ export const exploracionFisicaInforme = (
       ],
     },
     // Estilos
-    styles: styles,
+    styles: updatedStyles, // Regresar a styles cuando se elimine la parte específica para el Dr. García
   };
 };
