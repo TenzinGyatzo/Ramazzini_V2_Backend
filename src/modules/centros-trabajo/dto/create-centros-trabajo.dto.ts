@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsString, Matches, IsMongoId } from "class-validator";
+import { IsEnum, IsNotEmpty, IsString, Matches, IsMongoId, IsOptional } from "class-validator";
 
 const estadosDeMexico = [
     "Aguascalientes",
@@ -46,38 +46,42 @@ export class CreateCentrosTrabajoDto {
 
     @ApiProperty({
       description: 'Dirección del centro de trabajo',
-      example: 'Calle SinNombre #123'
+      example: 'Calle SinNombre #123',
+      required: false
     })
     @IsString({ message: 'La dirección debe ser un string' })
-    @IsNotEmpty({ message: 'La dirección no puede estar vacía' })
-    direccionCentro: string
+    @IsOptional()
+    direccionCentro?: string
 
     @ApiProperty({
       description: 'El Código Postal del centro de trabajo, con un formato válido de 5 dígitos',
       example: '81200',
+      required: false
     })
     @IsString({ message: 'El Código Postal debe ser un string' })
-    @IsNotEmpty({ message: 'El Código Postal no puede estar vacío' })
-    @Matches(/^[0-9]{5}$/, { message: 'El Código Postal debe de tener un formato válido' })
-    codigoPostal: string
+    @IsOptional()
+    // @Matches(/^[0-9]{5}$/, { message: 'El Código Postal debe de tener un formato válido' })
+    codigoPostal?: string
     
     @ApiProperty({
       description: 'El estado donde se encuentra el centro de trabajo',
       enum: estadosDeMexico,
       example: 'Sinaloa',
+      required: false
     })
     @IsString({ message: 'El estado debe ser un string' })
-    @IsNotEmpty({ message: 'El estado no puede estar vacío' })
-    @IsEnum(estadosDeMexico, { message: 'El estado no es válido' })
-    estado: string
+    @IsOptional()
+    // @IsEnum(estadosDeMexico, { message: 'El estado no es válido' })
+    estado?: string
 
     @ApiProperty({
       description: 'El municipio donde se encuentra el centro de trabajo',
       example: 'Ahome',
+      required: false
     })
     @IsString({ message: 'El municipio debe ser un string' })
-    @IsNotEmpty({ message: 'El municipio no puede estar vacío' })
-    municipio: string
+    @IsOptional()
+    municipio?: string
 
     @ApiProperty({
       description: 'El ID de la empresa a la cual pertenece el centro de trabajo',

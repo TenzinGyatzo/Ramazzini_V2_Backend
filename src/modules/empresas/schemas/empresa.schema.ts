@@ -4,8 +4,8 @@ import { User } from 'src/modules/users/entities/user.entity';
 import { ProveedoresSalud } from 'src/modules/proveedores-salud/entities/proveedores-salud.entity';
 
 interface Logotipo {
-    data: string;
-    contentType: string;
+  data: string;
+  contentType: string;
   }
 
 @Schema()
@@ -13,20 +13,20 @@ export class Empresa extends Document {
   @Prop({ required: true })
   nombreComercial: string;
 
-  @Prop({ required: true })
+  @Prop()
   razonSocial: string;
 
-  @Prop({ required: true, unique: true }) // No se está aplicando el unique porque ya había registros duplicados desde el uso de Ramazzini-V1
+  @Prop({ unique: true })
   RFC: string;
 
   @Prop()
   giroDeEmpresa: string;
 
   @Prop({
-    type: {
-      data: {type: String},
-      contentType: {type: String}
-    } 
+  type: {
+    data: {type: String},
+    contentType: {type: String}
+  } 
   })
   logotipoEmpresa: Logotipo
 

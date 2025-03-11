@@ -1,8 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsNotEmpty, Matches, ValidateNested, IsEnum, IsMongoId } from 'class-validator';
-
-const basesOperaciones = ["Pruebas", "Los Mochis"];
+import { IsString, IsNotEmpty, Matches, ValidateNested, IsOptional, IsMongoId } from 'class-validator';
 
 class LogotipoDto {
     @ApiProperty({
@@ -34,35 +32,40 @@ export class CreateEmpresaDto {
   @ApiProperty({
     description: 'Razón social de la empresa',
     example: 'Bakery Topolobampo S.A. de C.V.',
+    required: false
   })
   @IsString({ message: 'La razón social debe ser un string' })
-  @IsNotEmpty({ message: 'La razón social no puede estar vacía' })
-  razonSocial: string;
+  @IsOptional()
+  razonSocial?: string;
 
   @ApiProperty({
     description: 'RFC de la empresa',
     example: 'BTK123456Y32',
+    required: false
   })
   @IsString({ message: 'El RFC debe ser un string' })
-  @IsNotEmpty({ message: 'El RFC no puede estar vacío' })
-  @Matches(/^[A-ZÑ&]{3,4}\d{2}\d{2}\d{2}[A-Z\d]{3}$/, {
-    message: 'El RFC debe de tener un formato válido',
-  })
-  RFC: string;
+  @IsOptional()
+  // @Matches(/^[A-ZÑ&]{3,4}\d{2}\d{2}\d{2}[A-Z\d]{3}$/, {
+  //   message: 'El RFC debe de tener un formato válido',
+  // })
+  RFC?: string;
 
   @ApiProperty({
     description: 'Giro de la empresa',
     example: 'Pastelería',
   })
   @IsString({ message: 'El giro de la empresa debe ser un string' })
+  @IsOptional()
   giroDeEmpresa: string;
 
   @ApiProperty({
     description: 'Logotipo de la empresa',
     type: LogotipoDto,
+    required: false
   })
   @ValidateNested()
   @Type(() => LogotipoDto)
+  @IsOptional()
   logotipoEmpresa?: LogotipoDto;
 
   @ApiProperty({

@@ -112,5 +112,65 @@
     "memoryUsagePercentage": 66.08035261616779,
     "cpuUsage": 0,
     "diskStats": "📂 C: 413.34 GB usados de 999.26 GB (41.36% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
+  },
+  {
+    "timestamp": "2025-03-11T16:20:00.012Z",
+    "memoryUsagePercentage": 66.4116641686159,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 412.98 GB usados de 999.26 GB (41.33% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
+  },
+  {
+    "timestamp": "2025-03-11T16:50:00.015Z",
+    "memoryUsagePercentage": 66.1497959410545,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 412.91 GB usados de 999.26 GB (41.32% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
+  },
+  {
+    "timestamp": "2025-03-11T17:00:00.012Z",
+    "memoryUsagePercentage": 65.16103464297926,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 412.92 GB usados de 999.26 GB (41.32% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
+  },
+  {
+    "timestamp": "2025-03-11T17:10:00.018Z",
+    "memoryUsagePercentage": 66.25107347204833,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 412.91 GB usados de 999.26 GB (41.32% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
+  },
+  {
+    "timestamp": "2025-03-11T17:20:00.031Z",
+    "memoryUsagePercentage": 63.49364891947774,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 412.93 GB usados de 999.26 GB (41.32% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
+  },
+  {
+    "timestamp": "2025-03-11T17:30:00.013Z",
+    "memoryUsagePercentage": 62.14145311721364,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 412.93 GB usados de 999.26 GB (41.32% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
+  },
+  {
+    "timestamp": "2025-03-11T17:40:00.006Z",
+    "memoryUsagePercentage": 64.76930306669519,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 412.94 GB usados de 999.26 GB (41.32% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
+  },
+  {
+    "timestamp": "2025-03-11T17:50:00.006Z",
+    "memoryUsagePercentage": 64.83516113329773,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 412.94 GB usados de 999.26 GB (41.32% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
+  },
+  {
+    "timestamp": "2025-03-11T18:00:00.007Z",
+    "memoryUsagePercentage": 66.91326345849414,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 412.91 GB usados de 999.26 GB (41.32% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
+  },
+  {
+    "timestamp": "2025-03-11T18:10:00.010Z",
+    "memoryUsagePercentage": 68.006285992444,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 412.94 GB usados de 999.26 GB (41.32% ocupado)\n📂 D: 0.17 GB usados de 480.10 GB (0.03% ocupado)"
   }
 ]

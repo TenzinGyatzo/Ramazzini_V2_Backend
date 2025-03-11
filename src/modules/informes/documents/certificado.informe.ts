@@ -280,21 +280,21 @@ export const certificadoInforme = (
       {
         text: [
           {
-            text: 'Que, habiendo practicado reconocimiento médico en esta fecha, al C. ',
+        text: 'Que, habiendo practicado reconocimiento médico en esta fecha, al C. ',
           },
           { text: trabajador.nombre, bold: true },
           { text: ' de ' },
           { text: trabajador.edad, bold: true },
           {
-            text: ' de edad, lo encontré íntegro físicamente, sin defectos ni anomalías del aparato locomotor, ',
+        text: ' de edad, lo encontré íntegro físicamente, sin defectos ni anomalías del aparato locomotor, ',
           },
           {
-            text: examenVista
-              ? `con agudeza visual OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion}, campo visual, profundidad de campo, estereopsis y percepción cromática `
-              : `con agudeza visual, campo visual, profundidad de campo, estereopsis y percepción cromática `,
+        text: examenVista
+          ? `con agudeza visual OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion}, campo visual, profundidad de campo, estereopsis y percepción cromática `
+          : `con agudeza visual, campo visual, profundidad de campo, estereopsis y percepción cromática `,
           },
           {
-            text: 'sin alteraciones; agudeza auditiva, aparato respiratorio y aparato locomotor íntegros, el ',
+        text: 'sin alteraciones; agudeza auditiva, aparato respiratorio y aparato locomotor íntegros, el ',
           },
           { text: 'examen neurológico reveló buena coordinación y reflejos.' },
         ],
@@ -306,10 +306,10 @@ export const certificadoInforme = (
           { text: 'Por lo anterior se establece que el C. ' },
           { text: trabajador.nombre + ' ', bold: true },
           {
-            text: certificado.impedimentosFisicos,
+        text: certificado.impedimentosFisicos,
           },
           {
-            text: '. Este certificado de salud no implica ninguna garantía de que el trabajador no se lesionará o enfermará en el futuro.',
+        text: '. Este certificado de salud no implica ninguna garantía de que el trabajador no se lesionará o enfermará en el futuro.',
           },
         ],
         style: 'paragraph',
@@ -319,11 +319,11 @@ export const certificadoInforme = (
       {
         text: [
           {
-            text: 'Expido el presente certificado médico a petición de el C. ',
+        text: 'Expido el presente certificado médico a petición de el C. ',
           },
           { text: trabajador.nombre, bold: true },
           {
-            text: ' para los usos legales a que haya lugar, en la ciudad de Los Mochis, Sinaloa, en la fecha mencionada al inicio de este certificado.',
+        text: ` para los usos legales a que haya lugar, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
           },
         ],
         style: 'paragraph',
