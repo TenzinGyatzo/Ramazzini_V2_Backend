@@ -103,4 +103,81 @@ export class ProveedoresSaludService {
       }
     ]);
   }
+
+  async getHistoriasClinicasDelMes(idProveedorSalud: string) {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const result = await this.proveedoresSaludModel.aggregate([
+        {
+            $match: { _id: new Types.ObjectId(idProveedorSalud) }
+        },
+        {
+            $lookup: {
+                from: "empresas",
+                localField: "_id",
+                foreignField: "idProveedorSalud",
+                as: "empresas"
+            }
+        },
+        { $unwind: "$empresas" },
+        {
+            $lookup: {
+                from: "centrotrabajos",
+                localField: "empresas._id",
+                foreignField: "idEmpresa",
+                as: "centros"
+            }
+        },
+        { $unwind: "$centros" },
+        {
+            $lookup: {
+                from: "trabajadors",
+                localField: "centros._id",
+                foreignField: "idCentroTrabajo",
+                as: "trabajadores"
+            }
+        },
+        { $unwind: "$trabajadores" },
+        {
+            $lookup: {
+                from: "historiaclinicas",
+                localField: "trabajadores._id",
+                foreignField: "idTrabajador",
+                as: "historias"
+            }
+        },
+        {
+            $project: {
+                historias: {
+                    $filter: {
+                        input: "$historias",
+                        as: "historia",
+                        cond: {
+                            $and: [
+                                { $gte: ["$$historia.createdAt", firstDay] },
+                                { $lte: ["$$historia.createdAt", lastDay] }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                count: { $size: "$historias" }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                totalHistoriasClinicas: { $sum: "$count" }
+            }
+        }
+    ]);
+
+    return result.length > 0 ? result[0].totalHistoriasClinicas : 0;
+  }
+  
 }

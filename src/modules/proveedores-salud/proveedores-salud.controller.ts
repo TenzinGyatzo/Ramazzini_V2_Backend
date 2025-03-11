@@ -249,9 +249,10 @@ export class ProveedoresSaludController {
         const updatedProveedorSalud = await this.proveedoresSaludService.update(
           id,
           { 
-            maxUsuariosPermitidos: 1,
-            maxEmpresasPermitidas: 0,
-            maxTrabajadoresPermitidos: 0,
+            // maxUsuariosPermitidos: 1,
+            // maxEmpresasPermitidas: 0,
+            // maxTrabajadoresPermitidos: 0,
+            maxHistoriasPermitidasAlMes: 0,
             addOns: [],
           },
         );
@@ -280,5 +281,10 @@ export class ProveedoresSaludController {
   @Get('/top-empresas-por-trabajadores/:idProveedorSalud')
   async getTopEmpresas(@Param('idProveedorSalud') idProveedorSalud: string) {
     return this.proveedoresSaludService.getTopEmpresasByWorkers(idProveedorSalud);
+  }
+
+  @Get('/historias-clinicas-del-mes/:idProveedorSalud')
+  async getHistoriasClinicasDelMes(@Param('idProveedorSalud') idProveedorSalud: string) {
+    return this.proveedoresSaludService.getHistoriasClinicasDelMes(idProveedorSalud);
   }
 }

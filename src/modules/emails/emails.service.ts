@@ -72,7 +72,7 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  async sendNewSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, usuariosDisponibles, empresasDisponibles, trabajadoresDisponibles }) {
+  async sendNewSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, historiasDisponibles }) {
     const transporter = createTransport(
       process.env.EMAIL_HOST,
       process.env.EMAIL_PORT,
@@ -106,9 +106,7 @@ export class EmailsService {
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Fecha de Inicio:</strong> ${inicioSuscripcion}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Monto Mensual:</strong> $${montoMensual} MXN</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Próximo Pago:</strong> ${fechaProximoPago}</p>
-                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Usuarios Disponibles:</strong> ${usuariosDisponibles}</p>
-                  <p style="font-size: 16px; margin: 0;"><strong>Empresas Disponibles:</strong> ${empresasDisponibles}</p>
-                  <p style="font-size: 16px; margin: 0;"><strong>Límite de Trabajadores por Empresa:</strong> ${trabajadoresDisponibles}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Límite de Historias Clínicas al Mes:</strong> ${historiasDisponibles}</p>
               </div>
   
               <!-- Llamado a la acción -->
@@ -134,7 +132,7 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  async sendUpdatedSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, usuariosDisponibles, empresasDisponibles, trabajadoresDisponibles }) {
+  async sendUpdatedSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, historiasDisponibles }) {
     const transporter = createTransport(
       process.env.EMAIL_HOST,
       process.env.EMAIL_PORT,
@@ -169,10 +167,7 @@ export class EmailsService {
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Última Actualización:</strong> ${fechaActualizacion}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Monto Mensual:</strong> $${montoMensual} MXN</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Próximo Pago:</strong> ${fechaProximoPago}</p>
-                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Usuarios Disponibles:</strong> ${usuariosDisponibles}</p>
-                  <p style="font-size: 16px; margin: 0;"><strong>Empresas Disponibles:</strong> ${empresasDisponibles}</p>
-                  <p style="font-size: 16px; margin: 0;"><strong>Límite de Trabajadores por Empresa:</strong> ${trabajadoresDisponibles}</p>
-
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Límite de Historias Clínicas al Mes:</strong> ${historiasDisponibles}</p>
               </div>
   
               <!-- Llamado a la acción -->
@@ -198,7 +193,7 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  async sendCancellationConfirmation({ email, nombrePlan, inicioSuscripcion, fechaCancelacion, montoMensual, fechaFinDeSuscripcion, usuariosDisponibles, empresasDisponibles, trabajadoresDisponibles }) {
+  async sendCancellationConfirmation({ email, nombrePlan, inicioSuscripcion, fechaCancelacion, montoMensual, fechaFinDeSuscripcion, historiasDisponibles }) {
     const transporter = createTransport(
       process.env.EMAIL_HOST,
       process.env.EMAIL_PORT,
@@ -233,9 +228,7 @@ export class EmailsService {
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Fecha de Cancelación:</strong> ${fechaCancelacion}</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Monto Mensual:</strong> $${montoMensual} MXN</p>
                   <p style="font-size: 16px; margin: 0 0 10px;"><strong>Acceso hasta:</strong> ${fechaFinDeSuscripcion}</p>
-                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Usuarios Disponibles:</strong> ${usuariosDisponibles} (hasta el fin del periodo)</p>
-                  <p style="font-size: 16px; margin: 0;"><strong>Empresas Disponibles:</strong> ${empresasDisponibles} (hasta el fin del periodo)</p>
-                  <p style="font-size: 16px; margin: 0;"><strong>Límite de Trabajadores por Empresa:</strong> ${trabajadoresDisponibles}</p>
+                  <p style="font-size: 16px; margin: 0 0 10px;"><strong>Límite de Historias Clínicas al Mes:</strong> ${historiasDisponibles}</p>
               </div>
   
               <!-- Mensaje importante -->
@@ -321,12 +314,11 @@ export class EmailsService {
     const peakMemory = Math.max(...memoryUsages).toFixed(2);
   
     return `
-  📊 **Resumen de las Últimas 12 Horas (Horario Pico)**
-  ─────────────────────────────
-  🔹 **CPU Promedio:** ${avgCpu}%
-  🔹 **CPU Máximo:** ${peakCpu}%
-  🔹 **Memoria Promedio:** ${avgMemory}%
-  🔹 **Memoria Máxima:** ${peakMemory}%
+  Resumen de las Últimas 12 Horas (Horario Pico)
+  🔹 CPU Promedio: ${avgCpu}%
+  🔹 CPU Máximo: ${peakCpu}%
+  🔹 Memoria Promedio: ${avgMemory}%
+  🔹 Memoria Máxima: ${peakMemory}%
   `;
   }  
 
@@ -343,13 +335,13 @@ export class EmailsService {
     let alerts = [];
   
     if (highCpuUsage.length > 6) {
-      alerts.push("⚠️ **CPU ha estado sobre 80% por más de 1 hora.**");
+      alerts.push("⚠️ CPU ha estado sobre 80% por más de 1 hora.");
     }
     if (highMemoryUsage.length > 3) {
-      alerts.push("⚠️ **Memoria ha estado sobre 90% por más de 30 minutos.**");
+      alerts.push("⚠️ Memoria ha estado sobre 90% por más de 30 minutos.");
     }
   
-    return alerts.length > 0 ? alerts.join("\n") : "✅ **No se detectaron problemas críticos.**";
+    return alerts.length > 0 ? alerts.join("\n") : "✅ No se detectaron problemas críticos.";
   }
 
   async getDiskUsage(): Promise<string> {
@@ -370,7 +362,7 @@ export class EmailsService {
             const sizeGB = (size / 1e9).toFixed(2);
             const usagePercentage = ((used / size) * 100).toFixed(2);
   
-            result += `📂 **${device}:** ${usedGB} GB usados de ${sizeGB} GB (${usagePercentage}% ocupado)\n`;
+            result += `📂 ${device}: ${usedGB} GB usados de ${sizeGB} GB (${usagePercentage}% ocupado)\n`;
           }
         });
   
@@ -550,7 +542,7 @@ export class EmailsService {
       bcc: process.env.EMAIL_USER, // Copia oculta al remitente
       subject: '📊 Reporte de Uso del Servidor',
       // text: 'Adjunto el reporte generado automáticamente',
-      text: reportContent,
+      // text: reportContent,
       // attachments: [{ filename: 'Salud de Servidor Ramazzini.txt', path: reportPath }], // Adjuntar respaldo simple
       html: `<pre>${reportContent}</pre>`,
     });

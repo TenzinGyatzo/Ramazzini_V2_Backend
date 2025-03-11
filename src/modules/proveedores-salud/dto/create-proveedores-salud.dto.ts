@@ -91,16 +91,20 @@ export class CreateProveedoresSaludDto {
   periodoDePruebaFinalizado?: boolean;
   
   @IsOptional()
-  @IsNumber({}, { message: 'El número máximo de usuarios permitidos debe ser un número' })
-  maxUsuariosPermitidos?: number;
+  @IsNumber({}, { message: 'El número máximo de historias permitidas al mes debe ser un número' })
+  maxHistoriasPermitidasAlMes?: number;
 
-  @IsOptional()
-  @IsNumber({}, { message: 'El número máximo de empresas permitidas debe ser un número' })
-  maxEmpresasPermitidas?: number;
+  // @IsOptional()
+  // @IsNumber({}, { message: 'El número máximo de usuarios permitidos debe ser un número' })
+  // maxUsuariosPermitidos?: number;
 
-  @IsOptional()
-  @IsNumber({}, { message: 'El número máximo de trabajadores permitidos debe ser un número' })
-  maxTrabajadoresPermitidos?: number;
+  // @IsOptional()
+  // @IsNumber({}, { message: 'El número máximo de empresas permitidas debe ser un número' })
+  // maxEmpresasPermitidas?: number;
+
+  // @IsOptional()
+  // @IsNumber({}, { message: 'El número máximo de trabajadores permitidos debe ser un número' })
+  // maxTrabajadoresPermitidos?: number;
 
   @IsOptional()
   @IsArray({ message: 'El campo addOns debe ser un arreglo' })

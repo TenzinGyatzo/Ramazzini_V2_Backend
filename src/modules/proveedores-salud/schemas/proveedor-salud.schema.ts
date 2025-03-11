@@ -57,14 +57,17 @@ export class ProveedorSalud extends Document {
   @Prop({ default: false }) 
   periodoDePruebaFinalizado: boolean; // Indica si han pasado los 15 días de prueba
 
-  @Prop({ default: 1 })
-  maxUsuariosPermitidos: number; // Inicialmente 1 para periodo de prueba
+  @Prop({ default: 50 })
+  maxHistoriasPermitidasAlMes: number; // Inicialmente 15 para periodo de prueba
 
-  @Prop({ default: 5 })
-  maxEmpresasPermitidas: number; // Inicialmente 5 para periodo de prueba
+  // @Prop({ default: 1 })
+  // maxUsuariosPermitidos: number; // Inicialmente 1 para periodo de prueba
 
-  @Prop({ default: 25})
-  maxTrabajadoresPermitidos: number; // Inicialmente 50 para periodo de prueba
+  // @Prop({ default: 5 })
+  // maxEmpresasPermitidas: number; // Inicialmente 5 para periodo de prueba
+
+  // @Prop({ default: 25})
+  // maxTrabajadoresPermitidos: number; // Inicialmente 50 para periodo de prueba
 
   // **Add-ons dinámicos**
   @Prop({
