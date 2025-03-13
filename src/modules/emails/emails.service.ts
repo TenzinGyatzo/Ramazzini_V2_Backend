@@ -425,18 +425,38 @@ export class EmailsService {
 
   async saveUsageHistory(report: string) {
     const historyPath = path.join(__dirname, 'usage_history.txt');
-    fs.writeFileSync(historyPath, report, 'utf8');
+    
+    // Cargar el historial existente
+    let history = fs.existsSync(historyPath) ? fs.readFileSync(historyPath, 'utf8').split('\n') : [];
+  
+    // Filtrar solo los reportes de los últimos 2 días
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    
+    history = history.filter(line => {
+      const match = line.match(/\d{4}-\d{2}-\d{2}/);
+      return match ? new Date(match[0]) >= twoDaysAgo : false;
+    });
+  
+    // Agregar el nuevo reporte y escribir de nuevo
+    history.push(report);
+    fs.writeFileSync(historyPath, history.join('\n'), 'utf8');
   }
-
+  
   async getPreviousUsage(): Promise<string> {
     const historyPath = path.join(__dirname, 'usage_history.txt');
-    return fs.existsSync(historyPath) ? fs.readFileSync(historyPath, 'utf8') : '📊 No hay historial previo.';
+    
+    if (!fs.existsSync(historyPath)) return '📊 No hay historial previo.';
+  
+    const history = fs.readFileSync(historyPath, 'utf8').split('\n').slice(-50); // Limitar a las últimas 50 líneas
+    
+    return history.join('\n');
   }
+  
   
   //// Generar el reporte de uso del servidor ////
 
   async generateServerReport(): Promise<string> {
-    // Obtener información del sistema en tiempo real
     const totalMemory = os.totalmem();
     const freeMemory = os.freemem();
     const usedMemory = totalMemory - freeMemory;
@@ -455,71 +475,67 @@ export class EmailsService {
     const nginxStatus = await this.checkServiceStatus('nginx');
     const activeConnections = await this.getActiveConnections();
   
-    // Obtener promedios y picos durante el horario pico
     const peakMetrics = await this.getMetricsSummary();
-  
-    // Obtener alertas avanzadas basadas en tendencias
     const alertMessages = await this.generateAlerts();
-  
-    // Obtener historial de las últimas 24 horas
     const previousUsage = await this.getPreviousUsage();
   
     // 📌 Reporte Formateado
     const reportContent = `
-  ═════════════════════════════
-  📊 𝗥𝗘𝗣𝗢𝗥𝗧𝗘 𝗗𝗘 𝗦𝗘𝗥𝗩𝗜𝗗𝗢𝗥 - 𝗥𝗔𝗠𝗔𝗭𝗭𝗜𝗡𝗜
-  ═════════════════════════════
+    ═════════════════════════════
+    📊 𝗥𝗘𝗣𝗢𝗥𝗧𝗘 𝗗𝗘 𝗦𝗘𝗥𝗩𝗜𝗗𝗢𝗥 - 𝗥𝗔𝗠𝗔𝗭𝗭𝗜𝗡𝗜
+    ═════════════════════════════
+    
+    💾 𝗠𝗘𝗠𝗢𝗥𝗜𝗔
+    ─────────────────────────────
+    🟢 Total: ${(totalMemory / 1e9).toFixed(2)} GB
+    🟡 Usada: ${(usedMemory / 1e9).toFixed(2)} GB (${memoryUsagePercentage.toFixed(2)}%)
+    🔵 Libre: ${(freeMemory / 1e9).toFixed(2)} GB
+    🟣 Node.js: ${(memoryUsedByNode / 1e6).toFixed(2)} MB
   
-  💾 𝗠𝗘𝗠𝗢𝗥𝗜𝗔
-  ─────────────────────────────
-  🟢 Total:        ${(totalMemory / 1e9).toFixed(2)} GB
-  🟡 Usada:        ${(usedMemory / 1e9).toFixed(2)} GB (${memoryUsagePercentage.toFixed(2)}%)
-  🔵 Libre:        ${(freeMemory / 1e9).toFixed(2)} GB
-  🟣 Node.js:      ${(memoryUsedByNode / 1e6).toFixed(2)} MB
+    🖥️ 𝗖𝗣𝗨
+    ─────────────────────────────
+    🟠 CPU (Node.js): ${cpuUsage.toFixed(2)}%
+    🔴 CPU Total: ${totalCpuUsage}
   
-  🖥️ 𝗖𝗣𝗨
-  ─────────────────────────────
-  🟠 CPU (Node.js): ${cpuUsage.toFixed(2)}%
-  🔴 CPU Total:     ${totalCpuUsage}
+    📊 𝗖𝗔𝗥𝗚𝗔 𝗗𝗘𝗟 𝗦𝗜𝗦𝗧𝗘𝗠𝗔
+    ─────────────────────────────
+    ⏳ Último minuto: ${loadAvg[0].toFixed(2)}
+    ⏳ Últimos 5 minutos: ${loadAvg[1].toFixed(2)}
+    ⏳ Últimos 15 minutos: ${loadAvg[2].toFixed(2)}
   
-  📊 𝗖𝗔𝗥𝗚𝗔 𝗗𝗘𝗟 𝗦𝗜𝗦𝗧𝗘𝗠𝗔
-  ─────────────────────────────
-  ⏳ Último minuto:        ${loadAvg[0].toFixed(2)}
-  ⏳ Últimos 5 minutos:    ${loadAvg[1].toFixed(2)}
-  ⏳ Últimos 15 minutos:   ${loadAvg[2].toFixed(2)}
+    📊 𝗦𝗨𝗠𝗔𝗥𝗜𝗢 𝗗𝗘𝗟 𝗛𝗢𝗥𝗔𝗥𝗜𝗢 𝗣𝗜𝗖𝗢 (7 AM - 7 PM)
+    ─────────────────────────────
+    ${peakMetrics}
   
-  📊 𝗦𝗨𝗠𝗔𝗥𝗜𝗢 𝗗𝗘𝗟 𝗛𝗢𝗥𝗔𝗥𝗜𝗢 𝗣𝗜𝗖𝗢 (7 AM - 7 PM)
-  ─────────────────────────────
-  ${peakMetrics}
+    💽 𝗘𝗦𝗧𝗔𝗗𝗜́𝗦𝗧𝗜𝗖𝗔𝗦 𝗗𝗘 𝗗𝗜𝗦𝗖𝗢
+    ─────────────────────────────
+    ${diskStats}
   
-  💽 𝗘𝗦𝗧𝗔𝗗𝗜́𝗦𝗧𝗜𝗖𝗔𝗦 𝗗𝗘 𝗗𝗜𝗦𝗖𝗢
-  ─────────────────────────────
-  ${diskStats}
+    ⚙️ 𝗣𝗥𝗢𝗖𝗘𝗦𝗢𝗦 𝗬 𝗖𝗢𝗡𝗘𝗫𝗜𝗢𝗡𝗘𝗦
+    ─────────────────────────────
+    📌 Procesos en Ejecución: ${runningProcesses}
+    🌐 Conexiones Activas: ${activeConnections}
   
-  ⚙️ 𝗣𝗥𝗢𝗖𝗘𝗦𝗢𝗦 𝗬 𝗖𝗢𝗡𝗘𝗫𝗜𝗢𝗡𝗘𝗦
-  ─────────────────────────────
-  📌 Procesos en Ejecución:  ${runningProcesses}
-  🌐 Conexiones Activas:    ${activeConnections}
+    🔧 𝗘𝗦𝗧𝗔𝗗𝗢 𝗗𝗘 𝗦𝗘𝗥𝗩𝗜𝗖𝗜𝗢𝗦
+    ─────────────────────────────
+    ✅ ${dbStatus}
+    ✅ ${nginxStatus}
   
-  🔧 𝗘𝗦𝗧𝗔𝗗𝗢 𝗗𝗘 𝗦𝗘𝗥𝗩𝗜𝗖𝗜𝗢𝗦
-  ─────────────────────────────
-  ✅ ${dbStatus}
-  ✅ ${nginxStatus}
+    📜 𝗛𝗜𝗦𝗧𝗢𝗥𝗜𝗔𝗟 𝗗𝗘 𝗟𝗔𝗦 𝗨́𝗟𝗧𝗜𝗠𝗔𝗦 𝟮𝟰 𝗛𝗢𝗥𝗔𝗦
+    ─────────────────────────────
+    ${previousUsage}
   
-  📜 𝗛𝗜𝗦𝗧𝗢𝗥𝗜𝗔𝗟 𝗗𝗘 𝗟𝗔𝗦 𝗨́𝗟𝗧𝗜𝗠𝗔𝗦 𝟮𝟰 𝗛𝗢𝗥𝗔𝗦
-  ─────────────────────────────
-  ${previousUsage}
+    🚨 𝗔𝗟𝗘𝗥𝗧𝗔𝗦 𝗬 𝗥𝗘𝗖𝗢𝗠𝗘𝗡𝗗𝗔𝗖𝗜𝗢𝗡𝗘𝗦
+    ═════════════════════════════
+    ${alertMessages}
+    `;
   
-  🚨 𝗔𝗟𝗘𝗥𝗧𝗔𝗦 𝗬 𝗥𝗘𝗖𝗢𝗠𝗘𝗡𝗗𝗔𝗖𝗜𝗢𝗡𝗘𝗦
-  ═════════════════════════════
-  ${alertMessages}
-  `;
-  
-    // Guardar el historial del reporte
+    // Guardar historial del reporte sin duplicaciones
     await this.saveUsageHistory(reportContent);
   
     return reportContent;
   }
+  
   
   async sendServerReport() {
     const transporter = createTransport(

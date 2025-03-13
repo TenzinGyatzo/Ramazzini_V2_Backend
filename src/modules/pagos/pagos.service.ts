@@ -182,8 +182,8 @@ export class PagosService {
   getPlanDetails(reason: string) {
       const plans = [
           { name: "Ramazzini: Plan Básico", histories: 50 },
-          { name: "Ramazzini: Plan Profesional", histories: 300 },
-          { name: "Ramazzini: Plan Empresarial", histories: 600 },
+          { name: "Ramazzini: Plan Profesional", histories: 150 },
+          { name: "Ramazzini: Plan Empresarial", histories: 300 },
           // { name: "Ramazzini: Plan Básico", users: 1, companies: 10, workers: 100 },
           // { name: "Ramazzini: Plan Profesional", users: 5, companies: 50, workers: 500 },
           // { name: "Ramazzini: Plan Empresarial", users: 15, companies: 150, workers: 1500 },
