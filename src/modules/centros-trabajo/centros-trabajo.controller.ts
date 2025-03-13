@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { CentrosTrabajoService } from './centros-trabajo.service';
 import { CreateCentrosTrabajoDto } from './dto/create-centros-trabajo.dto';
 import { UpdateCentrosTrabajoDto } from './dto/update-centros-trabajo.dto';
@@ -95,20 +95,23 @@ export class CentrosTrabajoController {
     if (!isValidObjectId(empresaId)) {
       throw new BadRequestException('El ID de empresa proporcionado no es válido');
     }
-
+  
     if (!isValidObjectId(centroId)) {
       throw new BadRequestException('El ID de centro de trabajo proporcionado no es válido');
     }
-
-    const deletedCentroTrabajo = await this.centrosTrabajoService.remove(centroId);
-
-    if (!deletedCentroTrabajo) {
-      return { message: `El centro de trabajo con ID ${centroId} no existe o ya ha sido eliminado.` };
-    }
-
-    return {
-      message: 'Centro de Trabajo eliminado exitosamente',
+  
+    try {
+      const deletedCentroTrabajo = await this.centrosTrabajoService.remove(centroId);
+  
+      if (!deletedCentroTrabajo) {
+        throw new NotFoundException(`El centro de trabajo con ID ${centroId} no existe o ya ha sido eliminado.`);
+      }
+  
+      return { message: 'Centro de Trabajo eliminado exitosamente' };
+    } catch (error) {
+      throw new InternalServerErrorException('Ocurrió un error al eliminar el centro de trabajo');
     }
   }
+  
 }
 

@@ -7,11 +7,30 @@ import { UpdateTrabajadorDto } from './dto/update-trabajador.dto';
 import { normalizeTrabajadorData } from 'src/utils/normalization'
 import moment from 'moment';
 import * as xlsx from 'xlsx';
+import { format } from 'date-fns';
 import { calcularEdad, calcularAntiguedad } from 'src/utils/dates';
+import { Antidoping } from '../expedientes/schemas/antidoping.schema';
+import { AptitudPuesto } from '../expedientes/schemas/aptitud-puesto.schema';
+import { Certificado } from '../expedientes/schemas/certificado.schema';
+import { DocumentoExterno } from '../expedientes/schemas/documento-externo.schema';
+import { ExamenVista } from '../expedientes/schemas/examen-vista.schema';
+import { ExploracionFisica } from '../expedientes/schemas/exploracion-fisica.schema';
+import { HistoriaClinica } from '../expedientes/schemas/historia-clinica.schema';
+import { NotaMedica } from '../expedientes/schemas/nota-medica.schema';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class TrabajadoresService {
-  constructor(@InjectModel(Trabajador.name) private trabajadorModel: Model<Trabajador>) {}
+  constructor(@InjectModel(Trabajador.name) private trabajadorModel: Model<Trabajador>,
+  @InjectModel(Antidoping.name) private antidopingModel: Model<Antidoping>,
+  @InjectModel(AptitudPuesto.name) private aptitudModel: Model<AptitudPuesto>,
+  @InjectModel(Certificado.name) private certificadoModel: Model<Certificado>,
+  @InjectModel(DocumentoExterno.name) private documentoExternoModel: Model<DocumentoExterno>,
+  @InjectModel(ExamenVista.name) private examenVistaModel: Model<ExamenVista>,
+  @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
+  @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>,
+  @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
+  private filesService: FilesService) {}
 
   async create(createTrabajadorDto: CreateTrabajadorDto): Promise<Trabajador> {
     const normalizedDto = normalizeTrabajadorData(createTrabajadorDto);
@@ -25,7 +44,6 @@ export class TrabajadoresService {
     }
   }
   
-
   async findWorkersByCenter(id: string): Promise<Trabajador[]> {
     return await this.trabajadorModel.find({ idCentroTrabajo: id }).exec();
   }
@@ -92,10 +110,187 @@ export class TrabajadoresService {
     return { message: 'Trabajadores importados exitosamente', data: resultados };
   }
 
-  async remove(id: string): Promise<boolean> {
-    const result = await this.trabajadorModel.findByIdAndDelete(id).exec();
-    return result !== null;
+  private buildFilePath(basePath: string, doc: any): string {
+    
+    if (!doc) {
+      console.log(`[DEBUG] Documento inválido.`);
+      return '';
+    }
+  
+    // Mapeo de campos de fecha por tipo de documento
+    const dateFields: Record<string, string> = {
+      HistoriaClinica: 'fechaHistoriaClinica',
+      ExploracionFisica: 'fechaExploracionFisica',
+      ExamenVista: 'fechaExamenVista',
+      Antidoping: 'fechaAntidoping',
+      AptitudPuesto: 'fechaAptitudPuesto',
+      Certificado: 'fechaCertificado',
+      DocumentoExterno: 'fechaDocumento', // Este es clave para Documento Externo
+      NotaMedica: 'fechaNotaMedica',
+    };
+  
+    // Determinar el tipo de documento con el nombre del modelo en Mongoose
+    const modelName = doc.constructor.modelName;
+    const fechaCampo = dateFields[modelName] || 'createdAt'; // Usar createdAt si no hay fecha específica
+  
+    if (!doc[fechaCampo]) {
+      return '';
+    }
+  
+    // ⚠️ Convertir la fecha a string ISO si es un objeto Date
+    const fechaISO = doc[fechaCampo] instanceof Date ? doc[fechaCampo].toISOString() : doc[fechaCampo];
+    
+    if (typeof fechaISO !== 'string' || !fechaISO.includes('T')) {
+      console.log(`[ERROR] La fecha no está en el formato esperado.`);
+      return '';
+    }
+  
+    // Extraer manualmente el día, mes y año sin que JavaScript lo ajuste
+    const [year, month, day] = fechaISO.split('T')[0].split('-'); // Extrae "2025", "03", "12"
+    const fecha = `${day}-${month}-${year}`; // Formato DD-MM-YYYY
+  
+    // Mapeo de nombres de documentos para generar el nombre del archivo
+    const documentTypes: Record<string, string> = {
+      HistoriaClinica: 'Historia Clinica',
+      ExploracionFisica: 'Exploracion Fisica',
+      ExamenVista: 'Examen Vista',
+      Antidoping: 'Antidoping',
+      AptitudPuesto: 'Aptitud',
+      Certificado: 'Certificado',
+      NotaMedica: 'Nota Medica',
+    };
+  
+    // Si es un Documento Externo, construir el nombre dinámicamente
+    let fullPath = '';
+  
+    if (modelName === 'DocumentoExterno') {
+      if (!doc.nombreDocumento || !doc.extension) {
+        console.log(`[ERROR] Documento Externo sin nombre o sin extensión.`);
+        return '';
+      }
+      fullPath = `${basePath}/${doc.nombreDocumento} ${fecha}${doc.extension}`;
+    } else {
+      const tipoDocumento = documentTypes[modelName] || 'Documento';
+      fullPath = `${basePath}/${tipoDocumento} ${fecha}.pdf`;
+    }
+  
+    // Limpiar cualquier doble barra accidental en la ruta
+    fullPath = fullPath.replace(/\/\//g, '/');
+  
+    // console.log(`[DEBUG] Ruta generada: ${fullPath}`);
+  
+    return fullPath;
   }
+
+  private async eliminarArchivosDeDocumentos(documentos: any[], session: any): Promise<boolean> {
+    if (documentos.length === 0) {
+      console.log(`[DEBUG] No hay archivos asociados para eliminar.`);
+      return true;
+    }
+  
+    console.log(`[DEBUG] Eliminando ${documentos.length} archivos asociados...`);
+  
+    let eliminacionesExitosas = 0;
+    let erroresEncontrados = 0;
+  
+    try {
+      await Promise.all(
+        documentos.map(async (doc) => {
+          let fullPath = '';
+  
+          if ('rutaPDF' in doc && doc.rutaPDF) {
+            fullPath = this.buildFilePath(doc.rutaPDF, doc);
+          } else if ('rutaDocumento' in doc && doc.rutaDocumento) {
+            fullPath = this.buildFilePath(doc.rutaDocumento, doc);
+          }
+  
+          if (!fullPath) return; // Si la ruta está vacía, omitir el archivo
+  
+          try {
+            await this.filesService.deleteFile(fullPath);
+            eliminacionesExitosas++;
+          } catch (error) {
+            erroresEncontrados++;
+            console.error(`[ERROR] No se pudo eliminar el archivo ${fullPath}: ${error.message}`);
+          }
+        })
+      );
+  
+      console.log(
+        `[DEBUG] Eliminación de archivos completada. Exitosos: ${eliminacionesExitosas}, Errores: ${erroresEncontrados}`
+      );
+  
+      return erroresEncontrados === 0;
+    } catch (error) {
+      console.error(`[ERROR] Error en la eliminación de archivos: ${error.message}`);
+      return false;
+    }
+  }
+  
+
+  async remove(id: string): Promise<boolean> {
+    const session = await this.trabajadorModel.db.startSession();
+  
+    try {
+      await session.withTransaction(async () => {
+        // console.log(`[DEBUG] Iniciando eliminación de Trabajador con ID: ${id}`);
+  
+        // 1. Buscar documentos del trabajador
+        const documentos = (
+          await Promise.all([
+            this.historiaClinicaModel.find({ idTrabajador: id }).session(session).exec(),
+            this.exploracionFisicaModel.find({ idTrabajador: id }).session(session).exec(),
+            this.examenVistaModel.find({ idTrabajador: id }).session(session).exec(),
+            this.antidopingModel.find({ idTrabajador: id }).session(session).exec(),
+            this.aptitudModel.find({ idTrabajador: id }).session(session).exec(),
+            this.certificadoModel.find({ idTrabajador: id }).session(session).exec(),
+            this.documentoExternoModel.find({ idTrabajador: id }).session(session).exec(),
+            this.notaMedicaModel.find({ idTrabajador: id }).session(session).exec(),
+          ])
+        ).flat();
+  
+        if (documentos.length > 0) {
+          // console.log(`[DEBUG] Eliminando ${documentos.length} documentos y archivos asociados...`);
+  
+          // 2. Intentar eliminar archivos PDF asociados a los documentos
+          const eliminacionExitosa = await this.eliminarArchivosDeDocumentos(documentos, session);
+          if (!eliminacionExitosa) {
+            throw new Error('Error eliminando archivos.');
+          }
+  
+          // 3. Eliminar documentos de la base de datos
+          await Promise.all([
+            this.historiaClinicaModel.deleteMany({ idTrabajador: id }).session(session),
+            this.exploracionFisicaModel.deleteMany({ idTrabajador: id }).session(session),
+            this.examenVistaModel.deleteMany({ idTrabajador: id }).session(session),
+            this.antidopingModel.deleteMany({ idTrabajador: id }).session(session),
+            this.aptitudModel.deleteMany({ idTrabajador: id }).session(session),
+            this.certificadoModel.deleteMany({ idTrabajador: id }).session(session),
+            this.documentoExternoModel.deleteMany({ idTrabajador: id }).session(session),
+            this.notaMedicaModel.deleteMany({ idTrabajador: id }).session(session),
+          ]);
+        } else {
+          console.log(`[DEBUG] No hay documentos asociados, eliminando directamente el Trabajador.`);
+        }
+  
+        // 4. Eliminar el trabajador
+        const result = await this.trabajadorModel.findByIdAndDelete(id).session(session);
+  
+        if (!result) {
+          throw new Error('No se pudo eliminar el Trabajador.');
+        }
+  
+        // console.log(`[DEBUG] Eliminación del Trabajador completada con éxito.`);
+      });
+  
+      session.endSession();
+      return true;
+    } catch (error) {
+      console.error(`[ERROR] ${error.message}`);
+      session.endSession();
+      return false;
+    }
+  }   
 
   async exportarTrabajadores(idCentroTrabajo: string): Promise<Buffer> {
     // Consultar trabajadores del centro de trabajo especificado

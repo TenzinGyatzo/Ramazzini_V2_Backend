@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile, Res, InternalServerErrorException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as xlsx from 'xlsx';
 import { TrabajadoresService } from './trabajadores.service';
@@ -155,18 +155,22 @@ export class TrabajadoresController {
     if (!isValidObjectId(centroId)) {
       throw new BadRequestException('El ID de centro de trabajo proporcionado no es válido');
     }
-
+  
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID de trabajador proporcionado no es válido');
     }
-
-    const deletedTrabajador = await this.trabajadoresService.remove(id);
-
-    if (!deletedTrabajador) {
-      return { message: `El trabajador con ID ${centroId} no existe o ya ha sido eliminado.` };
-    }
-    return {
-      message: 'Trabajador/a eliminado exitosamente',
+  
+    try {
+      const deletedTrabajador = await this.trabajadoresService.remove(id);
+  
+      if (!deletedTrabajador) {
+        throw new NotFoundException(`El trabajador con ID ${id} no existe o ya ha sido eliminado.`);
+      }
+  
+      return { message: 'Trabajador/a eliminado exitosamente' };
+    } catch (error) {
+      throw new InternalServerErrorException('Ocurrió un error al eliminar el trabajador');
     }
   }
+  
 }

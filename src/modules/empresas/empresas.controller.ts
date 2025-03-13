@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile, InternalServerErrorException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { EmpresasService } from './empresas.service';
@@ -144,15 +144,18 @@ export class EmpresasController {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
-
-    const deletedEmpresa = await this.empresasService.remove(id);
-
-    if (!deletedEmpresa) {
-      return { message: `La empresa con ID ${id} no existe o ya ha sido eliminada.` };
+  
+    try {
+      const deletedEmpresa = await this.empresasService.remove(id);
+  
+      if (!deletedEmpresa) {
+        throw new NotFoundException(`La empresa con ID ${id} no existe o ya ha sido eliminada.`);
+      }
+  
+      return { message: 'Empresa eliminada exitosamente' };
+    } catch (error) {
+      throw new InternalServerErrorException('Ocurrió un error al eliminar la empresa');
     }
-    
-    return {
-      message: 'Empresa eliminada exitosamente',
-    };
   }
+  
 }
