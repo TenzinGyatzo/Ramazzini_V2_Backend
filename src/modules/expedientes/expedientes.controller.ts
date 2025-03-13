@@ -74,23 +74,22 @@ export class ExpedientesController {
         `Tipo de documento ${documentType} no soportado`,
       );
     }
-
-    // Usa el DtoClass para la validación con el ValidationPipe
+  
     const dtoInstance = Object.assign(new DtoClass(), createDto);
     await new ValidationPipe({ whitelist: true }).transform(dtoInstance, {
       type: 'body',
       metatype: DtoClass,
     });
-
+  
     try {
-      const document = await this.expedientesService.createOrUpdateDocument(
+      const document = await this.expedientesService.createDocument(
         documentType,
         dtoInstance,
       );
       return { message: `${documentType} creado exitosamente`, data: document };
     } catch (error) {
       console.error('Error detallado:', error);
-      throw new BadRequestException(`Error al crear el ${documentType}`, error);
+      throw new BadRequestException(`Error al crear el ${documentType}`);
     }
   }
 
@@ -137,6 +136,7 @@ export class ExpedientesController {
       }),
     }),
   )
+
   async uploadDocument(
     @Param('trabajadorId') trabajadorId: string,
     @Body() createDocumentoExternoDto: CreateDocumentoExternoDto,
@@ -208,44 +208,42 @@ export class ExpedientesController {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
-
+  
     const DtoClass = this.updateDtos[documentType];
     if (!DtoClass) {
       throw new BadRequestException(
         `Tipo de documento ${documentType} no soportado`,
       );
     }
-
-    // Usa el DtoClass para la validación con el ValidationPipe
+  
     const dtoInstance = Object.assign(new DtoClass(), updateDto);
     await new ValidationPipe({ whitelist: true }).transform(dtoInstance, {
       type: 'body',
       metatype: DtoClass,
     });
-
-    let updatedDocument = null;
-    if (documentType === 'documentoExterno') {
-      updatedDocument = await this.expedientesService.upsertDocumentoExterno(
-        id,
-        dtoInstance,
-      );
-    } else {
-      updatedDocument = await this.expedientesService.updateDocument(
-        documentType,
-        id,
-        dtoInstance,
-      );
+  
+    try {
+      let updatedDocument;
+      if (documentType === 'documentoExterno') {
+        updatedDocument = await this.expedientesService.upsertDocumentoExterno(
+          id,
+          dtoInstance,
+        );
+      } else {
+        updatedDocument = await this.expedientesService.updateOrCreateDocument(
+          documentType,
+          id,
+          dtoInstance,
+        );
+      }
+  
+      return { message: `${documentType} actualizado`, data: updatedDocument };
+    } catch (error) {
+      console.error('Error detallado:', error);
+      throw new BadRequestException(`Error al actualizar el ${documentType}`);
     }
-
-    if (!updatedDocument) {
-      return {
-        message: `No se pudo actualizar el documento de tipo ${documentType} con id ${id}`,
-      };
-    }
-
-    return { message: `${documentType} actualizado`, data: updatedDocument };
   }
-
+  
   @Delete(':documentType/eliminar/:id')
   async removeDocument(
     @Param('documentType') documentType: string,

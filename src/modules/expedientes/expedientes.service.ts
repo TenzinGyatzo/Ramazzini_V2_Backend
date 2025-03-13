@@ -14,6 +14,8 @@ import { startOfDay, endOfDay } from 'date-fns';
 import { FilesService } from '../files/files.service';
 import { convertirFechaISOaDDMMYYYY } from 'src/utils/dates';
 import path from 'path';
+import { parseISO } from 'date-fns';
+
 
 @Injectable()
 export class ExpedientesService {
@@ -54,47 +56,55 @@ export class ExpedientesService {
     };
   }
 
-  async createOrUpdateDocument(documentType: string, createDto: any): Promise<any> {
+  async createDocument(documentType: string, createDto: any): Promise<any> {
     const model = this.models[documentType];
-    let dateField = this.dateFields[documentType];
+  
+    if (!model) {
+      throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
+    }
+  
+    const createdDocument = new model(createDto);
+    return createdDocument.save();
+  } 
 
+  async updateOrCreateDocument(documentType: string, id: string, updateDto: any): Promise<any> {
+    const model = this.models[documentType];
+    const dateField = this.dateFields[documentType];
+  
     if (!model || !dateField) {
       throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
     }
-
-    const fecha = createDto[dateField];
-    const trabajadorId = createDto.idTrabajador;
-
-    if (!fecha) {
+  
+    const newFecha = parseISO(updateDto[dateField]); // Convertimos a Date en UTC
+    const trabajadorId = updateDto.idTrabajador;
+  
+    if (!newFecha) {
       throw new BadRequestException(`El campo ${dateField} es requerido para este documento`);
     }
-
+  
     if (!trabajadorId) {
       throw new BadRequestException('El campo idTrabajador es requerido');
     }
-
-    const startDate = startOfDay(new Date(fecha));
-    const endDate = endOfDay(new Date(fecha));
-
-    // Busca un documento existente para el tipo, trabajador y la fecha
-    const existingDocument = await model.findOne({
-      idTrabajador: trabajadorId,
-      [dateField]: { $gte: startDate, $lte: endDate },
-    }).exec();
-
-    // console.log(`Buscando documento existente para tipo: ${documentType}, trabajador: ${trabajadorId}, fecha: ${fecha}`);
-
-    if (existingDocument) {
-      // console.log(`Documento encontrado, actualizando: ${existingDocument._id}`);
-      // Si ya existe, actualízalo
-      return model.findByIdAndUpdate(existingDocument._id, createDto, { new: true }).exec();
+  
+    const existingDocument = await model.findById(id).exec();
+    
+    if (!existingDocument) {
+      throw new BadRequestException(`Documento con ID ${id} no encontrado`);
     }
-
-    // console.log('No se encontró documento existente, creando uno nuevo');
-    // Si no existe, crea uno nuevo
-    const createdDocument = new model(createDto);
-    return createdDocument.save();
-  }
+  
+    const oldFecha = new Date(existingDocument[dateField]); // Convertimos a Date en UTC
+  
+    // **Normalizamos ambas fechas en UTC para comparación correcta**
+    if (newFecha.toISOString() !== oldFecha.toISOString()) {
+      const newDocumentData = { ...updateDto };
+      delete newDocumentData._id;
+  
+      const newDocument = new model(newDocumentData);
+      return newDocument.save();
+    }
+  
+    return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
+  } 
 
   async uploadDocument(createDto: any): Promise<any> {
     const model = this.models['documentoExterno'];
@@ -316,8 +326,7 @@ export class ExpedientesService {
 
     const result = await model.findByIdAndDelete(id).exec();
     return result !== null;
-  }
-  
+  } 
 }
 
 function formatDocumentName(documentType: string, fecha: string): string {

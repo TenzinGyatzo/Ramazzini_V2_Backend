@@ -43,7 +43,7 @@ export class TrabajadoresController {
   async create(@Body() createTrabajadorDto: CreateTrabajadorDto) {
     try {
       const trabajador = await this.trabajadoresService.create(createTrabajadorDto);
-      console.log('Trabajador creado exitosamente:', trabajador); // Depuración: Trabajador creado
+      // console.log('Trabajador creado exitosamente:', trabajador); // Depuración: Trabajador creado
       return { message: 'Trabajador registrado', data: trabajador };
     } catch (error) {
       console.error('Error al registrar el trabajador:', error); // Depuración: Error capturado

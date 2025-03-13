@@ -40,8 +40,8 @@ export class EmpresasController {
     })
   )
   async create(@Body() createEmpresaDto: CreateEmpresaDto, @UploadedFile() file: Express.Multer.File) {
-    console.log('Archivo recibido:', file);
-    console.log('Datos de la empresa:', createEmpresaDto);
+    // console.log('Archivo recibido:', file);
+    // console.log('Datos de la empresa:', createEmpresaDto);
 
     try {
       if (file) {

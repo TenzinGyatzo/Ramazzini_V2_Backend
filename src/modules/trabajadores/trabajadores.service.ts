@@ -182,36 +182,45 @@ export class TrabajadoresService {
     return fullPath;
   }
 
-  private async eliminarArchivosDeDocumentos(documentos: any[], session: any): Promise<boolean> {
-    if (documentos.length === 0) {
-      console.log(`[DEBUG] No hay archivos asociados para eliminar.`);
-      return true;
-    }
+  private async eliminarArchivosDeDocumentos(documentos: any[]): Promise<boolean> {
+    if (documentos.length === 0) return true;
   
-    console.log(`[DEBUG] Eliminando ${documentos.length} archivos asociados...`);
+    console.log(`[DEBUG] Verificando eliminación de ${documentos.length} archivos asociados...`);
   
     let eliminacionesExitosas = 0;
     let erroresEncontrados = 0;
+    const archivosAEliminar: string[] = [];
   
     try {
+      // 1️⃣ Verificar que los archivos existen antes de eliminarlos
+      for (const doc of documentos) {
+        let fullPath = '';
+  
+        if ('rutaPDF' in doc && doc.rutaPDF) {
+          fullPath = this.buildFilePath(doc.rutaPDF, doc);
+        } else if ('rutaDocumento' in doc && doc.rutaDocumento) {
+          fullPath = this.buildFilePath(doc.rutaDocumento, doc);
+        }
+  
+        if (!fullPath) continue;
+  
+        archivosAEliminar.push(fullPath);
+      }
+  
+      // Si no hay archivos a eliminar, salir exitosamente
+      if (archivosAEliminar.length === 0) return true;
+  
+      console.log(`[DEBUG] Se han identificado ${archivosAEliminar.length} archivos a eliminar.`);
+  
+      // 2️⃣ Intentar eliminar los archivos solo después de confirmar la eliminación en la base de datos
       await Promise.all(
-        documentos.map(async (doc) => {
-          let fullPath = '';
-  
-          if ('rutaPDF' in doc && doc.rutaPDF) {
-            fullPath = this.buildFilePath(doc.rutaPDF, doc);
-          } else if ('rutaDocumento' in doc && doc.rutaDocumento) {
-            fullPath = this.buildFilePath(doc.rutaDocumento, doc);
-          }
-  
-          if (!fullPath) return; // Si la ruta está vacía, omitir el archivo
-  
+        archivosAEliminar.map(async (filePath) => {
           try {
-            await this.filesService.deleteFile(fullPath);
+            await this.filesService.deleteFile(filePath);
             eliminacionesExitosas++;
           } catch (error) {
             erroresEncontrados++;
-            console.error(`[ERROR] No se pudo eliminar el archivo ${fullPath}: ${error.message}`);
+            console.error(`[ERROR] No se pudo eliminar el archivo ${filePath}: ${error.message}`);
           }
         })
       );
@@ -227,15 +236,14 @@ export class TrabajadoresService {
     }
   }
   
-
   async remove(id: string): Promise<boolean> {
     const session = await this.trabajadorModel.db.startSession();
   
     try {
       await session.withTransaction(async () => {
-        // console.log(`[DEBUG] Iniciando eliminación de Trabajador con ID: ${id}`);
+        // console.log(`[DEBUG] Eliminando Trabajador con ID: ${id}...`);
   
-        // 1. Buscar documentos del trabajador
+        // 1️⃣ Buscar documentos del trabajador
         const documentos = (
           await Promise.all([
             this.historiaClinicaModel.find({ idTrabajador: id }).session(session).exec(),
@@ -250,15 +258,9 @@ export class TrabajadoresService {
         ).flat();
   
         if (documentos.length > 0) {
-          // console.log(`[DEBUG] Eliminando ${documentos.length} documentos y archivos asociados...`);
+          // console.log(`[DEBUG] Verificando que se pueden eliminar ${documentos.length} documentos asociados...`);
   
-          // 2. Intentar eliminar archivos PDF asociados a los documentos
-          const eliminacionExitosa = await this.eliminarArchivosDeDocumentos(documentos, session);
-          if (!eliminacionExitosa) {
-            throw new Error('Error eliminando archivos.');
-          }
-  
-          // 3. Eliminar documentos de la base de datos
+          // 2️⃣ Intentar eliminar los documentos en la base de datos primero
           await Promise.all([
             this.historiaClinicaModel.deleteMany({ idTrabajador: id }).session(session),
             this.exploracionFisicaModel.deleteMany({ idTrabajador: id }).session(session),
@@ -269,18 +271,23 @@ export class TrabajadoresService {
             this.documentoExternoModel.deleteMany({ idTrabajador: id }).session(session),
             this.notaMedicaModel.deleteMany({ idTrabajador: id }).session(session),
           ]);
+  
+          // 3️⃣ Si la eliminación en la base de datos fue exitosa, proceder a eliminar los archivos
+          console.log(`[DEBUG] Eliminación de registros en la base de datos completada. Procediendo con eliminación de archivos...`);
+          const eliminacionExitosa = await this.eliminarArchivosDeDocumentos(documentos);
+          if (!eliminacionExitosa) {
+            throw new Error('Error eliminando archivos.');
+          }
         } else {
           console.log(`[DEBUG] No hay documentos asociados, eliminando directamente el Trabajador.`);
         }
   
-        // 4. Eliminar el trabajador
+        // 4️⃣ Eliminar el trabajador
         const result = await this.trabajadorModel.findByIdAndDelete(id).session(session);
   
         if (!result) {
-          throw new Error('No se pudo eliminar el Trabajador.');
+          throw new Error(`No se pudo eliminar el Trabajador con ID: ${id}.`);
         }
-  
-        // console.log(`[DEBUG] Eliminación del Trabajador completada con éxito.`);
       });
   
       session.endSession();
@@ -290,7 +297,8 @@ export class TrabajadoresService {
       session.endSession();
       return false;
     }
-  }   
+  }
+  
 
   async exportarTrabajadores(idCentroTrabajo: string): Promise<Buffer> {
     // Consultar trabajadores del centro de trabajo especificado
