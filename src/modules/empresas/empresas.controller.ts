@@ -40,6 +40,7 @@ export class EmpresasController {
     })
   )
   async create(@Body() createEmpresaDto: CreateEmpresaDto, @UploadedFile() file: Express.Multer.File) {
+    
     // console.log('Archivo recibido:', file);
     // console.log('Datos de la empresa:', createEmpresaDto);
 
@@ -111,7 +112,11 @@ export class EmpresasController {
       })
     })
   )
-  async update(@Param('id') id: string, @Body() updateEmpresaDto: UpdateEmpresaDto, file: Express.Multer.File) {
+  async update(@Param('id') id: string, @Body() updateEmpresaDto: UpdateEmpresaDto, @UploadedFile() file: Express.Multer.File) {
+
+    // console.log('Archivo recibido:', file);
+    // console.log('Datos de la empresa:', updateEmpresaDto);
+
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
