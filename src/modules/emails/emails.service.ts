@@ -9,6 +9,7 @@ import * as os from 'os';
 import pidusage from 'pidusage';
 import { execSync } from 'child_process';
 import { get } from 'mongoose';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class EmailsService {
@@ -413,6 +414,16 @@ export class EmailsService {
     }
   }
 
+  async checkMongoConnection(): Promise<string> {
+    try {
+        const db = await mongoose.createConnection(process.env.MONGODB_URI);
+        await db.close();
+        return "✅ Conexión con MongoDB exitosa.";
+    } catch (error) {
+        return "⚠️ No se pudo conectar a MongoDB.";
+    }
+  }
+
   async getActiveConnections(): Promise<string> {
     try {
       return os.platform() === 'win32'
@@ -428,20 +439,26 @@ export class EmailsService {
     
     // Cargar el historial existente
     let history = fs.existsSync(historyPath) ? fs.readFileSync(historyPath, 'utf8').split('\n') : [];
-  
+
     // Filtrar solo los reportes de los últimos 2 días
     const twoDaysAgo = new Date();
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-    
+
     history = history.filter(line => {
-      const match = line.match(/\d{4}-\d{2}-\d{2}/);
-      return match ? new Date(match[0]) >= twoDaysAgo : false;
+        const match = line.match(/\d{4}-\d{2}-\d{2}/);
+        return match ? new Date(match[0]) >= twoDaysAgo : false;
     });
-  
+
+    // ✅ Verificar si el nuevo reporte ya está en el historial
+    if (history.includes(report.trim())) {
+        console.log("⚠️ Reporte duplicado detectado. No se guardará nuevamente.");
+        return;
+    }
+
     // Agregar el nuevo reporte y escribir de nuevo
     history.push(report);
     fs.writeFileSync(historyPath, history.join('\n'), 'utf8');
-  }
+}
   
   async getPreviousUsage(): Promise<string> {
     const historyPath = path.join(__dirname, 'usage_history.txt');
@@ -471,7 +488,7 @@ export class EmailsService {
     const diskStats = await this.getDiskUsage();
     const runningProcesses = execSync("ps aux | wc -l").toString().trim();
   
-    const dbStatus = await this.checkServiceStatus('mongod');
+    const dbStatus = await this.checkMongoConnection();
     const nginxStatus = await this.checkServiceStatus('nginx');
     const activeConnections = await this.getActiveConnections();
   
