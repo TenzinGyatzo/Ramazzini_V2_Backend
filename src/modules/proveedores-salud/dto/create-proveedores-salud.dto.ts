@@ -71,6 +71,13 @@ export class CreateProveedoresSaludDto {
   @IsString({ message: 'El sitio web debe ser un string' })
   sitioWeb?: string;
 
+  @IsOptional()
+  @IsString({ message: 'El color del informe debe ser un string' })
+  colorInforme: string;
+
+  @IsOptional()
+  semaforizacionActivada: boolean;
+
   @IsBoolean({ message: 'El campo termsAccepted debe ser un booleano' })
   termsAccepted: boolean;
 

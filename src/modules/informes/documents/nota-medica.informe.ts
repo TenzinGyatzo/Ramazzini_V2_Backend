@@ -146,6 +146,7 @@ interface ProveedorSalud {
   telefono: string;
   correoElectronico: string;
   sitioWeb: string;
+  colorInforme: string;
 }
 
 // ==================== INFORME PRINCIPAL ====================

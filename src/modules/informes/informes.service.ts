@@ -23,6 +23,7 @@ import * as fs from 'fs';
 import { UsersService } from '../users/users.service';
 import { MedicosFirmantesService } from '../medicos-firmantes/medicos-firmantes.service';
 import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.service';
+import { se } from 'date-fns/locale';
 
 @Injectable()
 export class InformesService {
@@ -116,6 +117,7 @@ export class InformesService {
         telefono: proveedorSalud.telefono || "",
         correoElectronico: proveedorSalud.correoElectronico || "",
         sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
       }
     : {
         nombre: "",
@@ -129,6 +131,7 @@ export class InformesService {
         telefono: "",
         correoElectronico: "",
         sitioWeb: "",
+        colorInforme: "#343A40",
       };
 
     // Formatear la fecha para el nombre del archivo
@@ -363,6 +366,8 @@ export class InformesService {
         telefono: proveedorSalud.telefono || "",
         correoElectronico: proveedorSalud.correoElectronico || "",
         sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
+        semaforizacionActivada: proveedorSalud.semaforizacionActivada || false,
       }
     : {
         nombre: "",
@@ -376,6 +381,8 @@ export class InformesService {
         telefono: "",
         correoElectronico: "",
         sitioWeb: "",
+        colorInforme: "#343A40",
+        semaforizacionActivada: false,
       };
 
     // Formatear la fecha para el nombre del archivo
@@ -652,6 +659,7 @@ export class InformesService {
         telefono: proveedorSalud.telefono || "",
         correoElectronico: proveedorSalud.correoElectronico || "",
         sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
       }
     : {
         nombre: "",
@@ -665,6 +673,7 @@ export class InformesService {
         telefono: "",
         correoElectronico: "",
         sitioWeb: "",
+        colorInforme: "#343A40",
       };
 
     const fecha = convertirFechaADDMMAAAA(examenVista.fechaExamenVista)
@@ -815,6 +824,7 @@ export class InformesService {
         telefono: proveedorSalud.telefono || "",
         correoElectronico: proveedorSalud.correoElectronico || "",
         sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
       }
     : {
         nombre: "",
@@ -828,6 +838,7 @@ export class InformesService {
         telefono: "",
         correoElectronico: "",
         sitioWeb: "",
+        colorInforme: "#343A40",
       };
 
     const fecha = convertirFechaADDMMAAAA(
@@ -1027,6 +1038,7 @@ export class InformesService {
         telefono: proveedorSalud.telefono || "",
         correoElectronico: proveedorSalud.correoElectronico || "",
         sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
       }
     : {
         nombre: "",
@@ -1040,6 +1052,7 @@ export class InformesService {
         telefono: "",
         correoElectronico: "",
         sitioWeb: "",
+        colorInforme: "#343A40",
       };
 
     const fecha = convertirFechaADDMMAAAA(historiaClinica.fechaHistoriaClinica)

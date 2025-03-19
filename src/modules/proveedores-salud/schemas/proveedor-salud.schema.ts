@@ -43,6 +43,10 @@ export class ProveedorSalud extends Document {
   correoElectronico: string;
   @Prop()
   sitioWeb: string;
+  @Prop({ default: '#343A40' })
+  colorInforme: string;
+  @Prop({ default: false })
+  semaforizacionActivada: boolean;
   @Prop()
   termsAccepted: boolean;
   @Prop()

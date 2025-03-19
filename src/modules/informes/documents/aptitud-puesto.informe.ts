@@ -38,6 +38,13 @@ const styles: StyleDictionary = {
     alignment: 'center',
     margin: [0, 0, 0, 0],
   },
+  result: {
+    fontSize: 18,
+    lineHeight: 1,
+    bold: true,
+    alignment: 'center',
+    margin: [0, 0, 0, 0],
+  },
 
   label: {
     fontSize: 10,
@@ -62,6 +69,7 @@ const styles: StyleDictionary = {
   },
   tableHeader: {
     // fillColor: '#262626', // Casi Negro
+    // fillColor: '#2BB9D9' // Azul claro
     // fillColor: '#007BFF' // Azul profesional
     // fillColor: '#004085' // Azul Oscuro
     // fillColor: '#28A745' // Verde médico
@@ -113,19 +121,46 @@ const createTableCell = (
   color,
 });
 
-const getColorForAptitud = (aptitudPuesto: string): string | undefined => {
+const getColorForAptitud = (aptitudPuesto: string, semaforizacionActivada: boolean): string | undefined => {
+  if (!semaforizacionActivada) return undefined; 
+
   switch (aptitudPuesto) {
     case 'Apto Sin Restricciones':
-      return undefined; // 'green'
+      return 'limegreen'; // 'green'
     case 'Apto Con Precaución':
-      return undefined; // 'orange'
+      return 'orange'; // 'orange'
     case 'Apto Con Restricciones':
-      return undefined; // 'orange'
+      return 'orange'; // 'orange'
     case 'No Apto':
-      return undefined; // 'red'
+      return 'red'; // 'red'
     case 'Evaluación No Completada':
     default:
       return undefined; // No cambia el color
+  }
+};
+
+const ajustarAptitudPorGenero = (aptitudPuesto: string, sexo: string): string => {
+  if (sexo === 'Femenino') {
+    return aptitudPuesto.replace('Apto', 'Apta');
+  }
+  return aptitudPuesto;
+};
+
+
+const getAptitudDescription = (aptitudPuesto: string): string => {
+  switch (aptitudPuesto) {
+    case 'Apto Sin Restricciones':
+      return 'Apto sin restricciones. No tiene impedimentos para el puesto al que aspira o desempeña.';
+    case 'Apto Con Precaución':
+      return 'Apto con precaución. Requiere vigilancia médica más frecuente.';
+    case 'Apto Con Restricciones':
+      return 'Apto con restricciones. Requiere adaptaciones razonables para asegurar la seguridad y salud.';
+    case 'No Apto':
+      return 'No apto. No está permitido el desempeño del puesto al que aspira.';
+    case 'Evaluación No Completada':
+      return 'Evaluación no completada. Para concluir, requiere evaluaciones adicionales o tratamiento médico.';
+    default:
+      return '';
   }
 };
 
@@ -250,6 +285,8 @@ interface ProveedorSalud {
   telefono: string;
   correoElectronico: string;
   sitioWeb: string;
+  colorInforme: string;  
+  semaforizacionActivada: boolean;
 }
 
 // ==================== INFORME PRINCIPAL ====================
@@ -265,18 +302,15 @@ export const aptitudPuestoInforme = (
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
 
-  ///////////// ESPECÍFICO PARA EL DR. GARCÍA //////////////
-  // Verificar si el RFC es el especificado
-  const isRFCMatch = proveedorSalud.RFC === 'ECS171130Q41';
-
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
 
   updatedStyles.tableHeader = {
     ...updatedStyles.tableHeader,
-    fillColor: isRFCMatch ? '#2BB9D9' : '#343A40', // Azul del logo
+    fillColor: proveedorSalud.colorInforme || '#343A40',
   };
-  //////////////////////////////////////////////////////////
+
+  const aptitudPuestoModificado = ajustarAptitudPorGenero(aptitud.aptitudPuesto, trabajador.sexo);
 
   const firma: Content = medicoFirmante.firma?.data
   ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 65 }
@@ -418,11 +452,7 @@ export const aptitudPuestoInforme = (
   }
 
   const aptitudPuesto = aptitud.aptitudPuesto;
-  const aptitudColor = getColorForAptitud(aptitudPuesto);
-
-  // Función para determinar si se coloca 'XX' o un string vacío
-  const getXXForAptitud = (option: string): string =>
-    aptitudPuesto === option ? 'XX' : '';
+  const aptitudColor = getColorForAptitud(aptitudPuesto, proveedorSalud.semaforizacionActivada);
 
   return {
     pageSize: 'LETTER',
@@ -532,90 +562,27 @@ export const aptitudPuestoInforme = (
         },
         margin: [0, 0, 0, 6],
       },
+
       // Aptitud al puesto
       {
         style: 'table',
         table: {
-          widths: ['7%', '*'],
+          widths: ['*'], // Una sola columna que ocupa todo el ancho
           body: [
             [
               {
                 text: 'BASADO EN LA INFORMACIÓN ANTERIOR SE HA DETERMINADO:',
                 style: 'tableHeader',
                 alignment: 'center',
-                colSpan: 2, // Aquí se indica que la celda debe abarcar dos columnas.
               },
-              {}, // Esta celda debe permanecer vacía para que la combinación funcione.
             ],
             [
-              createTableCell(
-                getXXForAptitud('Apto Sin Restricciones'),
-                'sectionHeader',
-                'center',
-                aptitudPuesto === 'Apto Sin Restricciones' ? aptitudColor : undefined
-              ),
-              createTableCell(
-                'Apto sin restricciones. No tiene impedimentos para el puesto al que aspira o desempeña.',
-                'preset',
-                'left',
-                aptitudPuesto === 'Apto Sin Restricciones' ? aptitudColor : undefined
-              ),
-            ],
-            [
-              createTableCell(
-                getXXForAptitud('Apto Con Precaución'),
-                'sectionHeader',
-                'center',
-                aptitudPuesto === 'Apto Con Precaución' ? aptitudColor : undefined
-              ),
-              createTableCell(
-                'Apto con precaución. Requiere vigilancia médica más frecuente.',
-                'preset',
-                'left',
-                aptitudPuesto === 'Apto Con Precaución' ? aptitudColor : undefined
-              ),
-            ],
-            [
-              createTableCell(
-                getXXForAptitud('Apto Con Restricciones'),
-                'sectionHeader',
-                'center',
-                aptitudPuesto === 'Apto Con Restricciones' ? aptitudColor : undefined
-              ),
-              createTableCell(
-                'Apto con restricciones. Requiere adaptaciones razonables para asegurar la seguridad y salud.',
-                'preset',
-                'left',
-                aptitudPuesto === 'Apto Con Restricciones' ? aptitudColor : undefined
-              ),
-            ],
-            [
-              createTableCell(
-                getXXForAptitud('No Apto'),
-                'sectionHeader',
-                'center',
-                aptitudPuesto === 'No Apto' ? aptitudColor : undefined
-              ),
-              createTableCell(
-                'No apto. No está permitido el desempeño del puesto al que aspira.',
-                'preset',
-                'left',
-                aptitudPuesto === 'No Apto' ? aptitudColor : undefined
-              ),
-            ],
-            [
-              createTableCell(
-                getXXForAptitud('Evaluación No Completada'),
-                'sectionHeader',
-                'center',
-                aptitudPuesto === 'Evaluación No Completada' ? aptitudColor : undefined
-              ),
-              createTableCell(
-                'Evaluación no completada. Para concluir, requiere evaluaciones adicionales o tratamiento médico.',
-                'preset',
-                'left',
-                aptitudPuesto === 'Evaluación No Completada' ? aptitudColor : undefined
-              ),
+              {
+                text: aptitudPuestoModificado.toUpperCase(), // Mostrar la aptitud en mayúsculas
+                style: 'result',
+                alignment: 'center',
+                color: aptitudColor, // Aplicar el color correspondiente
+              },
             ],
           ],
         },
@@ -805,6 +772,6 @@ export const aptitudPuestoInforme = (
       ],
     },
     // Estilos
-    styles: updatedStyles, // Regresar a styles cuando se elimine la parte específica para el Dr. García
+    styles: updatedStyles, 
   };
 };
