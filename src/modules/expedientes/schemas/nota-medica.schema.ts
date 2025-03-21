@@ -3,24 +3,29 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
+const tipoNota = ["Inicial", "Seguimiento", "Alta"];
+
 @Schema()
 export class NotaMedica extends Document {
-    @Prop({ required: true })
-    fechaNotaMedica: Date
+    @Prop({enum: tipoNota})
+    tipoNota: string;
 
     @Prop({ required: true })
-    motivoConsulta: string
+    fechaNotaMedica: Date;
+
+    @Prop({ required: true })
+    motivoConsulta: string;
 
     @Prop()
-    antecedentes: string
+    antecedentes: string;
 
-    @Prop({ required: true })
-    exploracionFisica: string
+    @Prop()
+    exploracionFisica: string;
 
-    @Prop({ required: true })
+    @Prop()
     tensionArterialSistolica: number;
   
-    @Prop({ required: true })
+    @Prop()
     tensionArterialDiastolica: number;
 
     @Prop()
@@ -36,16 +41,16 @@ export class NotaMedica extends Document {
     saturacionOxigeno: number;
 
     @Prop({ required: true })
-    diagnostico: string
+    diagnostico: string;
 
-    @Prop({ required: true })
-    tratamiento: string
+    @Prop({ type: [String]})
+    tratamiento: string[];
+
+    @Prop({ type: [String]})
+    recomendaciones: string;
 
     @Prop()
-    recomendaciones: string
-
-    @Prop()
-    observaciones: string
+    observaciones: string;
 
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
     idTrabajador: Trabajador;

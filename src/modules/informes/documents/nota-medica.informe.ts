@@ -30,7 +30,9 @@ const styles: StyleDictionary = {
     margin: [3, 3, 3, 3],
   },
   label: { fontSize: 11 },
-  value: { bold: true, fontSize: 11 },
+  signoVital: { fontSize: 9 },
+  // value: { bold: true, fontSize: 11 },
+  paragraph: { fontSize: 11, alignment: 'justify' },
   tableHeader: {
     fillColor: '#343A40',
     color: '#FFFFFF',
@@ -49,7 +51,7 @@ const styles: StyleDictionary = {
 
 // ==================== CONTENIDO ====================
 const headerText: Content = {
-  text: '                                                                                                              ANTIDOPING\n',
+  text: '                                                              CONSTANCIA DE VALORACIÓN MÉDICA\n',
   style: 'header',
   alignment: 'right',
   margin: [0, 35, 40, 0],
@@ -70,6 +72,40 @@ const createConditionalTableCell = (text: string): Content => ({
   margin: [4, 4, 4, 4],
   color: text.toUpperCase() === 'POSITIVO' ? 'red' : 'black', // Aplica rojo si es "POSITIVO"
 });
+
+function construirSignosVitales(notaMedica): Content {
+  const signosVitales = [];
+
+  const agregarDato = (etiqueta, valor, unidad) => {
+    if (valor !== undefined && valor !== null && valor !== '') {
+      if (signosVitales.length > 0) {
+        signosVitales.push({ text: '  |  ' }); // Agrega el separador solo si ya hay datos previos
+      }
+      signosVitales.push({ text: ` ${etiqueta}: `, bold: true });
+      signosVitales.push({ text: `${valor}${unidad}` });
+    }
+  };
+
+  agregarDato('TA', 
+    notaMedica.tensionArterialSistolica && notaMedica.tensionArterialDiastolica 
+      ? `${notaMedica.tensionArterialSistolica}/${notaMedica.tensionArterialDiastolica}` 
+      : null, 
+    ' mmHg'
+  );
+  agregarDato('FC', notaMedica.frecuenciaCardiaca, ' lpm');
+  agregarDato('FR', notaMedica.frecuenciaRespiratoria, ' lpm');
+  agregarDato('Temp', notaMedica.temperatura, ' °C');
+  agregarDato('SatO2', notaMedica.saturacionOxigeno, '%');
+
+  return {
+    text: [
+      { text: 'Signos Vitales: ', bold: true },
+      ...signosVitales
+    ],
+    margin: [0, 0, 0, 10],
+    style: 'paragraph'
+  };
+}
 
 function formatearFechaUTC(fecha: Date): string {
   if (!fecha || isNaN(fecha.getTime())) return '';
@@ -101,6 +137,7 @@ interface Trabajador {
 }
 
 interface NotaMedica {
+  tipoNota: string;
   fechaNotaMedica: Date;
   motivoConsulta: string;
   antecedentes: string;
@@ -112,8 +149,8 @@ interface NotaMedica {
   temperatura: number;
   saturacionOxigeno: number;
   diagnostico: string;
-  tratamiento: string;
-  recomendaciones: string;
+  tratamiento: string[];
+  recomendaciones: string[];
   observaciones: string;
 }
 
@@ -166,6 +203,29 @@ export const notaMedicaInforme = (
   ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
   : { text: '' };
 
+  const tipoNota = notaMedica.tipoNota;
+  const tipoNotaTexto = [
+    { text: 'Inicial (', style: 'fecha' },
+    {
+      text: tipoNota === 'Inicial' ? 'X' : ' ',
+      style: 'fecha',
+      bold: tipoNota === 'Inicial',
+    },
+    { text: ')    Seguimiento (', style: 'fecha' },
+    {
+      text: tipoNota === 'Seguimiento' ? 'X' : ' ',
+      style: 'fecha',
+      bold: tipoNota === 'Seguimiento',
+    },
+    { text: ')    Alta (', style: 'fecha' },
+    {
+      text: tipoNota === 'Alta' ? 'X' : ' ',
+      style: 'fecha',
+      bold: tipoNota === 'Alta',
+    },
+    { text: ')', style: 'fecha' },
+  ];
+
   return {
     pageSize: 'LETTER',
     pageMargins: [40, 70, 40, 80],
@@ -173,31 +233,61 @@ export const notaMedicaInforme = (
       columns: [logo, headerText],
     },
     content: [
-      // Nombre de la empresa y fecha
+      // Fecha
+      {
+        style: 'table',
+        table: {
+          widths: ['75%', '25%'],
+          body: [
+        [
+          {
+            text: tipoNotaTexto,
+            style: 'fecha',
+            alignment: 'right',
+            margin: [0, 4, 0, 0],
+          },
+          {
+            text: [
+          { text: 'Fecha: ', style: 'fecha', bold: false },
+          {
+            text: formatearFechaUTC(notaMedica.fechaNotaMedica),
+            style: 'fecha',
+            bold: true,
+          },
+            ],
+            margin: [0, 3, 0, 0],
+          },
+        ],
+          ],
+        },
+        layout: 'noBorders',
+        margin: [0, 0, 0, 0],
+      },
+      // Datos del trabajador
       {
         style: 'table',
         table: {
           widths: ['70%', '30%'],
           body: [
-            [
-              {
-                text: nombreEmpresa,
-                style: 'nombreEmpresa',
-                alignment: 'center',
-                margin: [0, 0, 0, 0],
-              },
-              {
-                text: [
-                  { text: 'Fecha: ', style: 'fecha', bold: false },
-                  {
-                    text: formatearFechaUTC(notaMedica.fechaNotaMedica),
-                    style: 'fecha',
-                    bold: true,
-                  },
-                ],
-                margin: [0, 3, 0, 0],
-              },
+        [
+          {
+            text: trabajador.nombre,
+            style: 'nombreEmpresa',
+            alignment: 'left',
+            margin: [0, 0, 0, 0],
+          },
+          {
+            text: [
+          { text: 'CEL: ', style: 'fecha', bold: false },
+          {
+            text: trabajador.telefono ? `${trabajador.telefono}` : 'No disponible',
+            style: 'fecha',
+            bold: true,
+          },
             ],
+            margin: [0, 3, 0, 0],
+          },
+        ],
           ],
         },
         layout: 'noBorders',
@@ -206,10 +296,11 @@ export const notaMedicaInforme = (
       // Datos del trabajador
       {
         text: [
-          { text: `${trabajador.nombre}  CEL: ${trabajador.telefono}\n`, bold: true },
           { text: `Se trata de ` },
           { text: trabajador.sexo === 'Masculino' ? 'un trabajador' : 'una trabajadora', bold: true },
-          { text: ` de ${trabajador.edad} años de edad, que labora en la empresa ` },
+          { text: ` de ` },
+          { text: ` ${trabajador.edad} `, bold: true },
+          { text: ` de edad, que labora en la empresa ` },
           { text: `${nombreEmpresa}`, bold: true },
           { text: `, ocupando el puesto de ` },
           { text: `${trabajador.puesto}`, bold: true },
@@ -223,35 +314,87 @@ export const notaMedicaInforme = (
           { text: `${trabajador.hijos} ${trabajador.hijos === 1 ? 'hijo' : 'hijos'}.`, bold: true }
         ],
         margin: [0, 0, 0, 10],
-        style: 'value'
+        style: 'paragraph'
+      },
+      // Motivo de consulta
+      {
+        text: [
+          { text: `Motivo de consulta:`, bold: true },
+          { text: ` ${notaMedica.motivoConsulta} `},
+        ],
+        margin: [0, 0, 0, 10],
+        style: 'paragraph'
+      },
+
+      // Antecedentes
+      notaMedica.antecedentes ? {
+        text: [
+          { text: `Antecedentes:`, bold: true },
+          { text: ` ${notaMedica.antecedentes} `},
+        ],
+        margin: [0, 0, 0, 10],
+        style: 'paragraph'
+      } : null,
+
+      // Exploracion Física
+      {
+        text: [
+          { text: `Exploración Física:`, bold: true },
+          { text: ` ${notaMedica.exploracionFisica} `},
+        ],
+        margin: [0, 0, 0, 10],
+        style: 'paragraph'
       },
       
-      // Tabla de resultados
+      // Signos Vitales
+      construirSignosVitales(notaMedica),
+
+      // Diagnóstico
       {
-        style: 'table',
-        table: {
-          widths: ['33.33%', '33.33%', '33.33%'],
-          body: [
-            [
-              createTableCell('DROGAS DE ABUSO', 'tableHeader'),
-              createTableCell('RESULTADOS', 'tableHeader'),
-              createTableCell('VALOR DE REFERENCIA', 'tableHeader'),
-            ],
-            [
-              createTableCell('MARIHUANA', 'sectionHeader'),
-              createConditionalTableCell('QUITAR ESTA TABLA'),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ],
-          ],
-        },
-        layout: {
-          hLineColor: '#e5e7eb',
-          vLineColor: '#e5e7eb',
-          hLineWidth: () => 1,
-          vLineWidth: () => 1,
-        },
+        text: [
+          { text: `IDX:`, bold: true },
+          { text: ` ${notaMedica.diagnostico.toUpperCase()} `, bold: true },
+        ],
         margin: [0, 0, 0, 10],
+        style: 'paragraph'
       },
+
+      // Tratamiento
+      notaMedica.tratamiento && notaMedica.tratamiento.length > 0 ? {
+        text: [
+          { text: `TX:`, bold: true },
+          ...notaMedica.tratamiento.flatMap((item, index) => ([
+            { text: `\n     ${index + 1}. `, preserveLeadingSpaces: true }, // Espacios antes del número
+            { text: item, bold: true }
+          ])) // 🔹 Se usa `flatMap` para evitar la anidación de arrays
+        ],
+        margin: [0, 0, 0, 10], // Mantiene formato correcto
+        style: 'paragraph'
+      } : undefined,  // 🔹 Se usa `undefined` en lugar de `null`
+
+      // Recomendaciones
+      notaMedica.recomendaciones && notaMedica.recomendaciones.length > 0 ? {
+        text: [
+          { text: `Recomendaciones:`, bold: true }, // Solo la etiqueta en negrita
+          ...notaMedica.recomendaciones.flatMap((item, index) => ([
+            { text: `\n     ${String.fromCharCode(97 + index)}. `, preserveLeadingSpaces: true }, // Letra en lugar de número
+            { text: item } // Texto normal, sin negrita
+          ])) // 🔹 `flatMap` evita arrays anidados
+        ],
+        margin: [0, 0, 0, 10], // Mantiene formato correcto
+        style: 'paragraph'
+      } : undefined, // 🔹 Se usa `undefined` en lugar de `null`      
+
+      // Observaciones
+      notaMedica.observaciones ? {
+        text: [
+          { text: `Observaciones:`, bold: true },
+          { text: ` ${notaMedica.observaciones} `},
+        ],
+        margin: [0, 0, 0, 10],
+        style: 'paragraph'
+      } : null,
+      
     ],
     // Pie de pagina
     footer: {

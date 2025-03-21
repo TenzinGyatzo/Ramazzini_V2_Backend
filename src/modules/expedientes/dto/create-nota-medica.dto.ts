@@ -1,8 +1,13 @@
 import { Type } from "class-transformer";
-import { IsDate, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 
+const tipoNota = ['Inicial', 'Seguimiento', 'Alta'];
 
 export class CreateNotaMedicaDto {
+
+    @IsNotEmpty({ message: 'El motivo del examen no puede estar vacío' })
+    @IsEnum(tipoNota, { message: 'El motivo del examen debe ser alguno de los siguientes: ' + tipoNota })
+    tipoNota: string;
 
     @IsDate({ message: 'La fecha de la nota médica debe ser una fecha' })
     @Type(() => Date)
@@ -17,8 +22,8 @@ export class CreateNotaMedicaDto {
     @IsString({ message: 'Los antecedentes deben ser un string' })
     antecedentes: string;
 
+    @IsOptional()
     @IsString({ message: 'La exploración física debe ser un string' })
-    @IsNotEmpty({ message: 'La exploración física no puede estar vacía' })
     exploracionFisica: string;
 
     // Signos Vitales
@@ -29,9 +34,9 @@ export class CreateNotaMedicaDto {
     tensionArterialSistolica: number;
 
     @IsOptional()
+    @IsNumber({ maxDecimalPlaces: 0 })
     @Min(40)
     @Max(150)
-    @IsNumber({ maxDecimalPlaces: 0 })
     tensionArterialDiastolica: number;
 
     @IsOptional()
@@ -58,17 +63,17 @@ export class CreateNotaMedicaDto {
     @Max(100)
     saturacionOxigeno: number;
 
+    @IsOptional()
     @IsString({ message: 'El diagnóstico debe ser un string' })
-    @IsNotEmpty({ message: 'El diagnóstico no puede estar vacío' })
     diagnostico: string;
 
-    @IsString({ message: 'El tratamiento debe ser un string' })
-    @IsNotEmpty({ message: 'El tratamiento no puede estar vacío' })
-    tratamiento: string;
+    @IsOptional()
+    @IsString({ each: true, message: 'Cada tratamiento debe ser un string' })
+    tratamiento: string[];
 
     @IsOptional()
-    @IsString({ message: 'Las recomendaciones deben ser un string' })
-    recomendaciones: string;
+    @IsString({ each: true, message: 'Cada recomendación debe ser un string' })
+    recomendaciones: string[];
 
     @IsOptional()
     @IsString({ message: 'Las observaciones deben ser un string' })
