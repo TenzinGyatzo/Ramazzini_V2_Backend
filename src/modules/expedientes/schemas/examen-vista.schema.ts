@@ -7,7 +7,7 @@ const siONo = ["Si", "No"];
 
 const agudezaVisualInterpretaciones = [
   "Visión excepcional",
-  "Visión Normal",
+  "Visión normal",
   "Visión ligeramente reducida",
   "Visión moderadamente reducida",
   "Visión significativamente reducida",
