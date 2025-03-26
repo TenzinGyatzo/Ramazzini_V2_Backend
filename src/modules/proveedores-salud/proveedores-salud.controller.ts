@@ -287,4 +287,9 @@ export class ProveedoresSaludController {
   async getHistoriasClinicasDelMes(@Param('idProveedorSalud') idProveedorSalud: string) {
     return this.proveedoresSaludService.getHistoriasClinicasDelMes(idProveedorSalud);
   }
+
+  @Get('/notas-medicas-del-mes/:idProveedorSalud')
+  async getNotasMedicasDelMes(@Param('idProveedorSalud') idProveedorSalud: string) {
+    return this.proveedoresSaludService.getNotasMedicasDelMes(idProveedorSalud);
+  }
 }

@@ -180,4 +180,80 @@ export class ProveedoresSaludService {
     return result.length > 0 ? result[0].totalHistoriasClinicas : 0;
   }
   
+  async getNotasMedicasDelMes(idProveedorSalud: string) {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const result = await this.proveedoresSaludModel.aggregate([
+        {
+            $match: { _id: new Types.ObjectId(idProveedorSalud) }
+        },
+        {
+            $lookup: {
+                from: "empresas",
+                localField: "_id",
+                foreignField: "idProveedorSalud",
+                as: "empresas"
+            }
+        },
+        { $unwind: "$empresas" },
+        {
+            $lookup: {
+                from: "centrotrabajos",
+                localField: "empresas._id",
+                foreignField: "idEmpresa",
+                as: "centros"
+            }
+        },
+        { $unwind: "$centros" },
+        {
+            $lookup: {
+                from: "trabajadors",
+                localField: "centros._id",
+                foreignField: "idCentroTrabajo",
+                as: "trabajadores"
+            }
+        },
+        { $unwind: "$trabajadores" },
+        {
+            $lookup: {
+                from: "notamedicas",
+                localField: "trabajadores._id",
+                foreignField: "idTrabajador",
+                as: "notas"
+            }
+        },
+        {
+            $project: {
+                notas: {
+                    $filter: {
+                        input: "$notas",
+                        as: "nota",
+                        cond: {
+                            $and: [
+                                { $gte: ["$$nota.createdAt", firstDay] },
+                                { $lte: ["$$nota.createdAt", lastDay] }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                count: { $size: "$notas" }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                totalNotasMedicas: { $sum: "$count" }
+            }
+        }
+    ]);
+
+    return result.length > 0 ? result[0].totalNotasMedicas : 0;
+  }
+  
 }
