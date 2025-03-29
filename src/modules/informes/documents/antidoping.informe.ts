@@ -104,6 +104,11 @@ interface Antidoping {
   anfetaminas: string;
   metanfetaminas: string;
   opiaceos: string;
+  benzodiacepinas?: string;
+  fenciclidina?: string;
+  metadona?: string;
+  barbituricos?: string;
+  antidepresivosTriciclicos?: string;
 }
 
 interface MedicoFirmante {
@@ -270,6 +275,31 @@ export const antidopingInforme = (
               createConditionalTableCell(antidoping.opiaceos),
               createTableCell('NEGATIVO', 'tableCell'),
             ],
+            ...(antidoping.benzodiacepinas ? [[
+              createTableCell('BENZODIACEPINAS', 'sectionHeader'),
+              createConditionalTableCell(antidoping.benzodiacepinas),
+              createTableCell('NEGATIVO', 'tableCell'),
+            ]] : []),
+            ...(antidoping.fenciclidina ? [[
+              createTableCell('FENCICLIDINA', 'sectionHeader'),
+              createConditionalTableCell(antidoping.fenciclidina),
+              createTableCell('NEGATIVO', 'tableCell'),
+            ]] : []),
+            ...(antidoping.metadona ? [[
+              createTableCell('METADONA', 'sectionHeader'),
+              createConditionalTableCell(antidoping.metadona),
+              createTableCell('NEGATIVO', 'tableCell'),
+            ]] : []),
+            ...(antidoping.barbituricos ? [[
+              createTableCell('BARBITURICOS', 'sectionHeader'),
+              createConditionalTableCell(antidoping.barbituricos),
+              createTableCell('NEGATIVO', 'tableCell'),
+            ]] : []),
+            ...(antidoping.antidepresivosTriciclicos ? [[
+              createTableCell('ANTIDEPRESIVOS T.', 'sectionHeader'),
+              createConditionalTableCell(antidoping.antidepresivosTriciclicos),
+              createTableCell('NEGATIVO', 'tableCell'),
+            ]] : []),
           ],
         },
         layout: {
@@ -280,7 +310,7 @@ export const antidopingInforme = (
         },
         margin: [0, 0, 0, 10],
       },
-    ],
+        ],
     // Pie de pagina
     footer: {
       stack: [

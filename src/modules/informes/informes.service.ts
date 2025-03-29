@@ -75,6 +75,11 @@ export class InformesService {
       anfetaminas: antidoping.anfetaminas,
       metanfetaminas: antidoping.metanfetaminas,
       opiaceos: antidoping.opiaceos,
+      benzodiacepinas: antidoping.benzodiacepinas || null,
+      fenciclidina: antidoping.fenciclidina || null,
+      metadona: antidoping.metadona || null,
+      barbituricos: antidoping.barbituricos || null,
+      antidepresivosTriciclicos: antidoping.antidepresivosTriciclicos || null,
     };
 
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);

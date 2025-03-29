@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsString } from "class-validator";
+import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 
 const resultado = ["Positivo", "Negativo"];
@@ -65,6 +65,32 @@ export class CreateAntidopingDto {
     @IsNotEmpty({ message: 'Opiaceos no puede estar vacía' })
     @IsEnum(resultado, { message: 'El resultado de opiaceos debe ser Positivo o Negativo' })
     opiaceos: string;
+
+
+    @IsOptional()
+    @IsString({ message: 'Benzodiacepinas debe ser un string' })
+    @IsEnum(resultado, { message: 'El resultado de benzodiacepinas debe ser Positivo o Negativo' })
+    benzodiacepinas?: string;
+
+    @IsOptional()
+    @IsString({ message: 'fenciclidina debe ser un string' })
+    @IsEnum(resultado, { message: 'El resultado de fenciclidina debe ser Positivo o Negativo' })
+    fenciclidina?: string;
+
+    @IsOptional()
+    @IsString({ message: 'metadona debe ser un string' })
+    @IsEnum(resultado, { message: 'El resultado de metadona debe ser Positivo o Negativo' })
+    metadona?: string;
+
+    @IsOptional()
+    @IsString({ message: 'barbituricos debe ser un string' })
+    @IsEnum(resultado, { message: 'El resultado de barbituricos debe ser Positivo o Negativo' })
+    barbituricos?: string;
+
+    @IsOptional()
+    @IsString({ message: 'antidepresivosTriciclicos debe ser un string' })
+    @IsEnum(resultado, { message: 'El resultado de antidepresivosTriciclicos debe ser Positivo o Negativo' })
+    antidepresivosTriciclicos?: string;
 
     @ApiProperty({
         description: 'El ID del trabajador',

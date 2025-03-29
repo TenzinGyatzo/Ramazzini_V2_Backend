@@ -25,6 +25,21 @@ export class Antidoping extends Document {
     @Prop({ required: true, enum: resultado })
     opiaceos: string;
 
+    @Prop({ enum: resultado })
+    benzodiacepinas: string;
+
+    @Prop({ enum: resultado })
+    fenciclidina: string;
+
+    @Prop({ enum: resultado })
+    metadona: string;
+
+    @Prop({ enum: resultado })
+    barbituricos: string;
+
+    @Prop({ enum: resultado })
+    antidepresivosTriciclicos: string;
+
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
     idTrabajador: Trabajador;
 

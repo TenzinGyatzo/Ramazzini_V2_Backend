@@ -102,6 +102,29 @@ export class ExpedientesService {
       const newDocument = new model(newDocumentData);
       return newDocument.save();
     }
+
+    if (documentType === 'antidoping') {
+      const allDrugs = [
+        'marihuana',
+        'cocaina',
+        'anfetaminas',
+        'metanfetaminas',
+        'opiaceos',
+        'benzodiacepinas',
+        'fenciclidina',
+        'metadona',
+        'barbituricos',
+        'antidepresivosTriciclicos',
+      ];
+    
+      const unsetFields = Object.fromEntries(
+        allDrugs.filter((campo) => !(campo in updateDto)).map((campo) => [campo, ""])
+      );
+    
+      if (Object.keys(unsetFields).length > 0) {
+        await model.updateOne({ _id: id }, { $unset: unsetFields });
+      }
+    }    
   
     return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
   } 
@@ -161,68 +184,69 @@ export class ExpedientesService {
     return model.findById(id).exec();
   }
 
-  async updateDocument(documentType: string, id: string, updateDto: any): Promise<any> {
-    const model = this.models[documentType];
-    const dateField = this.dateFields[documentType];
+  // async updateDocument(documentType: string, id: string, updateDto: any): Promise<any> {
+  //   const model = this.models[documentType];
+  //   const dateField = this.dateFields[documentType];
   
-    if (!model || !dateField) {
-      throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
-    }
+  //   if (!model || !dateField) {
+  //     throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
+  //   }
   
-    const newFecha = updateDto[dateField];
-    const trabajadorId = updateDto.idTrabajador;
+  //   const newFecha = updateDto[dateField];
+  //   const trabajadorId = updateDto.idTrabajador;
   
-    if (!newFecha) {
-      throw new BadRequestException(`El campo ${dateField} es requerido para este documento`);
-    }
+  //   if (!newFecha) {
+  //     throw new BadRequestException(`El campo ${dateField} es requerido para este documento`);
+  //   }
   
-    if (!trabajadorId) {
-      throw new BadRequestException('El campo idTrabajador es requerido');
-    }
+  //   if (!trabajadorId) {
+  //     throw new BadRequestException('El campo idTrabajador es requerido');
+  //   }
   
-    const startDate = startOfDay(new Date(newFecha));
-    const endDate = endOfDay(new Date(newFecha));
+  //   const startDate = startOfDay(new Date(newFecha));
+  //   const endDate = endOfDay(new Date(newFecha));
   
-    // Busca un documento existente para el tipo, trabajador y la nueva fecha
-    const conflictingDocument = await model.findOne({
-      idTrabajador: trabajadorId,
-      [dateField]: { $gte: startDate, $lte: endDate },
-    }).exec();
+  //   // Busca un documento existente para el tipo, trabajador y la nueva fecha
+  //   const conflictingDocument = await model.findOne({
+  //     idTrabajador: trabajadorId,
+  //     [dateField]: { $gte: startDate, $lte: endDate },
+  //   }).exec();
   
-    if (conflictingDocument && conflictingDocument._id.toString() !== id) {
-      throw new BadRequestException(
-        `Ya existe un documento de tipo ${documentType} para la fecha ${newFecha} y el trabajador ${trabajadorId}`
-      );
-    }
+  //   if (conflictingDocument && conflictingDocument._id.toString() !== id) {
+  //     throw new BadRequestException(
+  //       `Ya existe un documento de tipo ${documentType} para la fecha ${newFecha} y el trabajador ${trabajadorId}`
+  //     );
+  //   }
   
-    // Busca el documento existente para verificar si la fecha cambió
-    const existingDocument = await model.findById(id).exec();
-    if (!existingDocument) {
-      throw new BadRequestException(`Documento con ID ${id} no encontrado`);
-    }
+  //   // Busca el documento existente para verificar si la fecha cambió
+  //   const existingDocument = await model.findById(id).exec();
+  //   if (!existingDocument) {
+  //     throw new BadRequestException(`Documento con ID ${id} no encontrado`);
+  //   }
   
-    const oldFecha = existingDocument[dateField];
-    const rutaPDF = existingDocument.rutaPDF;
+  //   const oldFecha = existingDocument[dateField];
+  //   const rutaPDF = existingDocument.rutaPDF;
   
-    if (newFecha !== oldFecha) {
-      try {
-        // Construir la ruta del archivo anterior
-        const formattedOldFecha = convertirFechaISOaDDMMYYYY(oldFecha).replace(/\//g, '-');
-        const oldFileName = formatDocumentName(documentType, formattedOldFecha);
-        const oldFilePath = path.join(rutaPDF, oldFileName);
+  //   if (newFecha !== oldFecha) {
+  //     try {
+  //       // Construir la ruta del archivo anterior
+  //       const formattedOldFecha = convertirFechaISOaDDMMYYYY(oldFecha).replace(/\//g, '-');
+  //       const oldFileName = formatDocumentName(documentType, formattedOldFecha);
+  //       const oldFilePath = path.join(rutaPDF, oldFileName);
   
-        // console.log(`[DEBUG] Eliminando archivo anterior: ${oldFilePath}`);
-        await this.filesService.deleteFile(oldFilePath); // Usa FilesService para eliminar el archivo
-      } catch (error) {
-        console.error(`[ERROR] Error al eliminar el archivo anterior: ${error.message}`);
-      }
-    }
+  //       // console.log(`[DEBUG] Eliminando archivo anterior: ${oldFilePath}`);
+  //       await this.filesService.deleteFile(oldFilePath); // Usa FilesService para eliminar el archivo
+  //     } catch (error) {
+  //       console.error(`[ERROR] Error al eliminar el archivo anterior: ${error.message}`);
+  //     }
+  //   }   
   
-    // Actualizar el documento con los nuevos datos
-    return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
-  }
+  //   // Actualizar el documento con los nuevos datos
+  //   return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
+  // }
 
   // Función para actualizar o crear un documento externo
+  
   async upsertDocumentoExterno(id: string | null, updateDto: any): Promise<any> {
     const model = this.models.documentoExterno;
     const dateField = 'fechaDocumento';

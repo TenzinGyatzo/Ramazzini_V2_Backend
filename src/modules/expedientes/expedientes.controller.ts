@@ -216,7 +216,11 @@ export class ExpedientesController {
       );
     }
   
-    const dtoInstance = Object.assign(new DtoClass(), updateDto);
+    const dtoInstance = Object.assign(
+      new DtoClass(),
+      Object.fromEntries(Object.entries(updateDto).filter(([_, v]) => v !== undefined))
+    );
+    
     await new ValidationPipe({ whitelist: true }).transform(dtoInstance, {
       type: 'body',
       metatype: DtoClass,
