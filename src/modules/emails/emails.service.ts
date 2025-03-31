@@ -315,12 +315,12 @@ export class EmailsService {
     const peakMemory = Math.max(...memoryUsages).toFixed(2);
   
     return `
-  Resumen de las Últimas 12 Horas (Horario Pico)
-  🔹 CPU Promedio: ${avgCpu}%
-  🔹 CPU Máximo: ${peakCpu}%
-  🔹 Memoria Promedio: ${avgMemory}%
-  🔹 Memoria Máxima: ${peakMemory}%
-  `;
+    Resumen de las Últimas 12 Horas (Horario Pico)
+    🔹 CPU Promedio: ${avgCpu}% (${this.interpretValue(Number(avgCpu), { low: 50, high: 80 })})
+    🔹 CPU Máximo: ${peakCpu}% (${this.interpretValue(Number(peakCpu), { low: 50, high: 80 })})
+    🔹 Memoria Promedio: ${avgMemory}% (${this.interpretValue(Number(avgMemory), { low: 60, high: 90 })})
+    🔹 Memoria Máxima: ${peakMemory}% (${this.interpretValue(Number(peakMemory), { low: 60, high: 90 })})
+    `;    
   }  
 
   async generateAlerts(): Promise<string> {
@@ -363,25 +363,44 @@ export class EmailsService {
             const sizeGB = (size / 1e9).toFixed(2);
             const usagePercentage = ((used / size) * 100).toFixed(2);
   
-            result += `📂 ${device}: ${usedGB} GB usados de ${sizeGB} GB (${usagePercentage}% ocupado)\n`;
+            result += `    📂 ${device}: ${usedGB} GB usados de ${sizeGB} GB (${usagePercentage}% ocupado)\n`;
           }
         });
   
         return result.trim();
       } else {
-        // Verificar si df está disponible antes de ejecutarlo
+        // Verificar si df está disponible
         try {
           execSync("which df");
         } catch {
           return "⚠️ df no está instalado. Usa `sudo apt install coreutils`.";
         }
   
-        return execSync("df -h | awk 'NR>1 {print $1, $3, $4, $5}'").toString().trim();
+        const output = execSync("df -k --output=source,used,size,pcent | tail -n +2")
+          .toString()
+          .trim()
+          .split('\n');
+  
+        let result = '';
+  
+        output.forEach(line => {
+          const parts = line.trim().split(/\s+/);
+          if (parts[0].startsWith('/dev/')) {
+            const device = parts[0].replace('/dev/', '');
+            const used = (parseInt(parts[1]) * 1024 / 1e9).toFixed(2); // de KB a GB
+            const size = (parseInt(parts[2]) * 1024 / 1e9).toFixed(2);
+            const percent = parts[3];
+  
+            result += `    📂 ${device}: ${used} GB usados de ${size} GB (${percent} ocupado)\n`;
+          }
+        });
+  
+        return result.trim();
       }
     } catch (error) {
       return '⚠️ No se pudo obtener información del disco.';
     }
-  } 
+  }  
 
   async getCpuUsage(): Promise<string> {
     try {
@@ -434,40 +453,84 @@ export class EmailsService {
     }
   }
 
-  async saveUsageHistory(report: string) {
+  async saveUsageHistory(cpuUsage: number, memoryUsagePercentage: number) {
     const historyPath = path.join(__dirname, 'usage_history.txt');
-    
-    // Cargar el historial existente
-    let history = fs.existsSync(historyPath) ? fs.readFileSync(historyPath, 'utf8').split('\n') : [];
-
-    // Filtrar solo los reportes de los últimos 2 días
-    const twoDaysAgo = new Date();
-    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-
-    history = history.filter(line => {
-        const match = line.match(/\d{4}-\d{2}-\d{2}/);
-        return match ? new Date(match[0]) >= twoDaysAgo : false;
-    });
-
-    // ✅ Verificar si el nuevo reporte ya está en el historial
-    if (history.includes(report.trim())) {
-        console.log("⚠️ Reporte duplicado detectado. No se guardará nuevamente.");
-        return;
+    const today = new Date().toISOString().split('T')[0];
+  
+    // Formato simple de línea única
+    const line = `${today} | CPU: ${cpuUsage.toFixed(2)}% | Memoria: ${memoryUsagePercentage.toFixed(2)}%`;
+  
+    // Leer historial existente
+    let history = fs.existsSync(historyPath)
+      ? fs.readFileSync(historyPath, 'utf8').split('\n')
+      : [];
+  
+    // Eliminar duplicados del mismo día
+    history = history.filter(h => !h.startsWith(today));
+  
+    // Agregar nueva línea
+    history.push(line);
+  
+    // Limitar a últimos 3 días
+    const maxLines = 3;
+    if (history.length > maxLines) {
+      history = history.slice(history.length - maxLines);
     }
-
-    // Agregar el nuevo reporte y escribir de nuevo
-    history.push(report);
+  
     fs.writeFileSync(historyPath, history.join('\n'), 'utf8');
-}
+  }  
+
+  async checkAndSendAlertIfCritical() {
+    const metricsFile = this.METRICS_FILE;
   
-  async getPreviousUsage(): Promise<string> {
-    const historyPath = path.join(__dirname, 'usage_history.txt');
-    
-    if (!fs.existsSync(historyPath)) return '📊 No hay historial previo.';
+    if (!fs.existsSync(metricsFile)) return;
   
-    const history = fs.readFileSync(historyPath, 'utf8').split('\n').slice(-50); // Limitar a las últimas 50 líneas
-    
-    return history.join('\n');
+    const metrics = JSON.parse(fs.readFileSync(metricsFile, 'utf8'));
+    const lastMetric = metrics[metrics.length - 1];
+  
+    const alerts: string[] = [];
+  
+    if (lastMetric.cpuUsage > 80) {
+      alerts.push(`⚠️ Uso de CPU alto: ${lastMetric.cpuUsage.toFixed(2)}%`);
+    }
+  
+    if (lastMetric.memoryUsagePercentage > 90) {
+      alerts.push(`⚠️ Uso de Memoria alto: ${lastMetric.memoryUsagePercentage.toFixed(2)}%`);
+    }
+  
+    const diskLines = lastMetric.diskStats.split('\n');
+    for (const line of diskLines) {
+      const match = line.match(/(\d+)%/);
+      if (match && parseInt(match[1]) >= 95) {
+        alerts.push(`⚠️ Espacio en disco crítico: ${line}`);
+        break;
+      }
+    }
+  
+    if (alerts.length === 0) return; // No hay alertas, salir
+  
+    // Si hay alertas, enviar correo
+    const transporter = createTransport(
+      process.env.EMAIL_HOST,
+      process.env.EMAIL_PORT,
+      process.env.EMAIL_USER,
+      process.env.EMAIL_PASS,
+    );
+  
+    const info = await transporter.sendMail({
+      from: `"Alertas Ramazzini" <${process.env.EMAIL_USER}>`,
+      to: "edgarcoronel66@gmail.com",
+      subject: '🚨 Alerta Crítica del Servidor',
+      html: `<pre>${alerts.join('\n')}</pre>`,
+    });
+  
+    console.log('📨 Alerta crítica enviada:', info.messageId);
+  }  
+
+  private interpretValue(value: number, thresholds: { low: number; high: number }): string {
+    if (value < thresholds.low) return '🟢 Bajo';
+    if (value < thresholds.high) return '🟡 Medio';
+    return '🔴 Alto';
   }
   
   
@@ -482,22 +545,33 @@ export class EmailsService {
     const pidStats = await pidusage(process.pid);
     const cpuUsage = pidStats.cpu;
     const memoryUsedByNode = pidStats.memory;
-  
+    
     const totalCpuUsage = await this.getCpuUsage();
     const loadAvg = os.loadavg();
     const diskStats = await this.getDiskUsage();
     const runningProcesses = execSync("ps aux | wc -l").toString().trim();
-  
+    
     const dbStatus = await this.checkMongoConnection();
     const nginxStatus = await this.checkServiceStatus('nginx');
     const activeConnections = await this.getActiveConnections();
-  
+    
     const peakMetrics = await this.getMetricsSummary();
     const alertMessages = await this.generateAlerts();
-    const previousUsage = await this.getPreviousUsage();
-  
+    
+    const recommendations: string[] = [];
+    
+    if (cpuUsage > 80) {
+      recommendations.push("🔴 El uso de CPU de Node.js es alto. Considera revisar qué procesos están activos.");
+    }
+    if (memoryUsagePercentage > 90) {
+      recommendations.push("🔴 El uso de memoria está por encima del 90%. Puede ser momento de considerar más RAM o revisar fugas de memoria.");
+    }
+    if (diskStats.includes(' 95%') || diskStats.includes(' 100%')) {
+      recommendations.push("🔴 Espacio en disco muy bajo. Considera liberar espacio o ampliar el almacenamiento.");
+    }
+
     // 📌 Reporte Formateado
-    const reportContent = `
+    let reportContent = `
     ═════════════════════════════
     📊 𝗥𝗘𝗣𝗢𝗥𝗧𝗘 𝗗𝗘 𝗦𝗘𝗥𝗩𝗜𝗗𝗢𝗥 - 𝗥𝗔𝗠𝗔𝗭𝗭𝗜𝗡𝗜
     ═════════════════════════════
@@ -538,21 +612,20 @@ export class EmailsService {
     ✅ ${dbStatus}
     ✅ ${nginxStatus}
   
-    📜 𝗛𝗜𝗦𝗧𝗢𝗥𝗜𝗔𝗟 𝗗𝗘 𝗟𝗔𝗦 𝗨́𝗟𝗧𝗜𝗠𝗔𝗦 𝟮𝟰 𝗛𝗢𝗥𝗔𝗦
-    ─────────────────────────────
-    ${previousUsage}
-  
     🚨 𝗔𝗟𝗘𝗥𝗧𝗔𝗦 𝗬 𝗥𝗘𝗖𝗢𝗠𝗘𝗡𝗗𝗔𝗖𝗜𝗢𝗡𝗘𝗦
     ═════════════════════════════
     ${alertMessages}
     `;
+
+    if (recommendations.length > 0) {
+      reportContent += `\n${recommendations.join('\n')}`;
+    }    
   
     // Guardar historial del reporte sin duplicaciones
-    await this.saveUsageHistory(reportContent);
+    await this.saveUsageHistory(cpuUsage, memoryUsagePercentage);
   
     return reportContent;
-  }
-  
+  } 
   
   async sendServerReport() {
     const transporter = createTransport(
@@ -587,6 +660,7 @@ export class EmailsService {
   async trackMetrics() {
     console.log(`📊 Guardando métricas de servidor a las ${new Date().toLocaleString()} (hora local)`);
     await this.saveMetric();
+    await this.checkAndSendAlertIfCritical(); // <- agregar esta línea
   }
 
   // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM
