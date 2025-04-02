@@ -48,6 +48,26 @@ export class TrabajadoresService {
     return await this.trabajadorModel.find({ idCentroTrabajo: id }).exec();
   }
 
+  async findWorkersWithHistoriaDataByCenter(centroId: string): Promise<any[]> {
+    const trabajadores = await this.trabajadorModel.find({ idCentroTrabajo: centroId }).lean();
+  
+    const resultado = await Promise.all(trabajadores.map(async (trabajador) => {
+      const historia = await this.historiaClinicaModel.findOne({ idTrabajador: trabajador._id }).lean();
+  
+      return {
+        ...trabajador,
+        historiaClinicaResumen: {
+          diabeticosPP: historia?.diabeticosPP ?? null,
+          alergicos: historia?.alergicos ?? null,
+          hipertensivosPP: historia?.hipertensivosPP ?? null,
+          accidenteLaboral: historia?.accidenteLaboral ?? null,
+        }
+      };
+    }));
+  
+    return resultado;
+  }  
+
   async findOne(id: string): Promise<Trabajador> {
     return await this.trabajadorModel.findById(id).exec();
   }

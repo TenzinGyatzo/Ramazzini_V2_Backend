@@ -74,6 +74,31 @@ export class TrabajadoresController {
     return trabajadores;
   }
 
+  @Get('/trabajadores-con-historia')
+  @ApiOperation({ summary: 'Obtiene trabajadores con campos seleccionados de historia clínica' })
+  @ApiResponse({ status: 200, description: 'Trabajadores encontrados con información médica' })
+  @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido' })
+  async findWorkersWithHistoria(
+    @Param('empresaId') empresaId: string,
+    @Param('centroId') centroId: string
+  ) {
+    if (!isValidObjectId(empresaId)) {
+      throw new BadRequestException('El ID de empresa no es válido');
+    }
+
+    if (!isValidObjectId(centroId)) {
+      throw new BadRequestException('El ID de centro de trabajo no es válido');
+    }
+
+    const trabajadoresConHistoria = await this.trabajadoresService.findWorkersWithHistoriaDataByCenter(centroId);
+
+    if (!trabajadoresConHistoria || trabajadoresConHistoria.length === 0) {
+      return { message: 'No hay trabajadores con historia clínica en este centro de trabajo' };
+    }
+
+    return trabajadoresConHistoria;
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtiene un trabajador por su ID' })
   @ApiResponse({ status: 200, description: 'trabajador obtenido exitosamente' })
