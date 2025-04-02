@@ -50,20 +50,44 @@ export class TrabajadoresService {
 
   async findWorkersWithHistoriaDataByCenter(centroId: string): Promise<any[]> {
     const trabajadores = await this.trabajadorModel.find({ idCentroTrabajo: centroId }).lean();
+    const trabajadoresIds = trabajadores.map(t => t._id);
   
-    const resultado = await Promise.all(trabajadores.map(async (trabajador) => {
-      const historia = await this.historiaClinicaModel.findOne({ idTrabajador: trabajador._id }).lean();
+    // Buscar todas las historias clínicas de los trabajadores en una sola consulta
+    const historias = await this.historiaClinicaModel
+      .find({ idTrabajador: { $in: trabajadoresIds } })
+      .lean();
+  
+    // Agrupar historias por idTrabajador y quedarte con la más reciente
+    const historiasMap = new Map<string, any>();
+
+    for (const historia of historias) {
+      const id = historia.idTrabajador.toString();
+      const actual = historiasMap.get(id);
+
+      if (
+        !actual ||
+        new Date(historia.fechaHistoriaClinica) > new Date(actual.fechaHistoriaClinica)
+      ) {
+        historiasMap.set(id, historia);
+      }
+    }
+  
+    // Combinar trabajadores + resumen de historia
+    const resultado = trabajadores.map(trabajador => {
+      const historia = historiasMap.get(trabajador._id.toString());
   
       return {
         ...trabajador,
-        historiaClinicaResumen: {
-          diabeticosPP: historia?.diabeticosPP ?? null,
-          alergicos: historia?.alergicos ?? null,
-          hipertensivosPP: historia?.hipertensivosPP ?? null,
-          accidenteLaboral: historia?.accidenteLaboral ?? null,
-        }
+        historiaClinicaResumen: historia
+          ? {
+              diabeticosPP: historia.diabeticosPP ?? null,
+              alergicos: historia.alergicos ?? null,
+              hipertensivosPP: historia.hipertensivosPP ?? null,
+              accidenteLaboral: historia.accidenteLaboral ?? null,
+            }
+          : null,
       };
-    }));
+    });
   
     return resultado;
   }  
