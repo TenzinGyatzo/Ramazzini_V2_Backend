@@ -52,6 +52,89 @@ export class TrabajadoresService {
     const trabajadores = await this.trabajadorModel.find({ idCentroTrabajo: centroId }).lean();
     const trabajadoresIds = trabajadores.map(t => t._id);
   
+    // HISTORIAS CLÍNICAS
+    const historias = await this.historiaClinicaModel
+      .find({ idTrabajador: { $in: trabajadoresIds } })
+      .lean();
+  
+    const historiasMap = new Map<string, any>();
+    for (const historia of historias) {
+      const id = historia.idTrabajador.toString();
+      const actual = historiasMap.get(id);
+      if (!actual || new Date(historia.fechaHistoriaClinica) > new Date(actual.fechaHistoriaClinica)) {
+        historiasMap.set(id, historia);
+      }
+    }
+  
+    // APTITUD PUESTO
+    const aptitudes = await this.aptitudModel
+      .find({ idTrabajador: { $in: trabajadoresIds } })
+      .lean();
+  
+    const aptitudesMap = new Map<string, any>();
+    for (const aptitud of aptitudes) {
+      const id = aptitud.idTrabajador.toString();
+      const actual = aptitudesMap.get(id);
+      if (!actual || new Date(aptitud.fechaAptitudPuesto) > new Date(actual.fechaAptitudPuesto)) {
+        aptitudesMap.set(id, aptitud);
+      }
+    }
+  
+    // EXPLORACIÓN FÍSICA
+    const exploraciones = await this.exploracionFisicaModel
+      .find({ idTrabajador: { $in: trabajadoresIds } })
+      .lean();
+  
+    const exploracionesMap = new Map<string, any>();
+    for (const exploracion of exploraciones) {
+      const id = exploracion.idTrabajador.toString();
+      const actual = exploracionesMap.get(id);
+      if (!actual || new Date(exploracion.fechaExploracionFisica) > new Date(actual.fechaExploracionFisica)) {
+        exploracionesMap.set(id, exploracion);
+      }
+    }
+  
+    // COMBINAR
+    const resultado = trabajadores.map(trabajador => {
+      const id = trabajador._id.toString();
+  
+      const historia = historiasMap.get(id);
+      const aptitud = aptitudesMap.get(id);
+      const exploracion = exploracionesMap.get(id);
+  
+      return {
+        ...trabajador,
+        historiaClinicaResumen: historia
+          ? {
+              diabeticosPP: historia.diabeticosPP ?? null,
+              alergicos: historia.alergicos ?? null,
+              hipertensivosPP: historia.hipertensivosPP ?? null,
+              accidenteLaboral: historia.accidenteLaboral ?? null,
+            }
+          : null,
+        aptitudResumen: aptitud
+          ? {
+              aptitudPuesto: aptitud.aptitudPuesto ?? null,
+            }
+          : null,
+        exploracionFisicaResumen: exploracion
+          ? {
+              categoriaIMC: exploracion.categoriaIMC ?? null,
+              categoriaCircunferenciaCintura: exploracion.categoriaCircunferenciaCintura ?? null,
+              categoriaTensionArterial: exploracion.categoriaTensionArterial ?? null,
+              resumenExploracionFisica: exploracion.resumenExploracionFisica ?? null,
+            }
+          : null,
+      };
+    });
+  
+    return resultado;
+  }  
+
+  /* async findWorkersWithHistoriaDataByCenter(centroId: string): Promise<any[]> {
+    const trabajadores = await this.trabajadorModel.find({ idCentroTrabajo: centroId }).lean();
+    const trabajadoresIds = trabajadores.map(t => t._id);
+  
     // Buscar todas las historias clínicas de los trabajadores en una sola consulta
     const historias = await this.historiaClinicaModel
       .find({ idTrabajador: { $in: trabajadoresIds } })
@@ -90,7 +173,7 @@ export class TrabajadoresService {
     });
   
     return resultado;
-  }  
+  }   */
 
   async findOne(id: string): Promise<Trabajador> {
     return await this.trabajadorModel.findById(id).exec();
