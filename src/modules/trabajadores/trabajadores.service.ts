@@ -199,6 +199,7 @@ export class TrabajadoresService {
         telefono: worker.telefono ? String(worker.telefono).trim() : '',
         estadoCivil: worker.estadoCivil ? String(worker.estadoCivil).trim() : '',
         hijos: worker.hijos || 0,
+        estadoLaboral: worker.estadoLaboral ? String(worker.estadoLaboral).trim() : 'Activo',
         idCentroTrabajo: worker.idCentroTrabajo,
         createdBy: worker.createdBy,
         updatedBy: worker.updatedBy

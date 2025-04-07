@@ -24,6 +24,8 @@ const estadosCiviles = [
   "Viudo/a",
 ];
 
+const estadosLaborales = ["Activo", "Inactivo"];
+
 @Schema()
 export class Trabajador extends Document {
 
@@ -53,6 +55,9 @@ export class Trabajador extends Document {
 
     @Prop({ required: true })
     hijos: number;
+
+    @Prop({ required: true, enum: estadosLaborales, default: "Activo" })
+    estadoLaboral: string;
 
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'CentroTrabajo', required: true })
     idCentroTrabajo: CentroTrabajo;

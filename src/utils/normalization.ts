@@ -55,6 +55,7 @@ export function normalizeTrabajadorData(
     telefono: dto.telefono?.trim(),
     estadoCivil: dto.estadoCivil?.trim(),
     hijos: dto.hijos,
+    estadoLaboral: dto.estadoLaboral?.trim(),
     centroTrabajo: dto.idCentroTrabajo?.trim(),
     createdBy: dto.createdBy?.trim(),
     updatedBy: dto.updatedBy?.trim(),

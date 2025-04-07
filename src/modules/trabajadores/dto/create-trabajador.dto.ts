@@ -23,6 +23,8 @@ const estadosCiviles = [
   "Viudo/a",
 ];
 
+const estadosLaborales = ["Activo", "Inactivo"];
+
 export class CreateTrabajadorDto {
     @ApiProperty({
       description: 'Nombre completo del trabajador',
@@ -111,6 +113,14 @@ export class CreateTrabajadorDto {
     @Max(10, { message: 'La cantidad maxima de hijos es 10' })
     @IsNotEmpty({ message: 'La cantidad de hijos no puede estar vacía' })
     hijos: number;
+
+    @ApiProperty({
+      description: 'Estado laboral del trabajador',
+      example: 'Activo'
+    })
+    @IsString({ message: 'El estado laboral debe ser un string' })
+    @IsNotEmpty({ message: 'El estado laboral no puede estar vacío' })
+    estadoLaboral: string;
 
     @ApiProperty({
       description: 'El ID del centro de trabajo al que pertenece el trabajador',
