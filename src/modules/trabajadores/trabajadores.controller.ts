@@ -99,6 +99,28 @@ export class TrabajadoresController {
     return trabajadoresConHistoria;
   }
 
+  @Get('/sexos-y-fechas-nacimiento-activos')
+  async findSexosYFechasNacimientoActivos(
+    @Param('empresaId') empresaId: string,
+    @Param('centroId') centroId: string
+  ) {
+    if (!isValidObjectId(empresaId)) {
+      throw new BadRequestException('El ID de empresa no es válido');
+    }
+
+    if (!isValidObjectId(centroId)) {
+      throw new BadRequestException('El ID de centro de trabajo no es válido');
+    }
+
+    const sexosYFechasNacimiento = await this.trabajadoresService.findSexosYFechasNacimientoActivos(centroId);
+
+    if (!sexosYFechasNacimiento || sexosYFechasNacimiento.length === 0) {
+      return { message: 'No hay trabajadores con historia clínica en este centro de trabajo' };
+    }
+
+    return sexosYFechasNacimiento;
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtiene un trabajador por su ID' })
   @ApiResponse({ status: 200, description: 'trabajador obtenido exitosamente' })

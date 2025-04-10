@@ -129,7 +129,22 @@ export class TrabajadoresService {
     });
   
     return resultado;
-  }  
+  } 
+  
+  async findSexosYFechasNacimientoActivos(centroId: string): Promise<any[]> {
+    const resultados = await this.trabajadorModel.find({ 
+      idCentroTrabajo: centroId,
+      estadoLaboral: 'Activo',
+      sexo: { $exists: true }, 
+      fechaNacimiento: { $exists: true } 
+    }, 'sexo fechaNacimiento').lean();
+
+    return resultados.map(trabajador => ({
+      // id: trabajador._id,
+      sexo: trabajador.sexo,
+      fechaNacimiento: trabajador.fechaNacimiento
+    }));
+  }
 
   /* async findWorkersWithHistoriaDataByCenter(centroId: string): Promise<any[]> {
     const trabajadores = await this.trabajadorModel.find({ idCentroTrabajo: centroId }).lean();
