@@ -121,6 +121,17 @@ export class TrabajadoresController {
     return sexosYFechasNacimiento;
   }
 
+  @Get('dashboard/')
+  async getDashboardData(
+    @Param('empresaId') empresaId: string, 
+    @Param('centroId') centroId: string) {
+    const dashboardData = await this.trabajadoresService.getDashboardData(centroId);
+    if (!dashboardData) {
+      throw new BadRequestException('No se encontraron datos para el dashboard');
+    }
+    return dashboardData;
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtiene un trabajador por su ID' })
   @ApiResponse({ status: 200, description: 'trabajador obtenido exitosamente' })

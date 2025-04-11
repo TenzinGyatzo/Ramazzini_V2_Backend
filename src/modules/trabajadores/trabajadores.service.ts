@@ -146,49 +146,169 @@ export class TrabajadoresService {
     }));
   }
 
-  /* async findWorkersWithHistoriaDataByCenter(centroId: string): Promise<any[]> {
-    const trabajadores = await this.trabajadorModel.find({ idCentroTrabajo: centroId }).lean();
-    const trabajadoresIds = trabajadores.map(t => t._id);
-  
-    // Buscar todas las historias clínicas de los trabajadores en una sola consulta
-    const historias = await this.historiaClinicaModel
-      .find({ idTrabajador: { $in: trabajadoresIds } })
+  // trabajadores.service.ts
+  async getDashboardData(centroId: string) {
+    // 1. Obtener todos los trabajadores del centro
+    const trabajadores = await this.trabajadorModel
+      .find({ idCentroTrabajo: centroId })
+      .select('_id estadoLaboral sexo fechaNacimiento') // solo lo necesario
       .lean();
-  
-    // Agrupar historias por idTrabajador y quedarte con la más reciente
-    const historiasMap = new Map<string, any>();
 
-    for (const historia of historias) {
-      const id = historia.idTrabajador.toString();
-      const actual = historiasMap.get(id);
+    // 2. Separar trabajadores activos e inactivos
+    const trabajadoresActivos = trabajadores.filter(t => t.estadoLaboral === 'Activo');
+    const trabajadoresInactivos = trabajadores.filter(t => t.estadoLaboral === 'Inactivo');
 
-      if (
-        !actual ||
-        new Date(historia.fechaHistoriaClinica) > new Date(actual.fechaHistoriaClinica)
-      ) {
-        historiasMap.set(id, historia);
-      }
+    // 3. Obtener arrays de IDs
+    const idsActivos = trabajadoresActivos.map(t => t._id);
+    const idsTodos = trabajadores.map(t => t._id); // algunos gráficos usan ambos
+
+    // 4. Prepara base del objeto de retorno
+    const dashboardData = {
+      grupoEtario: [ // agrupado por centro
+        trabajadoresActivos.map(t => ({
+          sexo: t.sexo,
+          fechaNacimiento: t.fechaNacimiento
+        }))
+      ],
+      imc: [],
+      presionArterial: [],
+      alcoholYTabaco: [],
+      enfermedadesCronicas: [],
+      antecedentes: [],
+      agudezaVisual: [],
+      daltonismo: [],
+      aptitudes: []
+    };
+
+    // 5. EXPLORACIONES FÍSICAS – Obtener la más reciente por trabajador activo
+    const exploraciones = await this.exploracionFisicaModel
+    .find({ idTrabajador: { $in: idsActivos } })
+    .select('idTrabajador categoriaIMC categoriaTensionArterial fechaExploracionFisica')
+    .lean();
+
+    const exploracionesMap = new Map<string, any>();
+    for (const exploracion of exploraciones) {
+    const id = exploracion.idTrabajador.toString();
+    const actual = exploracionesMap.get(id);
+    if (!actual || new Date(exploracion.fechaExploracionFisica) > new Date(actual.fechaExploracionFisica)) {
+      exploracionesMap.set(id, exploracion);
     }
-  
-    // Combinar trabajadores + resumen de historia
-    const resultado = trabajadores.map(trabajador => {
-      const historia = historiasMap.get(trabajador._id.toString());
-  
-      return {
-        ...trabajador,
-        historiaClinicaResumen: historia
-          ? {
-              diabeticosPP: historia.diabeticosPP ?? null,
-              alergicos: historia.alergicos ?? null,
-              hipertensivosPP: historia.hipertensivosPP ?? null,
-              accidenteLaboral: historia.accidenteLaboral ?? null,
-            }
-          : null,
-      };
-    });
-  
-    return resultado;
-  }   */
+    }
+
+    dashboardData.imc.push(
+    Array.from(exploracionesMap.values()).map((exploracion) => ({
+      categoriaIMC: exploracion.categoriaIMC ?? null
+    }))
+    );
+
+    // 6. PRESIÓN ARTERIAL – Usar la misma exploración más reciente
+    dashboardData.presionArterial.push(
+      Array.from(exploracionesMap.values()).map((exploracion) => ({
+        categoriaTensionArterial: exploracion.categoriaTensionArterial ?? null
+      }))
+    );
+
+    // 7. HISTORIAS CLÍNICAS – Obtener la más reciente por trabajador activo
+    const historias = await this.historiaClinicaModel
+    .find({ idTrabajador: { $in: idsActivos } })
+    .select('idTrabajador alcoholismo tabaquismo diabeticosPP hipertensivosPP cardiopaticosPP epilepticosPP alergicos lumbalgias accidentes quirurgicos traumaticos fechaHistoriaClinica')
+    .lean();
+
+    const historiasMap = new Map<string, any>();
+    for (const historia of historias) {
+    const id = historia.idTrabajador.toString();
+    const actual = historiasMap.get(id);
+    if (!actual || new Date(historia.fechaHistoriaClinica) > new Date(actual.fechaHistoriaClinica)) {
+      historiasMap.set(id, historia);
+    }
+    }
+
+    // 8. ALCOHOL Y TABACO
+    dashboardData.alcoholYTabaco.push(
+    Array.from(historiasMap.values()).map((historia) => ({
+      alcoholismo: historia.alcoholismo ?? null,
+      tabaquismo: historia.tabaquismo ?? null
+    }))
+    );
+
+    // 9. ENFERMEDADES CRÓNICAS
+    dashboardData.enfermedadesCronicas.push(
+      Array.from(historiasMap.values()).map((historia) => ({
+        diabeticosPP: historia.diabeticosPP ?? null,
+        hipertensivosPP: historia.hipertensivosPP ?? null,
+        cardiopaticosPP: historia.cardiopaticosPP ?? null,
+        epilepticosPP: historia.epilepticosPP ?? null,
+        alergicos: historia.alergicos ?? null
+      }))
+    );
+
+    // 10. ANTECEDENTES TRAUMÁTICOS O LOCALIZADOS
+    dashboardData.antecedentes.push(
+      Array.from(historiasMap.values()).map((historia) => ({
+        lumbalgias: historia.lumbalgias ?? null,
+        accidentes: historia.accidentes ?? null,
+        quirurgicos: historia.quirurgicos ?? null,
+        traumaticos: historia.traumaticos ?? null
+      }))
+    );
+
+    // 11. EXÁMENES DE VISTA – Obtener el más reciente por trabajador activo
+    const examenesVista = await this.examenVistaModel
+    .find({ idTrabajador: { $in: idsActivos } })
+    .select('idTrabajador ojoIzquierdoLejanaSinCorreccion ojoDerechoLejanaSinCorreccion sinCorreccionLejanaInterpretacion ojoIzquierdoLejanaConCorreccion ojoDerechoLejanaConCorreccion conCorreccionLejanaInterpretacion interpretacionIshihara fechaExamenVista')
+    .lean();
+
+    const examenesMap = new Map<string, any>();
+    for (const examen of examenesVista) {
+    const id = examen.idTrabajador.toString();
+    const actual = examenesMap.get(id);
+    if (!actual || new Date(examen.fechaExamenVista) > new Date(actual.fechaExamenVista)) {
+      examenesMap.set(id, examen);
+    }
+    }
+
+    // 12. AGUDEZA VISUAL
+    dashboardData.agudezaVisual.push(
+    Array.from(examenesMap.values()).map((examen) => ({
+      ojoIzquierdoLejanaSinCorreccion: examen.ojoIzquierdoLejanaSinCorreccion ?? null,
+      ojoDerechoLejanaSinCorreccion: examen.ojoDerechoLejanaSinCorreccion ?? null,
+      sinCorreccionLejanaInterpretacion: examen.sinCorreccionLejanaInterpretacion ?? null,
+      ojoIzquierdoLejanaConCorreccion: examen.ojoIzquierdoLejanaConCorreccion ?? null,
+      ojoDerechoLejanaConCorreccion: examen.ojoDerechoLejanaConCorreccion ?? null,
+      conCorreccionLejanaInterpretacion: examen.conCorreccionLejanaInterpretacion ?? null,
+    }))
+    );
+
+    // 13. DALTONISMO
+    dashboardData.daltonismo.push(
+      Array.from(examenesMap.values()).map((examen) => ({
+        interpretacionIshihara: examen.interpretacionIshihara ?? null
+      }))
+    );
+
+    // 14. APTITUD PUESTO – Obtener la más reciente por trabajador (activo o inactivo)
+    const aptitudes = await this.aptitudModel
+    .find({ idTrabajador: { $in: idsTodos } })
+    .select('idTrabajador aptitudPuesto fechaAptitudPuesto')
+    .lean();
+
+    const aptitudesMap = new Map<string, any>();
+    for (const aptitud of aptitudes) {
+    const id = aptitud.idTrabajador.toString();
+    const actual = aptitudesMap.get(id);
+    if (!actual || new Date(aptitud.fechaAptitudPuesto) > new Date(actual.fechaAptitudPuesto)) {
+      aptitudesMap.set(id, aptitud);
+    }
+    }
+
+    dashboardData.aptitudes.push(
+    Array.from(aptitudesMap.values()).map((aptitud) => ({
+      aptitudPuesto: aptitud.aptitudPuesto ?? null
+    }))
+    );
+
+    return dashboardData;
+  }
 
   async findOne(id: string): Promise<Trabajador> {
     return await this.trabajadorModel.findById(id).exec();
