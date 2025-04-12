@@ -171,19 +171,20 @@ export class TrabajadoresService {
         }))
       ],
       imc: [],
-      presionArterial: [],
+      circunferenciaCintura: [],
       alcoholYTabaco: [],
       enfermedadesCronicas: [],
       antecedentes: [],
       agudezaVisual: [],
       daltonismo: [],
-      aptitudes: []
+      aptitudes: [],
+      consultas: []
     };
 
     // 5. EXPLORACIONES FÍSICAS – Obtener la más reciente por trabajador activo
     const exploraciones = await this.exploracionFisicaModel
     .find({ idTrabajador: { $in: idsActivos } })
-    .select('idTrabajador categoriaIMC categoriaTensionArterial fechaExploracionFisica')
+    .select('idTrabajador categoriaIMC categoriaCircunferenciaCintura fechaExploracionFisica')
     .lean();
 
     const exploracionesMap = new Map<string, any>();
@@ -202,9 +203,9 @@ export class TrabajadoresService {
     );
 
     // 6. PRESIÓN ARTERIAL – Usar la misma exploración más reciente
-    dashboardData.presionArterial.push(
+    dashboardData.circunferenciaCintura.push(
       Array.from(exploracionesMap.values()).map((exploracion) => ({
-        categoriaTensionArterial: exploracion.categoriaTensionArterial ?? null
+        categoriaCircunferenciaCintura: exploracion.categoriaCircunferenciaCintura ?? null
       }))
     );
 
@@ -305,6 +306,27 @@ export class TrabajadoresService {
     Array.from(aptitudesMap.values()).map((aptitud) => ({
       aptitudPuesto: aptitud.aptitudPuesto ?? null
     }))
+    );
+
+    // 15. CONSULTAS – Obtener la más reciente por trabajador activo
+    const consultas = await this.notaMedicaModel
+      .find({ idTrabajador: { $in: idsTodos } })
+      .select('idTrabajador fechaNotaMedica')
+      .lean();
+
+    const consultasMap = new Map<string, any>();
+    for (const consulta of consultas) {
+      const id = consulta.idTrabajador.toString();
+      const actual = consultasMap.get(id);
+      if (!actual || new Date(consulta.fechaNotaMedica) > new Date(actual.fechaNotaMedica)) {
+        consultasMap.set(id, consulta);
+      }
+    }
+
+    dashboardData.consultas.push(
+      Array.from(consultasMap.values()).map((consulta) => ({
+        fechaNotaMedica: consulta.fechaNotaMedica ?? null,
+      }))
     );
 
     return dashboardData;
