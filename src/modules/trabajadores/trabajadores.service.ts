@@ -151,7 +151,7 @@ export class TrabajadoresService {
     // 1. Obtener todos los trabajadores del centro
     const trabajadores = await this.trabajadorModel
       .find({ idCentroTrabajo: centroId })
-      .select('_id estadoLaboral sexo fechaNacimiento') // solo lo necesario
+      .select('_id estadoLaboral sexo fechaNacimiento agentesRiesgoActuales') // solo lo necesario
       .lean();
 
     // 2. Separar trabajadores activos e inactivos
@@ -169,6 +169,11 @@ export class TrabajadoresService {
           sexo: t.sexo,
           fechaNacimiento: t.fechaNacimiento
         }))
+      ],
+      agentesRiesgo: [
+        trabajadoresActivos.map(t => ({
+          agentesRiesgoActuales: t.agentesRiesgoActuales,
+        })),
       ],
       imc: [],
       circunferenciaCintura: [],
@@ -356,10 +361,11 @@ export class TrabajadoresService {
         telefono: worker.telefono ? String(worker.telefono).trim() : '',
         estadoCivil: worker.estadoCivil ? String(worker.estadoCivil).trim() : '',
         hijos: worker.hijos || 0,
+        agentesRiesgoActuales: worker.agentesRiesgoActuales || [],
         estadoLaboral: worker.estadoLaboral ? String(worker.estadoLaboral).trim() : 'Activo',
         idCentroTrabajo: worker.idCentroTrabajo,
         createdBy: worker.createdBy,
-        updatedBy: worker.updatedBy
+        updatedBy: worker.updatedBy,
     };
   }
 

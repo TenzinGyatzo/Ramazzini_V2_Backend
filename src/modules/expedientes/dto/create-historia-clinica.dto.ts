@@ -424,12 +424,10 @@ export class CreateHistoriaClinicaDto {
     @IsString({ message: 'secuelas debe ser un string' })
     secuelas: string;
 
-
     // Resumen de la Historia Clinica
     @IsOptional()
     @IsString({ message: 'resumenHistoriaClinica debe ser un string' })
     resumenHistoriaClinica: string;
-
 
     // Trabajador, ruta al archivo e info de creador y actualizador
     @ApiProperty({

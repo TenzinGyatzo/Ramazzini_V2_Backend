@@ -55,6 +55,9 @@ export class Trabajador extends Document {
 
     @Prop({ required: true })
     hijos: number;
+    
+    @Prop({ required: false, default: [] })
+    agentesRiesgoActuales: string[];
 
     @Prop({ required: true, enum: estadosLaborales, default: "Activo" })
     estadoLaboral: string;

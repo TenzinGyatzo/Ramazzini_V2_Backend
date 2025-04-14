@@ -13,6 +13,7 @@ export class Trabajador extends Document {
     telefono: string;
     estadoCivil: string;
     hijos: number;
+    agentesRiesgoActuales: string;
     estadoLaboral: string;
     centroTrabajo: CentroTrabajo | string;
     createdBy: User | string;

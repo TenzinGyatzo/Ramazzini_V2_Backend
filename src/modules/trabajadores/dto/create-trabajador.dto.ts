@@ -114,6 +114,11 @@ export class CreateTrabajadorDto {
     @IsNotEmpty({ message: 'La cantidad de hijos no puede estar vacía' })
     hijos: number;
 
+    // Agentes de Riesgo
+    @IsOptional()
+    @IsString({ each: true, message: 'Cada agente de riesgo debe ser un string' })
+    agentesRiesgoActuales: string[];
+
     @ApiProperty({
       description: 'Estado laboral del trabajador',
       example: 'Activo'

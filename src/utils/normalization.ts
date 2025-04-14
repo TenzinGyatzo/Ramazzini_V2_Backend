@@ -56,6 +56,7 @@ export function normalizeTrabajadorData(
     estadoCivil: dto.estadoCivil?.trim(),
     hijos: dto.hijos,
     estadoLaboral: dto.estadoLaboral?.trim(),
+    agentesRiesgoActuales: dto.agentesRiesgoActuales?.map(agent => agent.trim()),
     centroTrabajo: dto.idCentroTrabajo?.trim(),
     createdBy: dto.createdBy?.trim(),
     updatedBy: dto.updatedBy?.trim(),
