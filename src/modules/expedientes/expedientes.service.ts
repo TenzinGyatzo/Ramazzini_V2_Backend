@@ -15,6 +15,7 @@ import { FilesService } from '../files/files.service';
 import { convertirFechaISOaDDMMYYYY } from 'src/utils/dates';
 import path from 'path';
 import { parseISO } from 'date-fns';
+import { Trabajador } from '../trabajadores/schemas/trabajador.schema';
 
 
 @Injectable()
@@ -31,6 +32,7 @@ export class ExpedientesService {
     @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
     @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>,
     @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
+    @InjectModel(Trabajador.name) private trabajadorModel: Model<Trabajador>,
     private readonly filesService: FilesService
   ) {
     this.models = {
@@ -64,7 +66,14 @@ export class ExpedientesService {
     }
   
     const createdDocument = new model(createDto);
-    return createdDocument.save();
+    const savedDocument = await createdDocument.save();
+
+    // ✅ Actualizar el updatedAt del trabajador
+    if (createDto.idTrabajador) {
+      await this.actualizarUpdatedAtTrabajador(createDto.idTrabajador);
+    }
+  
+    return savedDocument;
   } 
 
   async updateOrCreateDocument(documentType: string, id: string, updateDto: any): Promise<any> {
@@ -75,7 +84,7 @@ export class ExpedientesService {
       throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
     }
   
-    const newFecha = parseISO(updateDto[dateField]); // Convertimos a Date en UTC
+    const newFecha = parseISO(updateDto[dateField]); // Convertimos a Date
     const trabajadorId = updateDto.idTrabajador;
   
     if (!newFecha) {
@@ -87,47 +96,46 @@ export class ExpedientesService {
     }
   
     const existingDocument = await model.findById(id).exec();
-    
+  
     if (!existingDocument) {
       throw new BadRequestException(`Documento con ID ${id} no encontrado`);
     }
   
-    const oldFecha = new Date(existingDocument[dateField]); // Convertimos a Date en UTC
+    const oldFecha = new Date(existingDocument[dateField]);
   
-    // **Normalizamos ambas fechas en UTC para comparación correcta**
+    let result;
     if (newFecha.toISOString() !== oldFecha.toISOString()) {
       const newDocumentData = { ...updateDto };
       delete newDocumentData._id;
   
       const newDocument = new model(newDocumentData);
-      return newDocument.save();
-    }
-
-    if (documentType === 'antidoping') {
-      const allDrugs = [
-        'marihuana',
-        'cocaina',
-        'anfetaminas',
-        'metanfetaminas',
-        'opiaceos',
-        'benzodiacepinas',
-        'fenciclidina',
-        'metadona',
-        'barbituricos',
-        'antidepresivosTriciclicos',
-      ];
-    
-      const unsetFields = Object.fromEntries(
-        allDrugs.filter((campo) => !(campo in updateDto)).map((campo) => [campo, ""])
-      );
-    
-      if (Object.keys(unsetFields).length > 0) {
-        await model.updateOne({ _id: id }, { $unset: unsetFields });
-      }
-    }    
+      result = await newDocument.save();
+    } else {
+      // Limpieza especial para antidoping
+      if (documentType === 'antidoping') {
+        const allDrugs = [
+          'marihuana', 'cocaina', 'anfetaminas', 'metanfetaminas',
+          'opiaceos', 'benzodiacepinas', 'fenciclidina', 'metadona',
+          'barbituricos', 'antidepresivosTriciclicos',
+        ];
   
-    return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
-  } 
+        const unsetFields = Object.fromEntries(
+          allDrugs.filter((campo) => !(campo in updateDto)).map((campo) => [campo, ""])
+        );
+  
+        if (Object.keys(unsetFields).length > 0) {
+          await model.updateOne({ _id: id }, { $unset: unsetFields });
+        }
+      }
+  
+      result = await model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
+    }
+  
+    // ✅ Actualizar el updatedAt del trabajador
+    await this.actualizarUpdatedAtTrabajador(trabajadorId);
+  
+    return result;
+  }
 
   async uploadDocument(createDto: any): Promise<any> {
     const model = this.models['documentoExterno'];
@@ -137,9 +145,9 @@ export class ExpedientesService {
     const trabajadorId = createDto.idTrabajador;
   
     if (!fechaDocumento) {
-      throw new BadRequestException(`El campo ${fechaDocumento} es requerido para este documento`);
+      throw new BadRequestException(`El campo fechaDocumento es requerido para este documento`);
     }
-
+  
     if (!nombreDocumento) {
       throw new BadRequestException('El campo nombreDocumento es requerido');
     }
@@ -147,7 +155,7 @@ export class ExpedientesService {
     if (!trabajadorId) {
       throw new BadRequestException('El campo idTrabajador es requerido');
     }
-
+  
     const startDate = startOfDay(new Date(fechaDocumento));
     const endDate = endOfDay(new Date(fechaDocumento));
   
@@ -158,15 +166,22 @@ export class ExpedientesService {
       nombreDocumento: nombreDocumento
     }).exec();
   
+    let result;
+  
     if (existingDocument) {
       // Si ya existe, actualízalo
-      return model.findByIdAndUpdate(existingDocument._id, createDto, { new: true }).exec();
+      result = await model.findByIdAndUpdate(existingDocument._id, createDto, { new: true }).exec();
+    } else {
+      // Si no existe, crea uno nuevo
+      const createdDocument = new model(createDto);
+      result = await createdDocument.save();
     }
   
-    // Si no existe, crea uno nuevo
-    const createdDocument = new model(createDto);
-    return createdDocument.save();
-  } 
+    // ✅ Actualizar el updatedAt del trabajador
+    await this.actualizarUpdatedAtTrabajador(trabajadorId);
+  
+    return result;
+  }
 
   async findDocuments(documentType: string, trabajadorId: string): Promise<any[]> {
     const model = this.models[documentType];
@@ -183,69 +198,6 @@ export class ExpedientesService {
     }
     return model.findById(id).exec();
   }
-
-  // async updateDocument(documentType: string, id: string, updateDto: any): Promise<any> {
-  //   const model = this.models[documentType];
-  //   const dateField = this.dateFields[documentType];
-  
-  //   if (!model || !dateField) {
-  //     throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
-  //   }
-  
-  //   const newFecha = updateDto[dateField];
-  //   const trabajadorId = updateDto.idTrabajador;
-  
-  //   if (!newFecha) {
-  //     throw new BadRequestException(`El campo ${dateField} es requerido para este documento`);
-  //   }
-  
-  //   if (!trabajadorId) {
-  //     throw new BadRequestException('El campo idTrabajador es requerido');
-  //   }
-  
-  //   const startDate = startOfDay(new Date(newFecha));
-  //   const endDate = endOfDay(new Date(newFecha));
-  
-  //   // Busca un documento existente para el tipo, trabajador y la nueva fecha
-  //   const conflictingDocument = await model.findOne({
-  //     idTrabajador: trabajadorId,
-  //     [dateField]: { $gte: startDate, $lte: endDate },
-  //   }).exec();
-  
-  //   if (conflictingDocument && conflictingDocument._id.toString() !== id) {
-  //     throw new BadRequestException(
-  //       `Ya existe un documento de tipo ${documentType} para la fecha ${newFecha} y el trabajador ${trabajadorId}`
-  //     );
-  //   }
-  
-  //   // Busca el documento existente para verificar si la fecha cambió
-  //   const existingDocument = await model.findById(id).exec();
-  //   if (!existingDocument) {
-  //     throw new BadRequestException(`Documento con ID ${id} no encontrado`);
-  //   }
-  
-  //   const oldFecha = existingDocument[dateField];
-  //   const rutaPDF = existingDocument.rutaPDF;
-  
-  //   if (newFecha !== oldFecha) {
-  //     try {
-  //       // Construir la ruta del archivo anterior
-  //       const formattedOldFecha = convertirFechaISOaDDMMYYYY(oldFecha).replace(/\//g, '-');
-  //       const oldFileName = formatDocumentName(documentType, formattedOldFecha);
-  //       const oldFilePath = path.join(rutaPDF, oldFileName);
-  
-  //       // console.log(`[DEBUG] Eliminando archivo anterior: ${oldFilePath}`);
-  //       await this.filesService.deleteFile(oldFilePath); // Usa FilesService para eliminar el archivo
-  //     } catch (error) {
-  //       console.error(`[ERROR] Error al eliminar el archivo anterior: ${error.message}`);
-  //     }
-  //   }   
-  
-  //   // Actualizar el documento con los nuevos datos
-  //   return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
-  // }
-
-  // Función para actualizar o crear un documento externo
   
   async upsertDocumentoExterno(id: string | null, updateDto: any): Promise<any> {
     const model = this.models.documentoExterno;
@@ -266,6 +218,8 @@ export class ExpedientesService {
     if (!trabajadorId) {
       throw new BadRequestException('El campo idTrabajador es requerido');
     }
+
+    let result;
   
     const existingDocument = id ? await model.findById(id).exec() : null;
   
@@ -302,12 +256,16 @@ export class ExpedientesService {
       }
   
       // Actualizar el documento existente
-      return model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
+      result = await model.findByIdAndUpdate(id, updateDto, { new: true }).exec();
+    } else {
+      const newDocument = new model(updateDto);
+      result = await newDocument.save();
     }
   
-    // Crear un nuevo documento si no existe
-    const newDocument = new model(updateDto);
-    return newDocument.save();
+    // ✅ Actualizar el updatedAt del trabajador
+    await this.actualizarUpdatedAtTrabajador(trabajadorId);
+
+    return result;
   }  
 
   async removeDocument(documentType: string, id: string): Promise<boolean> {
@@ -351,6 +309,12 @@ export class ExpedientesService {
     const result = await model.findByIdAndDelete(id).exec();
     return result !== null;
   } 
+  
+  private async actualizarUpdatedAtTrabajador(trabajadorId: string) {
+    if (!trabajadorId) return;
+    await this.trabajadorModel.findByIdAndUpdate(trabajadorId, { updatedAt: new Date() });
+  }
+
 }
 
 function formatDocumentName(documentType: string, fecha: string): string {
@@ -364,3 +328,4 @@ function formatDocumentName(documentType: string, fecha: string): string {
   // Unir las palabras con un espacio y agregar la fecha
   return `${capitalized.join(' ')} ${fecha}.pdf`;
 }
+

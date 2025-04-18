@@ -93,6 +93,34 @@ export class TrabajadoresService {
         exploracionesMap.set(id, exploracion);
       }
     }
+
+    // EXÁMENES DE VISTA
+    const examenesVista = await this.examenVistaModel
+      .find({ idTrabajador: { $in: trabajadoresIds } })
+      .lean();
+
+    const examenesVistaMap = new Map<string, any>();
+    for (const examen of examenesVista) {
+      const id = examen.idTrabajador.toString();
+      const actual = examenesVistaMap.get(id);
+      if (!actual || new Date(examen.fechaExamenVista) > new Date(actual.fechaExamenVista)) {
+        examenesVistaMap.set(id, examen);
+      }
+    }
+
+    // CONSULTAS
+    const consultas = await this.notaMedicaModel
+      .find({ idTrabajador: { $in: trabajadoresIds } })
+      .lean();
+
+    const consultasMap = new Map<string, any>();
+    for (const consulta of consultas) {
+      const id = consulta.idTrabajador.toString();
+      const actual = consultasMap.get(id);
+      if (!actual || new Date(consulta.fechaNotaMedica) > new Date(actual.fechaNotaMedica)) {
+        consultasMap.set(id, consulta);
+      }
+    }
   
     // COMBINAR
     const resultado = trabajadores.map(trabajador => {
@@ -101,6 +129,8 @@ export class TrabajadoresService {
       const historia = historiasMap.get(id);
       const aptitud = aptitudesMap.get(id);
       const exploracion = exploracionesMap.get(id);
+      const examenVista = examenesVistaMap.get(id);
+      const consulta = consultasMap.get(id);
   
       return {
         ...trabajador,
@@ -123,6 +153,20 @@ export class TrabajadoresService {
               categoriaCircunferenciaCintura: exploracion.categoriaCircunferenciaCintura ?? null,
               categoriaTensionArterial: exploracion.categoriaTensionArterial ?? null,
               resumenExploracionFisica: exploracion.resumenExploracionFisica ?? null,
+            }
+          : null,
+        examenVistaResumen: examenVista
+          ? {
+              requiereLentesUsoGeneral: examenVista.requiereLentesUsoGeneral ?? null,
+              interpretacionIshihara: examenVista.interpretacionIshihara ?? null,
+              sinCorreccionLejanaInterpretacion: examenVista.sinCorreccionLejanaInterpretacion ?? null,
+              ojoIzquierdoLejanaConCorreccion: examenVista.ojoIzquierdoLejanaConCorreccion ?? null,
+              ojoDerechoLejanaConCorreccion: examenVista.ojoDerechoLejanaConCorreccion ?? null,
+            }
+          : null,
+        consultaResumen: consulta
+          ? {
+              fechaNotaMedica: format(new Date(consulta.fechaNotaMedica), 'dd/MM/yyyy') ?? null,
             }
           : null,
       };
@@ -261,7 +305,7 @@ export class TrabajadoresService {
     // 11. EXÁMENES DE VISTA – Obtener el más reciente por trabajador activo
     const examenesVista = await this.examenVistaModel
     .find({ idTrabajador: { $in: idsActivos } })
-    .select('idTrabajador ojoIzquierdoLejanaSinCorreccion ojoDerechoLejanaSinCorreccion sinCorreccionLejanaInterpretacion ojoIzquierdoLejanaConCorreccion ojoDerechoLejanaConCorreccion conCorreccionLejanaInterpretacion interpretacionIshihara fechaExamenVista')
+    .select('idTrabajador requiereLentesUsoGeneral ojoIzquierdoLejanaSinCorreccion ojoDerechoLejanaSinCorreccion sinCorreccionLejanaInterpretacion ojoIzquierdoLejanaConCorreccion ojoDerechoLejanaConCorreccion conCorreccionLejanaInterpretacion interpretacionIshihara fechaExamenVista')
     .lean();
 
     const examenesMap = new Map<string, any>();
@@ -276,6 +320,7 @@ export class TrabajadoresService {
     // 12. AGUDEZA VISUAL
     dashboardData.agudezaVisual.push(
     Array.from(examenesMap.values()).map((examen) => ({
+      requiereLentesUsoGeneral: examen.requiereLentesUsoGeneral ?? null,
       ojoIzquierdoLejanaSinCorreccion: examen.ojoIzquierdoLejanaSinCorreccion ?? null,
       ojoDerechoLejanaSinCorreccion: examen.ojoDerechoLejanaSinCorreccion ?? null,
       sinCorreccionLejanaInterpretacion: examen.sinCorreccionLejanaInterpretacion ?? null,

@@ -18,6 +18,7 @@ const fonts = {
 export class PrinterService {
   private printer = new PdfPrinter(fonts);
 
+  // Método existente: guarda en disco
   createPdf(docDefinition: TDocumentDefinitions, outputPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
@@ -43,4 +44,22 @@ export class PrinterService {
       }
     });
   }
+
+  // 🚀 NUEVO MÉTODO: retorna un Buffer del PDF (no guarda en disco)
+  createPdfBuffer(docDefinition: TDocumentDefinitions): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      try {
+        const pdfDoc = this.printer.createPdfKitDocument(docDefinition);
+        const chunks: Uint8Array[] = [];
+
+        pdfDoc.on('data', (chunk) => chunks.push(chunk));
+        pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+
+        pdfDoc.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 }
+

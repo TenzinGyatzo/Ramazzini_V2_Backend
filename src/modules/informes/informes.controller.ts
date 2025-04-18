@@ -96,4 +96,55 @@ export class InformesController {
       throw error;
     }
   }
+
+  @Get('dashboard/ver/:empresaId/:trabajadorId/:userId')
+  async getInformeDashboard(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const buffer = await this.informesService.getInformeDashboard(
+        empresaId,
+        trabajadorId,
+        userId,
+      );
+  
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'inline; filename="NotaMedica.pdf"',
+        'Content-Length': buffer.length,
+      });
+  
+      res.end(buffer);
+    } catch (error) {
+      console.error('[getInformeDashboard] Error al generar el informe del dashboard:', error);
+      res.status(500).json({ message: 'Error al generar el PDF' });
+    }
+  }
+
+  @Get('dashboard/descargar/:empresaId/:trabajadorId/:userId')
+  async descargarInformeDashboard(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const buffer = await this.informesService.getInformeDashboard(empresaId, trabajadorId, userId);
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="NotaMedica.pdf"',
+        'Content-Length': buffer.length,
+      });
+
+      res.end(buffer);
+    } catch (error) {
+      console.error('[descargarInformeDashboard] Error al generar el PDF:', error);
+      res.status(500).json({ message: 'Error al generar el informe' });
+    }
+  }
+
 }
