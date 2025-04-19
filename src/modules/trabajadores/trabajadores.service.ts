@@ -139,7 +139,7 @@ export class TrabajadoresService {
               diabeticosPP: historia.diabeticosPP ?? null,
               alergicos: historia.alergicos ?? null,
               hipertensivosPP: historia.hipertensivosPP ?? null,
-              accidenteLaboral: historia.accidenteLaboral ?? null,
+              accidentes: historia.accidentes ?? null,
             }
           : null,
         aptitudResumen: aptitud
