@@ -390,6 +390,23 @@ export const aptitudPuestoInforme = (
       ),
     ],
     [
+      createTableCell('ADIPOSIDAD CORPORAL', 'sectionHeader', 'center'),
+      createTableCell(
+        exploracionFisica
+          ? formatearFechaUTC(exploracionFisica.fechaExploracionFisica)
+          : '-',
+        'tableCell',
+        'center',
+      ),
+      createTableCell(
+        exploracionFisica
+          ? `IMC: ${exploracionFisica.indiceMasaCorporal} - ${exploracionFisica.categoriaIMC}. Cintura: ${exploracionFisica.circunferenciaCintura} cm - ${exploracionFisica.categoriaCircunferenciaCintura}.`
+          : 'No se cuenta con exploración física',
+        'tableCell',
+        'center',
+      ),
+    ],
+    [
       createTableCell('EXAMEN VISUAL', 'sectionHeader', 'center'),
       createTableCell(
         examenVista ? formatearFechaUTC(examenVista.fechaExamenVista) : '-',
