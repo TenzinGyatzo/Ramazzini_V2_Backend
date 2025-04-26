@@ -136,10 +136,15 @@ export class TrabajadoresService {
         ...trabajador,
         historiaClinicaResumen: historia
           ? {
+              lumbalgias: historia.lumbalgias ?? null,
               diabeticosPP: historia.diabeticosPP ?? null,
+              cardiopaticosPP: historia.cardiopaticosPP ?? null,
               alergicos: historia.alergicos ?? null,
               hipertensivosPP: historia.hipertensivosPP ?? null,
+              epilepticosPP: historia.epilepticosPP ?? null,
               accidentes: historia.accidentes ?? null,
+              quirurgicos: historia.quirurgicos ?? null,
+              traumaticos: historia.traumaticos ?? null,
             }
           : null,
         aptitudResumen: aptitud
