@@ -19,6 +19,7 @@ import { MedicosFirmantesModule } from './modules/medicos-firmantes/medicos-firm
 import { EmailsModule } from './modules/emails/emails.module';
 import { PagosModule } from './modules/pagos/pagos.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { RiesgosTrabajoModule } from './modules/riesgos-trabajo/riesgos-trabajo.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     EmailsModule,
     PagosModule,
     ScheduleModule.forRoot(),
+    RiesgosTrabajoModule,
   ],
 })
 export class AppModule {}
