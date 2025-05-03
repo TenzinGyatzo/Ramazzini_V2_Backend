@@ -3,11 +3,11 @@ import { RiesgosTrabajoService } from './riesgos-trabajo.service';
 import { CreateRiesgosTrabajoDto } from './dto/create-riesgos-trabajo.dto';
 import { UpdateRiesgosTrabajoDto } from './dto/update-riesgos-trabajo.dto';
 
-@Controller('riesgos-trabajo')
+@Controller('riesgos-trabajo/:trabajadorId')
 export class RiesgosTrabajoController {
   constructor(private readonly riesgosTrabajoService: RiesgosTrabajoService) {}
 
-  @Post()
+  @Post('crear')
   create(@Body() createRiesgosTrabajoDto: CreateRiesgosTrabajoDto) {
     return this.riesgosTrabajoService.create(createRiesgosTrabajoDto);
   }
@@ -17,18 +17,18 @@ export class RiesgosTrabajoController {
     return this.riesgosTrabajoService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
+  @Get(':riesgoTrabajoId')
+  findOne(@Param('riesgoTrabajoId') id: string) {
     return this.riesgosTrabajoService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRiesgosTrabajoDto: UpdateRiesgosTrabajoDto) {
+  @Patch(':riesgoTrabajoId')
+  update(@Param('riesgoTrabajoId') id: string, @Body() updateRiesgosTrabajoDto: UpdateRiesgosTrabajoDto) {
     return this.riesgosTrabajoService.update(+id, updateRiesgosTrabajoDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete(':riesgoTrabajoId')
+  remove(@Param('riesgoTrabajoId') id: string) {
     return this.riesgosTrabajoService.remove(+id);
   }
 }

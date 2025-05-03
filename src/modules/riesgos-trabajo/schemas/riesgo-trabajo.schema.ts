@@ -13,8 +13,8 @@ const tipoAlta = ['Interna', 'ST2', 'Incapacidad Activa'];
 
 @Schema()
 export class RiesgoTrabajo extends Document {
-    @Prop()
-    fechaRiesgo?: Date;
+    @Prop({required: true})
+    fechaRiesgo: Date;
 
     @Prop({ match: /^\d{10}$/ })
     NSS?: string;
