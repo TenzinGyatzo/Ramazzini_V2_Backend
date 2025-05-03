@@ -22,19 +22,57 @@ export class RiesgosTrabajoService {
     }
   }
 
-  findAll() {
-    return `This action returns all riesgosTrabajo`;
+  async findAll() {
+    try {
+      return await this.RiesgoTrabajoModel.find().exec();
+    } catch (error) {
+      console.error('Error al buscar los riesgos de trabajo:', error);
+      throw new Error('Error al buscar los riesgos de trabajo');
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} riesgosTrabajo`;
+  async findOne(id: string) {
+    try {
+      const riesgoTrabajo = await this.RiesgoTrabajoModel.findById(id).exec();
+      if (!riesgoTrabajo) {
+        throw new Error('Riesgo de trabajo no encontrado');
+      }
+      return riesgoTrabajo;
+    } catch (error) {
+      console.error('Error al buscar el riesgo de trabajo:', error);
+      throw new Error('Error al buscar el riesgo de trabajo');
+    }
   }
 
-  update(id: number, updateRiesgosTrabajoDto: UpdateRiesgosTrabajoDto) {
-    return `This action updates a #${id} riesgosTrabajo`;
+  async update(id: string, updateRiesgosTrabajoDto: UpdateRiesgosTrabajoDto) {
+    try {
+      const updatedRiesgoTrabajo = await this.RiesgoTrabajoModel.findByIdAndUpdate(
+        id,
+        updateRiesgosTrabajoDto,
+        { new: true },
+      ).exec();
+      if (!updatedRiesgoTrabajo) {
+        throw new Error('Riesgo de trabajo no encontrado');
+      }
+      return updatedRiesgoTrabajo;
+    } catch (error) {
+      console.error('Error al actualizar el riesgo de trabajo:', error);
+      throw new Error('Error al actualizar el riesgo de trabajo');
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} riesgosTrabajo`;
+  async remove(id: string) {
+    try {
+      const deletedRiesgoTrabajo = await this.RiesgoTrabajoModel.findByIdAndDelete(id).exec();
+      if (!deletedRiesgoTrabajo) {
+        throw new Error('Riesgo de trabajo no encontrado');
+      }
+      return {
+        message: 'Riesgo de trabajo eliminado exitosamente',
+      };
+    } catch (error) {
+      console.error('Error al eliminar el riesgo de trabajo:', error);
+      throw new Error('Error al eliminar el riesgo de trabajo');
+    }
   }
 }

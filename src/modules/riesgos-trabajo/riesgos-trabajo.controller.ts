@@ -12,23 +12,23 @@ export class RiesgosTrabajoController {
     return this.riesgosTrabajoService.create(createRiesgosTrabajoDto);
   }
 
-  @Get()
+  @Get('riesgos-trabajo')
   findAll() {
     return this.riesgosTrabajoService.findAll();
   }
 
   @Get(':riesgoTrabajoId')
-  findOne(@Param('riesgoTrabajoId') id: string) {
-    return this.riesgosTrabajoService.findOne(+id);
+  findOne(@Param('riesgoTrabajoId') riesgoTrabajoId: string) {
+    return this.riesgosTrabajoService.findOne(riesgoTrabajoId);
   }
 
   @Patch(':riesgoTrabajoId')
-  update(@Param('riesgoTrabajoId') id: string, @Body() updateRiesgosTrabajoDto: UpdateRiesgosTrabajoDto) {
-    return this.riesgosTrabajoService.update(+id, updateRiesgosTrabajoDto);
+  update(@Param('riesgoTrabajoId') riesgoTrabajoId: string, @Body() updateRiesgosTrabajoDto: UpdateRiesgosTrabajoDto) {
+    return this.riesgosTrabajoService.update(riesgoTrabajoId, updateRiesgosTrabajoDto);
   }
 
   @Delete(':riesgoTrabajoId')
-  remove(@Param('riesgoTrabajoId') id: string) {
-    return this.riesgosTrabajoService.remove(+id);
+  remove(@Param('riesgoTrabajoId') riesgoTrabajoId: string) {
+    return this.riesgosTrabajoService.remove(riesgoTrabajoId);
   }
 }
