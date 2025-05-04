@@ -18,6 +18,7 @@ import { ExploracionFisica } from '../expedientes/schemas/exploracion-fisica.sch
 import { HistoriaClinica } from '../expedientes/schemas/historia-clinica.schema';
 import { NotaMedica } from '../expedientes/schemas/nota-medica.schema';
 import { FilesService } from '../files/files.service';
+import { RiesgoTrabajo } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
 
 @Injectable()
 export class TrabajadoresService {
@@ -30,6 +31,7 @@ export class TrabajadoresService {
   @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
   @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>,
   @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
+  @InjectModel(RiesgoTrabajo.name) private riesgoTrabajoModel: Model<RiesgoTrabajo>,
   private filesService: FilesService) {}
 
   async create(createTrabajadorDto: CreateTrabajadorDto): Promise<Trabajador> {
@@ -387,8 +389,22 @@ export class TrabajadoresService {
     return dashboardData;
   }
 
-  async findOne(id: string): Promise<Trabajador> {
-    return await this.trabajadorModel.findById(id).exec();
+  async findOne(id: string): Promise<any> {
+    // 1. Obtener al trabajador
+    const trabajador = await this.trabajadorModel.findById(id).lean();
+    if (!trabajador) throw new Error('Trabajador no encontrado');
+  
+    // 2. Obtener los riesgos de trabajo
+    const riesgos = await this.riesgoTrabajoModel
+      .find({ idTrabajador: id })
+      .sort({ fechaRiesgo: -1 })
+      .lean();
+  
+    // 3. Adjuntar y retornar
+    return {
+      ...trabajador,
+      riesgosTrabajo: riesgos
+    };
   }
 
   async update(id: string, updateTrabajadorDto: UpdateTrabajadorDto): Promise<Trabajador> {

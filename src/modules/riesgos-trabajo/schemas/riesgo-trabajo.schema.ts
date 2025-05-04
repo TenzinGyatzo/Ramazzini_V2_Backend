@@ -9,7 +9,7 @@ const siNO = ['Si', 'No'];
 
 const tiposManejo = ['IMSS', 'Interno'];
 
-const tipoAlta = ['Interna', 'ST2', 'Incapacidad Activa'];
+const tipoAlta = ['Alta Interna', 'Alta ST2', 'Incapacidad Activa'];
 
 @Schema()
 export class RiesgoTrabajo extends Document {

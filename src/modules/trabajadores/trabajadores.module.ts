@@ -11,6 +11,7 @@ import { ExamenVista, ExamenVistaSchema } from '../expedientes/schemas/examen-vi
 import { ExploracionFisica, ExploracionFisicaSchema } from '../expedientes/schemas/exploracion-fisica.schema';
 import { HistoriaClinica, HistoriaClinicaSchema } from '../expedientes/schemas/historia-clinica.schema';
 import { NotaMedica, NotaMedicaSchema } from '../expedientes/schemas/nota-medica.schema';
+import { RiesgoTrabajo, RiesgoTrabajoSchema } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
 import { FilesModule } from '../files/files.module';
 
 @Module({
@@ -25,6 +26,7 @@ import { FilesModule } from '../files/files.module';
       { name: ExploracionFisica.name, schema: ExploracionFisicaSchema },
       { name: HistoriaClinica.name, schema: HistoriaClinicaSchema },
       { name: NotaMedica.name, schema: NotaMedicaSchema },
+      { name: RiesgoTrabajo.name, schema: RiesgoTrabajoSchema },
     ]),
     FilesModule,
   ],
