@@ -19,6 +19,7 @@ import { HistoriaClinica } from '../expedientes/schemas/historia-clinica.schema'
 import { NotaMedica } from '../expedientes/schemas/nota-medica.schema';
 import { FilesService } from '../files/files.service';
 import { RiesgoTrabajo } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
+import { CentroTrabajo } from '../centros-trabajo/schemas/centro-trabajo.schema';
 
 @Injectable()
 export class TrabajadoresService {
@@ -32,6 +33,7 @@ export class TrabajadoresService {
   @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>,
   @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
   @InjectModel(RiesgoTrabajo.name) private riesgoTrabajoModel: Model<RiesgoTrabajo>,
+  @InjectModel(CentroTrabajo.name) private centroTrabajoModel: Model<CentroTrabajo>,
   private filesService: FilesService) {}
 
   async create(createTrabajadorDto: CreateTrabajadorDto): Promise<Trabajador> {
@@ -123,6 +125,18 @@ export class TrabajadoresService {
         consultasMap.set(id, consulta);
       }
     }
+
+    // RIESGOS DE TRABAJO
+    const riesgos = await this.riesgoTrabajoModel
+      .find({ idTrabajador: { $in: trabajadoresIds } })
+      .lean();
+
+    const riesgosMap = new Map<string, any[]>();
+    for (const riesgo of riesgos) {
+      const id = riesgo.idTrabajador.toString();
+      if (!riesgosMap.has(id)) riesgosMap.set(id, []);
+      riesgosMap.get(id).push(riesgo);
+    }
   
     // COMBINAR
     const resultado = trabajadores.map(trabajador => {
@@ -176,11 +190,58 @@ export class TrabajadoresService {
               fechaNotaMedica: format(new Date(consulta.fechaNotaMedica), 'dd/MM/yyyy') ?? null,
             }
           : null,
+          riesgosTrabajo: riesgosMap.get(id) ?? [],
       };
     });
   
     return resultado;
   } 
+
+  async findRiesgosTrabajoPorEmpresa(empresaId: string): Promise<any[]> {
+    // Paso 1: Obtener los centros de trabajo de la empresa
+    const centros = await this.centroTrabajoModel
+      .find({ idEmpresa: empresaId }, '_id')
+      .lean();
+  
+    const centroIds = centros.map(c => c._id);
+  
+    if (centroIds.length === 0) return [];
+  
+    // Paso 2: Obtener los trabajadores de esos centros
+    const trabajadores = await this.trabajadorModel
+      .find({ idCentroTrabajo: { $in: centroIds } }, '_id nombre puesto fechaNacimiento fechaIngreso idCentroTrabajo NSS')
+      .lean();
+  
+    const trabajadoresIds = trabajadores.map(t => t._id);
+  
+    if (trabajadoresIds.length === 0) return [];
+  
+    // Paso 3: Obtener los riesgos de esos trabajadores
+    const riesgos = await this.riesgoTrabajoModel
+      .find({ idTrabajador: { $in: trabajadoresIds } })
+      .lean();
+  
+    const trabajadoresMap = new Map<string, any>();
+    for (const trabajador of trabajadores) {
+      trabajadoresMap.set(trabajador._id.toString(), trabajador);
+    }
+  
+    const riesgosEnriquecidos = riesgos.map(riesgo => {
+      const trabajador = trabajadoresMap.get(riesgo.idTrabajador.toString());
+  
+      return {
+        ...riesgo,
+        nombreTrabajador: trabajador?.nombre ?? 'Desconocido',
+        puestoTrabajador: trabajador?.puesto ?? '',
+        fechaNacimiento: trabajador?.fechaNacimiento ?? null,
+        fechaIngreso: trabajador?.fechaIngreso ?? null,
+        NSS: trabajador?.NSS ?? '',
+        idCentroTrabajo: trabajador?.idCentroTrabajo ?? null,
+      };
+    });
+  
+    return riesgosEnriquecidos;
+  }   
   
   async findSexosYFechasNacimientoActivos(centroId: string): Promise<any[]> {
     const resultados = await this.trabajadorModel.find({ 

@@ -46,20 +46,43 @@ export class RiesgosTrabajoService {
 
   async update(id: string, updateRiesgosTrabajoDto: UpdateRiesgosTrabajoDto) {
     try {
+      const originalDoc = await this.RiesgoTrabajoModel.findById(id).lean();
+      if (!originalDoc) {
+        throw new Error('Riesgo de trabajo no encontrado');
+      }
+  
+      // Determinar qué campos se deben eliminar (los que existían antes y ya no están en el DTO)
+      const keysToUnset = {};
+      for (const key in originalDoc) {
+        if (
+          key !== '_id' &&
+          key !== '__v' &&
+          key !== 'updatedAt' && // <-- evita conflicto
+          !(key in updateRiesgosTrabajoDto)
+        ) {
+          keysToUnset[key] = '';
+        }
+      }      
+  
       const updatedRiesgoTrabajo = await this.RiesgoTrabajoModel.findByIdAndUpdate(
         id,
-        updateRiesgosTrabajoDto,
+        {
+          $set: updateRiesgosTrabajoDto,
+          $unset: keysToUnset,
+        },
         { new: true },
       ).exec();
+  
       if (!updatedRiesgoTrabajo) {
         throw new Error('Riesgo de trabajo no encontrado');
       }
+  
       return updatedRiesgoTrabajo;
     } catch (error) {
       console.error('Error al actualizar el riesgo de trabajo:', error);
       throw new Error('Error al actualizar el riesgo de trabajo');
     }
-  }
+  }  
 
   async remove(id: string) {
     try {

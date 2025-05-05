@@ -8,13 +8,17 @@ import { isValidObjectId } from 'mongoose';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { TrabajadoresService } from '../trabajadores/trabajadores.service';
 
 dotenv.config();
 
 @Controller('api')
 @ApiTags('Empresas')
 export class EmpresasController {
-  constructor(private readonly empresasService: EmpresasService) {}
+  constructor(
+    private readonly empresasService: EmpresasService,
+    private readonly trabajadoresService: TrabajadoresService
+  ) {}
 
   @Post('crear-empresa')
   @ApiOperation({ summary: 'Crea una nueva empresa' })
@@ -139,6 +143,22 @@ export class EmpresasController {
       message: 'Empresa actualizada exitosamente',
       data: updatedEmpresa,
     };
+  }
+
+  @Get(':empresaId/riesgos-trabajo')
+  @ApiOperation({ summary: 'Obtiene riesgos de trabajo por empresa' })
+  @ApiResponse({ status: 200, description: 'Riesgos de trabajo encontrados exitosamente' })
+  @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido' })
+  async findRiesgosTrabajoPorEmpresa(
+    @Param('empresaId') empresaId: string
+  ) {
+    if (!isValidObjectId(empresaId)) {
+      throw new BadRequestException('El ID de empresa no es válido');
+    }
+
+    const trabajadoresConHistoria = await this.trabajadoresService.findRiesgosTrabajoPorEmpresa(empresaId);
+
+    return trabajadoresConHistoria || [];
   }
 
   @Delete('/eliminar-empresa/:id')

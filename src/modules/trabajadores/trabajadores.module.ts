@@ -13,6 +13,7 @@ import { HistoriaClinica, HistoriaClinicaSchema } from '../expedientes/schemas/h
 import { NotaMedica, NotaMedicaSchema } from '../expedientes/schemas/nota-medica.schema';
 import { RiesgoTrabajo, RiesgoTrabajoSchema } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
 import { FilesModule } from '../files/files.module';
+import { CentroTrabajo, CentroTrabajoSchema } from '../centros-trabajo/schemas/centro-trabajo.schema';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { FilesModule } from '../files/files.module';
       { name: HistoriaClinica.name, schema: HistoriaClinicaSchema },
       { name: NotaMedica.name, schema: NotaMedicaSchema },
       { name: RiesgoTrabajo.name, schema: RiesgoTrabajoSchema },
+      { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
     ]),
     FilesModule,
   ],
