@@ -209,7 +209,7 @@ export class TrabajadoresService {
   
     // Paso 2: Obtener los trabajadores de esos centros
     const trabajadores = await this.trabajadorModel
-      .find({ idCentroTrabajo: { $in: centroIds } }, '_id nombre puesto fechaNacimiento fechaIngreso idCentroTrabajo NSS')
+      .find({ idCentroTrabajo: { $in: centroIds } }, '_id nombre sexo puesto fechaNacimiento fechaIngreso idCentroTrabajo')
       .lean();
   
     const trabajadoresIds = trabajadores.map(t => t._id);
@@ -232,10 +232,10 @@ export class TrabajadoresService {
       return {
         ...riesgo,
         nombreTrabajador: trabajador?.nombre ?? 'Desconocido',
+        sexoTrabajador: trabajador?.sexo ?? '',
         puestoTrabajador: trabajador?.puesto ?? '',
         fechaNacimiento: trabajador?.fechaNacimiento ?? null,
         fechaIngreso: trabajador?.fechaIngreso ?? null,
-        NSS: trabajador?.NSS ?? '',
         idCentroTrabajo: trabajador?.idCentroTrabajo ?? null,
       };
     });

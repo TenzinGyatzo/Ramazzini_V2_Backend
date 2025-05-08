@@ -16,7 +16,10 @@ export class RiesgoTrabajo extends Document {
     @Prop({required: true})
     fechaRiesgo: Date;
 
-    @Prop({ match: /^\d{10}$/ })
+    @Prop()
+    recaida?: string;
+
+    @Prop({ match: /^\d{11}$/ })
     NSS?: string;
 
     @Prop({enum: tiposDeRiesgo })

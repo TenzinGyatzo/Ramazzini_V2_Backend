@@ -18,8 +18,13 @@ export class CreateRiesgosTrabajoDto {
     fechaRiesgo: Date;
 
     @IsOptional()
+    @IsString({ message: 'La recaída debe ser una cadena de texto' })
+    @IsEnum(siNO, { message: `La recaída debe ser uno de los siguientes: ${siNO.join(', ')}` })
+    recaida?: string;
+
+    @IsOptional()
     @IsString({ message: 'El NSS debe ser una cadena de texto' })
-    @Length(10, 10, { message: 'El NSS debe tener exactamente 10 caracteres' })
+    @Length(11, 11, { message: 'El NSS debe tener exactamente 11 caracteres' })
     NSS?: string;
 
     @IsOptional()
