@@ -68,9 +68,9 @@ export function normalizeProveedorSaludData(
 ) {
   return {
     ...dto,
-    nombre: dto.nombre?.trim(),
-    RFC: dto.RFC?.trim().toUpperCase(),
-    perfilProveedorSalud: dto.perfilProveedorSalud?.trim(),
+    nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : "",
+    RFC: typeof dto.RFC === 'string' ? dto.RFC.trim().toUpperCase() : "",
+    perfilProveedorSalud: typeof dto.perfilProveedorSalud === 'string' ? dto.perfilProveedorSalud.trim() : "",
 
     logotipoEmpresa: dto.logotipoEmpresa
       ? {
@@ -79,21 +79,18 @@ export function normalizeProveedorSaludData(
         }
       : undefined,
 
-    estado: dto.estado?.trim(),
-    municipio: dto.municipio?.trim(),
-    codigoPostal: dto.codigoPostal?.trim(),
-    direccion: dto.direccion?.trim(),
-    telefono: dto.telefono?.trim(),
-    correoElectronico: dto.correoElectronico?.trim(),
-    sitioWeb: dto.sitioWeb?.trim(),
+    estado: typeof dto.estado === 'string' ? dto.estado.trim() : "",
+    municipio: typeof dto.municipio === 'string' ? dto.municipio.trim() : "",
+    codigoPostal: typeof dto.codigoPostal === 'string' ? dto.codigoPostal.trim() : "",
+    direccion: typeof dto.direccion === 'string' ? dto.direccion.trim() : "",
+    telefono: typeof dto.telefono === 'string' ? dto.telefono.trim() : "",
+    correoElectronico: typeof dto.correoElectronico === 'string' ? dto.correoElectronico.trim() : "",
+    sitioWeb: typeof dto.sitioWeb === 'string' ? dto.sitioWeb.trim() : "",
 
     // **Campos relacionados con el periodo de prueba y limites**
     fechaInicioTrial: dto.fechaInicioTrial ?? new Date(),
     periodoDePruebaFinalizado: dto.periodoDePruebaFinalizado ?? false,
     maxHistoriasPermitidasAlMes: dto.maxHistoriasPermitidasAlMes ?? 25,
-    // maxUsuariosPermitidos: dto.maxUsuariosPermitidos ?? 1,
-    // maxEmpresasPermitidas: dto.maxEmpresasPermitidas ?? 5,
-    // maxTrabajadoresPermitidos: dto.maxTrabajadoresPermitidos ?? 25,
 
     addOns: dto.addOns?.map((addOn) => ({
       tipo: addOn.tipo.trim(),
@@ -103,30 +100,41 @@ export function normalizeProveedorSaludData(
   };
 }
 
+
+// normalization.ts
+
 export function normalizeMedicoFirmanteData(
   dto: CreateMedicoFirmanteDto | UpdateMedicoFirmanteDto,
 ) {
-  return {
+  const normalizedDto = {
     ...dto,
-    nombre: dto.nombre?.trim(),
-    tituloProfesional: dto.tituloProfesional?.trim(),
-    numeroCedulaProfesional: dto.numeroCedulaProfesional?.trim(),
-    especialistaSaludTrabajo: dto.especialistaSaludTrabajo?.trim(),
-    numeroCedulaEspecialista: dto.numeroCedulaEspecialista?.trim(),
-    nombreCredencialAdicional: dto.nombreCredencialAdicional?.trim(),
-    numeroCredencialAdicional: dto.numeroCredencialAdicional?.trim(),
-    firma: dto.firma
+    nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : "",
+    tituloProfesional: typeof dto.tituloProfesional === 'string' ? dto.tituloProfesional.trim() : "",
+    numeroCedulaProfesional: typeof dto.numeroCedulaProfesional === 'string' ? dto.numeroCedulaProfesional.trim() : "",
+    especialistaSaludTrabajo: typeof dto.especialistaSaludTrabajo === 'string' ? dto.especialistaSaludTrabajo.trim() : "",
+    numeroCedulaEspecialista: typeof dto.numeroCedulaEspecialista === 'string' ? dto.numeroCedulaEspecialista.trim() : "",
+    nombreCredencialAdicional: typeof dto.nombreCredencialAdicional === 'string' ? dto.nombreCredencialAdicional.trim() : "",
+    numeroCredencialAdicional: typeof dto.numeroCredencialAdicional === 'string' ? dto.numeroCredencialAdicional.trim() : "",
+    firma: dto.firma && typeof dto.firma.data === 'string' && typeof dto.firma.contentType === 'string'
       ? {
           data: dto.firma.data.trim(),
           contentType: dto.firma.contentType.trim(),
         }
       : undefined,
-    firmaConAntefirma: dto.firmaConAntefirma
+    firmaConAntefirma: dto.firmaConAntefirma && typeof dto.firmaConAntefirma.data === 'string' && typeof dto.firmaConAntefirma.contentType === 'string'
       ? {
           data: dto.firmaConAntefirma.data.trim(),
           contentType: dto.firmaConAntefirma.contentType.trim(),
         }
       : undefined,
-    idUser: dto.idUser?.trim(),
   };
+
+  // ✅ Verificar y eliminar idUser si está vacío
+  if (!dto.idUser || dto.idUser.trim() === "") {
+    delete normalizedDto.idUser;
+  } else {
+    normalizedDto.idUser = dto.idUser.trim();
+  }
+
+  return normalizedDto;
 }

@@ -37,11 +37,13 @@ export class ProveedoresSaludService {
     if (!proveedor) {
       throw new Error('Proveedor de salud no encontrado');
     }
+
+    const normalizedDto = normalizeProveedorSaludData(updateProveedoresSaludDto);
   
     // Actualizar solo los campos proporcionados en el DTO
-    Object.keys(updateProveedoresSaludDto).forEach(key => {
-      if (updateProveedoresSaludDto[key] !== undefined) {
-        proveedor[key] = updateProveedoresSaludDto[key];
+    Object.keys(normalizedDto).forEach(key => {
+      if (normalizedDto[key] !== undefined) {
+        proveedor[key] = normalizedDto[key];
       }
     });
   
