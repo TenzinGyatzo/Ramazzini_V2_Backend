@@ -480,9 +480,9 @@ export const notaMedicaInforme = (
                     }
                   : null,
               
-                (proveedorSalud.codigoPostal && proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
                   ? {
-                      text: `${proveedorSalud.codigoPostal} ${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
+                      text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
