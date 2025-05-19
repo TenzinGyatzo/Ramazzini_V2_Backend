@@ -292,4 +292,15 @@ export class ProveedoresSaludController {
   async getNotasMedicasDelMes(@Param('idProveedorSalud') idProveedorSalud: string) {
     return this.proveedoresSaludService.getNotasMedicasDelMes(idProveedorSalud);
   }
+  
+  @Get('/cantidad-historias-clinicas/:idProveedorSalud')
+  async getTodasHistoriasClinicas(@Param('idProveedorSalud') idProveedorSalud: string) {
+    return this.proveedoresSaludService.getTodasHistoriasClinicas(idProveedorSalud);
+  }
+
+  @Get('/cantidad-notas-medicas/:idProveedorSalud')
+  async getTodasNotasMedicas(@Param('idProveedorSalud') idProveedorSalud: string) {
+    return this.proveedoresSaludService.getTodasNotasMedicas(idProveedorSalud);
+  }
+
 }
