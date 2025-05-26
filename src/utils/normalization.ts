@@ -66,39 +66,64 @@ export function normalizeTrabajadorData(
 export function normalizeProveedorSaludData(
   dto: CreateProveedoresSaludDto | UpdateProveedoresSaludDto,
 ) {
-  return {
-    ...dto,
-    nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : "",
-    RFC: typeof dto.RFC === 'string' ? dto.RFC.trim().toUpperCase() : "",
-    perfilProveedorSalud: typeof dto.perfilProveedorSalud === 'string' ? dto.perfilProveedorSalud.trim() : "",
+  const result: any = {};
 
-    logotipoEmpresa: dto.logotipoEmpresa
+  if ('nombre' in dto)
+    result.nombre = typeof dto.nombre === 'string' ? dto.nombre.trim() : "";
+
+  if ('RFC' in dto)
+    result.RFC = typeof dto.RFC === 'string' ? dto.RFC.trim().toUpperCase() : "";
+
+  if ('perfilProveedorSalud' in dto)
+    result.perfilProveedorSalud = typeof dto.perfilProveedorSalud === 'string' ? dto.perfilProveedorSalud.trim() : "";
+
+  if ('logotipoEmpresa' in dto)
+    result.logotipoEmpresa = dto.logotipoEmpresa
       ? {
           data: dto.logotipoEmpresa.data.trim(),
           contentType: dto.logotipoEmpresa.contentType.trim(),
         }
-      : undefined,
+      : undefined;
 
-    estado: typeof dto.estado === 'string' ? dto.estado.trim() : "",
-    municipio: typeof dto.municipio === 'string' ? dto.municipio.trim() : "",
-    codigoPostal: typeof dto.codigoPostal === 'string' ? dto.codigoPostal.trim() : "",
-    direccion: typeof dto.direccion === 'string' ? dto.direccion.trim() : "",
-    telefono: typeof dto.telefono === 'string' ? dto.telefono.trim() : "",
-    correoElectronico: typeof dto.correoElectronico === 'string' ? dto.correoElectronico.trim() : "",
-    sitioWeb: typeof dto.sitioWeb === 'string' ? dto.sitioWeb.trim() : "",
+  if ('estado' in dto)
+    result.estado = typeof dto.estado === 'string' ? dto.estado.trim() : "";
 
-    // **Campos relacionados con el periodo de prueba y limites**
-    fechaInicioTrial: dto.fechaInicioTrial ?? new Date(),
-    periodoDePruebaFinalizado: dto.periodoDePruebaFinalizado ?? false,
-    maxHistoriasPermitidasAlMes: dto.maxHistoriasPermitidasAlMes ?? 25,
+  if ('municipio' in dto)
+    result.municipio = typeof dto.municipio === 'string' ? dto.municipio.trim() : "";
 
-    addOns: dto.addOns?.map((addOn) => ({
+  if ('codigoPostal' in dto)
+    result.codigoPostal = typeof dto.codigoPostal === 'string' ? dto.codigoPostal.trim() : "";
+
+  if ('direccion' in dto)
+    result.direccion = typeof dto.direccion === 'string' ? dto.direccion.trim() : "";
+
+  if ('telefono' in dto)
+    result.telefono = typeof dto.telefono === 'string' ? dto.telefono.trim() : "";
+
+  if ('correoElectronico' in dto)
+    result.correoElectronico = typeof dto.correoElectronico === 'string' ? dto.correoElectronico.trim() : "";
+
+  if ('sitioWeb' in dto)
+    result.sitioWeb = typeof dto.sitioWeb === 'string' ? dto.sitioWeb.trim() : "";
+
+  if ('fechaInicioTrial' in dto)
+    result.fechaInicioTrial = dto.fechaInicioTrial;
+
+  if ('periodoDePruebaFinalizado' in dto)
+    result.periodoDePruebaFinalizado = dto.periodoDePruebaFinalizado;
+
+  if ('maxHistoriasPermitidasAlMes' in dto)
+    result.maxHistoriasPermitidasAlMes = dto.maxHistoriasPermitidasAlMes;
+
+  if ('addOns' in dto)
+    result.addOns = dto.addOns?.map((addOn) => ({
       tipo: addOn.tipo.trim(),
       cantidad: addOn.cantidad,
-    })) ?? [],
+    }));
 
-  };
+  return result;
 }
+
 
 
 // normalization.ts

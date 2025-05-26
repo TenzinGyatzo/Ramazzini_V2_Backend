@@ -203,7 +203,7 @@ export class ProveedoresSaludController {
           { 
             periodoDePruebaFinalizado: true,
             fechaInicioTrial: proveedorSalud.fechaInicioTrial
-          },
+          }
         );
 
         if (!updatedProveedorSalud) {
@@ -254,7 +254,7 @@ export class ProveedoresSaludController {
             // maxTrabajadoresPermitidos: 0,
             maxHistoriasPermitidasAlMes: 0,
             addOns: [],
-          },
+          }
         );
   
         if (!updatedProveedorSalud) {

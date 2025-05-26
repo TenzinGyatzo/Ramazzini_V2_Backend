@@ -31,22 +31,17 @@ export class ProveedoresSaludService {
   } */
 
   // **Método para actualizar los campos de uno por uno**
-  async update(id: string, updateProveedoresSaludDto: UpdateProveedoresSaludDto): Promise<ProveedorSalud> {
+  async update(id: string, updateDto: UpdateProveedoresSaludDto): Promise<ProveedorSalud> {
     const proveedor = await this.proveedoresSaludModel.findById(id);
-  
-    if (!proveedor) {
-      throw new Error('Proveedor de salud no encontrado');
+    if (!proveedor) throw new Error('Proveedor de salud no encontrado');
+
+    const normalizedDto = normalizeProveedorSaludData(updateDto);
+
+    // ✅ Asegura que también se actualicen los valores vacíos como ""
+    for (const key in normalizedDto) {
+      proveedor[key] = normalizedDto[key];
     }
 
-    const normalizedDto = normalizeProveedorSaludData(updateProveedoresSaludDto);
-  
-    // Actualizar solo los campos proporcionados en el DTO
-    Object.keys(normalizedDto).forEach(key => {
-      if (normalizedDto[key] !== undefined) {
-        proveedor[key] = normalizedDto[key];
-      }
-    });
-  
     return proveedor.save();
   }
   
