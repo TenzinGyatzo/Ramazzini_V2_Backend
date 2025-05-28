@@ -672,6 +672,7 @@ export class TrabajadoresService {
             this.certificadoModel.find({ idTrabajador: id }).session(session).exec(),
             this.documentoExternoModel.find({ idTrabajador: id }).session(session).exec(),
             this.notaMedicaModel.find({ idTrabajador: id }).session(session).exec(),
+            this.riesgoTrabajoModel.find({ idTrabajador: id }).session(session).exec(),
           ])
         ).flat();
   
@@ -688,6 +689,7 @@ export class TrabajadoresService {
             this.certificadoModel.deleteMany({ idTrabajador: id }).session(session),
             this.documentoExternoModel.deleteMany({ idTrabajador: id }).session(session),
             this.notaMedicaModel.deleteMany({ idTrabajador: id }).session(session),
+            this.riesgoTrabajoModel.deleteMany({ idTrabajador: id }).session(session),
           ]);
   
           // 3️⃣ Si la eliminación en la base de datos fue exitosa, proceder a eliminar los archivos
@@ -716,7 +718,6 @@ export class TrabajadoresService {
       return false;
     }
   }
-  
 
   async exportarTrabajadores(idCentroTrabajo: string): Promise<Buffer> {
     // Consultar trabajadores del centro de trabajo especificado
