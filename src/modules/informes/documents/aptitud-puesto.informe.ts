@@ -181,6 +181,51 @@ function formatearTelefono(telefono: string): string {
   return `(${telefono.slice(0, 3)}) ${telefono.slice(3, 6)} ${telefono.slice(6)}`;
 }
 
+// Función auxiliar para convertir número a texto
+const numeroEnLetras = (n: number) => {
+  return {
+    5: 'cinco',
+    6: 'seis',
+    10: 'diez'
+  }[n] || n.toString();
+};
+
+// Función para generar resumen de antidoping
+const obtenerResumenAntidoping = (a: any) => {
+  if (!a) return 'No se cuenta con antidoping';
+
+  const campos = [
+    { key: 'marihuana', label: 'Marihuana' },
+    { key: 'cocaina', label: 'Cocaína' },
+    { key: 'anfetaminas', label: 'Anfetaminas' },
+    { key: 'metanfetaminas', label: 'Metanfetaminas' },
+    { key: 'opiaceos', label: 'Opiáceos' },
+    { key: 'benzodiacepinas', label: 'Benzodiazepinas' },
+    { key: 'fenciclidina', label: 'Fenciclidina' },
+    { key: 'metadona', label: 'Metadona' },
+    { key: 'barbituricos', label: 'Barbitúricos' },
+    { key: 'antidepresivosTriciclicos', label: 'Antidepresivos Tricíclicos' }
+  ];
+
+  const evaluados = campos.filter(c => {
+    const valor = a[c.key];
+    return valor !== undefined && valor !== null && valor !== '';
+  });
+
+  const todosNegativos = evaluados.every(c => a[c.key] === 'Negativo');
+
+  if (todosNegativos) {
+    return `Negativo a ${numeroEnLetras(evaluados.length)} parámetros`;
+  }
+
+  const sustanciasPositivas = evaluados
+    .filter(c => a[c.key] !== 'Negativo')
+    .map(c => c.label)
+    .join(', ');
+
+  return `Positivo a: ${sustanciasPositivas}`;
+};
+
 // ==================== INTERFACES ====================
 interface Trabajador {
   nombre: string;
@@ -254,6 +299,11 @@ interface Antidoping {
   anfetaminas: string;
   metanfetaminas: string;
   opiaceos: string;
+  benzodiacepinas: string;
+  fenciclidina: string;
+  metadona: string;
+  barbituricos: string;
+  antidepresivosTriciclicos: string;
 }
 
 interface MedicoFirmante {
@@ -426,25 +476,7 @@ export const aptitudPuestoInforme = (
               'center',
             ),
             createTableCell(
-              antidoping.marihuana === 'Negativo' &&
-                antidoping.cocaina === 'Negativo' &&
-                antidoping.anfetaminas === 'Negativo' &&
-                antidoping.metanfetaminas === 'Negativo' &&
-                antidoping.opiaceos === 'Negativo'
-                ? 'Negativo a cinco parámetros'
-                : `Positivo a: ${[
-                    antidoping.marihuana !== 'Negativo' ? 'Marihuana' : null,
-                    antidoping.cocaina !== 'Negativo' ? 'Cocaína' : null,
-                    antidoping.anfetaminas !== 'Negativo'
-                      ? 'Anfetaminas'
-                      : null,
-                    antidoping.metanfetaminas !== 'Negativo'
-                      ? 'Metanfetaminas'
-                      : null,
-                    antidoping.opiaceos !== 'Negativo' ? 'Opiáceos' : null,
-                  ]
-                    .filter(Boolean)
-                    .join(', ')}`,
+              obtenerResumenAntidoping(antidoping),
               'tableCell',
               'center',
             ),

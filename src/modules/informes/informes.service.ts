@@ -328,6 +328,12 @@ export class InformesService {
           anfetaminas: nearestAntidoping.anfetaminas,
           metanfetaminas: nearestAntidoping.metanfetaminas,
           opiaceos: nearestAntidoping.opiaceos,
+          benzodiacepinas: nearestAntidoping.benzodiacepinas || null,
+          fenciclidina: nearestAntidoping.fenciclidina || null,
+          metadona: nearestAntidoping.metadona || null,
+          barbituricos: nearestAntidoping.barbituricos || null,
+          antidepresivosTriciclicos:
+            nearestAntidoping.antidepresivosTriciclicos || null,
         }
       : null;
 
