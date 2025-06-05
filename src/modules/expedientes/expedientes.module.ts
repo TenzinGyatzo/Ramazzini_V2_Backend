@@ -13,10 +13,11 @@ import { NotaMedica, NotaMedicaSchema } from './schemas/nota-medica.schema';
 import { Trabajador, TrabajadorSchema } from '../trabajadores/schemas/trabajador.schema';
 import { InformesModule } from '../informes/informes.module';
 import { FilesModule } from '../files/files.module';
+import { PdfCleanerService } from './pdf-cleaner.service';
 
 @Module({
   controllers: [ExpedientesController],
-  providers: [ExpedientesService],
+  providers: [ExpedientesService, PdfCleanerService],
   imports: [
     MongooseModule.forFeature([
       { name: Antidoping.name, schema: AntidopingSchema },
