@@ -24,7 +24,7 @@ export class PdfCleanerService {
     'Nota Medica',
   ];
 
-  @Cron('* * * * *') // Modo prueba
+  @Cron('* * * * *') // Modo prueba (cambiar a 0 3 * * * para producción)
   async handleCron() {
     this.logger.log('🔍 Buscando PDFs antiguos...');
     const archivosAntiguos = await this.buscarPDFsAntiguos(this.basePath);
@@ -35,7 +35,12 @@ export class PdfCleanerService {
       const { fullPath, sizeMB, createdAt } = archivo;
       this.logger.log(`🗂 ${fullPath} — ${sizeMB.toFixed(2)} MB — Creado: ${createdAt.toLocaleDateString()}`);
     }
+    if (!this.modoPrueba && archivosAntiguos.length > 0) {
+      await this.eliminarYLoggearArchivos(archivosAntiguos);
+    }
   }
+
+  private readonly modoPrueba = true;
 
   private async buscarPDFsAntiguos(dir: string): Promise<
     { fullPath: string; sizeMB: number; createdAt: Date }[]
@@ -47,7 +52,7 @@ export class PdfCleanerService {
 
       for (const el of elementos) {
         const fullPath = path.join(dir, el.name);
-        this.logger.log(`📄 Revisando archivo: ${el.name}`);
+        // this.logger.log(`📄 Revisando archivo: ${el.name}`);
 
         if (el.isDirectory()) {
           const subresultados = await this.buscarPDFsAntiguos(fullPath);
@@ -58,24 +63,31 @@ export class PdfCleanerService {
           this.esInformeGeneradoPorRamazzini(el.name)
         ) {
           const stat = await fs.stat(fullPath);
-          const birthtime = stat.birthtime;
-          this.logger.log(`🕒 ${el.name} => birthtime: ${birthtime.toLocaleString()}`);
+          const createdAt = stat.birthtime;
+          // this.logger.log(`🕒 ${el.name} => birthtime: ${createdAt.toLocaleString()}`);
 
-          const mtime = stat.mtime;
-          this.logger.log(`🕒 ${el.name} => mtime: ${mtime.toLocaleString()}`);
+          if (this.modoPrueba) {
+            const edadEnDias = this.calcularDiasDesde(createdAt);
+            // this.logger.log(`📅 ${el.name} => edad en días: ${edadEnDias.toFixed(1)}`);
 
-          const createdAt = stat.birthtime; // O stat.ctime si birthtime falla en algunos sistemas
-          // this.logger.log(`🕒 ${el.name} => creado: ${createdAt.toLocaleString()}`);
-          
-          const edadEnMeses = this.calcularMesesDesde(createdAt);
-          this.logger.log(`📅 ${el.name} => edad en meses: ${edadEnMeses}`);
+            if (edadEnDias >= 0) {
+              resultados.push({
+                fullPath,
+                sizeMB: stat.size / (1024 * 1024),
+                createdAt,
+              });
+            }
+          } else {
+            const edadEnMeses = this.calcularMesesDesde(createdAt);
+            // this.logger.log(`📅 ${el.name} => edad en meses: ${edadEnMeses}`);
 
-          if (edadEnMeses > 0) {
-            resultados.push({
-              fullPath,
-              sizeMB: stat.size / (1024 * 1024),
-              createdAt,
-            });
+            if (edadEnMeses > 14) {
+              resultados.push({
+                fullPath,
+                sizeMB: stat.size / (1024 * 1024),
+                createdAt,
+              });
+            }
           }
         }
       }
@@ -95,5 +107,55 @@ export class PdfCleanerService {
     const ahora = new Date();
     return (ahora.getFullYear() - fecha.getFullYear()) * 12 + (ahora.getMonth() - fecha.getMonth());
   }
+
+  private calcularDiasDesde(fecha: Date): number {
+    const ahora = new Date();
+    const diffMs = ahora.getTime() - fecha.getTime();
+    return diffMs / (1000 * 60 * 60 * 24); // convertir de ms a días
+  }
+
+  private async eliminarYLoggearArchivos(
+    archivos: { fullPath: string; sizeMB: number; createdAt: Date }[],
+  ): Promise<void> {
+    const logLines: string[] = [];
+    let totalEliminados = 0;
+    let espacioLiberadoMB = 0;
+
+    for (const archivo of archivos) {
+      try {
+        await fs.unlink(archivo.fullPath);
+        totalEliminados++;
+        espacioLiberadoMB += archivo.sizeMB;
+
+        const relativePath = path.relative(this.basePath, archivo.fullPath);
+        const partes = relativePath.split(path.sep); // divide por '\', '/' según OS
+        const lineaLog = `${partes.join(' | ')} — ${archivo.sizeMB.toFixed(2)} MB`;
+        logLines.push(lineaLog);
+        // this.logger.log(`🗑️  ${lineaLog}`);
+      } catch (err) {
+        this.logger.error(`❌ No se pudo eliminar ${archivo.fullPath}: ${err.message}`);
+      }
+    }
+
+    const resumen = `Eliminados: ${totalEliminados} archivos — ${espacioLiberadoMB.toFixed(2)} MB liberados`;
+    logLines.push('');
+    logLines.push(resumen);
+    this.logger.log(`🧹 ${resumen}`);
+
+    // Guardar en archivo local
+    const logPath = path.resolve('logs', `eliminados-${this.formatearFechaHoy()}.log`);
+    await fs.mkdir(path.dirname(logPath), { recursive: true });
+    await fs.writeFile(logPath, logLines.join('\n'), { flag: 'a' });
+  }
+
+  private formatearFechaHoy(): string {
+    const hoy = new Date();
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const anio = hoy.getFullYear();
+    return `${dia}-${mes}-${anio}`;
+  }
+
 }
+
 
