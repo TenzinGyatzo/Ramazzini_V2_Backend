@@ -24,7 +24,7 @@ export class PdfCleanerService {
     'Nota Medica',
   ];
 
-  @Cron('* * * * *') // Modo prueba (cambiar a 0 3 * * * para producción)
+  @Cron('* 3 * * *') // Modo prueba (cambiar a 0 3 * * * para producción)
   async handleCron() {
     this.logger.log('🔍 Buscando PDFs antiguos...');
     const archivosAntiguos = await this.buscarPDFsAntiguos(this.basePath);
@@ -40,7 +40,7 @@ export class PdfCleanerService {
     }
   }
 
-  private readonly modoPrueba = true;
+  private readonly modoPrueba = false;
 
   private async buscarPDFsAntiguos(dir: string): Promise<
     { fullPath: string; sizeMB: number; createdAt: Date }[]

@@ -532,8 +532,150 @@ export class EmailsService {
     if (value < thresholds.high) return '🟡 Medio';
     return '🔴 Alto';
   }
-  
-  
+
+  private async getCreatedPdfsSummary(): Promise<string> {
+    const basePath = path.resolve('expedientes-medicos');
+    const tiposValidos = [
+      'Antidoping',
+      'Aptitud',
+      'Certificado',
+      'Examen Vista',
+      'Historia Clinica',
+      'Exploracion Fisica',
+      'Nota Medica',
+    ];
+
+    const hoy = new Date();
+    const hoyISO = hoy.toISOString().split('T')[0];
+
+    let totalArchivos = 0;
+    let totalMB = 0;
+
+    const recorrer = async (dir: string) => {
+      const elementos = await fs.promises.readdir(dir, { withFileTypes: true });
+
+      for (const el of elementos) {
+        const fullPath = path.join(dir, el.name);
+
+        if (el.isDirectory()) {
+          await recorrer(fullPath);
+        } else if (
+          el.isFile() &&
+          el.name.endsWith('.pdf') &&
+          tiposValidos.some(tipo => el.name.startsWith(tipo + ' '))
+        ) {
+          const stat = await fs.promises.stat(fullPath);
+          const createdDate = stat.birthtime.toISOString().split('T')[0];
+
+          if (createdDate === hoyISO) {
+            totalArchivos++;
+            totalMB += stat.size / (1024 * 1024);
+          }
+        }
+      }
+    };
+
+    try {
+      await recorrer(basePath);
+    } catch (err) {
+      return '⚠️ No se pudo calcular la cantidad de PDFs creados.';
+    }
+
+    if (totalArchivos === 0) {
+      return '📁 No se generaron informes PDF hoy.';
+    }
+
+    return `📄 Creados: ${totalArchivos} archivos — ${totalMB.toFixed(2)} MB usados`;
+  }
+
+  private async getUploadedExternalDocsSummary(): Promise<string> {
+    const basePath = path.resolve('expedientes-medicos');
+    const tiposInternos = [
+      'Antidoping',
+      'Aptitud',
+      'Certificado',
+      'Examen Vista',
+      'Historia Clinica',
+      'Exploracion Fisica',
+      'Nota Medica',
+    ];
+
+    const extensionesExternas = ['.pdf', '.jpg', '.jpeg', '.png'];
+    const hoy = new Date();
+    const hoyISO = hoy.toISOString().split('T')[0];
+
+    let totalArchivos = 0;
+    let totalMB = 0;
+
+    const recorrer = async (dir: string) => {
+      const elementos = await fs.promises.readdir(dir, { withFileTypes: true });
+
+      for (const el of elementos) {
+        const fullPath = path.join(dir, el.name);
+
+        if (el.isDirectory()) {
+          await recorrer(fullPath);
+        } else if (el.isFile()) {
+          const ext = path.extname(el.name).toLowerCase();
+
+          // Verifica que sea un archivo válido externo
+          const esExtensionValida = extensionesExternas.includes(ext);
+          const esGenerado = tiposInternos.some(tipo => el.name.startsWith(tipo + ' '));
+
+          if (esExtensionValida && !esGenerado) {
+            const stat = await fs.promises.stat(fullPath);
+            const createdDate = stat.birthtime.toISOString().split('T')[0];
+
+            if (createdDate === hoyISO) {
+              totalArchivos++;
+              totalMB += stat.size / (1024 * 1024);
+            }
+          }
+        }
+      }
+    };
+
+    try {
+      await recorrer(basePath);
+    } catch (err) {
+      return '⚠️ No se pudo calcular los documentos externos subidos.';
+    }
+
+    if (totalArchivos === 0) {
+      return '📁 No se subieron documentos externos hoy.';
+    }
+
+    return `📎 Externos: ${totalArchivos} archivos — ${totalMB.toFixed(2)} MB usados`;
+  }
+
+  private formatearFechaHoy(): string {
+    const hoy = new Date();
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const anio = hoy.getFullYear();
+    return `${dia}-${mes}-${anio}`;
+  }
+
+  private async getDeletedPdfsLog(): Promise<string> {
+    const logPath = path.resolve('logs', `eliminados-${this.formatearFechaHoy()}.log`);
+
+    if (!fs.existsSync(logPath)) {
+      return '    📁 No se eliminaron archivos PDF hoy.';
+    }
+
+    const contenido = await fs.promises.readFile(logPath, 'utf8');
+
+    const lineasConSangria = contenido
+      .split('\n')
+      .map((linea, i) => {
+        if (i === 0) return linea; // ya tiene sangría
+        return `    ${linea}`;
+      })
+      .join('\n');
+
+    return lineasConSangria;
+  }
+
   //// Generar el reporte de uso del servidor ////
 
   async generateServerReport(): Promise<string> {
@@ -570,6 +712,12 @@ export class EmailsService {
       recommendations.push("🔴 Espacio en disco muy bajo. Considera liberar espacio o ampliar el almacenamiento.");
     }
 
+    const createdPdfsSummary = await this.getCreatedPdfsSummary();
+
+    const uploadedDocsSummary = await this.getUploadedExternalDocsSummary();
+
+    const deletedPdfsLog = await this.getDeletedPdfsLog();
+
     // 📌 Reporte Formateado
     let reportContent = `
     ═════════════════════════════
@@ -582,18 +730,18 @@ export class EmailsService {
     🟡 Usada: ${(usedMemory / 1e9).toFixed(2)} GB (${memoryUsagePercentage.toFixed(2)}%)
     🔵 Libre: ${(freeMemory / 1e9).toFixed(2)} GB
     🟣 Node.js: ${(memoryUsedByNode / 1e6).toFixed(2)} MB
-  
+    
     🖥️ 𝗖𝗣𝗨
     ─────────────────────────────
     🟠 CPU (Node.js): ${cpuUsage.toFixed(2)}%
     🔴 CPU Total: ${totalCpuUsage}
-  
+    
     📊 𝗖𝗔𝗥𝗚𝗔 𝗗𝗘𝗟 𝗦𝗜𝗦𝗧𝗘𝗠𝗔
     ─────────────────────────────
     ⏳ Último minuto: ${loadAvg[0].toFixed(2)}
     ⏳ Últimos 5 minutos: ${loadAvg[1].toFixed(2)}
     ⏳ Últimos 15 minutos: ${loadAvg[2].toFixed(2)}
-  
+    
     📊 𝗦𝗨𝗠𝗔𝗥𝗜𝗢 𝗗𝗘𝗟 𝗛𝗢𝗥𝗔𝗥𝗜𝗢 𝗣𝗜𝗖𝗢 (7 AM - 7 PM)
     ─────────────────────────────
     ${peakMetrics}
@@ -615,6 +763,15 @@ export class EmailsService {
     🚨 𝗔𝗟𝗘𝗥𝗧𝗔𝗦 𝗬 𝗥𝗘𝗖𝗢𝗠𝗘𝗡𝗗𝗔𝗖𝗜𝗢𝗡𝗘𝗦
     ═════════════════════════════
     ${alertMessages}
+
+    📁 𝗣𝗗𝗙s 𝗖𝗥𝗘𝗔𝗗𝗢𝗦 𝗬 𝗗𝗢𝗖𝗨𝗠𝗘𝗡𝗧𝗢𝗦 𝗘𝗫𝗧𝗘𝗥𝗡𝗢𝗦 𝗦𝗨𝗕𝗜𝗗𝗢𝗦 (HOY)
+    ─────────────────────────────
+    ${createdPdfsSummary}
+    ${uploadedDocsSummary}
+
+    🗑️ 𝗟𝗜𝗠𝗣𝗜𝗘𝗭𝗔 𝗔𝗨𝗧𝗢𝗠𝗔́𝗧𝗜𝗖𝗔 𝗗𝗘 𝗣𝗗𝗙s (14 MESES)
+    ─────────────────────────────
+    ${deletedPdfsLog}
     `;
 
     if (recommendations.length > 0) {
@@ -656,18 +813,18 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  // @Cron('*/10 7-19 * * *')   // De 12 AM a 2 AM UTC-7 (convertido a 12 AM - 2 AM UTC)
-  // async trackMetrics() {
-  //   console.log(`📊 Guardando métricas de servidor a las ${new Date().toLocaleString()} (hora local)`);
-  //   await this.saveMetric();
-  //   await this.checkAndSendAlertIfCritical(); // <- agregar esta línea
-  // }
+  @Cron('*/10 7-19 * * *')   // De 12 AM a 2 AM UTC-7 (convertido a 12 AM - 2 AM UTC)
+  async trackMetrics() {
+    console.log(`📊 Guardando métricas de servidor a las ${new Date().toLocaleString()} (hora local)`);
+    await this.saveMetric();
+    await this.checkAndSendAlertIfCritical(); // <- agregar esta línea
+  }
 
-  // // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM
-  // @Cron('0 19 * * *')
-  // async handleCron() {
-  //   console.log(`⏳ Enviando reporte diario a las ${new Date().toLocaleString()} (hora local)`);
-  //   await this.sendServerReport();
-  // }
+  // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM
+  @Cron('0 19 * * *')
+  async handleCron() {
+    console.log(`⏳ Enviando reporte diario a las ${new Date().toLocaleString()} (hora local)`);
+    await this.sendServerReport();
+  }
 
 }
