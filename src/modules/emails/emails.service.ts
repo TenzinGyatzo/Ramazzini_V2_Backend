@@ -533,6 +533,122 @@ export class EmailsService {
     return '🔴 Alto';
   }
 
+  //   private async getCreatedPdfsSummary(): Promise<string> {
+  //   const basePath = path.resolve('expedientes-medicos');
+  //   const tiposValidos = [
+  //     'Antidoping',
+  //     'Aptitud',
+  //     'Certificado',
+  //     'Examen Vista',
+  //     'Historia Clinica',
+  //     'Exploracion Fisica',
+  //     'Nota Medica',
+  //   ];
+
+  //   const hoy = new Date();
+  //   const hoyFormateado = hoy.toLocaleDateString('es-MX', {
+  //     day: '2-digit',
+  //     month: '2-digit',
+  //     year: 'numeric',
+  //   }).replace(/\//g, '-'); // Ej: "08-06-2025"
+
+  //   let totalArchivos = 0;
+  //   let totalMB = 0;
+
+  //   const recorrer = async (dir: string) => {
+  //     const elementos = await fs.promises.readdir(dir, { withFileTypes: true });
+
+  //     for (const el of elementos) {
+  //       const fullPath = path.join(dir, el.name);
+
+  //       if (el.isDirectory()) {
+  //         await recorrer(fullPath);
+  //       } else if (
+  //         el.isFile() &&
+  //         el.name.endsWith('.pdf') &&
+  //         tiposValidos.some(tipo => el.name.startsWith(tipo + ' ')) &&
+  //         el.name.includes(hoyFormateado)
+  //       ) {
+  //         const stat = await fs.promises.stat(fullPath);
+  //         totalArchivos++;
+  //         totalMB += stat.size / (1024 * 1024);
+  //       }
+  //     }
+  //   };
+
+  //   try {
+  //     await recorrer(basePath);
+  //   } catch (err) {
+  //     return '⚠️ No se pudo calcular la cantidad de PDFs creados.';
+  //   }
+
+  //   if (totalArchivos === 0) {
+  //     return '📁 No se generaron informes PDF hoy.';
+  //   }
+
+  //   return `📄 Creados: ${totalArchivos} archivos — ${totalMB.toFixed(2)} MB usados`;
+  // }
+
+  // private async getUploadedExternalDocsSummary(): Promise<string> {
+  //   const basePath = path.resolve('expedientes-medicos');
+  //   const tiposInternos = [
+  //     'Antidoping',
+  //     'Aptitud',
+  //     'Certificado',
+  //     'Examen Vista',
+  //     'Historia Clinica',
+  //     'Exploracion Fisica',
+  //     'Nota Medica',
+  //   ];
+
+  //   const extensionesExternas = ['.pdf', '.jpg', '.jpeg', '.png'];
+
+  //   const hoy = new Date();
+  //   const hoyFormateado = hoy.toLocaleDateString('es-MX', {
+  //     day: '2-digit',
+  //     month: '2-digit',
+  //     year: 'numeric',
+  //   }).replace(/\//g, '-'); // Ej: "08-06-2025"
+
+  //   let totalArchivos = 0;
+  //   let totalMB = 0;
+
+  //   const recorrer = async (dir: string) => {
+  //     const elementos = await fs.promises.readdir(dir, { withFileTypes: true });
+
+  //     for (const el of elementos) {
+  //       const fullPath = path.join(dir, el.name);
+
+  //       if (el.isDirectory()) {
+  //         await recorrer(fullPath);
+  //       } else if (el.isFile()) {
+  //         const ext = path.extname(el.name).toLowerCase();
+  //         const esExtensionValida = extensionesExternas.includes(ext);
+  //         const esGeneradoInternamente = tiposInternos.some(tipo => el.name.startsWith(tipo + ' '));
+
+  //         // Documentos externos válidos: extensión válida y NO generado internamente
+  //         if (esExtensionValida && !esGeneradoInternamente && el.name.includes(hoyFormateado)) {
+  //           const stat = await fs.promises.stat(fullPath);
+  //           totalArchivos++;
+  //           totalMB += stat.size / (1024 * 1024);
+  //         }
+  //       }
+  //     }
+  //   };
+
+  //   try {
+  //     await recorrer(basePath);
+  //   } catch (err) {
+  //     return '⚠️ No se pudo calcular los documentos externos subidos.';
+  //   }
+
+  //   if (totalArchivos === 0) {
+  //     return '📁 No se subieron documentos externos hoy.';
+  //   }
+
+  //   return `📎 Externos: ${totalArchivos} archivos — ${totalMB.toFixed(2)} MB usados`;
+  // }
+
   private async getCreatedPdfsSummary(): Promise<string> {
     const basePath = path.resolve('expedientes-medicos');
     const tiposValidos = [
@@ -546,7 +662,11 @@ export class EmailsService {
     ];
 
     const hoy = new Date();
-    const hoyISO = hoy.toISOString().split('T')[0];
+    const hoyFormateado = hoy.toLocaleDateString('es-MX', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).replace(/\//g, '-'); // "DD-MM-YYYY"
 
     let totalArchivos = 0;
     let totalMB = 0;
@@ -565,9 +685,14 @@ export class EmailsService {
           tiposValidos.some(tipo => el.name.startsWith(tipo + ' '))
         ) {
           const stat = await fs.promises.stat(fullPath);
-          const createdDate = stat.birthtime.toISOString().split('T')[0];
 
-          if (createdDate === hoyISO) {
+          const createdDate = stat.mtime.toLocaleDateString('es-MX', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          }).replace(/\//g, '-');
+
+          if (createdDate === hoyFormateado) {
             totalArchivos++;
             totalMB += stat.size / (1024 * 1024);
           }
@@ -601,8 +726,13 @@ export class EmailsService {
     ];
 
     const extensionesExternas = ['.pdf', '.jpg', '.jpeg', '.png'];
+
     const hoy = new Date();
-    const hoyISO = hoy.toISOString().split('T')[0];
+    const hoyFormateado = hoy.toLocaleDateString('es-MX', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).replace(/\//g, '-'); // "DD-MM-YYYY"
 
     let totalArchivos = 0;
     let totalMB = 0;
@@ -617,16 +747,19 @@ export class EmailsService {
           await recorrer(fullPath);
         } else if (el.isFile()) {
           const ext = path.extname(el.name).toLowerCase();
-
-          // Verifica que sea un archivo válido externo
           const esExtensionValida = extensionesExternas.includes(ext);
-          const esGenerado = tiposInternos.some(tipo => el.name.startsWith(tipo + ' '));
+          const esGeneradoInternamente = tiposInternos.some(tipo => el.name.startsWith(tipo + ' '));
 
-          if (esExtensionValida && !esGenerado) {
+          if (esExtensionValida && !esGeneradoInternamente) {
             const stat = await fs.promises.stat(fullPath);
-            const createdDate = stat.birthtime.toISOString().split('T')[0];
 
-            if (createdDate === hoyISO) {
+            const createdDate = stat.mtime.toLocaleDateString('es-MX', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            }).replace(/\//g, '-');
+
+            if (createdDate === hoyFormateado) {
               totalArchivos++;
               totalMB += stat.size / (1024 * 1024);
             }
@@ -660,7 +793,7 @@ export class EmailsService {
     const logPath = path.resolve('logs', `eliminados-${this.formatearFechaHoy()}.log`);
 
     if (!fs.existsSync(logPath)) {
-      return '    📁 No se eliminaron archivos PDF hoy.';
+      return '📁 No se eliminaron archivos PDF hoy.';
     }
 
     const contenido = await fs.promises.readFile(logPath, 'utf8');
@@ -821,7 +954,7 @@ export class EmailsService {
   }
 
   // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM
-  @Cron('0 19 * * *')
+  @Cron('* 19 * * *')
   async handleCron() {
     console.log(`⏳ Enviando reporte diario a las ${new Date().toLocaleString()} (hora local)`);
     await this.sendServerReport();
