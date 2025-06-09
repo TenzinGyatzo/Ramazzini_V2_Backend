@@ -24,7 +24,7 @@ export class PdfCleanerService {
     'Nota Medica',
   ];
 
-  @Cron('* 3 * * *') // Modo prueba (cambiar a 0 3 * * * para producción)
+  @Cron('0 3 * * *') // Modo prueba (cambiar a 0 3 * * * para producción)
   async handleCron() {
     this.logger.log('🔍 Buscando PDFs antiguos...');
     const archivosAntiguos = await this.buscarPDFsAntiguos(this.basePath);
@@ -40,7 +40,7 @@ export class PdfCleanerService {
     }
   }
 
-  private readonly modoPrueba = false;
+  private readonly modoPrueba = false; // Cambia a true para pruebas locales
 
   private async buscarPDFsAntiguos(dir: string): Promise<
     { fullPath: string; sizeMB: number; createdAt: Date }[]
@@ -63,8 +63,8 @@ export class PdfCleanerService {
           this.esInformeGeneradoPorRamazzini(el.name)
         ) {
           const stat = await fs.stat(fullPath);
-          const createdAt = stat.birthtime;
-          // this.logger.log(`🕒 ${el.name} => birthtime: ${createdAt.toLocaleString()}`);
+          const createdAt = stat.mtime;
+          // this.logger.log(`🕒 ${el.name} => mtime: ${createdAt.toLocaleString()}`);
 
           if (this.modoPrueba) {
             const edadEnDias = this.calcularDiasDesde(createdAt);

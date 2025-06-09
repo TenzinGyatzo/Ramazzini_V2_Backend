@@ -781,6 +781,99 @@ export class EmailsService {
     return `📎 Externos: ${totalArchivos} archivos — ${totalMB.toFixed(2)} MB usados`;
   }
 
+  private async getArchivoPdfCreadoMasAntiguo(): Promise<{ nombre: string; fullPath: string; fecha: Date } | null> {
+    const basePath = path.resolve('expedientes-medicos');
+    const tiposValidos = [
+      'Antidoping',
+      'Aptitud',
+      'Certificado',
+      'Examen Vista',
+      'Historia Clinica',
+      'Exploracion Fisica',
+      'Nota Medica',
+    ];
+
+    let masAntiguo: { nombre: string; fullPath: string; fecha: Date } | null = null;
+
+    const recorrer = async (dir: string) => {
+      const elementos = await fs.promises.readdir(dir, { withFileTypes: true });
+
+      for (const el of elementos) {
+        const fullPath = path.join(dir, el.name);
+
+        if (el.isDirectory()) {
+          await recorrer(fullPath);
+        } else if (
+          el.isFile() &&
+          el.name.endsWith('.pdf') &&
+          tiposValidos.some(tipo => el.name.toLowerCase().includes(tipo.toLowerCase()))
+        ) {
+          const stat = await fs.promises.stat(fullPath);
+          const fecha = stat.mtime;
+
+          if (!masAntiguo || fecha < masAntiguo.fecha) {
+            masAntiguo = {
+              nombre: el.name,
+              fullPath,
+              fecha,
+            };
+          }
+        }
+      }
+    };
+
+    await recorrer(basePath);
+    return masAntiguo;
+  }
+
+  private async getDocumentoExternoSubidoMasAntiguo(): Promise<{ nombre: string; fullPath: string; fecha: Date } | null> {
+    const basePath = path.resolve('expedientes-medicos');
+    const tiposInternos = [
+      'Antidoping',
+      'Aptitud',
+      'Certificado',
+      'Examen Vista',
+      'Historia Clinica',
+      'Exploracion Fisica',
+      'Nota Medica',
+    ];
+    const extensionesValidas = ['.pdf', '.jpg', '.jpeg', '.png'];
+
+    let masAntiguo: { nombre: string; fullPath: string; fecha: Date } | null = null;
+
+    const recorrer = async (dir: string) => {
+      const elementos = await fs.promises.readdir(dir, { withFileTypes: true });
+
+      for (const el of elementos) {
+        const fullPath = path.join(dir, el.name);
+
+        if (el.isDirectory()) {
+          await recorrer(fullPath);
+        } else if (el.isFile()) {
+          const ext = path.extname(el.name).toLowerCase();
+          const esExtensionValida = extensionesValidas.includes(ext);
+          const esGeneradoInternamente = tiposInternos.some(tipo => el.name.toLowerCase().includes(tipo.toLowerCase()));
+
+          if (esExtensionValida && !esGeneradoInternamente) {
+            const stat = await fs.promises.stat(fullPath);
+            const fecha = stat.mtime;
+
+            if (!masAntiguo || fecha < masAntiguo.fecha) {
+              masAntiguo = {
+                nombre: el.name,
+                fullPath,
+                fecha,
+              };
+            }
+          }
+        }
+      }
+    };
+
+    await recorrer(basePath);
+    return masAntiguo;
+  }
+
   private formatearFechaHoy(): string {
     const hoy = new Date();
     const dia = String(hoy.getDate()).padStart(2, '0');
@@ -846,8 +939,10 @@ export class EmailsService {
     }
 
     const createdPdfsSummary = await this.getCreatedPdfsSummary();
+    const archivoPdfCreadoMasAntiguo = await this.getArchivoPdfCreadoMasAntiguo();
 
     const uploadedDocsSummary = await this.getUploadedExternalDocsSummary();
+    const documentoExternoSubidoMasAntiguo = await this.getDocumentoExternoSubidoMasAntiguo();
 
     const deletedPdfsLog = await this.getDeletedPdfsLog();
 
@@ -905,6 +1000,15 @@ export class EmailsService {
     🗑️ 𝗟𝗜𝗠𝗣𝗜𝗘𝗭𝗔 𝗔𝗨𝗧𝗢𝗠𝗔́𝗧𝗜𝗖𝗔 𝗗𝗘 𝗣𝗗𝗙s (14 MESES)
     ─────────────────────────────
     ${deletedPdfsLog}
+
+    📄 𝗔𝗥𝗖𝗛𝗜𝗩𝗢𝗦 𝗠𝗔́𝗦 𝗔𝗡𝗧𝗜𝗚𝗨𝗢𝗦
+    ─────────────────────────────
+    ${archivoPdfCreadoMasAntiguo
+      ? `📘 PDF creado más antiguo: ${archivoPdfCreadoMasAntiguo.nombre} — ${archivoPdfCreadoMasAntiguo.fecha.toLocaleDateString('es-MX')}`
+      : '📘 PDF creado más antiguo: No encontrado'}
+    ${documentoExternoSubidoMasAntiguo
+      ? `📗 Documento externo más antiguo: ${documentoExternoSubidoMasAntiguo.nombre} — ${documentoExternoSubidoMasAntiguo.fecha.toLocaleDateString('es-MX')}`
+      : '📗 Documento externo más antiguo: No encontrado'}
     `;
 
     if (recommendations.length > 0) {
@@ -954,7 +1058,7 @@ export class EmailsService {
   }
 
   // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM
-  @Cron('* 19 * * *')
+  @Cron('0 19 * * *')
   async handleCron() {
     console.log(`⏳ Enviando reporte diario a las ${new Date().toLocaleString()} (hora local)`);
     await this.sendServerReport();
