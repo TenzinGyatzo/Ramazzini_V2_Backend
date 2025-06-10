@@ -464,6 +464,71 @@ export class InformesService {
       impedimentosFisicos: certificado.impedimentosFisicos,
     };
 
+    const exploracionesFisicas = await this.expedientesService.findDocuments(
+      'exploracionFisica',
+      trabajadorId,
+    );
+
+    const nearestExploracionFisica = exploracionesFisicas?.length
+      ? findNearestDocument(
+          exploracionesFisicas,
+          certificado.fechaCertificado,
+          'fechaExploracionFisica',
+        )
+      : null;
+    
+    const datosExploracionFisica = nearestExploracionFisica
+        ? {
+      fechaExploracionFisica: nearestExploracionFisica.fechaExploracionFisica,
+      peso: nearestExploracionFisica.peso,
+      altura: nearestExploracionFisica.altura,
+      indiceMasaCorporal: nearestExploracionFisica.indiceMasaCorporal,
+      categoriaIMC: nearestExploracionFisica.categoriaIMC,
+      circunferenciaCintura: nearestExploracionFisica.circunferenciaCintura,
+      categoriaCircunferenciaCintura:
+        nearestExploracionFisica.categoriaCircunferenciaCintura,
+      tensionArterialSistolica: nearestExploracionFisica.tensionArterialSistolica,
+      tensionArterialDiastolica: nearestExploracionFisica.tensionArterialDiastolica,
+      categoriaTensionArterial: nearestExploracionFisica.categoriaTensionArterial,
+      frecuenciaCardiaca: nearestExploracionFisica.frecuenciaCardiaca,
+      categoriaFrecuenciaCardiaca:
+        nearestExploracionFisica.categoriaFrecuenciaCardiaca,
+      frecuenciaRespiratoria: nearestExploracionFisica.frecuenciaRespiratoria,
+      categoriaFrecuenciaRespiratoria:
+        nearestExploracionFisica.categoriaFrecuenciaRespiratoria,
+      saturacionOxigeno: nearestExploracionFisica.saturacionOxigeno,
+      categoriaSaturacionOxigeno: nearestExploracionFisica.categoriaSaturacionOxigeno,
+      craneoCara: nearestExploracionFisica.craneoCara,
+      ojos: nearestExploracionFisica.ojos,
+      oidos: nearestExploracionFisica.oidos,
+      nariz: nearestExploracionFisica.nariz,
+      boca: nearestExploracionFisica.boca,
+      cuello: nearestExploracionFisica.cuello,
+      hombros: nearestExploracionFisica.hombros,
+      codos: nearestExploracionFisica.codos,
+      manos: nearestExploracionFisica.manos,
+      neurologicoESuperiores: nearestExploracionFisica.neurologicoESuperiores,
+      vascularESuperiores: nearestExploracionFisica.vascularESuperiores,
+      torax: nearestExploracionFisica.torax,
+      abdomen: nearestExploracionFisica.abdomen,
+      cadera: nearestExploracionFisica.cadera,
+      rodillas: nearestExploracionFisica.rodillas,
+      tobillosPies: nearestExploracionFisica.tobillosPies,
+      neurologicoEInferiores: nearestExploracionFisica.neurologicoEInferiores,
+      vascularEInferiores: nearestExploracionFisica.vascularEInferiores,
+      inspeccionColumna: nearestExploracionFisica.inspeccionColumna,
+      movimientosColumna: nearestExploracionFisica.movimientosColumna,
+      lesionesPiel: nearestExploracionFisica.lesionesPiel,
+      cicatrices: nearestExploracionFisica.cicatrices,
+      nevos: nearestExploracionFisica.nevos,
+      coordinacion: nearestExploracionFisica.coordinacion,
+      sensibilidad: nearestExploracionFisica.sensibilidad,
+      equilibrio: nearestExploracionFisica.equilibrio,
+      marcha: nearestExploracionFisica.marcha,
+      resumenExploracionFisica: nearestExploracionFisica.resumenExploracionFisica,
+        }
+      : null;
+
     const examenesVista = await this.expedientesService.findDocuments(
       'examenVista',
       trabajadorId,
@@ -481,8 +546,31 @@ export class InformesService {
           fechaExamenVista: nearestExamenVista.fechaExamenVista,
           ojoIzquierdoLejanaSinCorreccion:
             nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
-          ojoDerechoLejanaSinCorreccion:
-            nearestExamenVista.ojoDerechoLejanaSinCorreccion,
+          ojoDerechoLejanaSinCorreccion: nearestExamenVista.ojoDerechoLejanaSinCorreccion,
+          sinCorreccionLejanaInterpretacion:
+            nearestExamenVista.sinCorreccionLejanaInterpretacion,
+          requiereLentesUsoGeneral: nearestExamenVista.requiereLentesUsoGeneral,
+          ojoIzquierdoCercanaSinCorreccion:
+            nearestExamenVista.ojoIzquierdoCercanaSinCorreccion,
+          ojoDerechoCercanaSinCorreccion:
+            nearestExamenVista.ojoDerechoCercanaSinCorreccion,
+          sinCorreccionCercanaInterpretacion:
+            nearestExamenVista.sinCorreccionCercanaInterpretacion,
+          requiereLentesParaLectura: nearestExamenVista.requiereLentesParaLectura,
+          ojoIzquierdoLejanaConCorreccion:
+            nearestExamenVista.ojoIzquierdoLejanaConCorreccion,
+          ojoDerechoLejanaConCorreccion: nearestExamenVista.ojoDerechoLejanaConCorreccion,
+          conCorreccionLejanaInterpretacion:
+            nearestExamenVista.conCorreccionLejanaInterpretacion,
+          ojoIzquierdoCercanaConCorreccion:
+            nearestExamenVista.ojoIzquierdoCercanaConCorreccion,
+          ojoDerechoCercanaConCorreccion:
+            nearestExamenVista.ojoDerechoCercanaConCorreccion,
+          conCorreccionCercanaInterpretacion:
+            nearestExamenVista.conCorreccionCercanaInterpretacion,
+          placasCorrectas: nearestExamenVista.placasCorrectas,
+          porcentajeIshihara: nearestExamenVista.porcentajeIshihara,
+          interpretacionIshihara: nearestExamenVista.interpretacionIshihara,
         }
       : null;
 
@@ -559,6 +647,7 @@ export class InformesService {
       nombreEmpresa,
       datosTrabajador,
       datosCertificado,
+      datosExploracionFisica, 
       datosExamenVista,
       datosMedicoFirmante,
       datosProveedorSalud,

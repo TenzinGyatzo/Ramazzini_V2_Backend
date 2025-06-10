@@ -76,6 +76,40 @@ const campoFirma: Content = {
   absolutePosition: { x: 65, y: 610 }, 
 };
 
+function generarTextoExploracionFisica(exploracionFisica: ExploracionFisica): string {
+  const campos = [
+    'abdomen', 'boca', 'cadera', 'cicatrices', 'codos', 'coordinacion',
+    'craneoCara', 'cuello', 'equilibrio', 'hombros', 'inspeccionColumna',
+    'lesionesPiel', 'manos', 'marcha', 'movimientosColumna', 'nariz',
+    'neurologicoEInferiores', 'neurologicoESuperiores', 'nevos', 'oidos',
+    'ojos', 'rodillas', 'sensibilidad', 'tobillosPies', 'torax'
+  ];
+
+  const formatearCampo = (campo: string) =>
+    campo
+      .replace(/([A-Z])/g, ' $1')
+      .split(' ')
+      .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(' ')
+      .trim();
+
+  const hallazgos = campos
+    .filter(campo => {
+      const valor = (exploracionFisica as any)[campo];
+      return valor && valor.trim() !== 'Sin hallazgos';
+    })
+    .map(campo => {
+      const valor = (exploracionFisica as any)[campo];
+      return `${formatearCampo(campo)}: ${valor}`;
+    });
+
+  if (hallazgos.length === 0) {
+    return 'Exploración física sin alteraciones significativas. Se observó integridad funcional del aparato locomotor y del sistema nervioso, con marcha, coordinación, fuerza y reflejos dentro de parámetros normales.';
+  } else {
+    return `Hallazgos relevantes en la exploración física: ${hallazgos.join('; ')}.`;
+  }
+}
+
 // ==================== FUNCIONES REUSABLES ====================
 const createTableCell = (text: string, style: string): Content => ({
   text,
@@ -125,10 +159,72 @@ interface Certificado {
   impedimentosFisicos: string;
 }
 
+interface ExploracionFisica {
+  fechaExploracionFisica: Date;
+  peso?: number;
+  altura?: number;
+  indiceMasaCorporal?: number;
+  categoriaIMC?: string;
+  circunferenciaCintura?: number;
+  categoriaCircunferenciaCintura?: string;
+  tensionArterialSistolica?: number;
+  tensionArterialDiastolica?: number;
+  categoriaTensionArterial?: string;
+  frecuenciaCardiaca?: number;
+  categoriaFrecuenciaCardiaca?: string;
+  frecuenciaRespiratoria?: number;
+  categoriaFrecuenciaRespiratoria?: string;
+  saturacionOxigeno?: number;
+  categoriaSaturacionOxigeno?: string;
+  craneoCara?: string;
+  ojos?: string;
+  oidos?: string;
+  nariz?: string;
+  boca?: string;
+  cuello?: string;
+  hombros?: string;
+  codos?: string;
+  manos?: string;
+  neurologicoESuperiores?: string;
+  vascularESuperiores?: string;
+  torax?: string;
+  abdomen?: string;
+  cadera?: string;
+  rodillas?: string;
+  tobillosPies?: string;
+  neurologicoEInferiores?: string;
+  vascularEInferiores?: string;
+  inspeccionColumna?: string;
+  movimientosColumna?: string;
+  lesionesPiel?: string;
+  cicatrices?: string;
+  nevos?: string;
+  coordinacion?: string;
+  sensibilidad?: string;
+  equilibrio?: string;
+  marcha?: string;
+  resumenExploracionFisica?: string;
+}
+
 interface ExamenVista {
   fechaExamenVista: Date;
   ojoIzquierdoLejanaSinCorreccion: number;
   ojoDerechoLejanaSinCorreccion: number;
+  sinCorreccionLejanaInterpretacion: string;
+  requiereLentesUsoGeneral: string;
+  ojoIzquierdoCercanaSinCorreccion: number;
+  ojoDerechoCercanaSinCorreccion: number;
+  sinCorreccionCercanaInterpretacion: string;
+  requiereLentesParaLectura: string;
+  ojoIzquierdoLejanaConCorreccion?: number;
+  ojoDerechoLejanaConCorreccion?: number;
+  conCorreccionLejanaInterpretacion?: string;
+  ojoIzquierdoCercanaConCorreccion?: number;
+  ojoDerechoCercanaConCorreccion?: number;
+  conCorreccionCercanaInterpretacion?: string;
+  placasCorrectas: number;
+  porcentajeIshihara: number;
+  interpretacionIshihara: string;
 }
 
 interface MedicoFirmante {
@@ -167,6 +263,7 @@ export const certificadoInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
   certificado: Certificado,
+  exploracionFisica: ExploracionFisica | null, 
   examenVista: ExamenVista | null,
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
@@ -279,24 +376,32 @@ export const certificadoInforme = (
       },
       {
         text: [
-          {
-        text: 'Que, habiendo practicado reconocimiento médico en esta fecha, al C. ',
-          },
+          { text: 'Que, habiendo practicado reconocimiento médico en esta fecha, al C. ' },
           { text: trabajador.nombre, bold: true },
           { text: ' de ' },
-          { text: trabajador.edad, bold: true },
-          {
-        text: ' de edad, lo encontré íntegro físicamente, sin defectos ni anomalías del aparato locomotor, ',
-          },
-          {
-        text: examenVista
-          ? `con agudeza visual OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion}, campo visual, profundidad de campo, estereopsis y percepción cromática `
-          : `con agudeza visual, campo visual, profundidad de campo, estereopsis y percepción cromática `,
-          },
-          {
-        text: 'sin alteraciones; agudeza auditiva, aparato respiratorio y aparato locomotor íntegros, el ',
-          },
-          { text: 'examen neurológico reveló buena coordinación y reflejos.' },
+          { text: String(trabajador.edad), bold: true },
+          { text: ' años de edad. ' },
+
+          { text: `Presenta IMC: ${exploracionFisica.indiceMasaCorporal} (${exploracionFisica.categoriaIMC}). ` },
+          { text: `Frecuencia cardiaca de ${exploracionFisica.frecuenciaCardiaca} lpm (${exploracionFisica.categoriaFrecuenciaCardiaca}). ` },
+          { text: `Saturación de oxígeno del ${exploracionFisica.saturacionOxigeno}% (${exploracionFisica.categoriaSaturacionOxigeno}). ` },
+          { text: `Tensión arterial ${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg (${exploracionFisica.categoriaTensionArterial || 'no especificada'}). ` },
+
+          { text: `Examen visual con agudeza lejana sin corrección: OI 20/${examenVista.ojoIzquierdoLejanaSinCorreccion} y OD 20/${examenVista.ojoDerechoLejanaSinCorreccion} ` },
+          { text: `(${examenVista.sinCorreccionLejanaInterpretacion || 'categoría no disponible'}). ` },
+
+          ...(examenVista.interpretacionIshihara === 'Daltonismo'
+            ? [{ text: 'Se detecta alteración en la percepción cromática (Daltonismo). ' }]
+            : examenVista.interpretacionIshihara === 'Normal'
+              ? [{ text: 'No se detectan alteraciones en la percepción cromática. ' }]
+              : [{ text: 'No se cuenta con resultado de prueba de percepción cromática. ' }]),
+
+          { text: generarTextoExploracionFisica(exploracionFisica) },
+          
+          ...(exploracionFisica.resumenExploracionFisica === 'Se encuentra clínicamente sano' ||
+            exploracionFisica.resumenExploracionFisica === 'Se encuentra clínicamente sana'
+            ? [{ text: `${exploracionFisica.resumenExploracionFisica}.` }]
+            : [])
         ],
         style: 'paragraph',
         margin: [0, 20, 0, 0],
