@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile, Res, InternalServerErrorException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile, Res, InternalServerErrorException, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as xlsx from 'xlsx';
 import { TrabajadoresService } from './trabajadores.service';
@@ -124,8 +124,11 @@ export class TrabajadoresController {
   @Get('dashboard/')
   async getDashboardData(
     @Param('empresaId') empresaId: string, 
-    @Param('centroId') centroId: string) {
-    const dashboardData = await this.trabajadoresService.getDashboardData(centroId);
+    @Param('centroId') centroId: string,
+    @Query('inicio') inicio?: string,
+    @Query('fin') fin?: string
+  ) {
+    const dashboardData = await this.trabajadoresService.getDashboardData(centroId, inicio, fin);
     if (!dashboardData) {
       throw new BadRequestException('No se encontraron datos para el dashboard');
     }

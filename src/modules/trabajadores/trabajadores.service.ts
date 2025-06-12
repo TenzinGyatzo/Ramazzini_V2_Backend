@@ -259,7 +259,18 @@ export class TrabajadoresService {
   }
 
   // trabajadores.service.ts
-  async getDashboardData(centroId: string) {
+async getDashboardData(centroId: string, inicio?: string, fin?: string) {
+    // 0. Creaar el filtro de rango dde fechas para cada tipo
+    const rangoFecha = (campo: string) => {
+      if (!inicio || !fin) return {};
+      return {
+        [campo]: {
+          $gte: new Date(inicio),
+          $lte: new Date(fin)
+        }
+      };
+    };
+
     // 1. Obtener todos los trabajadores del centro
     const trabajadores = await this.trabajadorModel
       .find({ idCentroTrabajo: centroId })
@@ -295,12 +306,13 @@ export class TrabajadoresService {
       agudezaVisual: [],
       daltonismo: [],
       aptitudes: [],
-      consultas: []
+      consultas: [],
+      trabajadoresEvaluados: []
     };
 
     // 5. EXPLORACIONES FÍSICAS – Obtener la más reciente por trabajador activo
     const exploraciones = await this.exploracionFisicaModel
-    .find({ idTrabajador: { $in: idsActivos } })
+    .find({ idTrabajador: { $in: idsActivos }, ...rangoFecha('fechaExploracionFisica') })
     .select('idTrabajador categoriaIMC categoriaCircunferenciaCintura fechaExploracionFisica')
     .lean();
 
@@ -328,7 +340,7 @@ export class TrabajadoresService {
 
     // 7. HISTORIAS CLÍNICAS – Obtener la más reciente por trabajador activo
     const historias = await this.historiaClinicaModel
-    .find({ idTrabajador: { $in: idsActivos } })
+    .find({ idTrabajador: { $in: idsActivos }, ...rangoFecha('fechaHistoriaClinica') })
     .select('idTrabajador alcoholismo tabaquismo diabeticosPP hipertensivosPP cardiopaticosPP epilepticosPP alergicos lumbalgias accidentes quirurgicos traumaticos fechaHistoriaClinica')
     .lean();
 
@@ -372,7 +384,7 @@ export class TrabajadoresService {
 
     // 11. EXÁMENES DE VISTA – Obtener el más reciente por trabajador activo
     const examenesVista = await this.examenVistaModel
-    .find({ idTrabajador: { $in: idsActivos } })
+    .find({ idTrabajador: { $in: idsActivos }, ...rangoFecha('fechaExamenVista') })
     .select('idTrabajador requiereLentesUsoGeneral ojoIzquierdoLejanaSinCorreccion ojoDerechoLejanaSinCorreccion sinCorreccionLejanaInterpretacion ojoIzquierdoLejanaConCorreccion ojoDerechoLejanaConCorreccion conCorreccionLejanaInterpretacion interpretacionIshihara fechaExamenVista')
     .lean();
 
@@ -407,7 +419,7 @@ export class TrabajadoresService {
 
     // 14. APTITUD PUESTO – Obtener la más reciente por trabajador (activo o inactivo)
     const aptitudes = await this.aptitudModel
-    .find({ idTrabajador: { $in: idsTodos } })
+    .find({ idTrabajador: { $in: idsTodos }, ...rangoFecha('fechaAptitudPuesto') })
     .select('idTrabajador aptitudPuesto fechaAptitudPuesto')
     .lean();
 
@@ -428,7 +440,7 @@ export class TrabajadoresService {
 
     // 15. CONSULTAS – Obtener la más reciente por trabajador activo
     const consultas = await this.notaMedicaModel
-      .find({ idTrabajador: { $in: idsTodos } })
+      .find({ idTrabajador: { $in: idsTodos }, ...rangoFecha('fechaNotaMedica') })
       .select('idTrabajador fechaNotaMedica')
       .lean();
 
@@ -446,6 +458,31 @@ export class TrabajadoresService {
         fechaNotaMedica: consulta.fechaNotaMedica ?? null,
       }))
     );
+
+    const trabajadoresEvaluadosSet = new Set([
+      ...exploracionesMap.keys(),
+      ...historiasMap.keys(),
+      ...examenesMap.keys(),
+      ...aptitudesMap.keys(),
+      ...consultasMap.keys()
+    ]);
+
+    dashboardData.trabajadoresEvaluados = Array.from(trabajadoresEvaluadosSet);
+
+    dashboardData.agentesRiesgo = [
+      trabajadoresActivos.map(t => ({
+        agentesRiesgoActuales: t.agentesRiesgoActuales,
+      }))
+    ];
+
+    dashboardData.grupoEtario = [
+      trabajadoresActivos
+        .filter(t => trabajadoresEvaluadosSet.has(t._id.toString()))
+        .map(t => ({
+          sexo: t.sexo,
+          fechaNacimiento: t.fechaNacimiento
+        }))
+    ];
 
     return dashboardData;
   }
