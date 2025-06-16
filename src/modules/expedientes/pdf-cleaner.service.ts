@@ -81,7 +81,7 @@ export class PdfCleanerService {
             const edadEnMeses = this.calcularMesesDesde(createdAt);
             // this.logger.log(`📅 ${el.name} => edad en meses: ${edadEnMeses}`);
 
-            if (edadEnMeses > 14) {
+            if (edadEnMeses > 3) {
               resultados.push({
                 fullPath,
                 sizeMB: stat.size / (1024 * 1024),
