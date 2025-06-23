@@ -438,23 +438,15 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
     }))
     );
 
-    // 15. CONSULTAS – Obtener la más reciente por trabajador activo
+    // 15. CONSULTAS – Obtener todas las notas médicas por trabajador (activo o inactivo)
     const consultas = await this.notaMedicaModel
       .find({ idTrabajador: { $in: idsTodos }, ...rangoFecha('fechaNotaMedica') })
       .select('idTrabajador fechaNotaMedica')
       .lean();
 
-    const consultasMap = new Map<string, any>();
-    for (const consulta of consultas) {
-      const id = consulta.idTrabajador.toString();
-      const actual = consultasMap.get(id);
-      if (!actual || new Date(consulta.fechaNotaMedica) > new Date(actual.fechaNotaMedica)) {
-        consultasMap.set(id, consulta);
-      }
-    }
-
+    // Se incluyen todas las consultas, no solo la más reciente
     dashboardData.consultas.push(
-      Array.from(consultasMap.values()).map((consulta) => ({
+      consultas.map((consulta) => ({
         fechaNotaMedica: consulta.fechaNotaMedica ?? null,
       }))
     );
@@ -464,7 +456,6 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
       ...historiasMap.keys(),
       ...examenesMap.keys(),
       ...aptitudesMap.keys(),
-      ...consultasMap.keys()
     ]);
 
     dashboardData.trabajadoresEvaluados = Array.from(trabajadoresEvaluadosSet);
