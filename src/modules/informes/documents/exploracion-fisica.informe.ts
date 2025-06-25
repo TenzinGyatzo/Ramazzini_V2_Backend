@@ -524,7 +524,7 @@ export const exploracionFisicaInforme = (
               ['HOMBROS', exploracionFisica.hombros],
               ['CODOS', exploracionFisica.codos],
               ['MANOS', exploracionFisica.manos],
-              ['NEUROLÓGICO', exploracionFisica.neurologicoESuperiores],
+              ['REFLEJOS O.T.', exploracionFisica.neurologicoESuperiores],
               ['VASCULAR', exploracionFisica.vascularESuperiores],
             ].map((row) =>
               row.map((text, i) => ({
@@ -644,7 +644,7 @@ export const exploracionFisicaInforme = (
               ['CADERA', exploracionFisica.cadera],
               ['RODILLAS', exploracionFisica.rodillas],
               ['TOBILLOS-PIES', exploracionFisica.tobillosPies],
-              ['NEUROLÓGICO', exploracionFisica.neurologicoEInferiores],
+              ['REFLEJOS O.T.', exploracionFisica.neurologicoEInferiores],
               ['VASCULAR', exploracionFisica.vascularEInferiores],
             ].map((row) =>
               row.map((text, i) => ({

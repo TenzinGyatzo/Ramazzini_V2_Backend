@@ -352,12 +352,12 @@ export const historiaClinicaInforme = (
     createRow(
       historiaClinica.leuticos,
       historiaClinica.leuticosEspecificar,
-      'LUÉTICOS',
+      'AUTOIMMUNES',
     ),
     createRow(
       historiaClinica.fimicos,
       historiaClinica.fimicosEspecificar,
-      'FÍMICOS',
+      'TUBERCULOSIS',
     ),
     createRow(
       historiaClinica.hepatopatias,
@@ -395,7 +395,7 @@ export const historiaClinicaInforme = (
     createRow(
       historiaClinica.obesidad,
       historiaClinica.obesidadEspecificar,
-      'OBESIDAD',
+      'RESPIRATORIOS',
     ),
     createRow(
       historiaClinica.epilepticosPP,
@@ -802,14 +802,14 @@ export const historiaClinicaInforme = (
           [
             'PARTOS',
             historiaClinica.partos,
-            'PLANIFICACIÓN FAMILIAR',
-            historiaClinica.planificacionFamiliar,
+            'VIDA SEXUAL ACTIVA',
+            historiaClinica.vidaSexualActiva,
           ],
           [
             'CESÁREAS',
             historiaClinica.cesareas,
-            'VIDA SEXUAL ACTIVA',
-            historiaClinica.vidaSexualActiva,
+            'PLANIFICACIÓN FAMILIAR',
+            historiaClinica.planificacionFamiliar,
           ],
           [
             'ABORTOS',
