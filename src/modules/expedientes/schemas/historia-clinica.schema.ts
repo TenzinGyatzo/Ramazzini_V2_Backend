@@ -121,14 +121,14 @@ export class HistoriaClinica extends Document {
     epilepticosEspecificar: string;
 
     @Prop({ enum: siONo })
-    leuticos: string;
+    autoinmunes: string;
     @Prop()
-    leuticosEspecificar: string;
+    autoinmunesEspecificar: string;
 
     @Prop({ enum: siONo })
-    fimicos: string;
+    tuberculosis: string;
     @Prop()
-    fimicosEspecificar: string;
+    tuberculosisEspecificar: string;
 
     @Prop({ enum: siONo })
     hepatopatias: string;
@@ -163,9 +163,9 @@ export class HistoriaClinica extends Document {
     hipertensivosPPEspecificar: string;
 
     @Prop({ enum: siONo })
-    obesidad: string;
+    respiratorios: string;
     @Prop()
-    obesidadEspecificar: string;
+    respiratoriosEspecificar: string;
 
     @Prop({ enum: siONo })
     epilepticosPP: string;

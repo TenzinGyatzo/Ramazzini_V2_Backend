@@ -162,10 +162,10 @@ interface HistoriaClinica {
   psiquiatricosEspecificar?: string;
   epilepticos?: string;
   epilepticosEspecificar?: string;
-  leuticos?: string;
-  leuticosEspecificar?: string;
-  fimicos?: string;
-  fimicosEspecificar?: string;
+  autoinmunes?: string;
+  autoinmunesEspecificar?: string;
+  tuberculosis?: string;
+  tuberculosisEspecificar?: string;
   hepatopatias?: string;
   hepatopatiasEspecificar?: string;
   lumbalgias?: string;
@@ -178,8 +178,8 @@ interface HistoriaClinica {
   alergicosEspecificar?: string;
   hipertensivosPP?: string;
   hipertensivosPPEspecificar?: string;
-  obesidad?: string;
-  obesidadEspecificar?: string;
+  respiratorios?: string;
+  respiratoriosEspecificar?: string;
   epilepticosPP?: string;
   epilepticosPPEspecificar?: string;
   accidentes?: string;
@@ -350,13 +350,13 @@ export const historiaClinicaInforme = (
       'EPILÉPTICOS',
     ),
     createRow(
-      historiaClinica.leuticos,
-      historiaClinica.leuticosEspecificar,
+      historiaClinica.autoinmunes,
+      historiaClinica.autoinmunesEspecificar,
       'AUTOIMMUNES',
     ),
     createRow(
-      historiaClinica.fimicos,
-      historiaClinica.fimicosEspecificar,
+      historiaClinica.tuberculosis,
+      historiaClinica.tuberculosisEspecificar,
       'TUBERCULOSIS',
     ),
     createRow(
@@ -393,8 +393,8 @@ export const historiaClinicaInforme = (
       'HIPERTENSIVOS',
     ),
     createRow(
-      historiaClinica.obesidad,
-      historiaClinica.obesidadEspecificar,
+      historiaClinica.respiratorios,
+      historiaClinica.respiratoriosEspecificar,
       'RESPIRATORIOS',
     ),
     createRow(

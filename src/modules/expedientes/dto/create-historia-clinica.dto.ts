@@ -145,20 +145,20 @@ export class CreateHistoriaClinicaDto {
     epilepticosEspecificar: string;
 
     @IsOptional()
-    @IsEnum(siONo, { message: 'leuticos debe ser Si o No' })
-    leuticos: string;
+    @IsEnum(siONo, { message: 'autoinmunes debe ser Si o No' })
+    autoinmunes: string;
 
     @IsOptional()
-    @IsString({ message: 'leuticosEspecificar debe ser un string' })
-    leuticosEspecificar: string;
+    @IsString({ message: 'autoinmunesEspecificar debe ser un string' })
+    autoinmunesEspecificar: string;
 
     @IsOptional()
-    @IsEnum(siONo, { message: 'fimicos debe ser Si o No' })
-    fimicos: string;
+    @IsEnum(siONo, { message: 'tuberculosis debe ser Si o No' })
+    tuberculosis: string;
 
     @IsOptional()
-    @IsString({ message: 'fimicosEspecificar debe ser un string' })
-    fimicosEspecificar: string;
+    @IsString({ message: 'tuberculosisEspecificar debe ser un string' })
+    tuberculosisEspecificar: string;
 
     @IsOptional()
     @IsEnum(siONo, { message: 'hepatopatias debe ser Si o No' })
@@ -211,12 +211,12 @@ export class CreateHistoriaClinicaDto {
     hipertensivosPPEspecificar: string;
     
     @IsOptional()
-    @IsEnum(siONo, { message: 'obesidad debe ser Si o No' })
-    obesidad: string;
+    @IsEnum(siONo, { message: 'respiratorios debe ser Si o No' })
+    respiratorios: string;
     
     @IsOptional()
-    @IsString({ message: 'obesidadEspecificar debe ser un string' })
-    obesidadEspecificar: string;
+    @IsString({ message: 'respiratoriosEspecificar debe ser un string' })
+    respiratoriosEspecificar: string;
     
     @IsOptional()
     @IsEnum(siONo, { message: 'epilepticosPP debe ser Si o No' })
