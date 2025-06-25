@@ -139,7 +139,7 @@ export class ExploracionFisica extends Document {
   manos: string;
 
   @Prop()
-  neurologicoESuperiores: string;
+  reflejosOsteoTendinososSuperiores: string;
 
   @Prop()
   vascularESuperiores: string;
@@ -163,7 +163,7 @@ export class ExploracionFisica extends Document {
   tobillosPies: string;
 
   @Prop()
-  neurologicoEInferiores: string;
+  reflejosOsteoTendinososInferiores: string;
 
   @Prop()
   vascularEInferiores: string;

@@ -182,8 +182,8 @@ export class CreateExploracionFisicaDto {
     manos: string;
 
     @IsOptional()
-    @IsString( {message: 'neurologicoESuperiores debe ser un string' })
-    neurologicoESuperiores: string;
+    @IsString( {message: 'reflejosOsteoTendinososSuperiores debe ser un string' })
+    reflejosOsteoTendinososSuperiores: string;
 
     @IsOptional()
     @IsString( {message: 'vascularESuperiores debe ser un string' })
@@ -213,8 +213,8 @@ export class CreateExploracionFisicaDto {
     tobillosPies: string;
 
     @IsOptional()
-    @IsString( {message: 'neurologicoEInferiores debe ser un string' })
-    neurologicoEInferiores: string;
+    @IsString( {message: 'reflejosOsteoTendinososInferiores debe ser un string' })
+    reflejosOsteoTendinososInferiores: string;
 
     @IsOptional()
     @IsString( {message: 'vascularEInferiores debe ser un string' })

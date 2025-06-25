@@ -213,14 +213,14 @@ interface ExploracionFisica {
   hombros?: string;
   codos?: string;
   manos?: string;
-  neurologicoESuperiores?: string;
+  reflejosOsteoTendinososSuperiores?: string;
   vascularESuperiores?: string;
   torax?: string;
   abdomen?: string;
   cadera?: string;
   rodillas?: string;
   tobillosPies?: string;
-  neurologicoEInferiores?: string;
+  reflejosOsteoTendinososInferiores?: string;
   vascularEInferiores?: string;
   inspeccionColumna?: string;
   movimientosColumna?: string;
@@ -524,7 +524,7 @@ export const exploracionFisicaInforme = (
               ['HOMBROS', exploracionFisica.hombros],
               ['CODOS', exploracionFisica.codos],
               ['MANOS', exploracionFisica.manos],
-              ['REFLEJOS O.T.', exploracionFisica.neurologicoESuperiores],
+              ['REFLEJOS O.T.', exploracionFisica.reflejosOsteoTendinososSuperiores],
               ['VASCULAR', exploracionFisica.vascularESuperiores],
             ].map((row) =>
               row.map((text, i) => ({
@@ -644,7 +644,7 @@ export const exploracionFisicaInforme = (
               ['CADERA', exploracionFisica.cadera],
               ['RODILLAS', exploracionFisica.rodillas],
               ['TOBILLOS-PIES', exploracionFisica.tobillosPies],
-              ['REFLEJOS O.T.', exploracionFisica.neurologicoEInferiores],
+              ['REFLEJOS O.T.', exploracionFisica.reflejosOsteoTendinososInferiores],
               ['VASCULAR', exploracionFisica.vascularEInferiores],
             ].map((row) =>
               row.map((text, i) => ({
