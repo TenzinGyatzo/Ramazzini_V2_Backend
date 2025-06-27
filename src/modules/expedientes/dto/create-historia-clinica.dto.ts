@@ -69,8 +69,6 @@ const abortosOpciones = [
   "Más de 3 abortos",
 ];
 
-const cantidadDeSangreOpciones = ["Normal", "Hipermenorrea", "Hipomenorrea"];
-
 const dolorMenstrualOpciones = ["Eumenorrea", "Dismenorrea"];
 
 export class CreateHistoriaClinicaDto {
@@ -335,10 +333,6 @@ export class CreateHistoriaClinicaDto {
     fechaUltimaRegla: string;
 
     @IsOptional()
-    @IsEnum( cantidadDeSangreOpciones, { message: 'cantidadDeSangre debe ser alguna de las siguientes opciones: ' + cantidadDeSangreOpciones })
-    cantidadDeSangre: string;
-
-    @IsOptional()
     @IsEnum( dolorMenstrualOpciones, { message: 'dolorMenstrual debe ser alguna de las siguientes opciones: ' + dolorMenstrualOpciones })
     dolorMenstrual: string;
 
@@ -357,6 +351,10 @@ export class CreateHistoriaClinicaDto {
     @IsOptional()
     @IsString({ message: 'fechaUltimoPapanicolaou debe ser un string' })
     fechaUltimoPapanicolaou: string;
+
+    @IsOptional()
+    @IsString({ message: 'fechaUltimaMastografia debe ser un string' })
+    fechaUltimaMastografia: string;
 
     
     // Antecedentes Laborales

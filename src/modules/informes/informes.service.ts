@@ -1072,12 +1072,12 @@ export class InformesService {
       cesareas: historiaClinica.cesareas,
       abortos: historiaClinica.abortos,
       fechaUltimaRegla: historiaClinica.fechaUltimaRegla,
-      cantidadDeSangre: historiaClinica.cantidadDeSangre,
       dolorMenstrual: historiaClinica.dolorMenstrual,
       embarazoActual: historiaClinica.embarazoActual,
       planificacionFamiliar: historiaClinica.planificacionFamiliar,
       vidaSexualActiva: historiaClinica.vidaSexualActiva,
       fechaUltimoPapanicolaou: historiaClinica.fechaUltimoPapanicolaou,
+      fechaUltimaMastografia: historiaClinica.fechaUltimaMastografia,
       // Antecedentes Laborales
       empresaAnterior1: historiaClinica.empresaAnterior1,
       puestoAnterior1: historiaClinica.puestoAnterior1,

@@ -70,8 +70,6 @@ const abortosOpciones = [
   "Más de 3 abortos",
 ];
 
-const cantidadDeSangreOpciones = ["Normal", "Hipermenorrea", "Hipomenorrea"];
-
 const dolorMenstrualOpciones = ["Eumenorrea", "Dismenorrea"];
 
 @Schema()
@@ -245,9 +243,6 @@ export class HistoriaClinica extends Document {
     @Prop()
     fechaUltimaRegla: string;
 
-    @Prop({ enum: cantidadDeSangreOpciones })
-    cantidadDeSangre: string;
-
     @Prop({ enum: dolorMenstrualOpciones })
     dolorMenstrual: string;
 
@@ -263,6 +258,8 @@ export class HistoriaClinica extends Document {
     @Prop()
     fechaUltimoPapanicolaou: string;
 
+    @Prop()
+    fechaUltimaMastografia: string;
 
     // Antecedentes Laborales
     @Prop()

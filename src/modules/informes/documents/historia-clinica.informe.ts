@@ -208,12 +208,12 @@ interface HistoriaClinica {
   cesareas?: string;
   abortos?: string;
   fechaUltimaRegla?: string;
-  cantidadDeSangre?: string;
   dolorMenstrual?: string;
   embarazoActual?: string;
   planificacionFamiliar?: string;
   vidaSexualActiva?: string;
   fechaUltimoPapanicolaou?: string;
+  fechaUltimaMastografia?: string;
   empresaAnterior1?: string;
   puestoAnterior1?: string;
   antiguedadAnterior1?: string;
@@ -784,38 +784,38 @@ export const historiaClinicaInforme = (
           [
             'DURACIÓN PROMEDIO',
             historiaClinica.duracionPromedio,
-            'CANTIDAD DE SANGRE',
-            historiaClinica.cantidadDeSangre,
-          ],
-          [
-            'FRECUENCIA',
-            historiaClinica.frecuencia,
             'DOLOR MENSTRUAL',
             historiaClinica.dolorMenstrual,
           ],
           [
-            'GESTAS',
-            historiaClinica.gestas,
+            'FRECUENCIA',
+            historiaClinica.frecuencia,
             'EMBARAZO ACTUAL',
             historiaClinica.embarazoActual,
           ],
           [
-            'PARTOS',
-            historiaClinica.partos,
+            'GESTAS',
+            historiaClinica.gestas,
             'VIDA SEXUAL ACTIVA',
             historiaClinica.vidaSexualActiva,
           ],
           [
-            'CESÁREAS',
-            historiaClinica.cesareas,
+            'PARTOS',
+            historiaClinica.partos,
             'PLANIFICACIÓN FAMILIAR',
             historiaClinica.planificacionFamiliar,
           ],
           [
-            'ABORTOS',
-            historiaClinica.abortos,
+            'CESÁREAS',
+            historiaClinica.cesareas,
             'ÚLTIMO PAPANICOLAOU',
             historiaClinica.fechaUltimoPapanicolaou,
+          ],
+          [
+            'ABORTOS',
+            historiaClinica.abortos,
+            'ÚLTIMA MASTROGRAFÍA',
+            historiaClinica.fechaUltimaMastografia,
           ],
         ].map((row) =>
           row.map((text, i) => ({
