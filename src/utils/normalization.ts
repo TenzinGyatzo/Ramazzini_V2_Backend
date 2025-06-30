@@ -107,7 +107,10 @@ export function normalizeProveedorSaludData(
     result.sitioWeb = typeof dto.sitioWeb === 'string' ? dto.sitioWeb.trim() : "";
 
   if ('fechaInicioTrial' in dto)
-    result.fechaInicioTrial = dto.fechaInicioTrial;
+    result.fechaInicioTrial = new Date(dto.fechaInicioTrial);
+  
+  // if ('fechaInicioTrial' in dto)
+    // result.fechaInicioTrial = dto.fechaInicioTrial;
 
   if ('periodoDePruebaFinalizado' in dto)
     result.periodoDePruebaFinalizado = dto.periodoDePruebaFinalizado;
