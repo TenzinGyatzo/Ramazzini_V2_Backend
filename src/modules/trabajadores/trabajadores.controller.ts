@@ -41,14 +41,8 @@ export class TrabajadoresController {
   @ApiResponse({ status: 201, description: 'Trabajador registrado exitosamente' })
   @ApiResponse({ status: 400, description: 'Solicitud Incorrecta *(Muestra violaciones de reglas de validación)*' })
   async create(@Body() createTrabajadorDto: CreateTrabajadorDto) {
-    try {
-      const trabajador = await this.trabajadoresService.create(createTrabajadorDto);
-      // console.log('Trabajador creado exitosamente:', trabajador); // Depuración: Trabajador creado
-      return { message: 'Trabajador registrado', data: trabajador };
-    } catch (error) {
-      console.error('Error al registrar el trabajador:', error); // Depuración: Error capturado
-      throw new BadRequestException('Error al registrar el trabajador');
-    }
+    const trabajador = await this.trabajadoresService.create(createTrabajadorDto);
+    return { message: 'Trabajador registrado', data: trabajador };
   }
   
 

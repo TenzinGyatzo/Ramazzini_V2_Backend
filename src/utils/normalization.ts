@@ -54,10 +54,10 @@ export function normalizeTrabajadorData(
     fechaIngreso: dto.fechaIngreso,
     telefono: dto.telefono?.trim(),
     estadoCivil: dto.estadoCivil?.trim(),
-    hijos: dto.hijos,
+    numeroEmpleado: dto.numeroEmpleado?.trim(),
     estadoLaboral: dto.estadoLaboral?.trim(),
     agentesRiesgoActuales: dto.agentesRiesgoActuales?.map(agent => agent.trim()),
-    centroTrabajo: dto.idCentroTrabajo?.trim(),
+    idCentroTrabajo: dto.idCentroTrabajo?.trim(),
     createdBy: dto.createdBy?.trim(),
     updatedBy: dto.updatedBy?.trim(),
   };

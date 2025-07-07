@@ -105,14 +105,14 @@ export class CreateTrabajadorDto {
     estadoCivil: string;
 
     @ApiProperty({
-      description: 'Cantidad de hijos que tiene el trabajador',
-      example: '2'
+      description: 'Número de empleado del trabajador (opcional, máximo 7 dígitos)',
+      example: '1234567',
+      required: false
     })
-    @IsInt({ message: 'La cantidad de hijos debe ser un entero' })
-    @Min(0, { message: 'La cantidad mínima de hijos es 0' })
-    @Max(10, { message: 'La cantidad maxima de hijos es 10' })
-    @IsNotEmpty({ message: 'La cantidad de hijos no puede estar vacía' })
-    hijos: number;
+    @IsOptional()
+    @IsString({ message: 'El número de empleado debe ser un string' })
+    // @Matches(/^[0-9]{1,7}$/, { message: 'El número de empleado debe contener solo números y tener entre 1 y 7 dígitos' })
+    numeroEmpleado?: string;
 
     // Agentes de Riesgo
     @IsOptional()

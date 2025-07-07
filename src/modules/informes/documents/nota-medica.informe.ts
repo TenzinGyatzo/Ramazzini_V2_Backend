@@ -133,7 +133,7 @@ interface Trabajador {
   antiguedad: string;
   telefono: string;
   estadoCivil: string;
-  hijos: number;
+  numeroEmpleado: string;
 }
 
 interface NotaMedica {
@@ -310,8 +310,8 @@ export const notaMedicaInforme = (
           { text: `${trabajador.antiguedad}`, bold: true },
           { text: `. Estado civil: ` },
           { text: `${trabajador.estadoCivil}`, bold: true },
-          { text: `, con ` },
-          { text: `${trabajador.hijos} ${trabajador.hijos === 1 ? 'hijo' : 'hijos'}.`, bold: true }
+          { text: `, número de empleado: ` },
+          { text: `${trabajador.numeroEmpleado}`, bold: true }
         ],
         margin: [0, 0, 0, 10],
         style: 'paragraph'

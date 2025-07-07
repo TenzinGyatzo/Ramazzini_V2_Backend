@@ -184,7 +184,7 @@ interface Trabajador {
   antiguedad: string;
   telefono: string;
   estadoCivil: string;
-  hijos: number;
+  numeroEmpleado: string;
 }
 
 interface ExploracionFisica {

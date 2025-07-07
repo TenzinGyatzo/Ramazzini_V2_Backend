@@ -53,8 +53,8 @@ export class Trabajador extends Document {
     @Prop({ required: true, enum: estadosCiviles })
     estadoCivil: string;
 
-    @Prop({ required: true })
-    hijos: number;
+    @Prop({ required: false, match: /^[0-9]{1,7}$/, unique: false })
+    numeroEmpleado: string;
     
     @Prop({ required: false, default: [] })
     agentesRiesgoActuales: string[];

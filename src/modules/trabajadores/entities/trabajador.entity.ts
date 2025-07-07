@@ -12,10 +12,10 @@ export class Trabajador extends Document {
     fechaIngreso: Date;
     telefono: string;
     estadoCivil: string;
-    hijos: number;
+    numeroEmpleado: string;
     agentesRiesgoActuales: string;
     estadoLaboral: string;
-    centroTrabajo: CentroTrabajo | string;
+    idCentroTrabajo: CentroTrabajo | string;
     createdBy: User | string;
     updatedBy: User | string;
 }

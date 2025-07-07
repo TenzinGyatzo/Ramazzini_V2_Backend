@@ -142,7 +142,7 @@ interface Trabajador {
   antiguedad: string;
   telefono: string;
   estadoCivil: string;
-  hijos: number;
+  numeroEmpleado: string;
 }
 
 interface HistoriaClinica {
@@ -527,8 +527,8 @@ export const historiaClinicaInforme = (
         [
           { text: 'ESTADO CIVIL', style: 'label' },
           { text: trabajador.estadoCivil, style: 'value' },
-          { text: 'HIJOS', style: 'label' },
-          { text: trabajador.hijos, style: 'value' },
+          { text: 'NUM. DE EMPLEADO', style: 'label' },
+          { text: trabajador.numeroEmpleado, style: 'value' },
         ],
       ],
     },

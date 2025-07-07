@@ -38,13 +38,19 @@ export class TrabajadoresService {
 
   async create(createTrabajadorDto: CreateTrabajadorDto): Promise<Trabajador> {
     const normalizedDto = normalizeTrabajadorData(createTrabajadorDto);
+    
+    // Validar unicidad del número de empleado a nivel empresa si se proporciona
+    if (normalizedDto.numeroEmpleado) {
+      await this.validateNumeroEmpleadoUniqueness(normalizedDto.numeroEmpleado, normalizedDto.idCentroTrabajo);
+    }
+    
     try {
       const createdTrabajador = new this.trabajadorModel(normalizedDto);
       const savedTrabajador = await createdTrabajador.save();
       return savedTrabajador;
     } catch (error) {
-      console.error('Error al guardar el trabajador:', error); // Depuración: Error al guardar
-      throw error; // Re-lanzar el error para manejarlo en el controlador
+      console.error('Error al guardar el trabajador:', error);
+      throw error;
     }
   }
   
@@ -498,6 +504,21 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
 
   async update(id: string, updateTrabajadorDto: UpdateTrabajadorDto): Promise<Trabajador> {
     const normalizedDto = normalizeTrabajadorData(updateTrabajadorDto);
+    
+    // Validar unicidad del número de empleado a nivel empresa si se proporciona
+    if (normalizedDto.numeroEmpleado) {
+      // Obtener el trabajador actual para verificar si está cambiando el número
+      const trabajadorActual = await this.trabajadorModel.findById(id).exec();
+      if (!trabajadorActual) {
+        throw new BadRequestException('Trabajador no encontrado');
+      }
+      
+      // Solo validar si el número está cambiando
+      if (trabajadorActual.numeroEmpleado !== normalizedDto.numeroEmpleado) {
+        await this.validateNumeroEmpleadoUniqueness(normalizedDto.numeroEmpleado, trabajadorActual.idCentroTrabajo.toString());
+      }
+    }
+    
     return await this.trabajadorModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();
   }
 
@@ -515,7 +536,7 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
             : null,
         telefono: worker.telefono ? String(worker.telefono).trim() : '',
         estadoCivil: worker.estadoCivil ? String(worker.estadoCivil).trim() : '',
-        hijos: worker.hijos || 0,
+        numeroEmpleado: worker.numeroEmpleado ? String(worker.numeroEmpleado).trim() : '',
         agentesRiesgoActuales: worker.agentesRiesgoActuales || [],
         estadoLaboral: worker.estadoLaboral ? String(worker.estadoLaboral).trim() : 'Activo',
         idCentroTrabajo: worker.idCentroTrabajo,
@@ -770,7 +791,7 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
         Antiguedad: fechaIngresoStr ? calcularAntiguedad(fechaIngresoStr) : 'Desconocido',
         Telefono: trabajador.telefono,
         EstadoCivil: trabajador.estadoCivil,
-        Hijos: trabajador.hijos
+        NumeroEmpleado: trabajador.numeroEmpleado || ''
       };
     });
 
@@ -781,5 +802,36 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
 
     // Convertir el libro a un buffer
     return xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+  }
+
+  /**
+   * Valida que el número de empleado sea único a nivel empresa
+   * @param numeroEmpleado - Número de empleado a validar
+   * @param idCentroTrabajo - ID del centro de trabajo
+   * @throws BadRequestException si el número ya existe en la empresa
+   */
+  private async validateNumeroEmpleadoUniqueness(numeroEmpleado: string, idCentroTrabajo: string): Promise<void> {
+    // Obtener el centro de trabajo para encontrar la empresa
+    const centroTrabajo = await this.centroTrabajoModel.findById(idCentroTrabajo).exec();
+    if (!centroTrabajo) {
+      throw new BadRequestException('Centro de trabajo no encontrado');
+    }
+
+    // Buscar todos los centros de trabajo de la misma empresa
+    const centrosEmpresa = await this.centroTrabajoModel.find({ 
+      idEmpresa: centroTrabajo.idEmpresa 
+    }).exec();
+    
+    const idsCentrosEmpresa = centrosEmpresa.map(ct => ct._id);
+
+    // Verificar si ya existe un trabajador con ese número en la empresa
+    const trabajadorExistente = await this.trabajadorModel.findOne({
+      numeroEmpleado: numeroEmpleado,
+      idCentroTrabajo: { $in: idsCentrosEmpresa }
+    }).exec();
+
+    if (trabajadorExistente) {
+      throw new BadRequestException(`El número de empleado ${numeroEmpleado} ya está registrado`);
+    }
   }
 }

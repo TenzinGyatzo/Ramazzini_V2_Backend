@@ -62,7 +62,7 @@ export class InformesService {
       ),
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
-      hijos: trabajador.hijos,
+      numeroEmpleado: trabajador.numeroEmpleado,
     };
 
     const antidoping = await this.expedientesService.findDocument(
@@ -196,7 +196,7 @@ export class InformesService {
       ),
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
-      hijos: trabajador.hijos,
+      numeroEmpleado: trabajador.numeroEmpleado,
     };
 
     const aptitud = await this.expedientesService.findDocument(
@@ -452,7 +452,7 @@ export class InformesService {
       ),
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
-      hijos: trabajador.hijos,
+      numeroEmpleado: trabajador.numeroEmpleado,
     };
 
     const certificado = await this.expedientesService.findDocument(
@@ -681,7 +681,7 @@ export class InformesService {
       ),
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
-      hijos: trabajador.hijos,
+      numeroEmpleado: trabajador.numeroEmpleado,
     };
 
     const examenVista = await this.expedientesService.findDocument(
@@ -826,7 +826,7 @@ export class InformesService {
       ),
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
-      hijos: trabajador.hijos,
+      numeroEmpleado: trabajador.numeroEmpleado,
     };
 
     const exploracionFisica = await this.expedientesService.findDocument(
@@ -994,7 +994,7 @@ export class InformesService {
       ),
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
-      hijos: trabajador.hijos,
+      numeroEmpleado: trabajador.numeroEmpleado,
     };
 
     const historiaClinica = await this.expedientesService.findDocument(
@@ -1198,7 +1198,7 @@ export class InformesService {
       ),
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
-      hijos: trabajador.hijos,
+      numeroEmpleado: trabajador.numeroEmpleado,
     };
     const notaMedica = await this.expedientesService.findDocument('notaMedica', notaMedicaId);
     const datosNotaMedica = {
@@ -1314,7 +1314,7 @@ export class InformesService {
       ),
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
-      hijos: trabajador.hijos,
+      numeroEmpleado: trabajador.numeroEmpleado,
     };
 
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
