@@ -528,7 +528,7 @@ export const historiaClinicaInforme = (
           { text: 'ESTADO CIVIL', style: 'label' },
           { text: trabajador.estadoCivil, style: 'value' },
           { text: 'NUM. DE EMPLEADO', style: 'label' },
-          { text: trabajador.numeroEmpleado, style: 'value' },
+          { text: trabajador.numeroEmpleado || '-', style: 'value' },
         ],
       ],
     },
