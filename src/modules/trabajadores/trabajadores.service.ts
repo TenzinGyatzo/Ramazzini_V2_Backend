@@ -163,12 +163,14 @@ export class TrabajadoresService {
               cardiopaticosPP: historia.cardiopaticosPP ?? null,
               alergicos: historia.alergicos ?? null,
               hipertensivosPP: historia.hipertensivosPP ?? null,
+              respiratorios: historia.respiratorios ?? null,
               epilepticosPP: historia.epilepticosPP ?? null,
               accidentes: historia.accidentes ?? null,
               quirurgicos: historia.quirurgicos ?? null,
               traumaticos: historia.traumaticos ?? null,
               alcoholismo: historia.alcoholismoEspecificar ?? null,
               tabaquismo: historia.tabaquismoEspecificar ?? null,
+              accidenteLaboral: historia.accidenteLaboral ?? null,
             }
           : null,
         aptitudResumen: aptitud
