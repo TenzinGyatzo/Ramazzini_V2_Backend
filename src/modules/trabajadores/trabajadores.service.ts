@@ -167,6 +167,8 @@ export class TrabajadoresService {
               accidentes: historia.accidentes ?? null,
               quirurgicos: historia.quirurgicos ?? null,
               traumaticos: historia.traumaticos ?? null,
+              alcoholismo: historia.alcoholismoEspecificar ?? null,
+              tabaquismo: historia.tabaquismoEspecificar ?? null,
             }
           : null,
         aptitudResumen: aptitud
