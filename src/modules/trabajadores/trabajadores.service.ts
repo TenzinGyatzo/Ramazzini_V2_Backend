@@ -270,7 +270,7 @@ export class TrabajadoresService {
   }
 
   // trabajadores.service.ts
-async getDashboardData(centroId: string, inicio?: string, fin?: string) {
+  async getDashboardData(centroId: string, inicio?: string, fin?: string) {
     // 0. Creaar el filtro de rango dde fechas para cada tipo
     const rangoFecha = (campo: string) => {
       if (!inicio || !fin) return {};
@@ -311,6 +311,7 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
       ],
       imc: [],
       circunferenciaCintura: [],
+      tensionArterial: [],
       alcoholYTabaco: [],
       enfermedadesCronicas: [],
       antecedentes: [],
@@ -324,7 +325,7 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
     // 5. EXPLORACIONES FÍSICAS – Obtener la más reciente por trabajador activo
     const exploraciones = await this.exploracionFisicaModel
     .find({ idTrabajador: { $in: idsActivos }, ...rangoFecha('fechaExploracionFisica') })
-    .select('idTrabajador categoriaIMC categoriaCircunferenciaCintura fechaExploracionFisica')
+    .select('idTrabajador categoriaIMC categoriaCircunferenciaCintura categoriaTensionArterial fechaExploracionFisica')
     .lean();
 
     const exploracionesMap = new Map<string, any>();
@@ -342,14 +343,21 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
     }))
     );
 
-    // 6. PRESIÓN ARTERIAL – Usar la misma exploración más reciente
+    // 6. CIRCUNFERENCIA DE CINTURA – Usar la misma exploración más reciente
     dashboardData.circunferenciaCintura.push(
       Array.from(exploracionesMap.values()).map((exploracion) => ({
         categoriaCircunferenciaCintura: exploracion.categoriaCircunferenciaCintura ?? null
       }))
     );
 
-    // 7. HISTORIAS CLÍNICAS – Obtener la más reciente por trabajador activo
+    // 7. TENSIÓN ARTERIAL – Usar la misma exploración más reciente
+    dashboardData.tensionArterial.push(
+      Array.from(exploracionesMap.values()).map((exploracion) => ({
+        categoriaTensionArterial: exploracion.categoriaTensionArterial ?? null
+      }))
+    );
+
+    // 8. HISTORIAS CLÍNICAS – Obtener la más reciente por trabajador activo
     const historias = await this.historiaClinicaModel
     .find({ idTrabajador: { $in: idsActivos }, ...rangoFecha('fechaHistoriaClinica') })
     .select('idTrabajador alcoholismo tabaquismo diabeticosPP hipertensivosPP cardiopaticosPP epilepticosPP alergicos lumbalgias accidentes quirurgicos traumaticos fechaHistoriaClinica')
@@ -364,7 +372,7 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
     }
     }
 
-    // 8. ALCOHOL Y TABACO
+    // 9. ALCOHOL Y TABACO
     dashboardData.alcoholYTabaco.push(
     Array.from(historiasMap.values()).map((historia) => ({
       alcoholismo: historia.alcoholismo ?? null,
@@ -372,7 +380,7 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
     }))
     );
 
-    // 9. ENFERMEDADES CRÓNICAS
+    // 10. ENFERMEDADES CRÓNICAS
     dashboardData.enfermedadesCronicas.push(
       Array.from(historiasMap.values()).map((historia) => ({
         diabeticosPP: historia.diabeticosPP ?? null,
@@ -383,7 +391,7 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
       }))
     );
 
-    // 10. ANTECEDENTES TRAUMÁTICOS O LOCALIZADOS
+    // 11. ANTECEDENTES TRAUMÁTICOS O LOCALIZADOS
     dashboardData.antecedentes.push(
       Array.from(historiasMap.values()).map((historia) => ({
         lumbalgias: historia.lumbalgias ?? null,
@@ -393,7 +401,7 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
       }))
     );
 
-    // 11. EXÁMENES DE VISTA – Obtener el más reciente por trabajador activo
+    // 12. EXÁMENES DE VISTA – Obtener el más reciente por trabajador activo
     const examenesVista = await this.examenVistaModel
     .find({ idTrabajador: { $in: idsActivos }, ...rangoFecha('fechaExamenVista') })
     .select('idTrabajador requiereLentesUsoGeneral ojoIzquierdoLejanaSinCorreccion ojoDerechoLejanaSinCorreccion sinCorreccionLejanaInterpretacion ojoIzquierdoLejanaConCorreccion ojoDerechoLejanaConCorreccion conCorreccionLejanaInterpretacion interpretacionIshihara fechaExamenVista')
@@ -408,7 +416,7 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
     }
     }
 
-    // 12. AGUDEZA VISUAL
+    // 13. AGUDEZA VISUAL
     dashboardData.agudezaVisual.push(
     Array.from(examenesMap.values()).map((examen) => ({
       requiereLentesUsoGeneral: examen.requiereLentesUsoGeneral ?? null,
@@ -421,14 +429,14 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
     }))
     );
 
-    // 13. DALTONISMO
+    // 14. DALTONISMO
     dashboardData.daltonismo.push(
       Array.from(examenesMap.values()).map((examen) => ({
         interpretacionIshihara: examen.interpretacionIshihara ?? null
       }))
     );
 
-    // 14. APTITUD PUESTO – Obtener la más reciente por trabajador (activo o inactivo)
+    // 15. APTITUD PUESTO – Obtener la más reciente por trabajador (activo o inactivo)
     const aptitudes = await this.aptitudModel
     .find({ idTrabajador: { $in: idsTodos }, ...rangoFecha('fechaAptitudPuesto') })
     .select('idTrabajador aptitudPuesto fechaAptitudPuesto')
@@ -449,7 +457,7 @@ async getDashboardData(centroId: string, inicio?: string, fin?: string) {
     }))
     );
 
-    // 15. CONSULTAS – Obtener todas las notas médicas por trabajador (activo o inactivo)
+    // 16. CONSULTAS – Obtener todas las notas médicas por trabajador (activo o inactivo)
     const consultas = await this.notaMedicaModel
       .find({ idTrabajador: { $in: idsTodos }, ...rangoFecha('fechaNotaMedica') })
       .select('idTrabajador fechaNotaMedica')

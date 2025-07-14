@@ -533,122 +533,6 @@ export class EmailsService {
     return '🔴 Alto';
   }
 
-  //   private async getCreatedPdfsSummary(): Promise<string> {
-  //   const basePath = path.resolve('expedientes-medicos');
-  //   const tiposValidos = [
-  //     'Antidoping',
-  //     'Aptitud',
-  //     'Certificado',
-  //     'Examen Vista',
-  //     'Historia Clinica',
-  //     'Exploracion Fisica',
-  //     'Nota Medica',
-  //   ];
-
-  //   const hoy = new Date();
-  //   const hoyFormateado = hoy.toLocaleDateString('es-MX', {
-  //     day: '2-digit',
-  //     month: '2-digit',
-  //     year: 'numeric',
-  //   }).replace(/\//g, '-'); // Ej: "08-06-2025"
-
-  //   let totalArchivos = 0;
-  //   let totalMB = 0;
-
-  //   const recorrer = async (dir: string) => {
-  //     const elementos = await fs.promises.readdir(dir, { withFileTypes: true });
-
-  //     for (const el of elementos) {
-  //       const fullPath = path.join(dir, el.name);
-
-  //       if (el.isDirectory()) {
-  //         await recorrer(fullPath);
-  //       } else if (
-  //         el.isFile() &&
-  //         el.name.endsWith('.pdf') &&
-  //         tiposValidos.some(tipo => el.name.startsWith(tipo + ' ')) &&
-  //         el.name.includes(hoyFormateado)
-  //       ) {
-  //         const stat = await fs.promises.stat(fullPath);
-  //         totalArchivos++;
-  //         totalMB += stat.size / (1024 * 1024);
-  //       }
-  //     }
-  //   };
-
-  //   try {
-  //     await recorrer(basePath);
-  //   } catch (err) {
-  //     return '⚠️ No se pudo calcular la cantidad de PDFs creados.';
-  //   }
-
-  //   if (totalArchivos === 0) {
-  //     return '📁 No se generaron informes PDF hoy.';
-  //   }
-
-  //   return `📄 Creados: ${totalArchivos} archivos — ${totalMB.toFixed(2)} MB usados`;
-  // }
-
-  // private async getUploadedExternalDocsSummary(): Promise<string> {
-  //   const basePath = path.resolve('expedientes-medicos');
-  //   const tiposInternos = [
-  //     'Antidoping',
-  //     'Aptitud',
-  //     'Certificado',
-  //     'Examen Vista',
-  //     'Historia Clinica',
-  //     'Exploracion Fisica',
-  //     'Nota Medica',
-  //   ];
-
-  //   const extensionesExternas = ['.pdf', '.jpg', '.jpeg', '.png'];
-
-  //   const hoy = new Date();
-  //   const hoyFormateado = hoy.toLocaleDateString('es-MX', {
-  //     day: '2-digit',
-  //     month: '2-digit',
-  //     year: 'numeric',
-  //   }).replace(/\//g, '-'); // Ej: "08-06-2025"
-
-  //   let totalArchivos = 0;
-  //   let totalMB = 0;
-
-  //   const recorrer = async (dir: string) => {
-  //     const elementos = await fs.promises.readdir(dir, { withFileTypes: true });
-
-  //     for (const el of elementos) {
-  //       const fullPath = path.join(dir, el.name);
-
-  //       if (el.isDirectory()) {
-  //         await recorrer(fullPath);
-  //       } else if (el.isFile()) {
-  //         const ext = path.extname(el.name).toLowerCase();
-  //         const esExtensionValida = extensionesExternas.includes(ext);
-  //         const esGeneradoInternamente = tiposInternos.some(tipo => el.name.startsWith(tipo + ' '));
-
-  //         // Documentos externos válidos: extensión válida y NO generado internamente
-  //         if (esExtensionValida && !esGeneradoInternamente && el.name.includes(hoyFormateado)) {
-  //           const stat = await fs.promises.stat(fullPath);
-  //           totalArchivos++;
-  //           totalMB += stat.size / (1024 * 1024);
-  //         }
-  //       }
-  //     }
-  //   };
-
-  //   try {
-  //     await recorrer(basePath);
-  //   } catch (err) {
-  //     return '⚠️ No se pudo calcular los documentos externos subidos.';
-  //   }
-
-  //   if (totalArchivos === 0) {
-  //     return '📁 No se subieron documentos externos hoy.';
-  //   }
-
-  //   return `📎 Externos: ${totalArchivos} archivos — ${totalMB.toFixed(2)} MB usados`;
-  // }
-
   private async getCreatedPdfsSummary(): Promise<string> {
     const basePath = path.resolve('expedientes-medicos');
     const tiposValidos = [
@@ -997,7 +881,7 @@ export class EmailsService {
     ${createdPdfsSummary}
     ${uploadedDocsSummary}
 
-    🗑️ 𝗟𝗜𝗠𝗣𝗜𝗘𝗭𝗔 𝗔𝗨𝗧𝗢𝗠𝗔́𝗧𝗜𝗖𝗔 𝗗𝗘 𝗣𝗗𝗙s (3 MESES)
+    🗑️ 𝗟𝗜𝗠𝗣𝗜𝗘𝗭𝗔 𝗔𝗨𝗧𝗢𝗠𝗔́𝗧𝗜𝗖𝗔 𝗗𝗘 𝗣𝗗𝗙s (2 MESES)
     ─────────────────────────────
     ${deletedPdfsLog}
 
