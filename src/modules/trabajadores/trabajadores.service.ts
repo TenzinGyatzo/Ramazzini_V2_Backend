@@ -479,19 +479,37 @@ export class TrabajadoresService {
 
     dashboardData.trabajadoresEvaluados = Array.from(trabajadoresEvaluadosSet);
 
+    // Si hay filtro de fechas, obtener solo trabajadores con evaluaciones en el período
+    let trabajadoresFiltrados = trabajadoresActivos;
+    
+    if (inicio && fin) {
+      // Obtener IDs de trabajadores que tienen evaluaciones en el período
+      const trabajadoresConEvaluaciones = new Set([
+        ...exploracionesMap.keys(),
+        ...historiasMap.keys(),
+        ...examenesMap.keys(),
+        ...aptitudesMap.keys(),
+      ]);
+      
+      // Filtrar trabajadores activos que tienen evaluaciones en el período
+      trabajadoresFiltrados = trabajadoresActivos.filter(t => 
+        trabajadoresConEvaluaciones.has(t._id.toString())
+      );
+    }
+
+    // Para agentes de riesgo, mostrar trabajadores filtrados por período
     dashboardData.agentesRiesgo = [
-      trabajadoresActivos.map(t => ({
+      trabajadoresFiltrados.map(t => ({
         agentesRiesgoActuales: t.agentesRiesgoActuales,
       }))
     ];
 
+    // Para grupos etarios y distribución por sexo, mostrar trabajadores filtrados por período
     dashboardData.grupoEtario = [
-      trabajadoresActivos
-        .filter(t => trabajadoresEvaluadosSet.has(t._id.toString()))
-        .map(t => ({
-          sexo: t.sexo,
-          fechaNacimiento: t.fechaNacimiento
-        }))
+      trabajadoresFiltrados.map(t => ({
+        sexo: t.sexo,
+        fechaNacimiento: t.fechaNacimiento
+      }))
     ];
 
     return dashboardData;
