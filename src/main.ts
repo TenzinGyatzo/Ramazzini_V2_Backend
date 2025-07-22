@@ -9,9 +9,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { EnoentSilencerFilter } from './filters/enoent-silencer.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Registrar el filtro global para silenciar ENOENT en expedientes-medicos
+  app.useGlobalFilters(new EnoentSilencerFilter());
 
   // Servir el directorio de archivos estáticos
   app.useStaticAssets(join(__dirname, '..', 'assets', 'signatories'), {
