@@ -139,7 +139,7 @@ export class PagosService {
 
         // Enviar email con detalles de la suscripción
         const emailData = {
-          email: subscriptionPayload.external_reference,
+          email: subscriptionPayload.payer_email,
           nombrePlan: subscriptionPayload.reason,
           inicioSuscripcion: formatDate(subscriptionPayload.date_created),
           fechaActualizacion: formatDate(subscriptionPayload.last_modified),
