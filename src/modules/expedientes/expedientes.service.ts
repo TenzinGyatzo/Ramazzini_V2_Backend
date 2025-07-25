@@ -156,26 +156,10 @@ export class ExpedientesService {
       throw new BadRequestException('El campo idTrabajador es requerido');
     }
   
-    const startDate = startOfDay(new Date(fechaDocumento));
-    const endDate = endOfDay(new Date(fechaDocumento));
-  
-    // Busca un documento existente para el trabajador y la fecha
-    const existingDocument = await model.findOne({
-      idTrabajador: trabajadorId,
-      fechaDocumento: { $gte: startDate, $lte: endDate },
-      nombreDocumento: nombreDocumento
-    }).exec();
-  
-    let result;
-  
-    if (existingDocument) {
-      // Si ya existe, actualízalo
-      result = await model.findByIdAndUpdate(existingDocument._id, createDto, { new: true }).exec();
-    } else {
-      // Si no existe, crea uno nuevo
-      const createdDocument = new model(createDto);
-      result = await createdDocument.save();
-    }
+    // ✅ SIEMPRE crear una nueva entidad para evitar archivos huérfanos
+    // Esto permite que cada archivo tenga su propio registro y se pueda gestionar individualmente
+    const createdDocument = new model(createDto);
+    const result = await createdDocument.save();
   
     // ✅ Actualizar el updatedAt del trabajador
     await this.actualizarUpdatedAtTrabajador(trabajadorId);

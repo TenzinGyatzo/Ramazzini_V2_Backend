@@ -2,30 +2,9 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-const tiposDocumentos = [
-    "Prueba(s) de laboratorio",
-    "Estudio de Gabinete",
-    "Imagenología",
-    "Fotografía de prueba rápida",
-    "Identificación",
-    "Receta médica",
-    "Formato específico",
-    "Otro",
-  ];
-  
-  const extensiones = [".pdf", ".jpeg", ".jpg", ".png"];
+const extensiones = [".pdf", ".jpeg", ".jpg", ".png"];
 
 export class CreateDocumentoExternoDto {
-
-    @ApiProperty({
-        description: 'Tipo de documento',
-        enum: tiposDocumentos,
-        example: 'Prueba(s) de laboratorio'
-    })
-    @IsString({ message: 'El tipo de documento debe ser un string' })
-    @IsNotEmpty({ message: 'El tipo de documento no puede estar vacío' })
-    @IsEnum(tiposDocumentos, { message: 'El tipo de documento debe ser uno de los siguientes: ' + tiposDocumentos })
-    tipoDocumento: string;
 
     @ApiProperty({
         description: 'Nombre del documento',

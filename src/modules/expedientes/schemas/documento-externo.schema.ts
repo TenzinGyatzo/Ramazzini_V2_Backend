@@ -3,24 +3,10 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
-const tiposDocumentos = [
-    "Prueba(s) de laboratorio",
-    "Estudio de Gabinete",
-    "Imagenología",
-    "Fotografía de prueba rápida",
-    "Identificación",
-    "Receta médica",
-    "Formato específico",
-    "Otro",
-  ];
-  
 const extensiones = [".pdf", ".jpeg", ".jpg", ".png"];
 
 @Schema()
 export class DocumentoExterno extends Document {
-
-    @Prop({ required: true, enum: tiposDocumentos })
-    tipoDocumento: string
 
     @Prop({ required: true })
     nombreDocumento: string
