@@ -70,6 +70,9 @@ export class Trabajador extends Document {
   
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
     updatedBy: User;
+
+    @Prop({ required: false })
+    fechaTransferencia: Date;
 }
 
 export const TrabajadorSchema = SchemaFactory.createForClass(Trabajador).set('timestamps', true);

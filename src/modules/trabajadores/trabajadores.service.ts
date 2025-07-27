@@ -59,7 +59,30 @@ export class TrabajadoresService {
   }
 
   async findWorkersWithHistoriaDataByCenter(centroId: string): Promise<any[]> {
-    const trabajadores = await this.trabajadorModel.find({ idCentroTrabajo: centroId }).lean();
+    // Obtener trabajadores con fechaTransferencia (transferidos) ordenados por fecha descendente
+    // y luego por updatedAt descendente para que el último transferido en el mismo día aparezca primero
+    const trabajadoresTransferidos = await this.trabajadorModel
+      .find({ 
+        idCentroTrabajo: centroId,
+        fechaTransferencia: { $exists: true, $ne: null }
+      })
+      .sort({ fechaTransferencia: 1 })
+      .lean();
+
+    // Obtener trabajadores sin fechaTransferencia (no transferidos) en orden natural
+    const trabajadoresNoTransferidos = await this.trabajadorModel
+      .find({ 
+        idCentroTrabajo: centroId,
+        $or: [
+          { fechaTransferencia: { $exists: false } },
+          { fechaTransferencia: null }
+        ]
+      })
+      .lean();
+
+              // Combinar los arrays: primero los no transferidos, luego los transferidos
+          // Los transferidos estarán al final del array (folios más altos) para aparecer al principio con order desc
+          const trabajadores = [...trabajadoresNoTransferidos, ...trabajadoresTransferidos];
     const trabajadoresIds = trabajadores.map(t => t._id);
   
     // HISTORIAS CLÍNICAS
@@ -577,12 +600,13 @@ export class TrabajadoresService {
     //   await this.validateNumeroEmpleadoUniqueness(trabajador.numeroEmpleado, nuevoCentroId);
     // }
 
-    // Actualizar el centro de trabajo del trabajador
+    // Actualizar el centro de trabajo del trabajador y establecer fecha de transferencia
     const trabajadorActualizado = await this.trabajadorModel.findByIdAndUpdate(
       trabajadorId,
       {
         idCentroTrabajo: nuevoCentroId,
-        updatedBy: updatedBy
+        updatedBy: updatedBy,
+        fechaTransferencia: new Date()
       },
       { new: true }
     ).exec();

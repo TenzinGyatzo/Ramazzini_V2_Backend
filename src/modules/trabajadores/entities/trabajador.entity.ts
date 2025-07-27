@@ -18,4 +18,5 @@ export class Trabajador extends Document {
     idCentroTrabajo: CentroTrabajo | string;
     createdBy: User | string;
     updatedBy: User | string;
+    fechaTransferencia?: Date;
 }
