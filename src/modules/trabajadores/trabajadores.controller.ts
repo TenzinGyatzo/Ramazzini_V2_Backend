@@ -4,6 +4,7 @@ import * as xlsx from 'xlsx';
 import { TrabajadoresService } from './trabajadores.service';
 import { CreateTrabajadorDto } from './dto/create-trabajador.dto';
 import { UpdateTrabajadorDto } from './dto/update-trabajador.dto';
+import { TransferirTrabajadorDto } from './dto/transferir-trabajador.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { isValidObjectId } from 'mongoose';
 import { Response } from 'express';
@@ -164,6 +165,34 @@ export class TrabajadoresController {
     }
 
     return { message: 'Trabajador actualizado', data: updatedTrabajador };
+  }
+
+  @Patch('/transferir-trabajador/:id')
+  @ApiOperation({ summary: 'Transfiere un trabajador a otro centro de trabajo' })
+  @ApiResponse({ status: 200, description: 'Trabajador transferido exitosamente' })
+  @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido | Trabajador no encontrado | Centro de trabajo destino no encontrado | El trabajador ya pertenece a este centro de trabajo' })
+  async transferirTrabajador(
+    @Param('id') id: string,
+    @Body() transferData: TransferirTrabajadorDto
+  ) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID de trabajador proporcionado no es válido');
+    }
+
+    if (!isValidObjectId(transferData.nuevoCentroId)) {
+      throw new BadRequestException('El ID de centro de trabajo destino no es válido');
+    }
+
+    const trabajadorTransferido = await this.trabajadoresService.transferirTrabajador(
+      id,
+      transferData.nuevoCentroId,
+      transferData.updatedBy
+    );
+
+    return { 
+      message: 'Trabajador transferido exitosamente', 
+      data: trabajadorTransferido 
+    };
   }
 
   @Post('importar-trabajadores')

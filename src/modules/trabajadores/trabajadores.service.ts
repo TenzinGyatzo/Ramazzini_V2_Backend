@@ -554,6 +554,42 @@ export class TrabajadoresService {
     return await this.trabajadorModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();
   }
 
+  async transferirTrabajador(trabajadorId: string, nuevoCentroId: string, updatedBy: string): Promise<Trabajador> {
+    // Validar que el trabajador existe
+    const trabajador = await this.trabajadorModel.findById(trabajadorId).exec();
+    if (!trabajador) {
+      throw new BadRequestException('Trabajador no encontrado');
+    }
+
+    // Validar que el nuevo centro de trabajo existe
+    const nuevoCentro = await this.centroTrabajoModel.findById(nuevoCentroId).exec();
+    if (!nuevoCentro) {
+      throw new BadRequestException('Centro de trabajo destino no encontrado');
+    }
+
+    // Validar que no se está transfiriendo al mismo centro
+    if (trabajador.idCentroTrabajo.toString() === nuevoCentroId) {
+      throw new BadRequestException('El trabajador ya pertenece a este centro de trabajo');
+    }
+
+    // Validar unicidad del número de empleado en el nuevo centro si existe
+    // if (trabajador.numeroEmpleado) {
+    //   await this.validateNumeroEmpleadoUniqueness(trabajador.numeroEmpleado, nuevoCentroId);
+    // }
+
+    // Actualizar el centro de trabajo del trabajador
+    const trabajadorActualizado = await this.trabajadorModel.findByIdAndUpdate(
+      trabajadorId,
+      {
+        idCentroTrabajo: nuevoCentroId,
+        updatedBy: updatedBy
+      },
+      { new: true }
+    ).exec();
+
+    return trabajadorActualizado;
+  }
+
   private processWorkerData(worker) {
       return {
         nombre: worker.nombre ? String(worker.nombre).trim() : '',
