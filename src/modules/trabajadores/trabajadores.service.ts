@@ -59,30 +59,19 @@ export class TrabajadoresService {
   }
 
   async findWorkersWithHistoriaDataByCenter(centroId: string): Promise<any[]> {
-    // Obtener trabajadores con fechaTransferencia (transferidos) ordenados por fecha descendente
-    // y luego por updatedAt descendente para que el último transferido en el mismo día aparezca primero
-    const trabajadoresTransferidos = await this.trabajadorModel
-      .find({ 
-        idCentroTrabajo: centroId,
-        fechaTransferencia: { $exists: true, $ne: null }
-      })
-      .sort({ fechaTransferencia: 1 })
+    // Obtener todos los trabajadores del centro
+    const trabajadores = await this.trabajadorModel
+      .find({ idCentroTrabajo: centroId })
       .lean();
 
-    // Obtener trabajadores sin fechaTransferencia (no transferidos) en orden natural
-    const trabajadoresNoTransferidos = await this.trabajadorModel
-      .find({ 
-        idCentroTrabajo: centroId,
-        $or: [
-          { fechaTransferencia: { $exists: false } },
-          { fechaTransferencia: null }
-        ]
-      })
-      .lean();
-
-              // Combinar los arrays: primero los no transferidos, luego los transferidos
-          // Los transferidos estarán al final del array (folios más altos) para aparecer al principio con order desc
-          const trabajadores = [...trabajadoresNoTransferidos, ...trabajadoresTransferidos];
+    // Ordenar por fecha efectiva: fechaTransferencia si existe, sino createdAt
+    trabajadores.sort((a, b) => {
+      const fechaA = a.fechaTransferencia || (a as any).createdAt;
+      const fechaB = b.fechaTransferencia || (b as any).createdAt;
+      
+      // Orden ascendente (más antiguo primero)
+      return new Date(fechaA).getTime() - new Date(fechaB).getTime();
+    });
     const trabajadoresIds = trabajadores.map(t => t._id);
   
     // HISTORIAS CLÍNICAS
