@@ -152,4 +152,96 @@ export class InformesController {
     }
   }
 
+  @Get('formato-historia-clinica/:empresaId/:trabajadorId/:userId')
+  async getFormatoHistoriaClinica(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const buffer = await this.informesService.getFormatoHistoriaClinica(empresaId, trabajadorId, userId);
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'inline; filename="Formato_Historia_Clinica.pdf"',
+        'Content-Length': buffer.length,
+      });
+
+      res.end(buffer);
+    } catch (error) {
+      console.error('[getFormatoHistoriaClinica] Error al generar el PDF:', error);
+      res.status(500).json({ message: 'Error al generar el informe' });
+    }
+  }
+
+  @Get('formato-historia-clinica/descargar/:empresaId/:trabajadorId/:userId')
+  async descargarFormatoHistoriaClinica(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const buffer = await this.informesService.getFormatoHistoriaClinica(empresaId, trabajadorId, userId);
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="Formato_Historia_Clinica.pdf"',
+        'Content-Length': buffer.length,
+      });
+
+      res.end(buffer);
+    } catch (error) {
+      console.error('[descargarFormatoHistoriaClinica] Error al generar el PDF:', error);
+      res.status(500).json({ message: 'Error al generar el informe' });
+    }
+  }
+
+  @Get('formato-exploracion-fisica/:empresaId/:trabajadorId/:userId')
+  async getFormatoExploracionFisica(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const buffer = await this.informesService.getFormatoExploracionFisica(empresaId, trabajadorId, userId);
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'inline; filename="Formato_Exploracion_Fisica.pdf"',
+        'Content-Length': buffer.length,
+      });
+
+      res.end(buffer);
+    } catch (error) {
+      console.error('[getFormatoExploracionFisica] Error al generar el PDF:', error);
+      res.status(500).json({ message: 'Error al generar el informe' });
+    }
+  }
+
+  @Get('formato-exploracion-fisica/descargar/:empresaId/:trabajadorId/:userId')
+  async descargarFormatoExploracionFisica(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const buffer = await this.informesService.getFormatoExploracionFisica(empresaId, trabajadorId, userId);
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="Formato_Exploracion_Fisica.pdf"',
+        'Content-Length': buffer.length,
+      });
+
+      res.end(buffer);
+    } catch (error) {
+      console.error('[descargarFormatoExploracionFisica] Error al generar el PDF:', error);
+      res.status(500).json({ message: 'Error al generar el informe' });
+    }
+  }
+
 }

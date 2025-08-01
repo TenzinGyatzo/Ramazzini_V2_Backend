@@ -1384,6 +1384,304 @@ export class InformesService {
     return this.printer.createPdfBuffer(docDefinition);
   }
 
+  async getFormatoHistoriaClinica(empresaId: string, trabajadorId: string, userId: string): Promise<Buffer> {
+    // Para el formato en blanco, no necesitamos información de empresa ni trabajador
+    // Solo mantenemos la estructura del formulario con datos vacíos
+    const nombreEmpresa = ''; // Sin información de empresa
+    
+    // Datos del trabajador vacíos para el formato en blanco
+    const datosTrabajador = {
+      nombre: '',
+      nacimiento: '',
+      escolaridad: '',
+      edad: '',
+      puesto: '',
+      sexo: '', // Campo vacío para formato en blanco
+      antiguedad: '',
+      telefono: '',
+      estadoCivil: '',
+      numeroEmpleado: '', // Campo vacío para formato en blanco
+    };
+
+    // Crear historia clínica en blanco con todos los campos vacíos
+    const historiaClinicaBlanca = {
+      motivoExamen: '',
+      fechaHistoriaClinica: null, // Campo vacío para formato en blanco
+      // Antecedentes Heredofamiliares - todos vacíos
+      nefropatias: undefined,
+      nefropatiasEspecificar: undefined,
+      diabeticos: undefined,
+      diabeticosEspecificar: undefined,
+      hipertensivos: undefined,
+      hipertensivosEspecificar: undefined,
+      cardiopaticos: undefined,
+      cardiopaticosEspecificar: undefined,
+      neoplasicos: undefined,
+      neoplasicosEspecificar: undefined,
+      psiquiatricos: undefined,
+      psiquiatricosEspecificar: undefined,
+      epilepticos: undefined,
+      epilepticosEspecificar: undefined,
+      autoinmunes: undefined,
+      autoinmunesEspecificar: undefined,
+      tuberculosis: undefined,
+      tuberculosisEspecificar: undefined,
+      hepatopatias: undefined,
+      hepatopatiasEspecificar: undefined,
+      // Antecedentes Personales Patológicos - todos vacíos
+      lumbalgias: undefined,
+      lumbalgiasEspecificar: undefined,
+      diabeticosPP: undefined,
+      diabeticosPPEspecificar: undefined,
+      cardiopaticosPP: undefined,
+      cardiopaticosPPEspecificar: undefined,
+      alergicos: undefined,
+      alergicosEspecificar: undefined,
+      hipertensivosPP: undefined,
+      hipertensivosPPEspecificar: undefined,
+      respiratorios: undefined,
+      respiratoriosEspecificar: undefined,
+      epilepticosPP: undefined,
+      epilepticosPPEspecificar: undefined,
+      accidentes: undefined,
+      accidentesEspecificar: undefined,
+      quirurgicos: undefined,
+      quirurgicosEspecificar: undefined,
+      traumaticos: undefined,
+      traumaticosEspecificar: undefined,
+      // Antecedentes Personales No Patológicos - todos vacíos
+      alcoholismo: undefined,
+      alcoholismoEspecificar: undefined,
+      tabaquismo: undefined,
+      tabaquismoEspecificar: undefined,
+      toxicomanias: undefined,
+      toxicomaniasEspecificar: undefined,
+      alimentacionDeficiente: undefined,
+      alimentacionDeficienteEspecificar: undefined,
+      actividadFisicaDeficiente: undefined,
+      actividadFisicaDeficienteEspecificar: undefined,
+      higienePersonalDeficiente: undefined,
+      higienePersonalDeficienteEspecificar: undefined,
+      // Antecedentes Gineco-Obstétricos - todos vacíos
+      menarca: '',
+      duracionPromedio: '',
+      frecuencia: '',
+      gestas: '',
+      partos: '',
+      cesareas: '',
+      abortos: '',
+      fechaUltimaRegla: '',
+      dolorMenstrual: '',
+      embarazoActual: '',
+      planificacionFamiliar: '',
+      vidaSexualActiva: '',
+      fechaUltimoPapanicolaou: '',
+      fechaUltimaMastografia: '',
+      // Antecedentes Laborales - todos vacíos
+      empresaAnterior1: '',
+      puestoAnterior1: '',
+      antiguedadAnterior1: '',
+      agentesAnterior1: '',
+      empresaAnterior2: '',
+      puestoAnterior2: '',
+      antiguedadAnterior2: '',
+      agentesAnterior2: '',
+      empresaAnterior3: '',
+      puestoAnterior3: '',
+      antiguedadAnterior3: '',
+      agentesAnterior3: '',
+      accidenteLaboral: undefined,
+      accidenteLaboralEspecificar: undefined,
+      descripcionDelDano: '',
+      secuelas: '',
+      resumenHistoriaClinica: '',
+    };
+
+    // Para el formato en blanco, no incluimos información del médico firmante
+    const datosMedicoFirmante = {
+      nombre: "",
+      tituloProfesional: "",
+      numeroCedulaProfesional: "",
+      especialistaSaludTrabajo: "",
+      numeroCedulaEspecialista: "",
+      nombreCredencialAdicional: "",
+      numeroCredencialAdicional: "",
+      firma: null,
+    };
+
+    const usuario = await this.usersService.findById(userId);
+    const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = proveedorSalud
+    ? {
+        nombre: proveedorSalud.nombre || "",
+        RFC: proveedorSalud.RFC || "",
+        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
+        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
+        estado: proveedorSalud.estado || "",
+        municipio: proveedorSalud.municipio || "",
+        codigoPostal: proveedorSalud.codigoPostal || "",
+        direccion: proveedorSalud.direccion || "",
+        telefono: proveedorSalud.telefono || "",
+        correoElectronico: proveedorSalud.correoElectronico || "",
+        sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
+      }
+    : {
+        nombre: "",
+        RFC: "",
+        perfilProveedorSalud: "",
+        logotipoEmpresa: null,
+        estado: "",
+        municipio: "",
+        codigoPostal: "",
+        direccion: "",
+        telefono: "",
+        correoElectronico: "",
+        sitioWeb: "",
+        colorInforme: "#343A40",
+      };
+
+    const docDefinition = historiaClinicaInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      historiaClinicaBlanca,
+      datosMedicoFirmante,
+      datosProveedorSalud,
+      true, // isFormatoBlanco = true
+    );
+  
+    return this.printer.createPdfBuffer(docDefinition);
+  }
+
+  async getFormatoExploracionFisica(empresaId: string, trabajadorId: string, userId: string): Promise<Buffer> {
+    // Para el formato en blanco, no necesitamos información de empresa ni trabajador
+    // Solo mantenemos la estructura del formulario con datos vacíos
+    const nombreEmpresa = ''; // Sin información de empresa
+    
+    // Datos del trabajador vacíos para el formato en blanco
+    const datosTrabajador = {
+      nombre: '',
+      nacimiento: '',
+      escolaridad: '',
+      edad: '',
+      puesto: '',
+      sexo: '',
+      antiguedad: '',
+      telefono: '',
+      estadoCivil: '',
+      numeroEmpleado: '',
+    };
+
+    // Crear exploración física en blanco con todos los campos vacíos
+    const exploracionFisicaBlanca = {
+      fechaExploracionFisica: null, // Campo vacío para formato en blanco
+      peso: undefined,
+      altura: undefined,
+      indiceMasaCorporal: undefined,
+      categoriaIMC: undefined,
+      circunferenciaCintura: undefined,
+      categoriaCircunferenciaCintura: undefined,
+      tensionArterialSistolica: undefined,
+      tensionArterialDiastolica: undefined,
+      categoriaTensionArterial: undefined,
+      frecuenciaCardiaca: undefined,
+      categoriaFrecuenciaCardiaca: undefined,
+      frecuenciaRespiratoria: undefined,
+      categoriaFrecuenciaRespiratoria: undefined,
+      saturacionOxigeno: undefined,
+      categoriaSaturacionOxigeno: undefined,
+      craneoCara: '',
+      ojos: '',
+      oidos: '',
+      nariz: '',
+      boca: '',
+      cuello: '',
+      hombros: '',
+      codos: '',
+      manos: '',
+      reflejosOsteoTendinososSuperiores: '',
+      vascularESuperiores: '',
+      torax: '',
+      abdomen: '',
+      cadera: '',
+      rodillas: '',
+      tobillosPies: '',
+      reflejosOsteoTendinososInferiores: '',
+      vascularEInferiores: '',
+      inspeccionColumna: '',
+      movimientosColumna: '',
+      lesionesPiel: '',
+      cicatrices: '',
+      nevos: '',
+      coordinacion: '',
+      sensibilidad: '',
+      equilibrio: '',
+      marcha: '',
+      resumenExploracionFisica: '',
+    };
+
+    // Para el formato en blanco, no incluimos información del médico firmante
+    const datosMedicoFirmante = {
+      nombre: "",
+      tituloProfesional: "",
+      numeroCedulaProfesional: "",
+      especialistaSaludTrabajo: "",
+      numeroCedulaEspecialista: "",
+      nombreCredencialAdicional: "",
+      numeroCredencialAdicional: "",
+      firma: null,
+    };
+
+    const usuario = await this.usersService.findById(userId);
+    const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = proveedorSalud
+    ? {
+        nombre: proveedorSalud.nombre || "",
+        RFC: proveedorSalud.RFC || "",
+        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
+        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
+        estado: proveedorSalud.estado || "",
+        municipio: proveedorSalud.municipio || "",
+        codigoPostal: proveedorSalud.codigoPostal || "",
+        direccion: proveedorSalud.direccion || "",
+        telefono: proveedorSalud.telefono || "",
+        correoElectronico: proveedorSalud.correoElectronico || "",
+        sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
+      }
+    : {
+        nombre: "",
+        RFC: "",
+        perfilProveedorSalud: "",
+        logotipoEmpresa: null,
+        estado: "",
+        municipio: "",
+        codigoPostal: "",
+        direccion: "",
+        telefono: "",
+        correoElectronico: "",
+        sitioWeb: "",
+        colorInforme: "#343A40",
+      };
+
+    const docDefinition = exploracionFisicaInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      exploracionFisicaBlanca,
+      datosMedicoFirmante,
+      datosProveedorSalud,
+      true, // isFormatoBlanco = true
+    );
+  
+    return this.printer.createPdfBuffer(docDefinition);
+  }
+
   async eliminarInforme(filePath: string): Promise<void> {
     await this.filesService.deleteFile(filePath);
   }

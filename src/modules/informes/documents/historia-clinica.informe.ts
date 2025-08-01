@@ -272,6 +272,7 @@ export const historiaClinicaInforme = (
   historiaClinica: HistoriaClinica,
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
+  isFormatoBlanco: boolean = false,
 ): TDocumentDefinitions => {
 
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
@@ -479,10 +480,10 @@ export const historiaClinicaInforme = (
             text: [
               { text: 'Fecha: ', style: 'fecha', bold: false },
               {
-                text: formatearFechaUTC(historiaClinica.fechaHistoriaClinica),
+                text: isFormatoBlanco ? '________' : formatearFechaUTC(historiaClinica.fechaHistoriaClinica),
                 style: 'fecha',
                 bold: true,
-                decoration: 'underline',
+                decoration: isFormatoBlanco ? undefined : 'underline',
               },
             ],
             margin: [0, 4, 0, 0],
@@ -528,7 +529,7 @@ export const historiaClinicaInforme = (
           { text: 'ESTADO CIVIL', style: 'label' },
           { text: trabajador.estadoCivil, style: 'value' },
           { text: 'NUM. DE EMPLEADO', style: 'label' },
-          { text: trabajador.numeroEmpleado || '-', style: 'value' },
+          { text: isFormatoBlanco ? '' : (trabajador.numeroEmpleado || '-'), style: 'value' },
         ],
       ],
     },
@@ -756,7 +757,7 @@ export const historiaClinicaInforme = (
   }
 
   // Antecedentes Gineco Obstetricos
-  const antecedentesGinecoObstetricos: Content | null = trabajador.sexo === 'Femenino' ? {
+  const antecedentesGinecoObstetricos: Content | null = (trabajador.sexo === 'Femenino' || isFormatoBlanco) ? {
     style: 'table',
     table: {
       widths: ['20%', '30%', '20%', '30%'],
@@ -1040,8 +1041,8 @@ export const historiaClinicaInforme = (
     trabajadorSeccion, // Datos del Trabajador
     antecedentesSeccion, // Antecedentes Heredofamiliares y Personales Patológicos
     antecedentesPersonalesNoPatologicos, // Antecedentes Personales No Patológicos
-    // Incluir "Antecedentes Gineco Obstetricos" solo si el trabajador es femenino
-    ...(trabajador.sexo === 'Femenino' ? [antecedentesGinecoObstetricos] : []),
+    // Incluir "Antecedentes Gineco Obstetricos" solo si el trabajador es femenino o es formato en blanco
+    ...((trabajador.sexo === 'Femenino' || isFormatoBlanco) ? [antecedentesGinecoObstetricos] : []),
     antecedentesLaborales, // Antecedentes Laborales
     antecedentesLaborales2daParte, // Antecedentes Laborales 2da Parte
     resumenHistoriaClinica, // Resumen Historia Clínica

@@ -273,6 +273,7 @@ export const exploracionFisicaInforme = (
   exploracionFisica: ExploracionFisica,
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
+  isFormatoBlanco: boolean = false,
 ): TDocumentDefinitions => {
 
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
@@ -314,7 +315,7 @@ export const exploracionFisicaInforme = (
             text: [
               { text: 'Fecha: ', style: 'fecha', bold: false },
               {
-                text: formatearFechaUTC(exploracionFisica.fechaExploracionFisica),
+                text: isFormatoBlanco ? '________' : formatearFechaUTC(exploracionFisica.fechaExploracionFisica),
                 style: 'fecha',
                 bold: true,
                 decoration: 'underline',
@@ -393,15 +394,15 @@ export const exploracionFisicaInforme = (
             ],
             // Filas de Datos
             ...[
-              ['PESO', exploracionFisica.peso, ' - '],
-              ['ALTURA', exploracionFisica.altura, ' - '],
+              ['PESO', isFormatoBlanco ? '    kg' : `${exploracionFisica.peso} kg`, ' - '],
+              ['ALTURA', isFormatoBlanco ? '    m' : `${exploracionFisica.altura} cm`, ' - '],
               ['ÍNDICE DE MASA CORPORAL', exploracionFisica.indiceMasaCorporal, exploracionFisica.categoriaIMC],
-              ['CIRCUNFERENCIA DE CINTURA', exploracionFisica.circunferenciaCintura, exploracionFisica.categoriaCircunferenciaCintura],
+              ['CIRCUNFERENCIA DE CINTURA', isFormatoBlanco ? '    cm' : `${exploracionFisica.circunferenciaCintura} cm`, exploracionFisica.categoriaCircunferenciaCintura],
             ].map((row) =>
               row.map((text, i) => ({
                 text,
                 style: i === 0 ? 'tableCellBold' : 'tableCell',
-                alignment: 'center',
+                alignment: isFormatoBlanco ? 'right' : 'center',
               })),
             ),
           ],
@@ -437,15 +438,15 @@ export const exploracionFisicaInforme = (
             ],
             // Filas de datos
             ...[
-              ['TENSIÓN ARTERIAL', `${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg`, exploracionFisica.categoriaTensionArterial],
-              ['FRECUENCIA CARDIACA', `${exploracionFisica.frecuenciaCardiaca} lpm`, exploracionFisica.categoriaFrecuenciaCardiaca],
-              ['FRECUENCIA RESPIRATORIA', `${exploracionFisica.frecuenciaRespiratoria} rpm`, exploracionFisica.categoriaFrecuenciaRespiratoria],
-              ['SATURACIÓN DE OXÍGENO', `${exploracionFisica.saturacionOxigeno} %`, exploracionFisica.categoriaSaturacionOxigeno],
+              ['TENSIÓN ARTERIAL', isFormatoBlanco ? '      mmHg' : `${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg`, exploracionFisica.categoriaTensionArterial],
+              ['FRECUENCIA CARDIACA', isFormatoBlanco ? '    lpm' : `${exploracionFisica.frecuenciaCardiaca} lpm`, exploracionFisica.categoriaFrecuenciaCardiaca],
+              ['FRECUENCIA RESPIRATORIA', isFormatoBlanco ? '    rpm' : `${exploracionFisica.frecuenciaRespiratoria} rpm`, exploracionFisica.categoriaFrecuenciaRespiratoria],
+              ['SATURACIÓN DE OXÍGENO', isFormatoBlanco ? '    %' : `${exploracionFisica.saturacionOxigeno} %`, exploracionFisica.categoriaSaturacionOxigeno],
             ].map((row) =>
               row.map((text, i) => ({
                 text,
                 style: i === 0 ? 'tableCellBold' : 'tableCell',
-                alignment: 'center',
+                alignment: isFormatoBlanco ? 'right' : 'center',
               })),
             ),
           ],
