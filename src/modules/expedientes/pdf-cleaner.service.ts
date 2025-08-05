@@ -78,10 +78,10 @@ export class PdfCleanerService {
               });
             }
           } else {
-            const edadEnMeses = this.calcularMesesDesde(createdAt);
-            // this.logger.log(`📅 ${el.name} => edad en meses: ${edadEnMeses}`);
+            const edadEnDias = this.calcularDiasDesde(createdAt);
+            // this.logger.log(`📅 ${el.name} => edad en días: ${edadEnDias.toFixed(1)}`);
 
-            if (edadEnMeses > 2) {
+            if (edadEnDias >= 60) { // 60 días = aproximadamente 2 meses
               resultados.push({
                 fullPath,
                 sizeMB: stat.size / (1024 * 1024),
@@ -103,10 +103,7 @@ export class PdfCleanerService {
       /^.+ \d{2}-\d{2}-\d{4}\.pdf$/.test(nombre);
   }
 
-  private calcularMesesDesde(fecha: Date): number {
-    const ahora = new Date();
-    return (ahora.getFullYear() - fecha.getFullYear()) * 12 + (ahora.getMonth() - fecha.getMonth());
-  }
+
 
   private calcularDiasDesde(fecha: Date): number {
     const ahora = new Date();
