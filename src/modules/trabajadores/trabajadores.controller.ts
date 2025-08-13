@@ -211,24 +211,12 @@ export class TrabajadoresController {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const data = xlsx.utils.sheet_to_json(worksheet);
-  
+      
       // Llama al servicio para importar trabajadores
       const result = await this.trabajadoresService.importarTrabajadores(data, centroId, createdBy);
-  
-      const hasErrors = result.data.some((r) => !r.success);
-  
-      if (hasErrors) {
-          throw new BadRequestException({
-              message: 'Los trabajadores no pudieron ser importados',
-              errors: result.data.filter((r) => !r.success),
-          });
-      }
-  
-      return {
-          status: 200,
-          message: 'Trabajadores importados exitosamente',
-          data: result.data
-      };
+      
+      // Retornar el resultado completo del servicio (exitosos + fallidos)
+      return result;
   }
   
   @Delete('/eliminar-trabajador/:id')

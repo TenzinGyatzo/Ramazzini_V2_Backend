@@ -604,64 +604,698 @@ export class TrabajadoresService {
   }
 
   private processWorkerData(worker) {
-      return {
+      const result = {
         nombre: worker.nombre ? String(worker.nombre).trim() : '',
-        fechaNacimiento: moment(worker.fechaNacimiento, 'DD/MM/YYYY').isValid() 
-            ? moment(worker.fechaNacimiento, 'DD/MM/YYYY').toDate()  // Conversión a Date
-            : null,
+        fechaNacimiento: this.parseDate(worker.fechaNacimiento),
         sexo: worker.sexo ? String(worker.sexo).trim() : '',
         escolaridad: worker.escolaridad ? String(worker.escolaridad).trim() : '',
         puesto: worker.puesto ? String(worker.puesto).trim() : '',
-        fechaIngreso: moment(worker.fechaIngreso, 'DD/MM/YYYY').isValid()
-            ? moment(worker.fechaIngreso, 'DD/MM/YYYY').toDate()  // Conversión a Date
-            : null,
+        fechaIngreso: this.parseDate(worker.fechaIngreso),
         telefono: worker.telefono ? String(worker.telefono).trim() : '',
         estadoCivil: worker.estadoCivil ? String(worker.estadoCivil).trim() : '',
         numeroEmpleado: worker.numeroEmpleado ? String(worker.numeroEmpleado).trim() : '',
         agentesRiesgoActuales: worker.agentesRiesgoActuales || [],
-        estadoLaboral: worker.estadoLaboral ? String(worker.estadoLaboral).trim() : 'Activo',
+        estadoLaboral: 'Activo', // ✅ VALOR FIJO: Todos los trabajadores importados tienen estado "Activo"
         idCentroTrabajo: worker.idCentroTrabajo,
         createdBy: worker.createdBy,
         updatedBy: worker.updatedBy,
+              // Incluir valores originales para normalizaciones - solo cuando hay cambios reales
+      sexoOriginal: worker.originalValues?.sexo && worker.originalValues.sexo !== (worker.sexo ? String(worker.sexo).trim() : '') ? worker.originalValues.sexo : undefined,
+      escolaridadOriginal: worker.originalValues?.escolaridad && worker.originalValues.escolaridad !== (worker.escolaridad ? String(worker.escolaridad).trim() : '') ? worker.originalValues.escolaridad : undefined,
+      estadoCivilOriginal: worker.originalValues?.estadoCivil && worker.originalValues.estadoCivil !== (worker.estadoCivil ? String(worker.estadoCivil).trim() : '') ? worker.originalValues.estadoCivil : undefined,
+      // ✅ ELIMINADO: No se capturan valores originales del estado laboral
+      telefonoOriginal: worker.originalValues?.telefono && worker.originalValues.telefono !== (worker.telefono ? String(worker.telefono).trim() : '') ? worker.originalValues.telefono : undefined
+    };
+        
+    return result;
+  }
+
+  /**
+   * Método auxiliar para parsear fechas de diferentes formatos
+   * Maneja: string, Date, número de Excel, null, undefined
+   */
+  private parseDate(dateValue: any): Date | null {
+    if (!dateValue) return null;
+    
+    // Si ya es un objeto Date válido, retornarlo
+    if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
+      return dateValue;
+    }
+    
+    // Si es un número (fecha serial de Excel)
+    if (typeof dateValue === 'number') {
+      // Las fechas de Excel son días desde el 1 de enero de 1900
+      // Convertir a milisegundos y crear Date
+      const excelEpoch = new Date(1900, 0, 1);
+      const date = new Date(excelEpoch.getTime() + (dateValue - 1) * 24 * 60 * 60 * 1000);
+      return isNaN(date.getTime()) ? null : date;
+    }
+    
+    // Si es string, intentar diferentes formatos
+    if (typeof dateValue === 'string') {
+      const trimmedValue = dateValue.trim();
+      if (!trimmedValue) return null;
+      
+      // Intentar formato DD/MM/YYYY
+      let momentDate = moment(trimmedValue, 'DD/MM/YYYY', true);
+      if (momentDate.isValid()) {
+        return momentDate.toDate();
+      }
+      
+      // Intentar formato MM/DD/YYYY
+      momentDate = moment(trimmedValue, 'MM/DD/YYYY', true);
+      if (momentDate.isValid()) {
+        return momentDate.toDate();
+      }
+      
+      // Intentar formato YYYY-MM-DD
+      momentDate = moment(trimmedValue, 'YYYY-MM-DD', true);
+      if (momentDate.isValid()) {
+        return momentDate.toDate();
+      }
+      
+      // Intentar formato ISO
+      momentDate = moment(trimmedValue);
+      if (momentDate.isValid()) {
+        return momentDate.toDate();
+      }
+      
+      // Solo loguear si realmente no se pudo parsear
+      console.warn(`[FECHA] No se pudo parsear la fecha: ${trimmedValue}`);
+      return null;
+    }
+    
+    // Para cualquier otro tipo, solo loguear si es un valor inesperado
+    if (dateValue !== null && dateValue !== undefined) {
+      console.warn(`[FECHA] Tipo de fecha no soportado: ${typeof dateValue}, valor: ${dateValue}`);
+    }
+    return null;
+  }
+
+  /**
+   * Método para parsear fechas de Excel en múltiples formatos
+   */
+  private parseExcelDate(dateValue: any): Date | null {
+    if (!dateValue) return null;
+    
+    // Si ya es un objeto Date válido, retornarlo
+    if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
+      return dateValue;
+    }
+    
+    // Si es un número (fecha serial de Excel)
+    if (typeof dateValue === 'number') {
+      // Manejar fechas seriales de Excel (días desde 1900-01-01)
+      // Excel tiene un bug: considera 1900 como año bisiesto
+      const excelEpoch = new Date(1900, 0, 1);
+      const date = new Date(excelEpoch.getTime() + (dateValue - 2) * 24 * 60 * 60 * 1000);
+      return isNaN(date.getTime()) ? null : date;
+    }
+    
+    // Si es string, intentar múltiples formatos
+    if (typeof dateValue === 'string') {
+      const trimmedValue = dateValue.trim();
+      if (!trimmedValue) return null;
+      
+      // Lista de formatos comunes en Excel
+      const formats = [
+        'DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD',
+        'DD-MM-YYYY', 'MM-DD-YYYY', 'YYYY/MM/DD',
+        'DD.MM.YYYY', 'MM.DD.YYYY', 'YYYY.MM.DD',
+        'DD/MM/YY', 'MM/DD/YY', 'YY-MM-DD',
+        'DD-MM-YY', 'MM-DD-YY', 'YY/MM/DD'
+      ];
+      
+      for (const format of formats) {
+        const momentDate = moment(trimmedValue, format, true);
+        if (momentDate.isValid()) {
+          return momentDate.toDate();
+        }
+      }
+      
+      // Intentar parseo automático de moment
+      const momentDate = moment(trimmedValue);
+      if (momentDate.isValid()) {
+        return momentDate.toDate();
+      }
+      
+      // Intentar parsear como fecha ISO
+      const isoDate = new Date(trimmedValue);
+      if (!isNaN(isoDate.getTime())) {
+        return isoDate;
+      }
+      
+      // Solo loguear si realmente no se pudo parsear
+      console.warn(`[FECHA] No se pudo parsear la fecha de Excel: ${trimmedValue}`);
+      return null;
+    }
+    
+    // Para cualquier otro tipo, solo loguear si es un valor inesperado
+    if (dateValue !== null && dateValue !== undefined) {
+      console.warn(`[FECHA] Tipo de fecha de Excel no soportado: ${typeof dateValue}, valor: ${dateValue}`);
+    }
+    return null;
+  }
+
+  /**
+   * ✅ SOLUCIÓN: Método para normalizar números de teléfono
+   * Acepta formatos como: 6681702850, 668 170 28 50, (668) 1702850, etc.
+   * Retorna solo los dígitos o null si el formato no es válido
+   */
+  private normalizePhoneNumber(phone: string): string | null {
+    if (!phone || phone.trim() === '') return null;
+    
+    // Remover todos los caracteres no numéricos excepto espacios, paréntesis y guiones
+    const cleaned = phone.replace(/[^\d\s\(\)\-]/g, '');
+    
+    // Verificar que solo contenga caracteres válidos
+    if (!/^[\d\s\(\)\-]+$/.test(phone)) {
+      return null;
+    }
+    
+    // Remover espacios, paréntesis y guiones, dejando solo dígitos
+    const digitsOnly = cleaned.replace(/[\s\(\)\-]/g, '');
+    
+    // Verificar que solo contenga dígitos
+    if (!/^\d+$/.test(digitsOnly)) {
+      return null;
+    }
+    
+    return digitsOnly;
+  }
+
+  /**
+   * Método para normalizar enumeraciones con variaciones de mayúsculas/minúsculas
+   * y mapeos inteligentes para valores similares
+   */
+  private normalizeEnumValue(value: string, validValues: string[]): string | null {
+    if (!value) return null;
+    
+    const trimmedValue = String(value).trim();
+    if (!trimmedValue) return null;
+    
+    // 1. Búsqueda exacta (case-insensitive)
+    const exactMatch = validValues.find(valid => 
+      valid.toLowerCase() === trimmedValue.toLowerCase()
+    );
+    if (exactMatch) return exactMatch;
+    
+    // 2. Búsqueda con normalización de acentos y caracteres especiales
+    const normalizedInput = this.normalizeString(trimmedValue);
+    const normalizedMatch = validValues.find(valid => 
+      this.normalizeString(valid) === normalizedInput
+    );
+    if (normalizedMatch) return normalizedMatch;
+    
+    // 3. Búsqueda parcial (para casos como "Soltero" vs "Soltero/a")
+    const partialMatch = validValues.find(valid => {
+      const normalizedValid = this.normalizeString(valid);
+      const normalizedInputLower = normalizedInput.toLowerCase();
+      
+      // Buscar coincidencias parciales
+      return normalizedValid.toLowerCase().includes(normalizedInputLower) ||
+             normalizedInputLower.includes(normalizedValid.toLowerCase());
+    });
+    if (partialMatch) return partialMatch;
+    
+    // 4. Mapeos específicos para casos comunes
+    const specificMappings = this.getSpecificMappings(trimmedValue, validValues);
+    if (specificMappings) return specificMappings;
+    
+    // 5. Búsqueda fuzzy (para errores tipográficos menores)
+    const fuzzyMatch = this.findFuzzyMatch(trimmedValue, validValues);
+    if (fuzzyMatch) return fuzzyMatch;
+    
+    return null;
+  }
+
+  /**
+   * Normaliza strings eliminando acentos y caracteres especiales
+   */
+  private normalizeString(str: string): string {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
+      .replace(/[^a-z0-9\s]/g, '') // Solo letras, números y espacios
+      .replace(/\s+/g, ' ') // Normalizar espacios
+      .trim();
+  }
+
+  /**
+   * Mapeos específicos para casos comunes de enumeraciones
+   */
+  private getSpecificMappings(input: string, validValues: string[]): string | null {
+    const inputLower = input.toLowerCase();
+    
+    // Mapeos para sexo
+    if (validValues.includes('Masculino') || validValues.includes('Femenino')) {
+      const sexoMappings: Record<string, string> = {
+        'm': 'Masculino',
+        'masculino': 'Masculino',
+        'hombre': 'Masculino',
+        'varon': 'Masculino',
+        'f': 'Femenino',
+        'femenino': 'Femenino',
+        'mujer': 'Femenino',
+        'hembra': 'Femenino'
+      };
+      
+      if (sexoMappings[inputLower]) return sexoMappings[inputLower];
+    }
+    
+    // Mapeos para estado civil
+    if (validValues.includes('Soltero/a') || validValues.includes('Casado/a')) {
+      const estadoCivilMappings: Record<string, string> = {
+        'soltero': 'Soltero/a',
+        'soltera': 'Soltero/a',
+        'soltero/a': 'Soltero/a',
+        'casado': 'Casado/a',
+        'casada': 'Casado/a',
+        'casado/a': 'Casado/a',
+        'union libre': 'Unión libre',
+        'union': 'Unión libre',
+        'separado': 'Separado/a',
+        'separada': 'Separado/a',
+        'separado/a': 'Separado/a',
+        'divorciado': 'Divorciado/a',
+        'divorciada': 'Divorciado/a',
+        'divorciado/a': 'Divorciado/a',
+        'viudo': 'Viudo/a',
+        'viuda': 'Viudo/a',
+        'viudo/a': 'Viudo/a'
+      };
+      
+      if (estadoCivilMappings[inputLower]) return estadoCivilMappings[inputLower];
+    }
+    
+    // Mapeos para escolaridad
+    if (validValues.includes('Primaria') || validValues.includes('Secundaria')) {
+      const escolaridadMappings: Record<string, string> = {
+        'primaria': 'Primaria',
+        'secundaria': 'Secundaria',
+        'preparatoria': 'Preparatoria',
+        'bachillerato': 'Preparatoria',
+        'licenciatura': 'Licenciatura',
+        'universidad': 'Licenciatura',
+        'maestria': 'Maestría',
+        'doctorado': 'Doctorado',
+        'nula': 'Nula',
+        'sin estudios': 'Nula'
+      };
+      
+      if (escolaridadMappings[inputLower]) return escolaridadMappings[inputLower];
+    }
+    
+    // Mapeos para estado laboral
+    if (validValues.includes('Activo') || validValues.includes('Inactivo')) {
+      const estadoLaboralMappings: Record<string, string> = {
+        'activo': 'Activo',
+        'trabajando': 'Activo',
+        'empleado': 'Activo',
+        'inactivo': 'Inactivo',
+        'desempleado': 'Inactivo',
+        'cesado': 'Inactivo',
+        'renuncio': 'Inactivo'
+      };
+      
+      if (estadoLaboralMappings[inputLower]) return estadoLaboralMappings[inputLower];
+    }
+    
+    return null;
+  }
+
+  /**
+   * Búsqueda fuzzy para encontrar coincidencias con errores tipográficos menores
+   */
+  private findFuzzyMatch(input: string, validValues: string[]): string | null {
+    const inputLower = input.toLowerCase();
+    
+    // Calcular similitud con cada valor válido
+    let bestMatch: string | null = null;
+    let bestScore = 0;
+    
+    for (const valid of validValues) {
+      const validLower = valid.toLowerCase();
+      
+      // Calcular similitud usando distancia de Levenshtein simplificada
+      const score = this.calculateSimilarity(inputLower, validLower);
+      
+      if (score > bestScore && score > 0.7) { // Umbral de 70% de similitud
+        bestScore = score;
+        bestMatch = valid;
+      }
+    }
+    
+    return bestMatch;
+  }
+
+  /**
+   * Calcula similitud entre dos strings (0.0 a 1.0)
+   */
+  private calculateSimilarity(str1: string, str2: string): number {
+    if (str1 === str2) return 1.0;
+    
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    // Calcular distancia de Levenshtein simplificada
+    const distance = this.levenshteinDistance(longer, shorter);
+    return (longer.length - distance) / longer.length;
+  }
+
+  /**
+   * Calcula la distancia de Levenshtein entre dos strings
+   */
+  private levenshteinDistance(str1: string, str2: string): number {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }
+
+  /**
+   * Método para limpiar y normalizar datos antes de la validación
+   * Maneja casos especiales como espacios en blanco, valores nulos, etc.
+   */
+  private cleanWorkerData(worker: any): any {
+    const cleaned = { ...worker };
+    
+    // 🔍 CORRECCIÓN: Guardar valores originales ANTES de cualquier limpieza
+    const originalValues = {
+      sexo: worker.sexo, // Usar worker original, no cleaned
+      escolaridad: worker.escolaridad,
+      estadoCivil: worker.estadoCivil,
+      // ✅ ELIMINADO: No se capturan valores originales del estado laboral
+      telefono: worker.telefono && typeof worker.telefono === 'string' && worker.telefono.trim() !== '' ? worker.telefono : null
+    };
+    
+    // Limpiar strings eliminando espacios y convirtiendo a string
+    if (cleaned.nombre) cleaned.nombre = String(cleaned.nombre).trim();
+    if (cleaned.sexo) cleaned.sexo = String(cleaned.sexo).trim();
+    if (cleaned.escolaridad) cleaned.escolaridad = String(cleaned.escolaridad).trim();
+    if (cleaned.puesto) cleaned.puesto = String(cleaned.puesto).trim();
+    if (cleaned.telefono && typeof cleaned.telefono === 'string') cleaned.telefono = cleaned.telefono.trim();
+    if (cleaned.estadoCivil) cleaned.estadoCivil = String(cleaned.estadoCivil).trim();
+    if (cleaned.numeroEmpleado) cleaned.numeroEmpleado = String(cleaned.numeroEmpleado).trim();
+    // ✅ ELIMINADO: No se procesa el estado laboral del Excel
+    
+    // Normalizar enumeraciones - solo loguear si hay cambios reales
+    const sexos = ["Masculino", "Femenino"];
+    if (cleaned.sexo) {
+      const originalSexo = cleaned.sexo;
+      const normalizedSexo = this.normalizeEnumValue(cleaned.sexo, sexos);
+      if (normalizedSexo && normalizedSexo !== originalSexo) {
+        cleaned.sexo = normalizedSexo;
+        console.log(`[NORMALIZACIÓN] Sexo: "${originalSexo}" -> "${normalizedSexo}"`);
+      }
+    }
+    
+    const nivelesEscolaridad = ["Primaria", "Secundaria", "Preparatoria", "Licenciatura", "Maestría", "Doctorado", "Nula"];
+    if (cleaned.escolaridad) {
+      const originalEscolaridad = cleaned.escolaridad;
+      const normalizedEscolaridad = this.normalizeEnumValue(cleaned.escolaridad, nivelesEscolaridad);
+      if (normalizedEscolaridad && normalizedEscolaridad !== originalEscolaridad) {
+        cleaned.escolaridad = normalizedEscolaridad;
+        console.log(`[NORMALIZACIÓN] Escolaridad: "${originalEscolaridad}" -> "${normalizedEscolaridad}"`);
+      }
+    }
+    
+    const estadosCiviles = ["Soltero/a", "Casado/a", "Unión libre", "Separado/a", "Divorciado/a", "Viudo/a"];
+    if (cleaned.estadoCivil) {
+      const originalEstadoCivil = cleaned.estadoCivil;
+      const normalizedEstadoCivil = this.normalizeEnumValue(cleaned.estadoCivil, estadosCiviles);
+      if (normalizedEstadoCivil && normalizedEstadoCivil !== originalEstadoCivil) {
+        cleaned.estadoCivil = normalizedEstadoCivil;
+        console.log(`[NORMALIZACIÓN] Estado civil: "${originalEstadoCivil}" -> "${normalizedEstadoCivil}"`);
+      }
+    }
+    
+    // ✅ ELIMINADO: No se normaliza el estado laboral
+    
+    // Normalizar teléfono - solo si hay un cambio real
+    if (cleaned.telefono && typeof cleaned.telefono === 'string' && cleaned.telefono.trim() !== '') {
+      const originalTelefono = cleaned.telefono;
+      const normalizedTelefono = this.normalizePhoneNumber(cleaned.telefono);
+      
+      // Solo normalizar si hay un cambio real y el resultado no es null
+      if (normalizedTelefono && normalizedTelefono !== originalTelefono) {
+        cleaned.telefono = normalizedTelefono;
+        console.log(`[NORMALIZACIÓN] Teléfono: "${originalTelefono}" -> "${normalizedTelefono}"`);
+      }
+    }
+    
+    // Guardar valores originales en el objeto cleaned para uso posterior
+    cleaned.originalValues = originalValues;
+        
+    // Manejar valores nulos o undefined
+    if (cleaned.nombre === 'null' || cleaned.nombre === 'undefined' || cleaned.nombre === '') {
+      cleaned.nombre = null;
+    }
+    if (cleaned.sexo === 'null' || cleaned.sexo === 'undefined' || cleaned.sexo === '') {
+      cleaned.sexo = null;
+    }
+    if (cleaned.escolaridad === 'null' || cleaned.escolaridad === 'undefined' || cleaned.escolaridad === '') {
+      cleaned.escolaridad = null;
+    }
+    if (cleaned.puesto === 'null' || cleaned.puesto === 'undefined' || cleaned.puesto === '') {
+      cleaned.puesto = null;
+    }
+    if (cleaned.estadoCivil === 'null' || cleaned.estadoCivil === 'undefined' || cleaned.estadoCivil === '') {
+      cleaned.estadoCivil = null;
+    }
+    
+    // Limpiar fechas - convertir strings vacíos a null
+    if (cleaned.fechaNacimiento === '' || cleaned.fechaNacimiento === 'null' || cleaned.fechaNacimiento === 'undefined') {
+      cleaned.fechaNacimiento = null;
+    }
+    if (cleaned.fechaIngreso === '' || cleaned.fechaIngreso === 'null' || cleaned.fechaIngreso === 'undefined') {
+      cleaned.fechaIngreso = null;
+    }
+    
+    return cleaned;
+  }
+
+  /**
+   * Método para validar y limpiar datos antes de procesarlos
+   * Ayuda a identificar problemas temprano en la importación
+   */
+  private validateAndCleanWorkerData(worker: any): { isValid: boolean; errors: string[]; cleanedData: any } {
+    const errors: string[] = [];
+    const cleanedData = this.cleanWorkerData(worker);
+
+    // Validar campos requeridos
+    if (!worker.nombre || String(worker.nombre).trim() === '') {
+      errors.push('El nombre es requerido');
+    }
+
+    if (!worker.fechaNacimiento) {
+      errors.push('La fecha de nacimiento es requerida');
+    } else {
+      const parsedDate = this.parseExcelDate(worker.fechaNacimiento);
+      if (!parsedDate) {
+        errors.push(`Fecha de nacimiento inválida: ${worker.fechaNacimiento}`);
+      } else {
+        // ✅ SOLUCIÓN: Validar edad mínima de 15 años (edad mínima para laborar en México)
+        const fechaNacimiento = new Date(parsedDate);
+        const hoy = new Date();
+        const edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+        const mesActual = hoy.getMonth();
+        const mesNacimiento = fechaNacimiento.getMonth();
+        const diaActual = hoy.getDate();
+        const diaNacimiento = fechaNacimiento.getDate();
+        
+        // Ajustar edad si no ha cumplido años este año
+        const edadReal = (mesActual < mesNacimiento) || (mesActual === mesNacimiento && diaActual < diaNacimiento) ? edad - 1 : edad;
+        
+        if (edadReal < 15) {
+          errors.push(`Según el registro, el trabajador tiene ${edadReal} años. La edad mínima para laborar es 15 años. `);
+        }
+        
+        // Validar que la fecha de nacimiento no sea en el futuro
+        if (fechaNacimiento > hoy) {
+          errors.push('La fecha de nacimiento no puede ser en el futuro');
+        }
+        
+        cleanedData.fechaNacimiento = parsedDate;
+      }
+    }
+
+    if (!worker.fechaIngreso) {
+      errors.push('La fecha de ingreso es requerida');
+    } else {
+      const parsedDate = this.parseExcelDate(worker.fechaIngreso);
+      if (!parsedDate) {
+        errors.push(`Fecha de ingreso inválida: ${worker.fechaIngreso}`);
+      } else {
+        cleanedData.fechaIngreso = parsedDate;
+      }
+    }
+
+    // Validar campos de enumeración (ya normalizados en cleanWorkerData)
+    const sexos = ["Masculino", "Femenino"];
+    if (!cleanedData.sexo || !sexos.includes(cleanedData.sexo)) {
+      errors.push(`El sexo debe ser uno de: ${sexos.join(', ')}`);
+    }
+
+    const nivelesEscolaridad = ["Primaria", "Secundaria", "Preparatoria", "Licenciatura", "Maestría", "Doctorado", "Nula"];
+    if (!cleanedData.escolaridad || !nivelesEscolaridad.includes(cleanedData.escolaridad)) {
+      errors.push(`La escolaridad debe ser una de: ${nivelesEscolaridad.join(', ')}`);
+    }
+
+    const estadosCiviles = ["Soltero/a", "Casado/a", "Unión libre", "Separado/a", "Divorciado/a", "Viudo/a"];
+    if (!cleanedData.estadoCivil || !estadosCiviles.includes(cleanedData.estadoCivil)) {
+      errors.push(`El estado civil debe ser uno de: ${estadosCiviles.join(', ')}`);
+    }
+
+    // ✅ ELIMINADO: No se valida el estado laboral del Excel
+
+    // Validar número de empleado si existe
+    if (worker.numeroEmpleado) {
+      const numeroEmpleado = String(worker.numeroEmpleado).trim();
+      if (!/^[0-9]{1,7}$/.test(numeroEmpleado)) {
+        errors.push('El número de empleado debe tener entre 1 y 7 dígitos numéricos');
+      }
+    }
+
+    // ✅ SOLUCIÓN: Validar teléfono (opcional, pero si existe debe tener 10 dígitos)
+    if (worker.telefono && typeof worker.telefono === 'string') {
+      const telefonoNormalizado = this.normalizePhoneNumber(worker.telefono.trim());
+      if (telefonoNormalizado) {
+        if (telefonoNormalizado.length !== 10) {
+          errors.push(`El teléfono debe tener exactamente 10 dígitos. Recibido: ${telefonoNormalizado.length} dígitos`);
+        } else {
+          // Guardar el teléfono normalizado
+          cleanedData.telefono = telefonoNormalizado;
+        }
+      } else {
+        errors.push('El formato del teléfono no es válido. Debe contener solo números, espacios, paréntesis y guiones');
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      cleanedData
     };
   }
 
   // Método para importar trabajadores
   async importarTrabajadores(data: any[], idCentroTrabajo: string, createdBy: string) {
     const resultados = [];
-
-    for (const worker of data) {
-        const processedWorker = this.processWorkerData({
-            ...worker,
-            idCentroTrabajo,
-            createdBy,
-            updatedBy: createdBy
-        });
-
+    const startTime = Date.now();
+    console.log(`[IMPORTACIÓN] 🚀 Iniciando importación de ${data.length} trabajadores`);
+    
+    for (const [index, worker] of data.entries()) {
         try {
+            // Primero validar y limpiar los datos
+            const validation = this.validateAndCleanWorkerData({
+                ...worker,
+                idCentroTrabajo,
+                createdBy,
+                updatedBy: createdBy
+            });
+
+            if (!validation.isValid) {
+                console.error(`[ERROR] ${worker.nombre || 'Sin nombre'}: ${validation.errors.join(', ')}`);
+                // ✅ SOLUCIÓN: Enviar datos procesados para que las fechas se muestren correctamente
+                const processedData = this.processWorkerData(validation.cleanedData);
+                resultados.push({ 
+                    success: false, 
+                    error: 'Hay errores de validación', // ✅ Resumen genérico para evitar redundancia
+                    worker: processedData, // Usar datos procesados en lugar de datos originales
+                    validationErrors: validation.errors
+                });
+                continue;
+            }
+
+            // Procesar los datos validados
+            const processedWorker = this.processWorkerData(validation.cleanedData);
+
             const nuevoTrabajador = await this.create(processedWorker);
-            resultados.push({ success: true, worker: nuevoTrabajador });
+            
+            // ✅ CORRECCIÓN: Incluir tanto el trabajador guardado como los datos procesados con valores originales
+            const workerWithOriginals = {
+                ...nuevoTrabajador.toObject(), // Convertir el documento de Mongoose a objeto plano
+                // Agregar los campos originales para normalizaciones
+                sexoOriginal: processedWorker.sexoOriginal,
+                escolaridadOriginal: processedWorker.escolaridadOriginal,
+                estadoCivilOriginal: processedWorker.estadoCivilOriginal,
+                // ✅ ELIMINADO: No se incluyen valores originales del estado laboral
+                telefonoOriginal: processedWorker.telefonoOriginal
+            };
+            
+            resultados.push({ success: true, worker: workerWithOriginals });
+            
         } catch (error) {
-            console.error(`Error al crear el trabajador ${worker.nombre}:`, error.message);
-            resultados.push({ success: false, error: error.message, worker });
+            console.error(`[ERROR] ${worker.nombre || 'Sin nombre'}: ${error.message}`);
+            resultados.push({ 
+                success: false, 
+                error: error.message, 
+                worker,
+                processedData: this.processWorkerData({
+                    ...worker,
+                    idCentroTrabajo,
+                    createdBy,
+                    updatedBy: createdBy
+                })
+            });
         }
     }
 
     const hasErrors = resultados.some((r) => !r.success);
+    const endTime = Date.now();
+    const duration = ((endTime - startTime) / 1000).toFixed(2);
+    
     if (hasErrors) {
-        throw new BadRequestException({
-            message: 'Hubo un error, por favor utilice la plantilla.',
-            data: resultados.filter((r) => !r.success),
-        });
+        const exitosos = resultados.filter((r) => r.success).length;
+        const fallidos = resultados.filter((r) => !r.success).length;
+        console.log(`[IMPORTACIÓN] ⚠️ - Resultado mixto en ${duration}s: ${exitosos} exitosos, ${fallidos} fallidos de ${data.length} total`);
+        return {
+            message: 'Hubo errores durante la importación. Revisa los datos y asegúrate de usar el formato correcto.',
+            data: resultados,  // ✅ TODOS los resultados (exitosos + fallidos)
+            totalProcessed: data.length,
+            successful: exitosos,
+            failed: fallidos
+        };
     }
 
-    return { message: 'Trabajadores importados exitosamente', data: resultados };
+    console.log(`[IMPORTACIÓN] ✅ - Completada exitosamente en ${duration}s. ${resultados.length} trabajadores importados`);
+    return { 
+        message: 'Trabajadores importados exitosamente', 
+        data: resultados,
+        totalProcessed: data.length,
+        successful: resultados.length,
+        failed: 0
+    };
   }
 
   private buildFilePath(basePath: string, doc: any): string {
     
     if (!doc) {
-      console.log(`[DEBUG] Documento inválido.`);
       return '';
     }
   
@@ -689,7 +1323,6 @@ export class TrabajadoresService {
     const fechaISO = doc[fechaCampo] instanceof Date ? doc[fechaCampo].toISOString() : doc[fechaCampo];
     
     if (typeof fechaISO !== 'string' || !fechaISO.includes('T')) {
-      console.log(`[ERROR] La fecha no está en el formato esperado.`);
       return '';
     }
   
@@ -713,7 +1346,6 @@ export class TrabajadoresService {
   
     if (modelName === 'DocumentoExterno') {
       if (!doc.nombreDocumento || !doc.extension) {
-        console.log(`[ERROR] Documento Externo sin nombre o sin extensión.`);
         return '';
       }
       fullPath = `${basePath}/${doc.nombreDocumento} ${fecha}${doc.extension}`;
@@ -725,15 +1357,13 @@ export class TrabajadoresService {
     // Limpiar cualquier doble barra accidental en la ruta
     fullPath = fullPath.replace(/\/\//g, '/');
   
-    // console.log(`[DEBUG] Ruta generada: ${fullPath}`);
-  
     return fullPath;
   }
 
   private async eliminarArchivosDeDocumentos(documentos: any[]): Promise<boolean> {
     if (documentos.length === 0) return true;
   
-    console.log(`[DEBUG] Verificando eliminación de ${documentos.length} archivos asociados...`);
+    console.log(`[ARCHIVOS] Verificando eliminación de ${documentos.length} archivos asociados...`);
   
     let eliminacionesExitosas = 0;
     let erroresEncontrados = 0;
@@ -758,8 +1388,6 @@ export class TrabajadoresService {
       // Si no hay archivos a eliminar, salir exitosamente
       if (archivosAEliminar.length === 0) return true;
   
-      console.log(`[DEBUG] Se han identificado ${archivosAEliminar.length} archivos a eliminar.`);
-  
       // 2️⃣ Intentar eliminar los archivos solo después de confirmar la eliminación en la base de datos
       await Promise.all(
         archivosAEliminar.map(async (filePath) => {
@@ -773,9 +1401,12 @@ export class TrabajadoresService {
         })
       );
   
-      console.log(
-        `[DEBUG] Eliminación de archivos completada. Exitosos: ${eliminacionesExitosas}, Errores: ${erroresEncontrados}`
-      );
+      // Solo mostrar resumen final
+      if (erroresEncontrados > 0) {
+        console.log(`[ARCHIVOS] ⚠️ Eliminación completada con ${erroresEncontrados} errores de ${archivosAEliminar.length} archivos`);
+      } else {
+        console.log(`[ARCHIVOS] ✅ Eliminación exitosa de ${eliminacionesExitosas} archivos`);
+      }
   
       return erroresEncontrados === 0;
     } catch (error) {
@@ -789,8 +1420,6 @@ export class TrabajadoresService {
   
     try {
       await session.withTransaction(async () => {
-        // console.log(`[DEBUG] Eliminando Trabajador con ID: ${id}...`);
-  
         // 1️⃣ Buscar documentos del trabajador
         const documentos = (
           await Promise.all([
@@ -807,8 +1436,6 @@ export class TrabajadoresService {
         ).flat();
   
         if (documentos.length > 0) {
-          // console.log(`[DEBUG] Verificando que se pueden eliminar ${documentos.length} documentos asociados...`);
-  
           // 2️⃣ Intentar eliminar los documentos en la base de datos primero
           await Promise.all([
             this.historiaClinicaModel.deleteMany({ idTrabajador: id }).session(session),
@@ -823,13 +1450,10 @@ export class TrabajadoresService {
           ]);
   
           // 3️⃣ Si la eliminación en la base de datos fue exitosa, proceder a eliminar los archivos
-          console.log(`[DEBUG] Eliminación de registros en la base de datos completada. Procediendo con eliminación de archivos...`);
           const eliminacionExitosa = await this.eliminarArchivosDeDocumentos(documentos);
           if (!eliminacionExitosa) {
             throw new Error('Error eliminando archivos.');
           }
-        } else {
-          console.log(`[DEBUG] No hay documentos asociados, eliminando directamente el Trabajador.`);
         }
   
         // 4️⃣ Eliminar el trabajador
