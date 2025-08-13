@@ -102,6 +102,24 @@ export class InformesController {
     }
   }
 
+  @Get('receta/:empresaId/:trabajadorId/:recetaId/:userId')
+  async getInformeReceta(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('recetaId') recetaId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+  
+    try {
+      const rutaPDF = await this.informesService.getInformeReceta(empresaId, trabajadorId, recetaId, userId);
+      return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
+    } catch (error) {
+      console.error('[getInformeReceta] Error al generar el informe receta:', error);
+      throw error;
+    }
+  }
+
   @Get('dashboard/ver/:empresaId/:trabajadorId/:userId')
   async getInformeDashboard(
     @Param('empresaId') empresaId: string,
