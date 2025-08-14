@@ -30,6 +30,12 @@ const estadosLaborales = ["Activo", "Inactivo"];
 export class Trabajador extends Document {
 
     @Prop({ required: true })
+    primerApellido: string;
+
+    @Prop({ required: true })
+    segundoApellido: string;
+    
+    @Prop({ required: true })
     nombre: string;
 
     @Prop({ required: true })
@@ -55,6 +61,9 @@ export class Trabajador extends Document {
 
     @Prop({ required: false, match: /^[0-9]{1,7}$/, unique: false })
     numeroEmpleado: string;
+
+    @Prop({ required: false, match: /^[0-9]{11}$/, unique: false })
+    nss: string;
     
     @Prop({ required: false, default: [] })
     agentesRiesgoActuales: string[];

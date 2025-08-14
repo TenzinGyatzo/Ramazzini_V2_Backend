@@ -27,8 +27,24 @@ const estadosLaborales = ["Activo", "Inactivo"];
 
 export class CreateTrabajadorDto {
     @ApiProperty({
+      description: 'Primer apellido del trabajador',
+      example: 'Varela'
+    })
+    @IsString({ message: 'El primer apellido debe ser un string' })
+    @IsNotEmpty({ message: 'El primer apellido no puede estar vacío' })
+    primerApellido: string;
+
+    @ApiProperty({
+      description: 'Segundo apellido del trabajador',
+      example: 'Ruvalcaba'
+    })
+    @IsString({ message: 'El segundo apellido debe ser un string' })
+    @IsNotEmpty({ message: 'El segundo apellido no puede estar vacío' })
+    segundoApellido: string;
+
+    @ApiProperty({
       description: 'Nombre completo del trabajador',
-      example: 'Juan Enrique Varela Ruvalcaba'
+      example: 'Juan Enrique'
     })
     @IsString({ message: 'El nombre debe ser un string' })
     @IsNotEmpty({ message: 'El nombre no puede estar vacío' })
@@ -113,6 +129,16 @@ export class CreateTrabajadorDto {
     @IsString({ message: 'El número de empleado debe ser un string' })
     // @Matches(/^[0-9]{1,7}$/, { message: 'El número de empleado debe contener solo números y tener entre 1 y 7 dígitos' })
     numeroEmpleado?: string;
+
+    @ApiProperty({
+      description: 'Número de seguro social del trabajador (opcional, máximo 7 dígitos)',
+      example: '1234567',
+      required: false
+    })
+    @IsOptional()
+    @IsString({ message: 'El número de seguro social debe ser un string' })
+    // @Matches(/^[0-9]{11}$/, { message: 'El número de seguro social debe contener 11 dígitos' })
+    nss?: string;
 
     // Agentes de Riesgo
     @IsOptional()
