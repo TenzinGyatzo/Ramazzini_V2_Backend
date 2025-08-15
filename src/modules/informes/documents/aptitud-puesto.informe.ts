@@ -228,6 +228,8 @@ const obtenerResumenAntidoping = (a: any) => {
 
 // ==================== INTERFACES ====================
 interface Trabajador {
+  primerApellido: string;
+  segundoApellido: string;
   nombre: string;
   nacimiento: string;
   escolaridad: string;
@@ -547,7 +549,7 @@ export const aptitudPuestoInforme = (
           body: [
             [
               { text: 'NOMBRE', style: 'label' },
-              { text: trabajador.nombre, style: 'value' },
+              { text: trabajador.primerApellido + ' ' + trabajador.segundoApellido + ' ' + trabajador.nombre, style: 'value' },
               { text: 'NACIMIENTO', style: 'label' },
               { text: trabajador.nacimiento, style: 'value' },
             ],

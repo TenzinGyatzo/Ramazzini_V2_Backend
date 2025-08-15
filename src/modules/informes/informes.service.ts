@@ -51,6 +51,8 @@ export class InformesService {
 
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
     const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
       nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
@@ -63,6 +65,7 @@ export class InformesService {
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
     };
 
     const antidoping = await this.expedientesService.findDocument(
@@ -185,6 +188,8 @@ export class InformesService {
 
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
     const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
       nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
@@ -197,6 +202,7 @@ export class InformesService {
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
     };
 
     const aptitud = await this.expedientesService.findDocument(
@@ -441,6 +447,8 @@ export class InformesService {
 
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
     const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
       nombre: trabajador.nombre.toUpperCase(),
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
@@ -453,6 +461,7 @@ export class InformesService {
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
     };
 
     const certificado = await this.expedientesService.findDocument(
@@ -670,6 +679,8 @@ export class InformesService {
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
 
     const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
       nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
@@ -682,6 +693,7 @@ export class InformesService {
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
     };
 
     const examenVista = await this.expedientesService.findDocument(
@@ -815,6 +827,8 @@ export class InformesService {
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
 
     const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
       nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
@@ -827,6 +841,7 @@ export class InformesService {
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
     };
 
     const exploracionFisica = await this.expedientesService.findDocument(
@@ -983,6 +998,8 @@ export class InformesService {
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
 
     const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
       nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
@@ -995,6 +1012,7 @@ export class InformesService {
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
     };
 
     const historiaClinica = await this.expedientesService.findDocument(
@@ -1187,6 +1205,8 @@ export class InformesService {
     const nombreEmpresa = empresa.nombreComercial;
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
     const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
       nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
@@ -1199,6 +1219,7 @@ export class InformesService {
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
     };
     const notaMedica = await this.expedientesService.findDocument('notaMedica', notaMedicaId);
     const datosNotaMedica = {
@@ -1303,6 +1324,8 @@ export class InformesService {
     const nombreEmpresa = empresa.nombreComercial;
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
     const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
       nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
@@ -1315,6 +1338,7 @@ export class InformesService {
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
     };
 
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);

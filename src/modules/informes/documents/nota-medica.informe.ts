@@ -125,6 +125,8 @@ function formatearTelefono(telefono: string): string {
 }
 // ==================== INTERFACES ====================
 interface Trabajador {
+  primerApellido: string;
+  segundoApellido: string;
   nombre: string;
   edad: string;
   puesto: string;
@@ -271,7 +273,7 @@ export const notaMedicaInforme = (
           body: [
         [
           {
-            text: trabajador.nombre,
+            text: trabajador.primerApellido + ' ' + trabajador.segundoApellido + ' ' + trabajador.nombre,
             style: 'nombreEmpresa',
             alignment: 'left',
             margin: [0, 0, 0, 0],

@@ -32,7 +32,7 @@ export class Trabajador extends Document {
     @Prop({ required: true })
     primerApellido: string;
 
-    @Prop({ required: true })
+    @Prop({ required: false })
     segundoApellido: string;
     
     @Prop({ required: true })
@@ -59,10 +59,10 @@ export class Trabajador extends Document {
     @Prop({ required: true, enum: estadosCiviles })
     estadoCivil: string;
 
-    @Prop({ required: false, match: /^[0-9]{1,7}$/, unique: false })
+    @Prop({ required: false, match: /^$|^[0-9]{1,7}$/, unique: false })
     numeroEmpleado: string;
 
-    @Prop({ required: false, match: /^[0-9]{11}$/, unique: false })
+    @Prop({ required: false, match: /^$|^[0-9]{11}$/, unique: false })
     nss: string;
     
     @Prop({ required: false, default: [] })

@@ -146,6 +146,8 @@ function formatearTelefono(telefono: string): string {
 // ==================== INTERFACES ====================
 
 interface Trabajador {
+  primerApellido: string;
+  segundoApellido: string;
   nombre: string;
   edad: string;
   puesto: string;
@@ -377,7 +379,7 @@ export const certificadoInforme = (
       {
         text: [
           { text: 'Que, habiendo practicado reconocimiento médico en esta fecha, al C. ' },
-          { text: trabajador.nombre, bold: true },
+          { text: trabajador.nombre + ' ' + trabajador.primerApellido + ' ' + trabajador.segundoApellido, bold: true },
           { text: ' de ' },
           { text: String(trabajador.edad), bold: true },
           { text: ' años de edad. ' },
@@ -409,7 +411,7 @@ export const certificadoInforme = (
       {
         text: [
           { text: 'Por lo anterior se establece que el C. ' },
-          { text: trabajador.nombre + ' ', bold: true },
+          { text: trabajador.nombre + ' ' + trabajador.primerApellido + ' ' + trabajador.segundoApellido, bold: true },
           {
         text: certificado.impedimentosFisicos,
           },
@@ -426,7 +428,7 @@ export const certificadoInforme = (
           {
         text: 'Expido el presente certificado médico a petición de el C. ',
           },
-          { text: trabajador.nombre, bold: true },
+          { text: trabajador.nombre + ' ' + trabajador.primerApellido + ' ' + trabajador.segundoApellido, bold: true },
           {
         text: ` para los usos legales a que haya lugar, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
           },

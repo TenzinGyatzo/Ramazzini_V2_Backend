@@ -46,6 +46,8 @@ export function normalizeTrabajadorData(
 ) {
   return {
     ...dto,
+    primerApellido: dto.primerApellido?.trim(),
+    segundoApellido: dto.segundoApellido?.trim(),
     nombre: dto.nombre?.trim(),
     fechaNacimiento: dto.fechaNacimiento,
     sexo: dto.sexo?.trim(),
@@ -55,6 +57,7 @@ export function normalizeTrabajadorData(
     telefono: dto.telefono?.trim(),
     estadoCivil: dto.estadoCivil?.trim(),
     numeroEmpleado: dto.numeroEmpleado?.trim(),
+    nss: dto.nss?.trim(),
     estadoLaboral: dto.estadoLaboral?.trim(),
     agentesRiesgoActuales: dto.agentesRiesgoActuales?.map(agent => agent.trim()),
     idCentroTrabajo: dto.idCentroTrabajo?.trim(),

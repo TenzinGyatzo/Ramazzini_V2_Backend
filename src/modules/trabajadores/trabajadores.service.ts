@@ -231,7 +231,7 @@ export class TrabajadoresService {
   
     // Paso 2: Obtener los trabajadores de esos centros
     const trabajadores = await this.trabajadorModel
-      .find({ idCentroTrabajo: { $in: centroIds } }, '_id nombre sexo puesto fechaNacimiento fechaIngreso idCentroTrabajo numeroEmpleado')
+      .find({ idCentroTrabajo: { $in: centroIds } }, '_id primerApellido segundoApellido nombre sexo puesto fechaNacimiento fechaIngreso idCentroTrabajo numeroEmpleado nss')
       .lean();
   
     const trabajadoresIds = trabajadores.map(t => t._id);
@@ -253,6 +253,8 @@ export class TrabajadoresService {
   
       return {
         ...riesgo,
+        primerApellidoTrabajador: trabajador?.primerApellido ?? '',
+        segundoApellidoTrabajador: trabajador?.segundoApellido ?? '',
         nombreTrabajador: trabajador?.nombre ?? 'Desconocido',
         sexoTrabajador: trabajador?.sexo ?? '',
         puestoTrabajador: trabajador?.puesto ?? '',
@@ -260,6 +262,7 @@ export class TrabajadoresService {
         fechaIngreso: trabajador?.fechaIngreso ?? null,
         idCentroTrabajo: trabajador?.idCentroTrabajo ?? null,
         numeroEmpleado: trabajador?.numeroEmpleado ?? null,
+        nss: trabajador?.nss ?? null,
       };
     });
   
@@ -605,6 +608,8 @@ export class TrabajadoresService {
 
   private processWorkerData(worker) {
       const result = {
+        primerApellido: worker.primerApellido ? String(worker.primerApellido).trim() : '',
+        segundoApellido: worker.segundoApellido ? String(worker.segundoApellido).trim() : '',
         nombre: worker.nombre ? String(worker.nombre).trim() : '',
         fechaNacimiento: this.parseDate(worker.fechaNacimiento),
         sexo: worker.sexo ? String(worker.sexo).trim() : '',
@@ -614,6 +619,7 @@ export class TrabajadoresService {
         telefono: worker.telefono ? String(worker.telefono).trim() : '',
         estadoCivil: worker.estadoCivil ? String(worker.estadoCivil).trim() : '',
         numeroEmpleado: worker.numeroEmpleado ? String(worker.numeroEmpleado).trim() : '',
+        nss: worker.nss ? String(worker.nss).trim() : '',
         agentesRiesgoActuales: worker.agentesRiesgoActuales || [],
         estadoLaboral: 'Activo', // ✅ VALOR FIJO: Todos los trabajadores importados tienen estado "Activo"
         idCentroTrabajo: worker.idCentroTrabajo,
@@ -1014,6 +1020,8 @@ export class TrabajadoresService {
     };
     
     // Limpiar strings eliminando espacios y convirtiendo a string
+    if (cleaned.primerApellido) cleaned.primerApellido = String(cleaned.primerApellido).trim();
+    if (cleaned.segundoApellido) cleaned.segundoApellido = String(cleaned.segundoApellido).trim();
     if (cleaned.nombre) cleaned.nombre = String(cleaned.nombre).trim();
     if (cleaned.sexo) cleaned.sexo = String(cleaned.sexo).trim();
     if (cleaned.escolaridad) cleaned.escolaridad = String(cleaned.escolaridad).trim();
@@ -1021,6 +1029,7 @@ export class TrabajadoresService {
     if (cleaned.telefono && typeof cleaned.telefono === 'string') cleaned.telefono = cleaned.telefono.trim();
     if (cleaned.estadoCivil) cleaned.estadoCivil = String(cleaned.estadoCivil).trim();
     if (cleaned.numeroEmpleado) cleaned.numeroEmpleado = String(cleaned.numeroEmpleado).trim();
+    if (cleaned.nss) cleaned.nss = String(cleaned.nss).trim();
     // ✅ ELIMINADO: No se procesa el estado laboral del Excel
     
     // Normalizar enumeraciones - solo loguear si hay cambios reales
@@ -1072,6 +1081,12 @@ export class TrabajadoresService {
     cleaned.originalValues = originalValues;
         
     // Manejar valores nulos o undefined
+    if (cleaned.primerApellido === 'null' || cleaned.primerApellido === 'undefined' || cleaned.primerApellido === '') {
+      cleaned.primerApellido = null;
+    }
+    if (cleaned.segundoApellido === 'null' || cleaned.segundoApellido === 'undefined' || cleaned.segundoApellido === '') {
+      cleaned.segundoApellido = null;
+    }
     if (cleaned.nombre === 'null' || cleaned.nombre === 'undefined' || cleaned.nombre === '') {
       cleaned.nombre = null;
     }
@@ -1108,6 +1123,10 @@ export class TrabajadoresService {
     const cleanedData = this.cleanWorkerData(worker);
 
     // Validar campos requeridos
+    if (!worker.primerApellido || String(worker.primerApellido).trim() === '') {
+      errors.push('El primer apellido es requerido');
+    }
+
     if (!worker.nombre || String(worker.nombre).trim() === '') {
       errors.push('El nombre es requerido');
     }
@@ -1220,7 +1239,7 @@ export class TrabajadoresService {
             });
 
             if (!validation.isValid) {
-                console.error(`[ERROR] ${worker.nombre || 'Sin nombre'}: ${validation.errors.join(', ')}`);
+                console.error(`[ERROR] ${worker.primerApellido || 'Sin primer apellido'} ${worker.segundoApellido || 'Sin segundo apellido'} ${worker.nombre || 'Sin nombre'}: ${validation.errors.join(', ')}`);
                 // ✅ SOLUCIÓN: Enviar datos procesados para que las fechas se muestren correctamente
                 const processedData = this.processWorkerData(validation.cleanedData);
                 resultados.push({ 
@@ -1251,7 +1270,7 @@ export class TrabajadoresService {
             resultados.push({ success: true, worker: workerWithOriginals });
             
         } catch (error) {
-            console.error(`[ERROR] ${worker.nombre || 'Sin nombre'}: ${error.message}`);
+            console.error(`[ERROR] ${worker.primerApellido || 'Sin primer apellido'} ${worker.segundoApellido || 'Sin segundo apellido'} ${worker.nombre || 'Sin nombre'}: ${error.message}`);
             resultados.push({ 
                 success: false, 
                 error: error.message, 
@@ -1488,6 +1507,8 @@ export class TrabajadoresService {
         : null;
 
       return {
+        PrimerApellido: trabajador.primerApellido,
+        SegundoApellido: trabajador.segundoApellido,
         Nombre: trabajador.nombre,
         Edad: fechaNacimientoStr ? `${calcularEdad(fechaNacimientoStr)} años` : 'Desconocido',
         Sexo: trabajador.sexo,
@@ -1496,7 +1517,8 @@ export class TrabajadoresService {
         Antiguedad: fechaIngresoStr ? calcularAntiguedad(fechaIngresoStr) : 'Desconocido',
         Telefono: trabajador.telefono,
         EstadoCivil: trabajador.estadoCivil,
-        NumeroEmpleado: trabajador.numeroEmpleado || ''
+        NumeroEmpleado: trabajador.numeroEmpleado || '',
+        NSS: trabajador.nss || ''
       };
     });
 

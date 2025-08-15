@@ -133,6 +133,8 @@ function formatearTelefono(telefono: string): string {
 }
 // ==================== INTERFACES ====================
 interface Trabajador {
+  primerApellido: string;
+  segundoApellido: string;
   nombre: string;
   nacimiento: string;
   escolaridad: string;
@@ -502,7 +504,7 @@ export const historiaClinicaInforme = (
       body: [
         [
           { text: 'NOMBRE', style: 'label' },
-          { text: trabajador.nombre, style: 'value' },
+          { text: trabajador.primerApellido + ' ' + trabajador.segundoApellido + ' ' + trabajador.nombre, style: 'value' },
           { text: 'NACIMIENTO', style: 'label' },
           { text: trabajador.nacimiento, style: 'value' },
         ],

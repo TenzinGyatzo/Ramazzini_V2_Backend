@@ -89,6 +89,8 @@ function formatearTelefono(telefono: string): string {
 }
 // ==================== INTERFACES ====================
 interface Trabajador {
+  primerApellido: string;
+  segundoApellido: string;
   nombre: string;
   edad: string;
   puesto: string;
@@ -213,7 +215,7 @@ export const antidopingInforme = (
           body: [
             [
               { text: 'NOMBRE', style: 'label' },
-              { text: trabajador.nombre, style: 'value' },
+              { text: trabajador.primerApellido + ' ' + trabajador.segundoApellido + ' ' + trabajador.nombre, style: 'value' },
               { text: 'EDAD', style: 'label' },
               { text: trabajador.edad, style: 'value' },
             ],

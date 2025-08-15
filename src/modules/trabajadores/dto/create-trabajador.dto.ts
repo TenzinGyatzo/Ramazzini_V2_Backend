@@ -39,8 +39,8 @@ export class CreateTrabajadorDto {
       example: 'Ruvalcaba'
     })
     @IsString({ message: 'El segundo apellido debe ser un string' })
-    @IsNotEmpty({ message: 'El segundo apellido no puede estar vacío' })
-    segundoApellido: string;
+    @IsOptional({ message: 'El segundo apellido puede estar vacío' })
+    segundoApellido?: string;
 
     @ApiProperty({
       description: 'Nombre completo del trabajador',
@@ -108,7 +108,6 @@ export class CreateTrabajadorDto {
     @IsString({ message: 'El teléfono debe ser un string' })
     @Matches(/^$|^[0-9]{10}$/, { message: 'El teléfono debe estar vacío o tener 10 dígitos' })
     telefono?: string; // El operador `?` también indica que es opcional en TypeScript
-    
 
     @ApiProperty({
       description: 'Estado Civil del trabajador',
@@ -127,17 +126,17 @@ export class CreateTrabajadorDto {
     })
     @IsOptional()
     @IsString({ message: 'El número de empleado debe ser un string' })
-    // @Matches(/^[0-9]{1,7}$/, { message: 'El número de empleado debe contener solo números y tener entre 1 y 7 dígitos' })
+    @Matches(/^$|^[0-9]{1,7}$/, { message: 'El número de empleado debe estar vacío o contener solo números entre 1 y 7 dígitos' })
     numeroEmpleado?: string;
 
     @ApiProperty({
-      description: 'Número de seguro social del trabajador (opcional, máximo 7 dígitos)',
-      example: '1234567',
+      description: 'Número de seguro social del trabajador (opcional, 11 dígitos)',
+      example: '12345678901',
       required: false
     })
     @IsOptional()
     @IsString({ message: 'El número de seguro social debe ser un string' })
-    // @Matches(/^[0-9]{11}$/, { message: 'El número de seguro social debe contener 11 dígitos' })
+    @Matches(/^$|^[0-9]{11}$/, { message: 'El número de seguro social debe estar vacío o tener 11 dígitos' })
     nss?: string;
 
     // Agentes de Riesgo

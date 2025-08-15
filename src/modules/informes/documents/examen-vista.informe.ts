@@ -97,6 +97,8 @@ function formatearTelefono(telefono: string): string {
 
 
 interface Trabajador {
+  primerApellido: string;
+  segundoApellido: string;
   nombre: string;
   edad: string;
   puesto: string;
@@ -229,7 +231,7 @@ export const examenVistaInforme = (
           body: [
             [
               { text: 'NOMBRE', style: 'label' },
-              { text: trabajador.nombre, style: 'value' },
+              { text: trabajador.primerApellido + ' ' + trabajador.segundoApellido + ' ' + trabajador.nombre, style: 'value' },
               { text: 'EDAD', style: 'label' },
               { text: trabajador.edad, style: 'value' },
             ],
