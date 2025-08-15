@@ -3,6 +3,7 @@ import type {
   StyleDictionary,
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
+import { formatearNombreTrabajador } from '../../../utils/names';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -231,7 +232,7 @@ export const examenVistaInforme = (
           body: [
             [
               { text: 'NOMBRE', style: 'label' },
-              { text: trabajador.primerApellido + ' ' + trabajador.segundoApellido + ' ' + trabajador.nombre, style: 'value' },
+              { text: formatearNombreTrabajador(trabajador), style: 'value' },
               { text: 'EDAD', style: 'label' },
               { text: trabajador.edad, style: 'value' },
             ],

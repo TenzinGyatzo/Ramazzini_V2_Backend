@@ -3,6 +3,7 @@ import type {
   StyleDictionary,
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
+import { formatearNombreTrabajador } from '../../../utils/names';
 import { Interface } from 'readline';
 
 // ==================== ESTILOS ====================
@@ -549,7 +550,7 @@ export const aptitudPuestoInforme = (
           body: [
             [
               { text: 'NOMBRE', style: 'label' },
-              { text: trabajador.primerApellido + ' ' + trabajador.segundoApellido + ' ' + trabajador.nombre, style: 'value' },
+              { text: formatearNombreTrabajador(trabajador), style: 'value' },
               { text: 'NACIMIENTO', style: 'label' },
               { text: trabajador.nacimiento, style: 'value' },
             ],

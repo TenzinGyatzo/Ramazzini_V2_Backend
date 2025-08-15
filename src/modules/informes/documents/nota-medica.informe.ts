@@ -3,6 +3,7 @@ import type {
   StyleDictionary,
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
+import { formatearNombreTrabajador } from '../../../utils/names';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -273,7 +274,7 @@ export const notaMedicaInforme = (
           body: [
         [
           {
-            text: trabajador.primerApellido + ' ' + trabajador.segundoApellido + ' ' + trabajador.nombre,
+                            text: formatearNombreTrabajador(trabajador),
             style: 'nombreEmpresa',
             alignment: 'left',
             margin: [0, 0, 0, 0],

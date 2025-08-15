@@ -630,7 +630,9 @@ export class TrabajadoresService {
       escolaridadOriginal: worker.originalValues?.escolaridad && worker.originalValues.escolaridad !== (worker.escolaridad ? String(worker.escolaridad).trim() : '') ? worker.originalValues.escolaridad : undefined,
       estadoCivilOriginal: worker.originalValues?.estadoCivil && worker.originalValues.estadoCivil !== (worker.estadoCivil ? String(worker.estadoCivil).trim() : '') ? worker.originalValues.estadoCivil : undefined,
       // ✅ ELIMINADO: No se capturan valores originales del estado laboral
-      telefonoOriginal: worker.originalValues?.telefono && worker.originalValues.telefono !== (worker.telefono ? String(worker.telefono).trim() : '') ? worker.originalValues.telefono : undefined
+      telefonoOriginal: worker.originalValues?.telefono && worker.originalValues.telefono !== (worker.telefono ? String(worker.telefono).trim() : '') ? worker.originalValues.telefono : undefined,
+      numeroEmpleadoOriginal: worker.originalValues?.numeroEmpleado && worker.originalValues.numeroEmpleado !== (worker.numeroEmpleado ? String(worker.numeroEmpleado).trim() : '') ? worker.originalValues.numeroEmpleado : undefined,
+      nssOriginal: worker.originalValues?.nss && worker.originalValues.nss !== (worker.nss ? String(worker.nss).trim() : '') ? worker.originalValues.nss : undefined
     };
         
     return result;
@@ -1016,7 +1018,9 @@ export class TrabajadoresService {
       escolaridad: worker.escolaridad,
       estadoCivil: worker.estadoCivil,
       // ✅ ELIMINADO: No se capturan valores originales del estado laboral
-      telefono: worker.telefono && typeof worker.telefono === 'string' && worker.telefono.trim() !== '' ? worker.telefono : null
+      telefono: worker.telefono && typeof worker.telefono === 'string' && worker.telefono.trim() !== '' ? worker.telefono : null,
+      numeroEmpleado: worker.numeroEmpleado && typeof worker.numeroEmpleado === 'string' && worker.numeroEmpleado.trim() !== '' ? worker.numeroEmpleado : null,
+      nss: worker.nss && typeof worker.nss === 'string' && worker.nss.trim() !== '' ? worker.nss : null
     };
     
     // Limpiar strings eliminando espacios y convirtiendo a string
@@ -1192,11 +1196,18 @@ export class TrabajadoresService {
 
     // ✅ ELIMINADO: No se valida el estado laboral del Excel
 
-    // Validar número de empleado si existe
+    // ✅ SOLUCIÓN: Validar número de empleado (opcional, pero si existe debe tener 1-7 dígitos)
     if (worker.numeroEmpleado) {
-      const numeroEmpleado = String(worker.numeroEmpleado).trim();
-      if (!/^[0-9]{1,7}$/.test(numeroEmpleado)) {
-        errors.push('El número de empleado debe tener entre 1 y 7 dígitos numéricos');
+      const numeroEmpleadoNormalizado = String(worker.numeroEmpleado).trim();
+      if (numeroEmpleadoNormalizado !== '') {
+        // Aceptar solo números, pero permitir que venga como texto con separadores
+        const numeroEmpleadoLimpio = numeroEmpleadoNormalizado.replace(/[^0-9]/g, '');
+        if (numeroEmpleadoLimpio.length < 1 || numeroEmpleadoLimpio.length > 7) {
+          errors.push(`El número de empleado debe tener entre 1 y 7 dígitos. Recibido: ${numeroEmpleadoLimpio.length} dígitos`);
+        } else {
+          // Guardar el número de empleado normalizado (solo números)
+          cleanedData.numeroEmpleado = numeroEmpleadoLimpio;
+        }
       }
     }
 
@@ -1212,6 +1223,21 @@ export class TrabajadoresService {
         }
       } else {
         errors.push('El formato del teléfono no es válido. Debe contener solo números, espacios, paréntesis y guiones');
+      }
+    }
+
+    // ✅ SOLUCIÓN: Validar NSS (opcional, pero si existe debe tener 11 dígitos)
+    if (worker.nss && typeof worker.nss === 'string') {
+      const nssNormalizado = String(worker.nss).trim();
+      if (nssNormalizado !== '') {
+        // Aceptar solo números, pero permitir que venga como texto
+        const nssLimpio = nssNormalizado.replace(/[^0-9]/g, '');
+        if (nssLimpio.length !== 11) {
+          errors.push(`El NSS debe tener exactamente 11 dígitos. Recibido: ${nssLimpio.length} dígitos`);
+        } else {
+          // Guardar el NSS normalizado (solo números)
+          cleanedData.nss = nssLimpio;
+        }
       }
     }
 
@@ -1263,8 +1289,9 @@ export class TrabajadoresService {
                 sexoOriginal: processedWorker.sexoOriginal,
                 escolaridadOriginal: processedWorker.escolaridadOriginal,
                 estadoCivilOriginal: processedWorker.estadoCivilOriginal,
-                // ✅ ELIMINADO: No se incluyen valores originales del estado laboral
-                telefonoOriginal: processedWorker.telefonoOriginal
+                telefonoOriginal: processedWorker.telefonoOriginal,
+                numeroEmpleadoOriginal: processedWorker.numeroEmpleadoOriginal,
+                nssOriginal: processedWorker.nssOriginal
             };
             
             resultados.push({ success: true, worker: workerWithOriginals });

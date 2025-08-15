@@ -43,6 +43,27 @@ Método `validateAndCleanWorkerData` que:
 - Trazabilidad completa de errores
 - Estadísticas de importación (total, exitosos, fallidos)
 
+## Validación de Campos Opcionales
+
+### Número de Empleado
+- **Formato**: 1-7 dígitos numéricos
+- **Validación**: Solo números, longitud entre 1 y 7 caracteres
+- **Ejemplo válido**: "1234567", "001", "42"
+- **Normalización**: Se eliminan espacios, guiones y caracteres no numéricos
+- **Ejemplos de normalización**: "001-234" → "001234", "EMP-001" → "001", " 123 " → "123"
+
+### NSS (Número de Seguro Social)
+- **Formato**: Exactamente 11 dígitos
+- **Validación**: Acepta números o texto, el sistema extrae solo los dígitos
+- **Ejemplo válido**: "12345678901", "12-34-56-78-90-1", "12 34 56 78 90 1"
+- **Normalización**: Se eliminan espacios, guiones y caracteres no numéricos
+
+### Teléfono
+- **Formato**: Exactamente 10 dígitos
+- **Validación**: Acepta números, espacios, paréntesis y guiones
+- **Ejemplo válido**: "(668) 123-4567", "6681234567", "668 123 4567"
+- **Normalización**: Se eliminan todos los caracteres no numéricos
+
 ## Normalización de Enumeraciones
 
 ### Sistema Inteligente de Normalización
@@ -124,6 +145,8 @@ El sistema ahora incluye un motor de normalización que maneja automáticamente:
 - Formatos de fecha inválidos
 - Valores de enumeración incorrectos
 - Números de empleado mal formateados
+- NSS mal formateado (debe tener exactamente 11 dígitos)
+- Teléfonos mal formateados (debe tener exactamente 10 dígitos)
 
 ### Errores de Base de Datos
 - Errores de unicidad
@@ -161,9 +184,10 @@ interface ExcelWorker {
   sexo: string;           // Acepta: "MASCULINO", "hombre", "M", etc.
   escolaridad: string;    // Acepta: "BACHILLERATO", "universidad", etc.
   puesto: string;
-  telefono?: string;
+  telefono?: string;      // Opcional, 10 dígitos
   estadoCivil: string;    // Acepta: "SOLTERO", "union libre", etc.
-  numeroEmpleado?: string;
+  numeroEmpleado?: string; // Opcional, 1-7 dígitos (acepta números, texto, separadores)
+  nss?: string;           // Opcional, 11 dígitos (acepta números o texto)
   estadoLaboral?: string; // Acepta: "TRABAJANDO", "empleado", etc.
   agentesRiesgoActuales?: string[];
 }
@@ -196,6 +220,12 @@ interface ExcelWorker {
 "TRABAJANDO" → "Activo"          // ✅ Aceptado
 "empleado" → "Activo"            // ✅ Aceptado
 "DESEMPLEADO" → "Inactivo"       // ✅ Aceptado
+
+// Número de Empleado
+"001-234" → "001234"            // ✅ Aceptado
+"EMP-001" → "001"               // ✅ Aceptado
+" 123 " → "123"                 // ✅ Aceptado
+"ABC-456-DEF" → "456"           // ✅ Aceptado
 ```
 
 ## Recomendaciones para Usuarios
@@ -204,7 +234,7 @@ interface ExcelWorker {
 1. **Fechas**: Usar formato de celda "Fecha" en Excel
 2. **Campos de texto**: Evitar espacios extra al inicio/final
 3. **Enumeraciones**: Usar exactamente los valores permitidos
-4. **Números**: Usar formato de celda "Texto" para números de empleado
+4. **Números**: Usar formato de celda "Texto" para números de empleado (el sistema normaliza automáticamente separadores y caracteres no numéricos)
 
 ### Plantilla de Excel
 - Incluir encabezados exactos

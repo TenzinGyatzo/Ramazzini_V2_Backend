@@ -3,6 +3,7 @@ import type {
   StyleDictionary,
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
+import { formatearNombreTrabajadorCertificado } from '../../../utils/names';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -379,7 +380,7 @@ export const certificadoInforme = (
       {
         text: [
           { text: 'Que, habiendo practicado reconocimiento médico en esta fecha, al C. ' },
-          { text: trabajador.nombre + ' ' + trabajador.primerApellido + ' ' + trabajador.segundoApellido, bold: true },
+          { text: formatearNombreTrabajadorCertificado(trabajador), bold: true },
           { text: ' de ' },
           { text: String(trabajador.edad), bold: true },
           { text: ' años de edad. ' },
@@ -411,7 +412,7 @@ export const certificadoInforme = (
       {
         text: [
           { text: 'Por lo anterior se establece que el C. ' },
-          { text: trabajador.nombre + ' ' + trabajador.primerApellido + ' ' + trabajador.segundoApellido, bold: true },
+          { text: formatearNombreTrabajadorCertificado(trabajador), bold: true },
           {
         text: certificado.impedimentosFisicos,
           },
@@ -428,7 +429,7 @@ export const certificadoInforme = (
           {
         text: 'Expido el presente certificado médico a petición de el C. ',
           },
-          { text: trabajador.nombre + ' ' + trabajador.primerApellido + ' ' + trabajador.segundoApellido, bold: true },
+          { text: formatearNombreTrabajadorCertificado(trabajador), bold: true },
           {
         text: ` para los usos legales a que haya lugar, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
           },
