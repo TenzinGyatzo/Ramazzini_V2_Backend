@@ -30,6 +30,8 @@ import { CreateHistoriaClinicaDto } from './dto/create-historia-clinica.dto';
 import { UpdateHistoriaClinicaDto } from './dto/update-historia-clinica.dto';
 import { CreateNotaMedicaDto } from './dto/create-nota-medica.dto';
 import { UpdateNotaMedicaDto } from './dto/update-nota-medica.dto';
+import { CreateControlPrenatalDto } from './dto/create-control-prenatal.dto';
+import { UpdateControlPrenatalDto } from './dto/update-control-prenatal.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import path from 'path';
@@ -50,6 +52,7 @@ export class ExpedientesController {
     exploracionFisica: CreateExploracionFisicaDto,
     historiaClinica: CreateHistoriaClinicaDto,
     notaMedica: CreateNotaMedicaDto,
+    controlPrenatal: CreateControlPrenatalDto,
   };
 
   private updateDtos = {
@@ -61,6 +64,7 @@ export class ExpedientesController {
     exploracionFisica: UpdateExploracionFisicaDto,
     historiaClinica: UpdateHistoriaClinicaDto,
     notaMedica: UpdateNotaMedicaDto,
+    controlPrenatal: UpdateControlPrenatalDto,
   };
 
   @Post(':documentType/crear')

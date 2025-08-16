@@ -10,6 +10,7 @@ import { ExamenVista, ExamenVistaSchema } from './schemas/examen-vista.schema';
 import { ExploracionFisica, ExploracionFisicaSchema } from './schemas/exploracion-fisica.schema';
 import { HistoriaClinica, HistoriaClinicaSchema } from './schemas/historia-clinica.schema';
 import { NotaMedica, NotaMedicaSchema } from './schemas/nota-medica.schema';
+import { ControlPrenatal, ControlPrenatalSchema } from './schemas/control-prenatal.schema';
 import { Trabajador, TrabajadorSchema } from '../trabajadores/schemas/trabajador.schema';
 import { InformesModule } from '../informes/informes.module';
 import { FilesModule } from '../files/files.module';
@@ -28,6 +29,7 @@ import { PdfCleanerService } from './pdf-cleaner.service';
       { name: ExploracionFisica.name, schema: ExploracionFisicaSchema },
       { name: HistoriaClinica.name, schema: HistoriaClinicaSchema },
       { name: NotaMedica.name, schema: NotaMedicaSchema },
+      { name: ControlPrenatal.name, schema: ControlPrenatalSchema },
       { name: Trabajador.name, schema: TrabajadorSchema },
     ]),
     forwardRef(() => InformesModule),
