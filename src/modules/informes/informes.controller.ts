@@ -102,6 +102,26 @@ export class InformesController {
     }
   }
 
+  // Cuestionarios
+
+  @Get('controlPrenatal/:empresaId/:trabajadorId/:controlPrenatalId/:userId')
+  async getInformeControlPrenatal(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('controlPrenatalId') controlPrenatalId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+  
+    try {
+      const rutaPDF = await this.informesService.getInformeControlPrenatal(empresaId, trabajadorId, controlPrenatalId, userId);
+      return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
+    } catch (error) {
+      console.error('[getInformeControlPrenatal] Error al generar el informe control prenatal:', error);
+      throw error;
+    }
+  }
+
   @Get('dashboard/ver/:empresaId/:trabajadorId/:userId')
   async getInformeDashboard(
     @Param('empresaId') empresaId: string,
