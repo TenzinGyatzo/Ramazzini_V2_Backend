@@ -296,7 +296,7 @@ export const controlPrenatalInforme = (
   const nombreEmpresaSeccion: Content = {
     style: 'table',
     table: {
-      widths: ['50%', '32%', '18%'],
+      widths: ['70%', '30%'],
       body: [
         [
           {
