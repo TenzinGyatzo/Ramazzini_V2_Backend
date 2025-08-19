@@ -164,6 +164,20 @@ export class ExpedientesController {
     }
   }
 
+  @Get('altura-disponible')
+  async getAlturaDisponible(@Param('trabajadorId') trabajadorId: string) {
+    try {
+      const alturaData = await this.expedientesService.getAlturaDisponible(trabajadorId);
+      return {
+        message: 'Altura consultada exitosamente',
+        data: alturaData
+      };
+    } catch (error) {
+      console.error('Error al consultar altura:', error);
+      throw new BadRequestException('Error al consultar la altura disponible');
+    }
+  }
+
   @Get(':documentType')
   async findDocuments(
     @Param('trabajadorId') trabajadorId: string,

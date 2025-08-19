@@ -298,6 +298,37 @@ export class ExpedientesService {
     return result !== null;
   } 
   
+  async getAlturaDisponible(trabajadorId: string): Promise<{ altura: number | null, fuente: string | null }> {
+    try {
+      // 1. Buscar en exploración física (más reciente)
+      const exploracionFisica = await this.exploracionFisicaModel
+        .findOne({ idTrabajador: trabajadorId })
+        .sort({ fechaExploracionFisica: -1 })
+        .select('altura')
+        .exec();
+
+      if (exploracionFisica?.altura) {
+        return { altura: exploracionFisica.altura, fuente: 'exploracionFisica' };
+      }
+
+      // 2. Buscar en control prenatal (más reciente)
+      const controlPrenatal = await this.controlPrenatalModel
+        .findOne({ idTrabajador: trabajadorId })
+        .sort({ fechaInicioControlPrenatal: -1 })
+        .select('altura')
+        .exec();
+
+      if (controlPrenatal?.altura) {
+        return { altura: controlPrenatal.altura, fuente: 'controlPrenatal' };
+      }
+
+      return { altura: null, fuente: null };
+    } catch (error) {
+      console.error('Error al consultar altura disponible:', error);
+      throw new BadRequestException('Error al consultar la altura disponible');
+    }
+  }
+
   private async actualizarUpdatedAtTrabajador(trabajadorId: string) {
     if (!trabajadorId) return;
     await this.trabajadorModel.findByIdAndUpdate(trabajadorId, { updatedAt: new Date() });
