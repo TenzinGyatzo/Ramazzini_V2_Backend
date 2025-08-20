@@ -4,6 +4,7 @@ import type {
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
 import { formatearNombreTrabajador } from '../../../utils/names';
+import { convertirFechaISOaDDMMYYYY } from '../../../utils/dates';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -67,6 +68,12 @@ const styles: StyleDictionary = {
     bold: false,
     alignment: 'center',
     margin: [0, 0, 0, 0],
+  },
+  tableCellMonthSmall: {
+    fontSize: 6,
+    bold: false,
+    alignment: 'center',
+    margin: [0, 1, 0, 0],
   },
   tableCellMonthHeader: {
     fontSize: 7,
@@ -457,7 +464,7 @@ export const controlPrenatalInforme = (
   const tablaSeguimientoMensual: Content = {
     style: 'table',
     table: {
-      widths: ['20%', '6.67%', '6.67%', '6.67%', '6.67%', '6.67%', '6.67%', '6.67%', '6.67%', '6.67%', '6.67%', '6.67%', '6.67%'],
+      widths: ['16%', '7%', '7%', '7%', '7%', '7%', '7%', '7%', '7%', '7%', '7%', '7%', '7%'],
       body: [
         // Encabezado de meses
         [
@@ -481,23 +488,23 @@ export const controlPrenatalInforme = (
         ],
         // Fila de Fecha
         [
-          { text: 'FECHA', style: 'tableCellBold' },
-          { text: controlPrenatal.eneroFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.febreroFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.marzoFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.abrilFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.mayoFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.junioFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.julioFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.agostoFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.septiembreFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.octubreFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.noviembreFecha?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.diciembreFecha?.toString() || '', style: 'tableCellMonth' },
+          { text: 'FECHA', style: 'tableCellBold', alignment: 'center' },
+          { text: controlPrenatal.eneroFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.eneroFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.febreroFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.febreroFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.marzoFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.marzoFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.abrilFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.abrilFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.mayoFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.mayoFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.junioFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.junioFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.julioFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.julioFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.agostoFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.agostoFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.septiembreFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.septiembreFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.octubreFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.octubreFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.noviembreFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.noviembreFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          { text: controlPrenatal.diciembreFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.diciembreFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
         ],
         // Fila de PESO
         [
-          { text: 'PESO (Kg)', style: 'tableCellBold' },
+          { text: 'PESO (kg)', style: 'tableCellBold', alignment: 'center' },
           { text: controlPrenatal.eneroPeso?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.febreroPeso?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.marzoPeso?.toString() || '', style: 'tableCellMonth' },
@@ -513,7 +520,7 @@ export const controlPrenatalInforme = (
         ],
         // Fila de IMC - Índice de Masa Corporal
         [
-          { text: 'ÍNDICE DE MASA CORPORAL', style: 'tableCellBold' },
+          { text: 'IMC', style: 'tableCellBold', alignment: 'center' },
           { text: controlPrenatal.eneroImc?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.febreroImc?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.marzoImc?.toString() || '', style: 'tableCellMonth' },
@@ -529,7 +536,7 @@ export const controlPrenatalInforme = (
         ],
         // Fila de T/A - Tensión Arterial
         [
-          { text: 'TENSIÓN ARTERIAL (mmHg)', style: 'tableCellBold' },
+          { text: 'T/A (mmHg)', style: 'tableCellBold', alignment: 'center' },
           { text: controlPrenatal.eneroTia || '', style: 'tableCellMonth' },
           { text: controlPrenatal.febreroTia || '', style: 'tableCellMonth' },
           { text: controlPrenatal.marzoTia || '', style: 'tableCellMonth' },
@@ -545,7 +552,7 @@ export const controlPrenatalInforme = (
         ],
         // Fila de FCF - Frecuencia Cardíaca Fetal
         [
-          { text: 'F. C. FETAL (lat/min)', style: 'tableCellBold' },
+          { text: 'FCF (lat/min)', style: 'tableCellBold', alignment: 'center' },
           { text: controlPrenatal.eneroFcf?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.febreroFcf?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.marzoFcf?.toString() || '', style: 'tableCellMonth' },
@@ -561,7 +568,7 @@ export const controlPrenatalInforme = (
         ],
         // Fila de SDG - Semanas de Gestación
         [
-          { text: 'SEMANAS DE GESTACION', style: 'tableCellBold' },
+          { text: 'SDG', style: 'tableCellBold', alignment: 'center' },
           { text: controlPrenatal.eneroSdg?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.febreroSdg?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.marzoSdg?.toString() || '', style: 'tableCellMonth' },
@@ -577,7 +584,7 @@ export const controlPrenatalInforme = (
         ],
         // Fila de F. UT. - Fondo Uterino
         [
-          { text: 'FONDO UTERINO (cm)', style: 'tableCellBold' },
+          { text: 'F. UTERINO (cm)', style: 'tableCellBold', alignment: 'center' },
           { text: controlPrenatal.eneroFondoUterino?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.febreroFondoUterino?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.marzoFondoUterino?.toString() || '', style: 'tableCellMonth' },
@@ -618,13 +625,13 @@ export const controlPrenatalInforme = (
         [
           { 
             text: [
-              controlPrenatal.observacionesPeso ? `PESO: ${controlPrenatal.observacionesPeso}\n` : '',
-              controlPrenatal.observacionesImc ? `IMC: ${controlPrenatal.observacionesImc}\n` : '',
-              controlPrenatal.observacionesTia ? `T/A: ${controlPrenatal.observacionesTia}\n` : '',
-              controlPrenatal.observacionesFcf ? `FCF: ${controlPrenatal.observacionesFcf}\n` : '',
-              controlPrenatal.observacionesSdg ? `SDG: ${controlPrenatal.observacionesSdg}\n` : '',
-              controlPrenatal.observacionesFondoUterino ? `FONDO UTERINO: ${controlPrenatal.observacionesFondoUterino}` : '',
-            ].filter(text => text !== '').join('') || 'Sin observaciones',
+              controlPrenatal.observacionesPeso ? [{ text: 'PESO: ', bold: true }, `${controlPrenatal.observacionesPeso}\n`] : '',
+              controlPrenatal.observacionesImc ? [{ text: 'IMC: ', bold: true }, `${controlPrenatal.observacionesImc}\n`] : '',
+              controlPrenatal.observacionesTia ? [{ text: 'T/A: ', bold: true }, `${controlPrenatal.observacionesTia}\n`] : '',
+              controlPrenatal.observacionesFcf ? [{ text: 'FCF: ', bold: true }, `${controlPrenatal.observacionesFcf}\n`] : '',
+              controlPrenatal.observacionesSdg ? [{ text: 'SDG: ', bold: true }, `${controlPrenatal.observacionesSdg}\n`] : '',
+              controlPrenatal.observacionesFondoUterino ? [{ text: 'FONDO UTERINO: ', bold: true }, `${controlPrenatal.observacionesFondoUterino}`] : '',
+            ].filter(text => text !== '').flat() || 'Sin observaciones',
             style: 'tableCell',
             alignment: 'left',
             margin: [5, 5, 5, 5],
