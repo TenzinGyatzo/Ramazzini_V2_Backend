@@ -303,7 +303,7 @@ export const controlPrenatalInforme = (
   const nombreEmpresaSeccion: Content = {
     style: 'table',
     table: {
-      widths: ['70%', '30%'],
+      widths: ['65%', '35%'],
       body: [
         [
           {
@@ -315,7 +315,7 @@ export const controlPrenatalInforme = (
           },
           {
             text: [
-              { text: 'Fecha: ', style: 'fecha', bold: false },
+              { text: 'Inicio de Control Prenatal: ', style: 'fecha', bold: false },
               {
                 text: formatearFechaUTC(controlPrenatal.fechaInicioControlPrenatal),
                 style: 'fecha',
@@ -568,7 +568,7 @@ export const controlPrenatalInforme = (
         ],
         // Fila de SDG - Semanas de Gestación
         [
-          { text: 'SDG', style: 'tableCellBold', alignment: 'center' },
+          { text: 'SDG (semanas)', style: 'tableCellBold', alignment: 'center' },
           { text: controlPrenatal.eneroSdg?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.febreroSdg?.toString() || '', style: 'tableCellMonth' },
           { text: controlPrenatal.marzoSdg?.toString() || '', style: 'tableCellMonth' },
