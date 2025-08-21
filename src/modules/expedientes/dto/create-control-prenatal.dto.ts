@@ -118,7 +118,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de enero debe ser una fecha' })
     @Type(() => Date)
-    eneroFecha?: Date;
+    eneroFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en enero (kg)', required: false })
     @IsOptional()
@@ -155,7 +155,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de febrero debe ser una fecha' })
     @Type(() => Date)
-    febreroFecha?: Date;
+    febreroFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en febrero (kg)', required: false })
     @IsOptional()
@@ -192,7 +192,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de marzo debe ser una fecha' })
     @Type(() => Date)
-    marzoFecha?: Date;
+    marzoFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en marzo (kg)', required: false })
     @IsOptional()
@@ -229,7 +229,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de abril debe ser una fecha' })
     @Type(() => Date)
-    abrilFecha?: Date;
+    abrilFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en abril (kg)', required: false })
     @IsOptional()
@@ -266,7 +266,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de mayo debe ser una fecha' })
     @Type(() => Date)
-    mayoFecha?: Date;
+    mayoFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en mayo (kg)', required: false })
     @IsOptional()
@@ -303,7 +303,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de junio debe ser una fecha' })
     @Type(() => Date)
-    junioFecha?: Date;
+    junioFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en junio (kg)', required: false })
     @IsOptional()
@@ -340,7 +340,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de julio debe ser una fecha' })
     @Type(() => Date)
-    julioFecha?: Date;
+    julioFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en julio (kg)', required: false })
     @IsOptional()
@@ -377,7 +377,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de agosto debe ser una fecha' })
     @Type(() => Date)
-    agostoFecha?: Date;
+    agostoFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en agosto (kg)', required: false })
     @IsOptional()
@@ -414,7 +414,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de septiembre debe ser una fecha' })
     @Type(() => Date)
-    septiembreFecha?: Date;
+    septiembreFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en septiembre (kg)', required: false })
     @IsOptional()
@@ -451,7 +451,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de octubre debe ser una fecha' })
     @Type(() => Date)
-    octubreFecha?: Date;
+    octubreFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en octubre (kg)', required: false })
     @IsOptional()
@@ -488,7 +488,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de noviembre debe ser una fecha' })
     @Type(() => Date)
-    noviembreFecha?: Date;
+    noviembreFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en noviembre (kg)', required: false })
     @IsOptional()
@@ -525,7 +525,7 @@ export class CreateControlPrenatalDto {
     @IsOptional()
     @IsDate({ message: 'Fecha de diciembre debe ser una fecha' })
     @Type(() => Date)
-    diciembreFecha?: Date;
+    diciembreFecha?: Date | null;
 
     @ApiProperty({ description: 'Peso en diciembre (kg)', required: false })
     @IsOptional()

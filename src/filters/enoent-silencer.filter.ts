@@ -1,56 +1,72 @@
-import { ExceptionFilter, Catch, ArgumentsHost, Logger } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  Logger,
+  BadRequestException,
+  HttpException,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 
 @Catch()
 export class EnoentSilencerFilter implements ExceptionFilter {
   private readonly logger = new Logger(EnoentSilencerFilter.name);
 
-  catch(exception: any, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
 
-    // Silenciar ENOENT solo para la ruta de expedientes-medicos
+    // 1) Silenciar ENOENT SOLO en /expedientes-medicos
     if (
-      exception?.code === 'ENOENT' &&
+      typeof exception === 'object' &&
+      exception !== null &&
+      (exception as any).code === 'ENOENT' &&
       request?.url?.startsWith('/expedientes-medicos')
     ) {
-      // Devuelve un 404 limpio sin loguear el error
-      response.status(404).json({
+      return response.status(404).json({
         statusCode: 404,
         message: 'Archivo no encontrado',
+        path: request.url,
+        timestamp: new Date().toISOString(),
       });
-      return;
     }
 
-    // Para otras excepciones, loguear y devolver una respuesta de error apropiada
-    this.logger.error(`Error no manejado: ${exception.message}`, exception.stack);
-    
-    // Determinar el código de estado apropiado
-    let statusCode = 500;
-    let message = 'Error interno del servidor';
-
-    if (exception?.status) {
-      statusCode = exception.status;
-    } else if (exception?.statusCode) {
-      statusCode = exception.statusCode;
+    // 2) Si es BadRequestException (validación), devuelve el payload completo
+    if (exception instanceof BadRequestException) {
+      const status = exception.getStatus();
+      const payload = exception.getResponse(); // <-- aquí viene el array de errores del ValidationPipe
+      this.logger.warn(
+        `[BadRequestException] ${request.method} ${request.url} -> ${JSON.stringify(payload)}`
+      );
+      return response.status(status).json(payload);
     }
 
-    if (exception?.message) {
-      message = exception.message;
+    // 3) Para cualquier HttpException, no pierdas el payload
+    if (exception instanceof HttpException) {
+      const status = exception.getStatus();
+      const payload = exception.getResponse();
+      this.logger.error(
+        `[HttpException] ${request.method} ${request.url} -> ${JSON.stringify(payload)}`
+      );
+      return response.status(status).json(
+        typeof payload === 'string' ? { statusCode: status, message: payload } : payload
+      );
     }
 
-    // Asegurar que el statusCode sea válido
-    if (statusCode < 100 || statusCode >= 600) {
-      statusCode = 500;
-    }
+    // 4) Fallback para errores inesperados (no tumba el proceso)
+    const message =
+      (typeof exception === 'object' && exception && (exception as any)['message']) ||
+      'Internal server error';
+    const stack =
+      (typeof exception === 'object' && exception && (exception as any)['stack']) || '';
+    this.logger.error(`[UnknownException] ${request.method} ${request.url}: ${message}`, stack);
 
-    // Devolver respuesta de error sin interrumpir el servidor
-    response.status(statusCode).json({
-      statusCode,
-      message,
-      timestamp: new Date().toISOString(),
+    return response.status(500).json({
+      statusCode: 500,
+      message: 'Internal server error',
       path: request.url,
+      timestamp: new Date().toISOString(),
     });
   }
-} 
+}
