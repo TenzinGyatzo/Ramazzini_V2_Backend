@@ -188,6 +188,7 @@ export class TrabajadoresService {
         aptitudResumen: aptitud
           ? {
               aptitudPuesto: aptitud.aptitudPuesto ?? null,
+              fechaAptitudPuesto: format(new Date(aptitud.fechaAptitudPuesto), 'dd/MM/yyyy') ?? null,
             }
           : null,
         exploracionFisicaResumen: exploracion

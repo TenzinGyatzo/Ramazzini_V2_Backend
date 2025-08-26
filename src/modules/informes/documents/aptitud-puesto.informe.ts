@@ -546,7 +546,7 @@ export const aptitudPuestoInforme = (
       {
         style: 'table',
         table: {
-          widths: ['15%', '45%', '15%', '25%'],
+          widths: ['15%', '45%', '20%', '20%'],
           body: [
             [
               { text: 'NOMBRE', style: 'label' },
