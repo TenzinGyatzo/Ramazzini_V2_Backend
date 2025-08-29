@@ -274,7 +274,7 @@ export const notaMedicaInforme = (
           body: [
         [
           {
-                            text: formatearNombreTrabajador(trabajador),
+            text: formatearNombreTrabajador(trabajador),
             style: 'nombreEmpresa',
             alignment: 'left',
             margin: [0, 0, 0, 0],

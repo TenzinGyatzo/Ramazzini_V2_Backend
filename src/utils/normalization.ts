@@ -130,8 +130,6 @@ export function normalizeProveedorSaludData(
   return result;
 }
 
-
-
 // normalization.ts
 
 export function normalizeMedicoFirmanteData(

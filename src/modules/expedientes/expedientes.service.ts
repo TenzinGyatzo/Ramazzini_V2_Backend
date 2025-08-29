@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { Antidoping } from './schemas/antidoping.schema';
 import { AptitudPuesto } from './schemas/aptitud-puesto.schema';
 import { Certificado } from './schemas/certificado.schema';
+import { CertificadoExpedito } from './schemas/certificado-expedito.schema';
 import { DocumentoExterno } from './schemas/documento-externo.schema';
 import { ExamenVista } from './schemas/examen-vista.schema';
 import { ExploracionFisica } from './schemas/exploracion-fisica.schema';
@@ -28,6 +29,7 @@ export class ExpedientesService {
     @InjectModel(Antidoping.name) private antidopingModel: Model<Antidoping>,
     @InjectModel(AptitudPuesto.name) private aptitudModel: Model<AptitudPuesto>,
     @InjectModel(Certificado.name) private certificadoModel: Model<Certificado>,
+    @InjectModel(CertificadoExpedito.name) private certificadoExpeditoModel: Model<CertificadoExpedito>,
     @InjectModel(DocumentoExterno.name) private documentoExternoModel: Model<DocumentoExterno>,
     @InjectModel(ExamenVista.name) private examenVistaModel: Model<ExamenVista>,
     @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
@@ -41,6 +43,7 @@ export class ExpedientesService {
       antidoping: this.antidopingModel,
       aptitud: this.aptitudModel,
       certificado: this.certificadoModel,
+      certificadoExpedito: this.certificadoExpeditoModel,
       documentoExterno: this.documentoExternoModel,
       examenVista: this.examenVistaModel,
       exploracionFisica: this.exploracionFisicaModel,
@@ -53,6 +56,7 @@ export class ExpedientesService {
       antidoping: 'fechaAntidoping',
       aptitud: 'fechaAptitudPuesto',
       certificado: 'fechaCertificado',
+      certificadoExpedito: 'fechaCertificadoExpedito',
       documentoExterno: 'fechaDocumento',
       examenVista: 'fechaExamenVista',
       exploracionFisica: 'fechaExploracionFisica',

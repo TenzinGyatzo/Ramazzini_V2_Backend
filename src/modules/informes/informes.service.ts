@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrinterService } from '../printer/printer.service';
 import { antidopingInforme } from './documents/antidoping.informe';
 import { certificadoInforme } from './documents/certificado.informe';
+import { certificadoExpeditoInforme } from './documents/certificado-expedito.informe';
 import { aptitudPuestoInforme } from './documents/aptitud-puesto.informe';
 import { examenVistaInforme } from './documents/examen-vista.informe';
 import { exploracionFisicaInforme } from './documents/exploracion-fisica.informe';
@@ -659,6 +660,137 @@ export class InformesService {
       datosCertificado,
       datosExploracionFisica, 
       datosExamenVista,
+      datosMedicoFirmante,
+      datosProveedorSalud,
+    );
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+
+    return rutaCompleta;
+  }
+
+  async getInformeCertificadoExpedito(
+    empresaId: string,
+    trabajadorId: string,
+    certificadoExpeditoId: string,
+    userId: string,
+  ): Promise<string> {
+    const empresa = await this.empresasService.findOne(empresaId);
+    const nombreEmpresa = empresa.nombreComercial;
+
+    const trabajador = await this.trabajadoresService.findOne(trabajadorId);
+    const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
+      nombre: trabajador.nombre.toUpperCase(),
+      nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
+      escolaridad: trabajador.escolaridad,
+      edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
+      puesto: trabajador.puesto,
+      sexo: trabajador.sexo,
+      antiguedad: calcularAntiguedad(
+        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
+      ),
+      telefono: trabajador.telefono,
+      estadoCivil: trabajador.estadoCivil,
+      numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
+    };
+
+    const certificado = await this.expedientesService.findDocument(
+      'certificadoExpedito',
+      certificadoExpeditoId,
+    );
+    const datosCertificadoExpedito = {
+      fechaCertificadoExpedito: certificado.fechaCertificadoExpedito,
+      cuerpoCertificado: certificado.cuerpoCertificado,
+      impedimentosFisicos: certificado.impedimentosFisicos,
+      peso: certificado.peso,
+      altura: certificado.altura,
+      indiceMasaCorporal: certificado.indiceMasaCorporal,
+      tensionArterialSistolica: certificado.tensionArterialSistolica,
+      tensionArterialDiastolica: certificado.tensionArterialDiastolica,
+      frecuenciaCardiaca: certificado.frecuenciaCardiaca,
+      frecuenciaRespiratoria: certificado.frecuenciaRespiratoria,
+      temperaturaCorporal: certificado.temperaturaCorporal,
+      gradoSalud: certificado.gradoSalud,
+      aptitudPuesto: certificado.aptitudPuesto,
+      descripcionSobreAptitud: certificado.descripcionSobreAptitud,
+      observaciones: certificado.observaciones,
+    };
+
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = medicoFirmante
+    ? {
+        nombre: medicoFirmante.nombre || "",
+        tituloProfesional: medicoFirmante.tituloProfesional || "",
+        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
+        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
+        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
+        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
+        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
+        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
+      }
+    : {
+        nombre: "",
+        tituloProfesional: "",
+        numeroCedulaProfesional: "",
+        especialistaSaludTrabajo: "",
+        numeroCedulaEspecialista: "",
+        nombreCredencialAdicional: "",
+        numeroCredencialAdicional: "",
+        firma: null,
+      };
+
+    const usuario = await this.usersService.findById(userId);
+     const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = proveedorSalud
+    ? {
+        nombre: proveedorSalud.nombre || "",
+        RFC: proveedorSalud.RFC || "",
+        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
+        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
+        estado: proveedorSalud.estado || "",
+        municipio: proveedorSalud.municipio || "",
+        codigoPostal: proveedorSalud.codigoPostal || "",
+        direccion: proveedorSalud.direccion || "",
+        telefono: proveedorSalud.telefono || "",
+        correoElectronico: proveedorSalud.correoElectronico || "",
+        sitioWeb: proveedorSalud.sitioWeb || "",
+      }
+    : {
+        nombre: "",
+        RFC: "",
+        perfilProveedorSalud: "",
+        logotipoEmpresa: null,
+        estado: "",
+        municipio: "",
+        codigoPostal: "",
+        direccion: "",
+        telefono: "",
+        correoElectronico: "",
+        sitioWeb: "",
+      };
+
+    const fecha = convertirFechaADDMMAAAA(certificado.fechaCertificadoExpedito)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Certificado Expedito ${fecha}.pdf`;
+
+    const rutaDirectorio = path.resolve(certificado.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
+    }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
+
+    const docDefinition = certificadoExpeditoInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      datosCertificadoExpedito,
       datosMedicoFirmante,
       datosProveedorSalud,
     );

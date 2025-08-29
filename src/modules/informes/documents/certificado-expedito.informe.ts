@@ -29,7 +29,7 @@ const styles: StyleDictionary = {
 
 // ==================== CONTENIDO ====================
 const headerText: Content = {
-  text: '          CERTIFICADO MÉDICO DE NO IMPEDIMENTO FÍSICO (SALUD FÍSICA)\n',
+  text: '                                                                                              CERTIFICADO MÉDICO\n',
   style: 'header',
   alignment: 'right',
   margin: [0, 35, 40, 0],
@@ -77,40 +77,6 @@ const campoFirma: Content = {
   absolutePosition: { x: 65, y: 610 }, 
 };
 
-function generarTextoExploracionFisica(exploracionFisica: ExploracionFisica): string {
-  const campos = [
-    'abdomen', 'boca', 'cadera', 'cicatrices', 'codos', 'coordinacion',
-    'craneoCara', 'cuello', 'equilibrio', 'hombros', 'inspeccionColumna',
-    'lesionesPiel', 'manos', 'marcha', 'movimientosColumna', 'nariz',
-    'reflejosOsteoTendinososInferiores', 'reflejosOsteoTendinososSuperiores', 'nevos', 'oidos',
-    'ojos', 'rodillas', 'sensibilidad', 'tobillosPies', 'torax'
-  ];
-
-  const formatearCampo = (campo: string) =>
-    campo
-      .replace(/([A-Z])/g, ' $1')
-      .split(' ')
-      .map(p => p.charAt(0).toUpperCase() + p.slice(1))
-      .join(' ')
-      .trim();
-
-  const hallazgos = campos
-    .filter(campo => {
-      const valor = (exploracionFisica as any)[campo];
-      return valor && valor.trim() !== 'Sin hallazgos';
-    })
-    .map(campo => {
-      const valor = (exploracionFisica as any)[campo];
-      return `${formatearCampo(campo)}: ${valor}`;
-    });
-
-  if (hallazgos.length === 0) {
-    return 'Exploración física sin alteraciones significativas. Se observó integridad funcional del aparato locomotor y del sistema nervioso, con marcha, coordinación, fuerza y reflejos dentro de parámetros normales.';
-  } else {
-    return `Hallazgos relevantes en la exploración física: ${hallazgos.join('; ')}.`;
-  }
-}
-
 // ==================== FUNCIONES REUSABLES ====================
 const createTableCell = (text: string, style: string): Content => ({
   text,
@@ -126,6 +92,42 @@ const createConditionalTableCell = (text: string): Content => ({
   margin: [4, 4, 4, 4],
   color: text.toUpperCase() === 'POSITIVO' ? 'red' : 'black', // Aplica rojo si es "POSITIVO"
 });
+
+function construirSignosVitales(certificado): Content {
+  const signosVitales = [];
+
+  const agregarDato = (etiqueta, valor, unidad) => {
+    if (valor !== undefined && valor !== null && valor !== '') {
+      if (signosVitales.length > 0) {
+        signosVitales.push({ text: '  |  ' }); // Agrega el separador solo si ya hay datos previos
+      }
+      signosVitales.push({ text: ` ${etiqueta}: `, bold: true });
+      signosVitales.push({ text: `${valor}${unidad}` });
+    }
+  };
+
+  agregarDato('TA', 
+    certificado.tensionArterialSistolica && certificado.tensionArterialDiastolica 
+      ? `${certificado.tensionArterialSistolica}/${certificado.tensionArterialDiastolica}` 
+      : null, 
+    ' mmHg'
+  );
+  agregarDato('FC', certificado.frecuenciaCardiaca, ' lpm');
+  agregarDato('FR', certificado.frecuenciaRespiratoria, ' lpm');
+  agregarDato('Temp', certificado.temperaturaCorporal, ' °C');
+  agregarDato('Peso', certificado.peso, ' kg');
+  agregarDato('Altura', certificado.altura, ' cm');
+  agregarDato('IMC', certificado.indiceMasaCorporal, '');
+
+  return {
+    text: [
+      { text: 'SV: ', bold: true },
+      ...signosVitales
+    ],
+    margin: [0, 0, 0, 10],
+    style: 'paragraph'
+  };
+}
 
 function formatearFechaUTC(fecha: Date): string {
   if (!fecha || isNaN(fecha.getTime())) return '';
@@ -157,77 +159,22 @@ interface Trabajador {
   antiguedad: string;
 }
 
-interface Certificado {
-  fechaCertificado: Date;
+interface CertificadoExpedito {
+  fechaCertificadoExpedito: Date;
+  cuerpoCertificado: string;
   impedimentosFisicos: string;
-}
-
-interface ExploracionFisica {
-  fechaExploracionFisica: Date;
-  peso?: number;
-  altura?: number;
-  indiceMasaCorporal?: number;
-  categoriaIMC?: string;
-  circunferenciaCintura?: number;
-  categoriaCircunferenciaCintura?: string;
-  tensionArterialSistolica?: number;
-  tensionArterialDiastolica?: number;
-  categoriaTensionArterial?: string;
-  frecuenciaCardiaca?: number;
-  categoriaFrecuenciaCardiaca?: string;
-  frecuenciaRespiratoria?: number;
-  categoriaFrecuenciaRespiratoria?: string;
-  saturacionOxigeno?: number;
-  categoriaSaturacionOxigeno?: string;
-  craneoCara?: string;
-  ojos?: string;
-  oidos?: string;
-  nariz?: string;
-  boca?: string;
-  cuello?: string;
-  hombros?: string;
-  codos?: string;
-  manos?: string;
-  reflejosOsteoTendinososSuperiores?: string;
-  vascularESuperiores?: string;
-  torax?: string;
-  abdomen?: string;
-  cadera?: string;
-  rodillas?: string;
-  tobillosPies?: string;
-  reflejosOsteoTendinososInferiores?: string;
-  vascularEInferiores?: string;
-  inspeccionColumna?: string;
-  movimientosColumna?: string;
-  lesionesPiel?: string;
-  cicatrices?: string;
-  nevos?: string;
-  coordinacion?: string;
-  sensibilidad?: string;
-  equilibrio?: string;
-  marcha?: string;
-  resumenExploracionFisica?: string;
-}
-
-interface ExamenVista {
-  fechaExamenVista: Date;
-  ojoIzquierdoLejanaSinCorreccion: number;
-  ojoDerechoLejanaSinCorreccion: number;
-  sinCorreccionLejanaInterpretacion: string;
-  requiereLentesUsoGeneral: string;
-  ojoIzquierdoCercanaSinCorreccion: number;
-  ojoDerechoCercanaSinCorreccion: number;
-  sinCorreccionCercanaInterpretacion: string;
-  requiereLentesParaLectura: string;
-  ojoIzquierdoLejanaConCorreccion?: number;
-  ojoDerechoLejanaConCorreccion?: number;
-  conCorreccionLejanaInterpretacion?: string;
-  ojoIzquierdoCercanaConCorreccion?: number;
-  ojoDerechoCercanaConCorreccion?: number;
-  conCorreccionCercanaInterpretacion?: string;
-  placasCorrectas: number;
-  porcentajeIshihara: number;
-  interpretacionIshihara: string;
+  peso: number;
+  altura: number;
+  indiceMasaCorporal: number;
+  tensionArterialSistolica: number;
+  tensionArterialDiastolica: number;
+  frecuenciaCardiaca: number;
+  frecuenciaRespiratoria: number;
+  temperaturaCorporal: number;
+  gradoSalud: string;
+  aptitudPuesto: string;
+  descripcionSobreAptitud: string;
+  observaciones: string;
 }
 
 interface MedicoFirmante {
@@ -262,18 +209,16 @@ interface ProveedorSalud {
 }
 
 // ==================== INFORME PRINCIPAL ====================
-export const certificadoInforme = (
+export const certificadoExpeditoInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
-  certificado: Certificado,
-  exploracionFisica: ExploracionFisica | null, 
-  examenVista: ExamenVista | null,
+  certificado: CertificadoExpedito,
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
 
   const firma: Content = medicoFirmante.firma?.data
-  ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 100, absolutePosition: { x: 260, y: 580 } }
+  ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 100, absolutePosition: { x: 260, y: 615 } }
   : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
@@ -304,7 +249,7 @@ export const certificadoInforme = (
                 text: [
                   { text: 'Fecha: ', style: 'fecha', bold: false },
                   {
-                    text: formatearFechaUTC(certificado.fechaCertificado),
+                    text: formatearFechaUTC(certificado.fechaCertificadoExpedito),
                     style: 'fecha',
                     bold: true,
                     // decoration: 'underline',
@@ -379,63 +324,89 @@ export const certificadoInforme = (
       },
       {
         text: [
-          { text: 'Que, habiendo practicado reconocimiento médico en esta fecha, al C. ' },
-          { text: formatearNombreTrabajadorCertificado(trabajador), bold: true },
+          { text: `Que, habiendo practicado reconocimiento médico en esta fecha, ${trabajador.sexo === 'Femenino' ? 'a la' : 'al'} C. ` },
+          { text: formatearNombreTrabajadorCertificado(trabajador).toUpperCase(), bold: true },
           { text: ' de ' },
           { text: String(trabajador.edad), bold: true },
-          { text: ' años de edad. ' },
-
-          { text: `Presenta IMC: ${exploracionFisica.indiceMasaCorporal} (${exploracionFisica.categoriaIMC}). ` },
-          { text: `Frecuencia cardiaca de ${exploracionFisica.frecuenciaCardiaca} lpm (${exploracionFisica.categoriaFrecuenciaCardiaca}). ` },
-          { text: `Saturación de oxígeno del ${exploracionFisica.saturacionOxigeno}% (${exploracionFisica.categoriaSaturacionOxigeno}). ` },
-          { text: `Tensión arterial ${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg (${exploracionFisica.categoriaTensionArterial || 'no especificada'}). ` },
-
-          { text: `Examen visual con agudeza lejana sin corrección: OI 20/${examenVista.ojoIzquierdoLejanaSinCorreccion} y OD 20/${examenVista.ojoDerechoLejanaSinCorreccion} ` },
-          { text: `(${examenVista.sinCorreccionLejanaInterpretacion || 'categoría no disponible'}). ` },
-
-          ...(examenVista.interpretacionIshihara === 'Daltonismo'
-            ? [{ text: 'Se detecta alteración en la percepción cromática (Daltonismo). ' }]
-            : examenVista.interpretacionIshihara === 'Normal'
-              ? [{ text: 'No se detectan alteraciones en la percepción cromática. ' }]
-              : [{ text: 'No se cuenta con resultado de prueba de percepción cromática. ' }]),
-
-          { text: generarTextoExploracionFisica(exploracionFisica) },
-          
-          ...(exploracionFisica.resumenExploracionFisica === 'Se encuentra clínicamente sano' ||
-            exploracionFisica.resumenExploracionFisica === 'Se encuentra clínicamente sana'
-            ? [{ text: `${exploracionFisica.resumenExploracionFisica}.` }]
-            : [])
+          { text: ' años de edad. Concluyo que:' },
         ],
         style: 'paragraph',
-        margin: [0, 20, 0, 0],
+        margin: [0, 20, 0, 10],
       },
+
+      {
+        text: [
+          { text: `${certificado.cuerpoCertificado}.`, bold: true },
+          { text: ' \n', bold: true },
+        ],
+        style: 'paragraph',
+        margin: [0, 0, 0, 10],
+      },
+
+      // Signos Vitales
+      construirSignosVitales(certificado),
+
       {
         text: [
           { text: 'Por lo anterior se establece que el C. ' },
-          { text: formatearNombreTrabajadorCertificado(trabajador), bold: true },
+          { text: formatearNombreTrabajadorCertificado(trabajador).toUpperCase(), bold: true },
+          { text: ' ' },
           {
-        text: certificado.impedimentosFisicos,
+            text: certificado.impedimentosFisicos,
           },
           {
-        text: '. Este certificado de salud no implica ninguna garantía de que el trabajador no se lesionará o enfermará en el futuro.',
-          },
+          text: ` y se encuentra actualmente en ${
+              certificado.gradoSalud === "Bueno"
+                ? "BUEN"
+                : certificado.gradoSalud === "Malo"
+                  ? "MAL"
+                  : String(certificado.gradoSalud).toUpperCase()
+            } estado de salud. \n`,
+          }
         ],
         style: 'paragraph',
-        margin: [0, 20, 0, 0],
+        margin: [0, 0, 0, 10],
+      },
+
+      // Aptitud Puesto
+      {
+        text: [
+          { 
+            text: certificado.descripcionSobreAptitud !== undefined && certificado.descripcionSobreAptitud !== null && certificado.descripcionSobreAptitud !== ''
+              ? `${certificado.aptitudPuesto.toUpperCase()}. ${certificado.descripcionSobreAptitud} \n`
+              : `${certificado.aptitudPuesto.toUpperCase()}.\n`
+          },
+        ],
+        bold: true,
+        style: 'paragraph',
+        margin: [0, 0, 0, 10],
+      },
+
+      // Observaciones
+      {
+        text: [
+          ...(certificado.observaciones !== undefined && certificado.observaciones !== null && certificado.observaciones !== ''
+            ? [{ text: `${certificado.observaciones}. \n` }]
+            : []),
+        ],
+        style: 'paragraph',
+        margin: (certificado.observaciones !== undefined && certificado.observaciones !== null && certificado.observaciones !== ''
+          ? [0, 0, 0, 10]
+          : 0),
       },
 
       {
         text: [
           {
-        text: 'Expido el presente certificado médico a petición de el C. ',
+        text: `Expido el presente certificado médico a petición de ${trabajador.sexo === "Femenino" ? "la" : "el"} C. `,
           },
-          { text: formatearNombreTrabajadorCertificado(trabajador), bold: true },
+          { text: formatearNombreTrabajadorCertificado(trabajador).toUpperCase(), bold: true },
           {
-        text: ` para los usos legales a que haya lugar, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
+        text: ` para fines de prevención y detección oportuna de padecimientos que pudieran afectar la salud del trabajador y su rendimiento laboral, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
           },
         ],
         style: 'paragraph',
-        margin: [0, 20, 0, 0],
+        margin: [0, 0, 0, 10],
       },
       // Firma del médico
       {

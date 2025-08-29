@@ -48,6 +48,18 @@ export class InformesController {
     return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
   }
 
+  @Get('certificadoExpedito/:empresaId/:trabajadorId/:certificadoExpeditoId/:userId')
+  async getInformeCertificadoExpedito(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('certificadoExpeditoId') certificadoExpeditoId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+    const rutaPDF = await this.informesService.getInformeCertificadoExpedito(empresaId, trabajadorId, certificadoExpeditoId, userId);
+    return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
+  }
+
   @Get('examenVista/:empresaId/:trabajadorId/:examenVistaId/:userId')
   async getInformeExamenVista(
     @Param('empresaId') empresaId: string,
