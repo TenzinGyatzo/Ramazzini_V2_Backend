@@ -273,7 +273,14 @@ export const certificadoInforme = (
 ): TDocumentDefinitions => {
 
   const firma: Content = medicoFirmante.firma?.data
-  ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 100, absolutePosition: { x: 260, y: 580 } }
+  ? { 
+      image: `assets/signatories/${medicoFirmante.firma.data}`, 
+      width: 100, 
+      absolutePosition: { 
+        x: 260, 
+        y: medicoFirmante.especialistaSaludTrabajo === 'Si' ? 530 : 520 
+      } 
+    }
   : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data

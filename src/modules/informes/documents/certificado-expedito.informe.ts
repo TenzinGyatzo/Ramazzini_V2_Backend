@@ -218,7 +218,24 @@ export const certificadoExpeditoInforme = (
 ): TDocumentDefinitions => {
 
   const firma: Content = medicoFirmante.firma?.data
-  ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 100, absolutePosition: { x: 260, y: 615 } }
+  ? { 
+      image: `assets/signatories/${medicoFirmante.firma.data}`, 
+      width: 100, 
+      absolutePosition: { 
+        x: 260, 
+        y: (() => {
+          const observacionesExiste = certificado.observaciones !== undefined && 
+                                    certificado.observaciones !== null && 
+                                    certificado.observaciones !== '';
+          
+          if (medicoFirmante.especialistaSaludTrabajo === 'Si') {
+            return observacionesExiste ? 605 : 595; // Escenario 1 o 2
+          } else {
+            return observacionesExiste ? 595 : 585; // Escenario 3 o 4
+          }
+        })()
+      } 
+    }
   : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
@@ -386,10 +403,11 @@ export const certificadoExpeditoInforme = (
       {
         text: [
           ...(certificado.observaciones !== undefined && certificado.observaciones !== null && certificado.observaciones !== ''
-            ? [{ text: `${certificado.observaciones}. \n` }]
+            ? [{ text: `${certificado.observaciones.toUpperCase()}. \n`, bold: true }]
             : []),
         ],
         style: 'paragraph',
+        bold: true,
         margin: (certificado.observaciones !== undefined && certificado.observaciones !== null && certificado.observaciones !== ''
           ? [0, 0, 0, 10]
           : 0),
