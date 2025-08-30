@@ -135,6 +135,7 @@ export class ProveedoresSaludController {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
+
     // Si se sube un archivo, se añade al DTO para actualizar el logotipo
     if (file) {
       updateProveedoresSaludDto.logotipoEmpresa = {

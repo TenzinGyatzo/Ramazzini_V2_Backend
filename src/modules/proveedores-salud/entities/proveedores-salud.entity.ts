@@ -31,4 +31,6 @@ export class ProveedoresSalud extends Document {
   addOns?: AddOn[];
   mercadoPagoSubscriptionId?: string;
   payerEmail?: string;
+  colorInforme?: string;
+  semaforizacionActivada?: boolean;
 }

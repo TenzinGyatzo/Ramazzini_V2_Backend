@@ -109,6 +109,14 @@ export function normalizeProveedorSaludData(
   if ('sitioWeb' in dto)
     result.sitioWeb = typeof dto.sitioWeb === 'string' ? dto.sitioWeb.trim() : "";
 
+  if ('colorInforme' in dto) {
+    result.colorInforme = typeof dto.colorInforme === 'string' ? dto.colorInforme.trim() : "#343A40";
+  }
+
+  if ('semaforizacionActivada' in dto) {
+    result.semaforizacionActivada = typeof dto.semaforizacionActivada === 'boolean' ? dto.semaforizacionActivada : false;
+  }
+
   if ('fechaInicioTrial' in dto)
     result.fechaInicioTrial = new Date(dto.fechaInicioTrial);
   

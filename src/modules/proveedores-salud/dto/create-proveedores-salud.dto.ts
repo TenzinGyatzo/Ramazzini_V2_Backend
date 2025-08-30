@@ -1,5 +1,5 @@
-import { Type } from 'class-transformer';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, IsBoolean, IsArray, ValidateNested, IsDate } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsBoolean, IsNumber, IsArray, ValidateNested } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 const perfiles = [
   'Médico único de empresa',
@@ -73,9 +73,16 @@ export class CreateProveedoresSaludDto {
 
   @IsOptional()
   @IsString({ message: 'El color del informe debe ser un string' })
+  @Transform(({ value }) => value?.toString() || '#343A40')
   colorInforme: string;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value === 'true';
+    }
+    return Boolean(value);
+  })
   semaforizacionActivada: boolean;
 
   @IsBoolean({ message: 'El campo termsAccepted debe ser un booleano' })
