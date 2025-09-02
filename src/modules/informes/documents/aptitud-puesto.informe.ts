@@ -371,23 +371,11 @@ export const aptitudPuestoInforme = (
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
   ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { text: '' };
+  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
 
-  const header: Content = proveedorSalud.logotipoEmpresa?.data
-  ? {
-      columns: [logo, headerText],
-    }
-  : {
-      columns: [
-        {
-          width: '*',
-          text: headerText.text, // Mantén el texto pero ajusta márgenes y alineación
-          style: 'header',
-          alignment: 'right', // Alineación central para ocupar todo el espacio disponible
-          margin: [0, 35, 40, 0], // Reducir márgenes laterales
-        },
-      ],
-    };
+  const header: Content = {
+    columns: [logo, headerText],
+  };
 
   const examenVistaResumen = examenVista
     ? (examenVista.ojoIzquierdoLejanaConCorreccion === 0 ||
@@ -775,10 +763,11 @@ export const aptitudPuestoInforme = (
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
-            {
+            // Solo incluir la columna de firma si hay firma
+            ...(medicoFirmante.firma?.data ? [{
               ...firma,
-              margin: [0, -3, 0, 0],  // Mueve el elemento más arriba
-            },
+              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
+            }] : []),
             {
               text: [
                 proveedorSalud.nombre

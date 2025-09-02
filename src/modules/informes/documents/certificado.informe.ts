@@ -278,14 +278,14 @@ export const certificadoInforme = (
       width: 100, 
       absolutePosition: { 
         x: 260, 
-        y: medicoFirmante.especialistaSaludTrabajo === 'Si' ? 530 : 520 
+        y: medicoFirmante.especialistaSaludTrabajo === 'Si' ? 570 : 560 
       } 
     }
   : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
   ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { text: '' };
+  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
 
   return {
     pageSize: 'LETTER',

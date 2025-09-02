@@ -152,7 +152,7 @@ export const dashboardInforme = (
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
   ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { text: '' };
+  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
 
   return {
     pageSize: 'LETTER',

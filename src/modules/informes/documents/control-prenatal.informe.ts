@@ -297,7 +297,7 @@ export const controlPrenatalInforme = (
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
   ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { text: '' };
+  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
 
   // Nombre de Empresa y Fecha
   const nombreEmpresaSeccion: Content = {
@@ -728,10 +728,11 @@ export const controlPrenatalInforme = (
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
-            {
+            // Solo incluir la columna de firma si hay firma
+            ...(medicoFirmante.firma?.data ? [{
               ...firma,
-              margin: [0, -3, 0, 0],
-            },
+              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
+            }] : []),
             {
               text: [
                 proveedorSalud.nombre
