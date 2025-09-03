@@ -1,7 +1,5 @@
 import { config } from 'dotenv';
 config({ path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env' });
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('DB_CONNECTION_STRING:', process.env.DB_CONNECTION_STRING);
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';

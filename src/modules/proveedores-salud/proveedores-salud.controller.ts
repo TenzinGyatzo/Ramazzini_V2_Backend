@@ -47,14 +47,28 @@ export class ProveedoresSaludController {
           callback(null, uniqueFilename);
         },
       }),
+      fileFilter: (req, file, callback) => {
+        // Validar mimetypes permitidos
+        const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException(
+              'Solo se permiten archivos de imagen JPG, JPEG o PNG',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 1 * 1024 * 1024, // 1MB
+      },
     }),
   )
   async create(
     @Body() createProveedoresSaludDto: CreateProveedoresSaludDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    console.log('Archivo recibido:', file);
-    console.log('Datos del proveedor:', createProveedoresSaludDto);
 
     try {
       if (file) {
