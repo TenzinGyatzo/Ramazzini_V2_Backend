@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Antidoping } from './schemas/antidoping.schema';
 import { AptitudPuesto } from './schemas/aptitud-puesto.schema';
+import { Audiometria } from './schemas/audiometria.schema';
 import { Certificado } from './schemas/certificado.schema';
 import { CertificadoExpedito } from './schemas/certificado-expedito.schema';
 import { DocumentoExterno } from './schemas/documento-externo.schema';
@@ -28,6 +29,7 @@ export class ExpedientesService {
   constructor(
     @InjectModel(Antidoping.name) private antidopingModel: Model<Antidoping>,
     @InjectModel(AptitudPuesto.name) private aptitudModel: Model<AptitudPuesto>,
+    @InjectModel(Audiometria.name) private audiometriaModel: Model<Audiometria>,
     @InjectModel(Certificado.name) private certificadoModel: Model<Certificado>,
     @InjectModel(CertificadoExpedito.name) private certificadoExpeditoModel: Model<CertificadoExpedito>,
     @InjectModel(DocumentoExterno.name) private documentoExternoModel: Model<DocumentoExterno>,
@@ -42,6 +44,7 @@ export class ExpedientesService {
     this.models = {
       antidoping: this.antidopingModel,
       aptitud: this.aptitudModel,
+      audiometria: this.audiometriaModel,
       certificado: this.certificadoModel,
       certificadoExpedito: this.certificadoExpeditoModel,
       documentoExterno: this.documentoExternoModel,
@@ -55,6 +58,7 @@ export class ExpedientesService {
     this.dateFields = {
       antidoping: 'fechaAntidoping',
       aptitud: 'fechaAptitudPuesto',
+      audiometria: 'fechaAudiometria',
       certificado: 'fechaCertificado',
       certificadoExpedito: 'fechaCertificadoExpedito',
       documentoExterno: 'fechaDocumento',

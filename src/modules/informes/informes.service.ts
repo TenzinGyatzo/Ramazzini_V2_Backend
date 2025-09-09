@@ -5,6 +5,7 @@ import { antidopingInforme } from './documents/antidoping.informe';
 import { certificadoInforme } from './documents/certificado.informe';
 import { certificadoExpeditoInforme } from './documents/certificado-expedito.informe';
 import { aptitudPuestoInforme } from './documents/aptitud-puesto.informe';
+import { audiometriaInforme } from './documents/audiometria.informe';
 import { examenVistaInforme } from './documents/examen-vista.informe';
 import { exploracionFisicaInforme } from './documents/exploracion-fisica.informe';
 import { historiaClinicaInforme } from './documents/historia-clinica.informe';
@@ -428,6 +429,156 @@ export class InformesService {
       datosExploracionFisica,
       datosExamenVista,
       datosAntidoping,
+      datosMedicoFirmante,
+      datosProveedorSalud,
+    );
+
+    // Generar y guardar el PDF
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+
+    return rutaCompleta; // Retorna la ruta del archivo generado
+  }
+
+  async getInformeAudiometria(
+    empresaId: string,
+    trabajadorId: string,
+    audiometriaId: string,
+    userId: string,
+  ): Promise<string> {
+    const empresa = await this.empresasService.findOne(empresaId);
+    const nombreEmpresa = empresa.nombreComercial;
+
+    const trabajador = await this.trabajadoresService.findOne(trabajadorId);
+    const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
+      nombre: trabajador.nombre,
+      nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
+      escolaridad: trabajador.escolaridad,
+      edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
+      puesto: trabajador.puesto,
+      sexo: trabajador.sexo,
+      antiguedad: calcularAntiguedad(
+        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
+      ),
+      telefono: trabajador.telefono,
+      estadoCivil: trabajador.estadoCivil,
+      numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
+    };
+
+    const audiometria = await this.expedientesService.findDocument(
+      'audiometria',
+      audiometriaId,
+    );
+    const datosAudiometria = {
+      fechaAudiometria: audiometria.fechaAudiometria,
+      oidoDerecho125: audiometria.oidoDerecho125,
+      oidoDerecho250: audiometria.oidoDerecho250,
+      oidoDerecho500: audiometria.oidoDerecho500,
+      oidoDerecho1000: audiometria.oidoDerecho1000,
+      oidoDerecho2000: audiometria.oidoDerecho2000,
+      oidoDerecho3000: audiometria.oidoDerecho3000,
+      oidoDerecho4000: audiometria.oidoDerecho4000,
+      oidoDerecho6000: audiometria.oidoDerecho6000,
+      oidoDerecho8000: audiometria.oidoDerecho8000,
+      porcentajePerdidaOD: audiometria.porcentajePerdidaOD,
+      oidoIzquierdo125: audiometria.oidoIzquierdo125,
+      oidoIzquierdo250: audiometria.oidoIzquierdo250,
+      oidoIzquierdo500: audiometria.oidoIzquierdo500,
+      oidoIzquierdo1000: audiometria.oidoIzquierdo1000,
+      oidoIzquierdo2000: audiometria.oidoIzquierdo2000,
+      oidoIzquierdo3000: audiometria.oidoIzquierdo3000,
+      oidoIzquierdo4000: audiometria.oidoIzquierdo4000,
+      oidoIzquierdo6000: audiometria.oidoIzquierdo6000,
+      oidoIzquierdo8000: audiometria.oidoIzquierdo8000,
+      porcentajePerdidaOI: audiometria.porcentajePerdidaOI,
+      hipoacusiaBilateralCombinada: audiometria.hipoacusiaBilateralCombinada,
+      observacionesAudiometria: audiometria.observacionesAudiometria,
+      interpretacionAudiometrica: audiometria.interpretacionAudiometrica,
+      diagnosticoAudiometria: audiometria.diagnosticoAudiometria,
+      recomendacionesAudiometria: audiometria.recomendacionesAudiometria,
+    };
+
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = medicoFirmante
+    ? {
+        nombre: medicoFirmante.nombre || "",
+        tituloProfesional: medicoFirmante.tituloProfesional || "",
+        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
+        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
+        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
+        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
+        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
+        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
+      }
+    : {
+        nombre: "",
+        tituloProfesional: "",
+        numeroCedulaProfesional: "",
+        especialistaSaludTrabajo: "",
+        numeroCedulaEspecialista: "",
+        nombreCredencialAdicional: "",
+        numeroCredencialAdicional: "",
+        firma: null,
+      };
+
+    const usuario = await this.usersService.findById(userId);
+     const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = proveedorSalud
+    ? {
+        nombre: proveedorSalud.nombre || "",
+        RFC: proveedorSalud.RFC || "",
+        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
+        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
+        estado: proveedorSalud.estado || "",
+        municipio: proveedorSalud.municipio || "",
+        codigoPostal: proveedorSalud.codigoPostal || "",
+        direccion: proveedorSalud.direccion || "",
+        telefono: proveedorSalud.telefono || "",
+        correoElectronico: proveedorSalud.correoElectronico || "",
+        sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
+        semaforizacionActivada: proveedorSalud.semaforizacionActivada || false,
+      }
+    : {
+        nombre: "",
+        RFC: "",
+        perfilProveedorSalud: "",
+        logotipoEmpresa: null,
+        estado: "",
+        municipio: "",
+        codigoPostal: "",
+        direccion: "",
+        telefono: "",
+        correoElectronico: "",
+        sitioWeb: "",
+        colorInforme: "#343A40",
+        semaforizacionActivada: false,
+      };
+
+    // Formatear la fecha para el nombre del archivo
+    const fecha = convertirFechaADDMMAAAA(audiometria.fechaAudiometria)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Audiometria ${fecha}.pdf`;
+
+    // Obtener la ruta específica del documento
+    const rutaDirectorio = path.resolve(audiometria.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
+    }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
+
+    const docDefinition = audiometriaInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      datosAudiometria,
       datosMedicoFirmante,
       datosProveedorSalud,
     );

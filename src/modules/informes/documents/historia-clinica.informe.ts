@@ -505,7 +505,7 @@ export const historiaClinicaInforme = (
       body: [
         [
           { text: 'NOMBRE', style: 'label' },
-                        { text: formatearNombreTrabajador(trabajador), style: 'value' },
+          { text: formatearNombreTrabajador(trabajador), style: 'value' },
           { text: 'NACIMIENTO', style: 'label' },
           { text: trabajador.nacimiento, style: 'value' },
         ],

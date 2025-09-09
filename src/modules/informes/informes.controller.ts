@@ -36,6 +36,18 @@ export class InformesController {
     return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
   }
 
+  @Get('audiometria/:empresaId/:trabajadorId/:audiometriaId/:userId')
+  async getInformeAudiometria(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('audiometriaId') audiometriaId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+    const rutaPDF = await this.informesService.getInformeAudiometria(empresaId, trabajadorId, audiometriaId, userId);
+    return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
+  }
+
   @Get('certificado/:empresaId/:trabajadorId/:certificadoId/:userId')
   async getInformeCertificado(
     @Param('empresaId') empresaId: string,

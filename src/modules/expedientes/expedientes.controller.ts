@@ -18,6 +18,8 @@ import { CreateAntidopingDto } from './dto/create-antidoping.dto';
 import { UpdateAntidopingDto } from './dto/update-antidoping.dto';
 import { CreateAptitudDto } from './dto/create-aptitud.dto';
 import { UpdateAptitudDto } from './dto/update-aptitud.dto';
+import { CreateAudiometriaDto } from './dto/create-audiometria.dto';
+import { UpdateAudiometriaDto } from './dto/update-audiometria.dto';
 import { CreateCertificadoDto } from './dto/create-certificado.dto';
 import { UpdateCertificadoDto } from './dto/update-certificado.dto';
 import { CreateCertificadoExpeditoDto } from './dto/create-certificado-expedito.dto';
@@ -48,6 +50,7 @@ export class ExpedientesController {
   private createDtos = {
     antidoping: CreateAntidopingDto,
     aptitud: CreateAptitudDto,
+    audiometria: CreateAudiometriaDto,
     certificado: CreateCertificadoDto,
     certificadoExpedito: CreateCertificadoExpeditoDto,
     documentoExterno: CreateDocumentoExternoDto,
@@ -61,6 +64,7 @@ export class ExpedientesController {
   private updateDtos = {
     antidoping: UpdateAntidopingDto,
     aptitud: UpdateAptitudDto,
+    audiometria: UpdateAudiometriaDto,
     certificado: UpdateCertificadoDto,
     certificadoExpedito: UpdateCertificadoExpeditoDto,
     documentoExterno: UpdateDocumentoExternoDto,

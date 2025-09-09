@@ -4,6 +4,7 @@ import { ExpedientesController } from './expedientes.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Antidoping, AntidopingSchema } from './schemas/antidoping.schema';
 import { AptitudPuesto, AptitudPuestoSchema } from './schemas/aptitud-puesto.schema';
+import { Audiometria, AudiometriaSchema } from './schemas/audiometria.schema';
 import { Certificado, CertificadoSchema } from './schemas/certificado.schema';
 import { CertificadoExpedito, CertificadoExpeditoSchema } from './schemas/certificado-expedito.schema';
 import { DocumentoExterno, DocumentoExternoSchema } from './schemas/documento-externo.schema';
@@ -24,6 +25,7 @@ import { PdfCleanerService } from './pdf-cleaner.service';
     MongooseModule.forFeature([
       { name: Antidoping.name, schema: AntidopingSchema },
       { name: AptitudPuesto.name, schema: AptitudPuestoSchema },
+      { name: Audiometria.name, schema: AudiometriaSchema },
       { name: Certificado.name, schema: CertificadoSchema },
       { name: CertificadoExpedito.name, schema: CertificadoExpeditoSchema },
       { name: DocumentoExterno.name, schema: DocumentoExternoSchema },
