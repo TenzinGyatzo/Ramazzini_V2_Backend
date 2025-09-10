@@ -32,7 +32,7 @@ const styles: StyleDictionary = {
   },
   label: { fontSize: 11 },
   signoVital: { fontSize: 9 },
-  // value: { bold: true, fontSize: 11 },
+  value: { bold: true, fontSize: 11 },
   paragraph: { fontSize: 11, alignment: 'justify' },
   tableHeader: {
     fillColor: '#343A40',
@@ -44,7 +44,7 @@ const styles: StyleDictionary = {
   },
   tableCell: {
     fontSize: 12,
-    bold: true,
+    // bold: true,
     alignment: 'center',
     margin: [3, 3, 3, 3],
   },
@@ -52,6 +52,12 @@ const styles: StyleDictionary = {
     fontSize: 12,
     bold: true,
     alignment: 'left',
+    margin: [3, 3, 3, 3],
+  },
+  tableCellBoldCenter: {
+    fontSize: 12,
+    bold: true,
+    alignment: 'center',
     margin: [3, 3, 3, 3],
   },
 };
@@ -290,17 +296,17 @@ export const audiometriaInforme = (
           widths: ['20%', '8%', '8%', '8%', '8%', '8%', '8%', '8%', '8%', '8%', '8%'],
           body: [
             [
-              { text: '', style: 'tableCell' },
-              { text: '125', style: 'tableCell' },
-              { text: '250', style: 'tableCell' },
-              { text: '500', style: 'tableCell' },
-              { text: '1000', style: 'tableCell' },
-              { text: '2000', style: 'tableCell' },
-              { text: '3000', style: 'tableCell' },
-              { text: '4000', style: 'tableCell' },
-              { text: '6000', style: 'tableCell' },
-              { text: '8000', style: 'tableCell' },
-              { text: 'P%', style: 'tableCell' },
+              { text: '', style: 'tableCellBoldCenter' },
+              { text: '125', style: 'tableCellBoldCenter' },
+              { text: '250', style: 'tableCellBoldCenter' },
+              { text: '500', style: 'tableCellBoldCenter' },
+              { text: '1000', style: 'tableCellBoldCenter' },
+              { text: '2000', style: 'tableCellBoldCenter' },
+              { text: '3000', style: 'tableCellBoldCenter' },
+              { text: '4000', style: 'tableCellBoldCenter' },
+              { text: '6000', style: 'tableCellBoldCenter' },
+              { text: '8000', style: 'tableCellBoldCenter' },
+              { text: 'P%', style: 'tableCellBoldCenter' },
             ],
             // Oído Derecho
             [
@@ -334,7 +340,7 @@ export const audiometriaInforme = (
             [
               { text: 'Hipoacusia Bilateral Combinada', style: 'tableCellBold', alignment: 'left', colSpan: 10 },
               {}, {}, {}, {}, {}, {}, {}, {}, {},
-              { text: audiometria.hipoacusiaBilateralCombinada?.toString() || '', style: 'tableCell' },
+              { text: audiometria.hipoacusiaBilateralCombinada?.toString() || '', style: 'tableCellBoldCenter' },
             ],
           ],
         },
@@ -349,6 +355,14 @@ export const audiometriaInforme = (
           vLineWidth: () => 0.3,
         },
         margin: [0, 0, 0, 8],
+      },
+
+      {
+        text: [
+          { text: `GRÁFICA`, bold: true, fontSize: 18 },
+        ],
+        margin: [0, 20, 0, 20],
+        style: 'paragraph'
       },
 
       // Observaciones
@@ -375,7 +389,7 @@ export const audiometriaInforme = (
       {
         text: [
           { text: `DIAGNÓSTICO:`, bold: true },
-          { text: audiometria.diagnosticoAudiometria ? ` ${audiometria.diagnosticoAudiometria.toUpperCase()} ` : '', bold: true },
+          { text: audiometria.diagnosticoAudiometria ? ` ${audiometria.diagnosticoAudiometria.toUpperCase()} ` : '', bold: true, fontSize: 12 },
         ],
         margin: [0, 0, 0, 10],
         style: 'paragraph'
@@ -388,7 +402,7 @@ export const audiometriaInforme = (
           ...(audiometria.recomendacionesAudiometria && audiometria.recomendacionesAudiometria.length > 0 
             ? audiometria.recomendacionesAudiometria.flatMap((item, index) => ([
                 { text: `\n     ${index + 1}. `, preserveLeadingSpaces: true },
-                { text: item, bold: true }
+                { text: item, bold: false }
               ]))
             : []
           )
