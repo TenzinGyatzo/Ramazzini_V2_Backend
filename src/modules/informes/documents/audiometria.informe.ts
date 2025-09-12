@@ -145,6 +145,7 @@ interface Audiometria {
   interpretacionAudiometrica: string;
   diagnosticoAudiometria: string;
   recomendacionesAudiometria: string[];
+  graficaAudiometria?: string; // Base64 de la gráfica audiométrica
 }
 
 interface MedicoFirmante {
@@ -357,59 +358,56 @@ export const audiometriaInforme = (
         margin: [0, 0, 0, 8],
       },
 
-      {
-        text: [
-          { text: `GRÁFICA`, bold: true, fontSize: 18 },
-        ],
-        margin: [0, 20, 0, 20],
-        style: 'paragraph'
-      },
+      // Gráfica audiométrica - solo mostrar si existe
+      ...(audiometria.graficaAudiometria ? [{
+        image: audiometria.graficaAudiometria,
+        width: 500, // Intentar con 450 y 400
+        alignment: 'center' as const,
+        margin: [0, 0, 0, 10] as [number, number, number, number]
+      }] : []),
 
-      // Observaciones
-      {
+      // Observaciones - solo mostrar si tiene contenido
+      ...(audiometria.observacionesAudiometria && audiometria.observacionesAudiometria.trim() !== '' ? [{
         text: [
           { text: `OBSERVACIONES:`, bold: true },
-          { text: audiometria.observacionesAudiometria ? ` ${audiometria.observacionesAudiometria} ` : '' },
+          { text: ` ${audiometria.observacionesAudiometria} ` },
         ],
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, 10] as [number, number, number, number],
         style: 'paragraph'
-      },
+      }] : []),
 
-      // Interpretación Audiométrica
-      {
+      // Interpretación Audiométrica - solo mostrar si tiene contenido
+      ...(audiometria.interpretacionAudiometrica && audiometria.interpretacionAudiometrica.trim() !== '' ? [{
         text: [
           { text: `INTERPRETACIÓN AUDIOMÉTRICA:`, bold: true },
-          { text: audiometria.interpretacionAudiometrica ? ` ${audiometria.interpretacionAudiometrica} ` : '' },
+          { text: ` ${audiometria.interpretacionAudiometrica} ` },
         ],
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, 10] as [number, number, number, number],
         style: 'paragraph'
-      },
+      }] : []),
 
       // Diagnóstico
       {
         text: [
           { text: `DIAGNÓSTICO:`, bold: true },
           { text: audiometria.diagnosticoAudiometria ? ` ${audiometria.diagnosticoAudiometria.toUpperCase()} ` : '', bold: true, fontSize: 12 },
-        ],
-        margin: [0, 0, 0, 10],
+        ] as any,
+        margin: [0, 0, 0, 10] as [number, number, number, number],
         style: 'paragraph'
       },
 
-      // Recomendaciones
-      {
+      // Recomendaciones - solo mostrar si tiene contenido
+      ...(audiometria.recomendacionesAudiometria && audiometria.recomendacionesAudiometria.length > 0 ? [{
         text: [
           { text: `RECOMENDACIONES:`, bold: true },
-          ...(audiometria.recomendacionesAudiometria && audiometria.recomendacionesAudiometria.length > 0 
-            ? audiometria.recomendacionesAudiometria.flatMap((item, index) => ([
-                { text: `\n     ${index + 1}. `, preserveLeadingSpaces: true },
-                { text: item, bold: false }
-              ]))
-            : []
-          )
+          ...audiometria.recomendacionesAudiometria.flatMap((item, index) => ([
+              { text: `   ${index + 1}. `, preserveLeadingSpaces: true },
+              { text: item, bold: false }
+            ]))
         ],
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, 10] as [number, number, number, number],
         style: 'paragraph'
-      },
+      }] : []),
    
     ],
     // Pie de pagina

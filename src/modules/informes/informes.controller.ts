@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, Res } from '@nestjs/common';
 import { InformesService } from './informes.service';
 import { Response } from 'express';
 
@@ -43,8 +43,22 @@ export class InformesController {
     @Param('audiometriaId') audiometriaId: string,
     @Param('userId') userId: string,
     @Res() res: Response,
+    @Query('grafica') graficaAudiometria?: string,
   ) {
-    const rutaPDF = await this.informesService.getInformeAudiometria(empresaId, trabajadorId, audiometriaId, userId);
+    const rutaPDF = await this.informesService.getInformeAudiometria(empresaId, trabajadorId, audiometriaId, userId, graficaAudiometria);
+    return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
+  }
+
+  @Post('audiometria/:empresaId/:trabajadorId/:audiometriaId/:userId')
+  async getInformeAudiometriaWithGraph(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('audiometriaId') audiometriaId: string,
+    @Param('userId') userId: string,
+    @Body() body: { grafica?: string },
+    @Res() res: Response,
+  ) {    
+    const rutaPDF = await this.informesService.getInformeAudiometria(empresaId, trabajadorId, audiometriaId, userId, body.grafica);
     return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
   }
 

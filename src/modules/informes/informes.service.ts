@@ -444,6 +444,7 @@ export class InformesService {
     trabajadorId: string,
     audiometriaId: string,
     userId: string,
+    graficaAudiometria?: string,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -498,6 +499,7 @@ export class InformesService {
       interpretacionAudiometrica: audiometria.interpretacionAudiometrica,
       diagnosticoAudiometria: audiometria.diagnosticoAudiometria,
       recomendacionesAudiometria: audiometria.recomendacionesAudiometria,
+      graficaAudiometria: graficaAudiometria, // Agregar la gráfica si se proporciona
     };
 
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
