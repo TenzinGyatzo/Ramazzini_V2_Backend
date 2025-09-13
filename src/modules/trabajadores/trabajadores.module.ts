@@ -10,6 +10,9 @@ import { DocumentoExterno, DocumentoExternoSchema } from '../expedientes/schemas
 import { ExamenVista, ExamenVistaSchema } from '../expedientes/schemas/examen-vista.schema';
 import { ExploracionFisica, ExploracionFisicaSchema } from '../expedientes/schemas/exploracion-fisica.schema';
 import { HistoriaClinica, HistoriaClinicaSchema } from '../expedientes/schemas/historia-clinica.schema';
+import { Audiometria, AudiometriaSchema } from '../expedientes/schemas/audiometria.schema';
+import { CertificadoExpedito, CertificadoExpeditoSchema } from '../expedientes/schemas/certificado-expedito.schema';
+import { ControlPrenatal, ControlPrenatalSchema } from '../expedientes/schemas/control-prenatal.schema';
 import { NotaMedica, NotaMedicaSchema } from '../expedientes/schemas/nota-medica.schema';
 import { RiesgoTrabajo, RiesgoTrabajoSchema } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
 import { FilesModule } from '../files/files.module';
@@ -27,6 +30,9 @@ import { CentroTrabajo, CentroTrabajoSchema } from '../centros-trabajo/schemas/c
       { name: ExploracionFisica.name, schema: ExploracionFisicaSchema },
       { name: HistoriaClinica.name, schema: HistoriaClinicaSchema },
       { name: NotaMedica.name, schema: NotaMedicaSchema },
+      { name: Audiometria.name, schema: AudiometriaSchema },
+      { name: CertificadoExpedito.name, schema: CertificadoExpeditoSchema },
+      { name: ControlPrenatal.name, schema: ControlPrenatalSchema },
       { name: RiesgoTrabajo.name, schema: RiesgoTrabajoSchema },
       { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
     ]),
