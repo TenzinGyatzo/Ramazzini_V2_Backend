@@ -538,10 +538,13 @@ export class EmailsService {
     const tiposValidos = [
       'Antidoping',
       'Aptitud',
+      'Audiometria',
       'Certificado',
+      'Certificado Expedito',
       'Examen Vista',
       'Historia Clinica',
       'Exploracion Fisica',
+      'Control Prenatal',
       'Nota Medica',
     ];
 
@@ -602,10 +605,13 @@ export class EmailsService {
     const tiposInternos = [
       'Antidoping',
       'Aptitud',
+      'Audiometria',
+      'Certificado Expedito',
       'Certificado',
       'Examen Vista',
       'Historia Clinica',
       'Exploracion Fisica',
+      'Control Prenatal',
       'Nota Medica',
     ];
 
@@ -670,10 +676,13 @@ export class EmailsService {
     const tiposValidos = [
       'Antidoping',
       'Aptitud',
+      'Audiometria',
+      'Certificado Expedito',
       'Certificado',
       'Examen Vista',
       'Historia Clinica',
       'Exploracion Fisica',
+      'Control Prenatal',
       'Nota Medica',
     ];
 
@@ -715,10 +724,13 @@ export class EmailsService {
     const tiposInternos = [
       'Antidoping',
       'Aptitud',
+      'Audiometria',
+      'Certificado Expedito',
       'Certificado',
       'Examen Vista',
       'Historia Clinica',
       'Exploracion Fisica',
+      'Control Prenatal',
       'Nota Medica',
     ];
     const extensionesValidas = ['.pdf', '.jpg', '.jpeg', '.png'];

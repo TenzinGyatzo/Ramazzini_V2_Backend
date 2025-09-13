@@ -17,10 +17,13 @@ export class PdfCleanerService {
   private readonly tiposValidos = [
     'Antidoping',
     'Aptitud',
+    'Audiometria',
+    'Certificado Expedito',
     'Certificado',
     'Examen Vista',
     'Historia Clinica',
     'Exploracion Fisica',
+    'Control Prenatal',
     'Nota Medica',
   ];
 
@@ -81,7 +84,7 @@ export class PdfCleanerService {
             const edadEnDias = this.calcularDiasDesde(createdAt);
             // this.logger.log(`📅 ${el.name} => edad en días: ${edadEnDias.toFixed(1)}`);
 
-            if (edadEnDias >= 60) { // 60 días = aproximadamente 2 meses
+            if (edadEnDias >= 30) { // 30 días = aproximadamente 1 mes
               resultados.push({
                 fullPath,
                 sizeMB: stat.size / (1024 * 1024),
