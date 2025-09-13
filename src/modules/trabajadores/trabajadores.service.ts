@@ -11,12 +11,15 @@ import { format } from 'date-fns';
 import { calcularEdad, calcularAntiguedad } from 'src/utils/dates';
 import { Antidoping } from '../expedientes/schemas/antidoping.schema';
 import { AptitudPuesto } from '../expedientes/schemas/aptitud-puesto.schema';
+import { Audiometria } from '../expedientes/schemas/audiometria.schema';
 import { Certificado } from '../expedientes/schemas/certificado.schema';
+import { CertificadoExpedito } from '../expedientes/schemas/certificado-expedito.schema';
 import { DocumentoExterno } from '../expedientes/schemas/documento-externo.schema';
 import { ExamenVista } from '../expedientes/schemas/examen-vista.schema';
 import { ExploracionFisica } from '../expedientes/schemas/exploracion-fisica.schema';
 import { HistoriaClinica } from '../expedientes/schemas/historia-clinica.schema';
 import { NotaMedica } from '../expedientes/schemas/nota-medica.schema';
+import { ControlPrenatal } from '../expedientes/schemas/control-prenatal.schema';
 import { FilesService } from '../files/files.service';
 import { RiesgoTrabajo } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
 import { CentroTrabajo } from '../centros-trabajo/schemas/centro-trabajo.schema';
@@ -26,12 +29,15 @@ export class TrabajadoresService {
   constructor(@InjectModel(Trabajador.name) private trabajadorModel: Model<Trabajador>,
   @InjectModel(Antidoping.name) private antidopingModel: Model<Antidoping>,
   @InjectModel(AptitudPuesto.name) private aptitudModel: Model<AptitudPuesto>,
+  @InjectModel(Audiometria.name) private audiometriaModel: Model<Audiometria>,
   @InjectModel(Certificado.name) private certificadoModel: Model<Certificado>,
+  @InjectModel(CertificadoExpedito.name) private certificadoExpeditoModel: Model<CertificadoExpedito>,
   @InjectModel(DocumentoExterno.name) private documentoExternoModel: Model<DocumentoExterno>,
   @InjectModel(ExamenVista.name) private examenVistaModel: Model<ExamenVista>,
   @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
   @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>,
   @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
+  @InjectModel(ControlPrenatal.name) private controlPrenatalModel: Model<ControlPrenatal>,
   @InjectModel(RiesgoTrabajo.name) private riesgoTrabajoModel: Model<RiesgoTrabajo>,
   @InjectModel(CentroTrabajo.name) private centroTrabajoModel: Model<CentroTrabajo>,
   private filesService: FilesService) {}
@@ -1475,7 +1481,10 @@ export class TrabajadoresService {
             this.examenVistaModel.find({ idTrabajador: id }).session(session).exec(),
             this.antidopingModel.find({ idTrabajador: id }).session(session).exec(),
             this.aptitudModel.find({ idTrabajador: id }).session(session).exec(),
+            this.audiometriaModel.find({ idTrabajador: id }).session(session).exec(),
             this.certificadoModel.find({ idTrabajador: id }).session(session).exec(),
+            this.certificadoExpeditoModel.find({ idTrabajador: id }).session(session).exec(),
+            this.controlPrenatalModel.find({ idTrabajador: id }).session(session).exec(),
             this.documentoExternoModel.find({ idTrabajador: id }).session(session).exec(),
             this.notaMedicaModel.find({ idTrabajador: id }).session(session).exec(),
             this.riesgoTrabajoModel.find({ idTrabajador: id }).session(session).exec(),
@@ -1490,7 +1499,10 @@ export class TrabajadoresService {
             this.examenVistaModel.deleteMany({ idTrabajador: id }).session(session),
             this.antidopingModel.deleteMany({ idTrabajador: id }).session(session),
             this.aptitudModel.deleteMany({ idTrabajador: id }).session(session),
+            this.audiometriaModel.deleteMany({ idTrabajador: id }).session(session),
             this.certificadoModel.deleteMany({ idTrabajador: id }).session(session),
+            this.certificadoExpeditoModel.deleteMany({ idTrabajador: id }).session(session),
+            this.controlPrenatalModel.deleteMany({ idTrabajador: id }).session(session),
             this.documentoExternoModel.deleteMany({ idTrabajador: id }).session(session),
             this.notaMedicaModel.deleteMany({ idTrabajador: id }).session(session),
             this.riesgoTrabajoModel.deleteMany({ idTrabajador: id }).session(session),
