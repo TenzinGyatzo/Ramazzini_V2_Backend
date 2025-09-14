@@ -390,7 +390,7 @@ export const audiometriaInforme = (
       {
         text: [
           { text: `DIAGNÓSTICO:`, bold: true },
-          { text: audiometria.diagnosticoAudiometria ? ` ${audiometria.diagnosticoAudiometria.toUpperCase()} ` : '', bold: true, fontSize: 12 },
+          { text: audiometria.diagnosticoAudiometria ? ` ${audiometria.diagnosticoAudiometria.toUpperCase()} HBC DE ${audiometria.hipoacusiaBilateralCombinada}% ` : '', bold: true, fontSize: 12 },
         ] as any,
         margin: [0, 0, 0, 10] as [number, number, number, number],
         style: 'paragraph'
