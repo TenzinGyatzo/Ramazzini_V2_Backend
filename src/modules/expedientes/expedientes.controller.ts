@@ -108,6 +108,10 @@ export class ExpedientesController {
   @Post('documentoExterno/subir')
   @UseInterceptors(
     FileInterceptor('file', {
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB límite
+        fieldSize: 10 * 1024 * 1024, // 10MB límite para campos
+      },
       storage: diskStorage({
         destination: (req, file, cb) => {
           const dirPath = path.resolve(
