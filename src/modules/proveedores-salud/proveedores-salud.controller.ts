@@ -20,7 +20,7 @@ import { BadRequestException } from '@nestjs/common';
 import { isValidObjectId } from 'mongoose';
 import { isAfter, addDays } from 'date-fns';
 
-@Controller('auth/proveedores-salud')
+@Controller('proveedores-salud')
 export class ProveedoresSaludController {
   constructor(
     private readonly proveedoresSaludService: ProveedoresSaludService,

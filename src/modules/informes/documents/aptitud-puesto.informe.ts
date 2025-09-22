@@ -237,6 +237,18 @@ const numeroEnLetras = (n: number) => {
   }[n] || n.toString();
 };
 
+// Función para generar resumen de audiometría
+const obtenerResumenAudiometria = (audiometria: Audiometria | null) => {
+  if (!audiometria) return 'No se cuenta con audiometría';
+  
+  const diagnostico = audiometria.diagnosticoAudiometria || 'Sin diagnóstico';
+  const hipoacusia = audiometria.hipoacusiaBilateralCombinada !== undefined 
+    ? audiometria.hipoacusiaBilateralCombinada + '%' 
+    : 'No especificado';
+  
+  return `${diagnostico} HBC ${hipoacusia}`;
+};
+
 // Función para generar resumen de antidoping
 const obtenerResumenAntidoping = (a: any) => {
   if (!a) return 'No se cuenta con antidoping';
@@ -341,6 +353,12 @@ interface ExamenVista {
   interpretacionIshihara: string;
 }
 
+interface Audiometria {
+  fechaAudiometria: Date;
+  diagnosticoAudiometria: string;
+  hipoacusiaBilateralCombinada: number;
+}
+
 interface Antidoping {
   fechaAntidoping: Date;
   marihuana: string;
@@ -396,6 +414,7 @@ export const aptitudPuestoInforme = (
   historiaClinica: HistoriaClinica | null,
   exploracionFisica: ExploracionFisica | null,
   examenVista: ExamenVista | null,
+  audiometria: Audiometria | null,
   antidoping: Antidoping | null,
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
@@ -502,6 +521,24 @@ export const aptitudPuestoInforme = (
       ),
       createTableCell(examenVistaResumen, 'tableCell', 'center'),
     ],
+    // AUDIOMETRÍA solo se incluye si existen datos
+    ...(audiometria
+      ? [
+          [
+            createTableCell('AUDIOMETRÍA', 'sectionHeader', 'center'),
+            createTableCell(
+              formatearFechaUTC(audiometria.fechaAudiometria),
+              'tableCell',
+              'center',
+            ),
+            createTableCell(
+              obtenerResumenAudiometria(audiometria),
+              'tableCell',
+              'center',
+            ),
+          ],
+        ]
+      : []),
     // ANTIDOPING solo se incluye si existen datos
     ...(antidoping
       ? [

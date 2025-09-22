@@ -318,6 +318,25 @@ export class InformesService {
         }
       : null;
 
+    const audiometrias = await this.expedientesService.findDocuments(
+      'audiometria',
+      trabajadorId,
+    );
+    const nearestAudiometria = audiometrias?.length
+      ? findNearestDocument(
+          audiometrias,
+          aptitud.fechaAptitudPuesto,
+          'fechaAudiometria',
+        )
+      : null;
+    const datosAudiometria = nearestAudiometria
+      ? {
+          fechaAudiometria: nearestAudiometria.fechaAudiometria,
+          diagnosticoAudiometria: nearestAudiometria.diagnosticoAudiometria,
+          hipoacusiaBilateralCombinada: nearestAudiometria.hipoacusiaBilateralCombinada,
+        }
+      : null;
+
     const antidopings = await this.expedientesService.findDocuments(
       'antidoping',
       trabajadorId,
@@ -428,6 +447,7 @@ export class InformesService {
       datosHistoriaClinica,
       datosExploracionFisica,
       datosExamenVista,
+      datosAudiometria,
       datosAntidoping,
       datosMedicoFirmante,
       datosProveedorSalud,
