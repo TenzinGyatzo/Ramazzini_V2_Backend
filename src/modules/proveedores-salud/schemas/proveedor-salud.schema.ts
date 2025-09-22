@@ -93,6 +93,40 @@ export class ProveedorSalud extends Document {
 
   @Prop()
   finDeSuscripcion: Date; // Fecha hasta la cual el usuario mantiene acceso tras cancelar
+
+  // **Configuración de reglas de puntaje para productividad**
+  @Prop({
+    type: {
+      aptitudes: { type: Number, default: 3 },
+      historias: { type: Number, default: 1 },
+      exploraciones: { type: Number, default: 1 },
+      examenesVista: { type: Number, default: 1 },
+      audiometrias: { type: Number, default: 1 },
+      antidopings: { type: Number, default: 1 },
+      notas: { type: Number, default: 2 },
+      externos: { type: Number, default: 0 }
+    },
+    default: {
+      aptitudes: 3,
+      historias: 1,
+      exploraciones: 1,
+      examenesVista: 1,
+      audiometrias: 1,
+      antidopings: 1,
+      notas: 2,
+      externos: 0
+    }
+  })
+  reglasPuntaje: {
+    aptitudes: number;
+    historias: number;
+    exploraciones: number;
+    examenesVista: number;
+    audiometrias: number;
+    antidopings: number;
+    notas: number;
+    externos: number;
+  };
 }
 
 export const ProveedorSaludSchema = SchemaFactory.createForClass(ProveedorSalud);

@@ -365,5 +365,53 @@ export class ProveedoresSaludService {
     return result.length > 0 ? result[0].totalNotasMedicas : 0;
   }
 
+  // **Métodos para reglas de puntaje**
+  async getReglasPuntaje(idProveedorSalud: string) {
+    const proveedor = await this.proveedoresSaludModel.findById(idProveedorSalud).select('reglasPuntaje').exec();
+    
+    if (!proveedor) {
+      throw new Error('Proveedor de salud no encontrado');
+    }
+
+    // Si no tiene reglas configuradas, devolver las por defecto
+    if (!proveedor.reglasPuntaje) {
+      return {
+        aptitudes: 3,
+        historias: 1,
+        exploraciones: 1,
+        examenesVista: 1,
+        audiometrias: 1,
+        antidopings: 1,
+        notas: 2,
+        externos: 0
+      };
+    }
+
+    return proveedor.reglasPuntaje;
+  }
+
+  async updateReglasPuntaje(idProveedorSalud: string, reglasPuntaje: {
+    aptitudes: number;
+    historias: number;
+    exploraciones: number;
+    examenesVista: number;
+    audiometrias: number;
+    antidopings: number;
+    notas: number;
+    externos: number;
+  }) {
+    const proveedor = await this.proveedoresSaludModel.findByIdAndUpdate(
+      idProveedorSalud,
+      { reglasPuntaje },
+      { new: true }
+    ).exec();
+
+    if (!proveedor) {
+      throw new Error('Proveedor de salud no encontrado');
+    }
+
+    return proveedor.reglasPuntaje;
+  }
+
   
 }

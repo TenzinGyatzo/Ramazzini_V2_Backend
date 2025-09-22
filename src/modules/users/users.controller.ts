@@ -11,6 +11,7 @@ import {
   NotFoundException,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -228,6 +229,43 @@ export class UsersController {
       res.json(user);
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  // Endpoints para estadísticas de productividad
+  @Get('productividad/:idProveedorSalud')
+  async getProductivityStatsByProveedor(
+    @Param('idProveedorSalud') idProveedorSalud: string,
+    @Res() res: Response,
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin') fechaFin?: string
+  ) {
+    try {
+      const stats = await this.usersService.getProductivityStatsByProveedor(
+        idProveedorSalud, 
+        fechaInicio, 
+        fechaFin
+      );
+      res.json(stats);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: 'Error al obtener estadísticas de productividad' });
+    }
+  }
+
+  @Get('estadisticas/:userId')
+  async getUserDetailedStats(
+    @Param('userId') userId: string,
+    @Res() res: Response,
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin') fechaFin?: string
+  ) {
+    try {
+      const stats = await this.usersService.getUserDetailedStats(userId, fechaInicio, fechaFin);
+      res.json(stats);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: 'Error al obtener estadísticas del usuario' });
     }
   }
 

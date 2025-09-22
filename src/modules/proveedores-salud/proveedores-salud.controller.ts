@@ -20,7 +20,7 @@ import { BadRequestException } from '@nestjs/common';
 import { isValidObjectId } from 'mongoose';
 import { isAfter, addDays } from 'date-fns';
 
-@Controller('proveedores-salud')
+@Controller('auth/proveedores-salud')
 export class ProveedoresSaludController {
   constructor(
     private readonly proveedoresSaludService: ProveedoresSaludService,
@@ -316,6 +316,35 @@ export class ProveedoresSaludController {
   @Get('/cantidad-notas-medicas/:idProveedorSalud')
   async getTodasNotasMedicas(@Param('idProveedorSalud') idProveedorSalud: string) {
     return this.proveedoresSaludService.getTodasNotasMedicas(idProveedorSalud);
+  }
+
+  // **Endpoints para reglas de puntaje**
+  @Get('/reglas-puntaje/:idProveedorSalud')
+  async getReglasPuntaje(@Param('idProveedorSalud') idProveedorSalud: string) {
+    if (!isValidObjectId(idProveedorSalud)) {
+      throw new BadRequestException('ID de proveedor de salud inválido');
+    }
+    return this.proveedoresSaludService.getReglasPuntaje(idProveedorSalud);
+  }
+
+  @Patch('/reglas-puntaje/:idProveedorSalud')
+  async updateReglasPuntaje(
+    @Param('idProveedorSalud') idProveedorSalud: string,
+    @Body() reglasPuntaje: {
+      aptitudes: number;
+      historias: number;
+      exploraciones: number;
+      examenesVista: number;
+      audiometrias: number;
+      antidopings: number;
+      notas: number;
+      externos: number;
+    }
+  ) {
+    if (!isValidObjectId(idProveedorSalud)) {
+      throw new BadRequestException('ID de proveedor de salud inválido');
+    }
+    return this.proveedoresSaludService.updateReglasPuntaje(idProveedorSalud, reglasPuntaje);
   }
 
 }
