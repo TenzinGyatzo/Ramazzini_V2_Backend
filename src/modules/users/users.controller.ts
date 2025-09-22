@@ -35,7 +35,7 @@ export class UsersController {
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
-    const { username, email, phone, password } = createUserDto;
+    const { username, email, phone, country, password } = createUserDto;
 
     // Validar extensión del username
     const MIN_USERNAME_LENGTH = 5;

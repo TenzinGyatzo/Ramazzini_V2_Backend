@@ -114,7 +114,7 @@ interface MedicoFirmante {
 
 interface ProveedorSalud {
   nombre: string;
-  RFC: string;
+  pais: string;
   perfilProveedorSalud: string;
   logotipoEmpresa: {
     data: string;
@@ -291,14 +291,18 @@ export const dashboardInforme = (
               
                 medicoFirmante.numeroCedulaProfesional
                   ? {
-                      text: `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`,
+                      text: proveedorSalud.pais === 'MX' 
+                        ? `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`
+                        : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
               
                 medicoFirmante.numeroCedulaEspecialista
                   ? {
-                      text: `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text: proveedorSalud.pais === 'MX'
+                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,

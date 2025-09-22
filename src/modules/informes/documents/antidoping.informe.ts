@@ -83,10 +83,56 @@ function formatearFechaUTC(fecha: Date): string {
 }
 
 function formatearTelefono(telefono: string): string {
-  if (!telefono || telefono.length !== 10) {
-    return 'Teléfono inválido';  // Mensaje de error si el número no tiene 10 dígitos
+  if (!telefono) {
+    return ''; 
   }
-  return `(${telefono.slice(0, 3)}) ${telefono.slice(3, 6)} ${telefono.slice(6)}`;
+  
+  // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
+  if (telefono.startsWith('+')) {
+    // Buscar el país correspondiente para obtener el código
+    const countries = [
+      { code: 'MX', dialCode: '+52' },
+      { code: 'AR', dialCode: '+54' },
+      { code: 'BR', dialCode: '+55' },
+      { code: 'CL', dialCode: '+56' },
+      { code: 'CO', dialCode: '+57' },
+      { code: 'PE', dialCode: '+51' },
+      { code: 'VE', dialCode: '+58' },
+      { code: 'UY', dialCode: '+598' },
+      { code: 'PY', dialCode: '+595' },
+      { code: 'BO', dialCode: '+591' },
+      { code: 'EC', dialCode: '+593' },
+      { code: 'GT', dialCode: '+502' },
+      { code: 'CR', dialCode: '+506' },
+      { code: 'PA', dialCode: '+507' },
+      { code: 'HN', dialCode: '+504' },
+      { code: 'NI', dialCode: '+505' },
+      { code: 'SV', dialCode: '+503' },
+      { code: 'CU', dialCode: '+53' },
+      { code: 'DO', dialCode: '+1' },
+      { code: 'PR', dialCode: '+1' }
+    ];
+    
+    // Encontrar el país por código de marcación
+    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    if (country) {
+      const numeroLocal = telefono.replace(country.dialCode, '');
+      return `(${country.dialCode}) ${numeroLocal}`;
+    }
+  }
+  
+  // Si es un número local de 10 dígitos (México)
+  if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
+    return `(+52) ${telefono}`;
+  }
+  
+  // Si es un número local de otros países (8-11 dígitos)
+  if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
+    return `(+XX) ${telefono}`;
+  }
+  
+  // Si no coincide con ningún formato conocido, devolver tal como está
+  return telefono;
 }
 // ==================== INTERFACES ====================
 interface Trabajador {
@@ -130,7 +176,7 @@ interface MedicoFirmante {
 
 interface ProveedorSalud {
   nombre: string;
-  RFC: string;
+  pais: string;
   perfilProveedorSalud: string;
   logotipoEmpresa: {
     data: string;
@@ -353,14 +399,18 @@ export const antidopingInforme = (
               
                 medicoFirmante.numeroCedulaProfesional
                   ? {
-                      text: `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`,
+                      text: proveedorSalud.pais === 'MX' 
+                        ? `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`
+                        : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
               
                 medicoFirmante.numeroCedulaEspecialista
                   ? {
-                      text: `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text: proveedorSalud.pais === 'MX'
+                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,

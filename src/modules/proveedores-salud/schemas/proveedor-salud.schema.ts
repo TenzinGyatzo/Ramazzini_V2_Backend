@@ -19,7 +19,7 @@ export class ProveedorSalud extends Document {
   @Prop({ required: true })
   nombre: string;
   @Prop({ required: true }) 
-  RFC: string;
+  pais: string;
   @Prop({ required: true, enum: perfiles })
   perfilProveedorSalud: string;
   @Prop({

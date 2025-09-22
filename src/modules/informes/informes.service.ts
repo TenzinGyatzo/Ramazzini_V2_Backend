@@ -120,7 +120,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -134,7 +134,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",
@@ -378,7 +378,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -393,7 +393,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",
@@ -534,7 +534,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -549,7 +549,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",
@@ -770,7 +770,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -783,7 +783,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",
@@ -903,7 +903,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -916,7 +916,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",
@@ -1049,7 +1049,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -1063,7 +1063,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",
@@ -1217,7 +1217,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -1231,7 +1231,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",
@@ -1434,7 +1434,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -1448,7 +1448,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",
@@ -1556,7 +1556,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -1570,7 +1570,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",
@@ -1762,7 +1762,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -1776,7 +1776,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",
@@ -1863,7 +1863,7 @@ export class InformesService {
     const datosProveedorSalud = proveedorSalud
     ? {
         nombre: proveedorSalud.nombre || "",
-        RFC: proveedorSalud.RFC || "",
+        pais: proveedorSalud.pais || "",
         perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
         logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
         estado: proveedorSalud.estado || "",
@@ -1877,7 +1877,7 @@ export class InformesService {
       }
     : {
         nombre: "",
-        RFC: "",
+        pais: "",
         perfilProveedorSalud: "",
         logotipoEmpresa: null,
         estado: "",

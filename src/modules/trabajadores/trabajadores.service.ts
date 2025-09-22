@@ -1359,7 +1359,10 @@ export class TrabajadoresService {
       ExamenVista: 'fechaExamenVista',
       Antidoping: 'fechaAntidoping',
       AptitudPuesto: 'fechaAptitudPuesto',
+      Audiometria: 'fechaAudiometria',
       Certificado: 'fechaCertificado',
+      CertificadoExpedito: 'fechaCertificadoExpedito',
+      ControlPrenatal: 'fechaInicioControlPrenatal',
       DocumentoExterno: 'fechaDocumento', // Este es clave para Documento Externo
       NotaMedica: 'fechaNotaMedica',
     };
@@ -1390,7 +1393,10 @@ export class TrabajadoresService {
       ExamenVista: 'Examen Vista',
       Antidoping: 'Antidoping',
       AptitudPuesto: 'Aptitud',
+      Audiometria: 'Audiometria',
       Certificado: 'Certificado',
+      CertificadoExpedito: 'Certificado Expedito',
+      ControlPrenatal: 'Control Prenatal',
       NotaMedica: 'Nota Medica',
     };
   

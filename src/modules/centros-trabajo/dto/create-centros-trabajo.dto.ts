@@ -1,39 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsString, Matches, IsMongoId, IsOptional } from "class-validator";
+import { IsNotEmpty, IsString, IsMongoId, IsOptional } from "class-validator";
 
-const estadosDeMexico = [
-    "Aguascalientes",
-    "Baja California",
-    "Baja California Sur",
-    "Campeche",
-    "Chiapas",
-    "Chihuahua",
-    "Coahuila",
-    "Colima",
-    "Durango",
-    "Guanajuato",
-    "Guerrero",
-    "Hidalgo",
-    "Jalisco",
-    "Estado de México",
-    "Michoacán",
-    "Morelos",
-    "Nayarit",
-    "Nuevo León",
-    "Oaxaca",
-    "Puebla",
-    "Querétaro",
-    "Quintana Roo",
-    "San Luis Potosí",
-    "Sinaloa",
-    "Sonora",
-    "Tabasco",
-    "Tamaulipas",
-    "Tlaxcala",
-    "Veracruz",
-    "Yucatán",
-    "Zacatecas",
-  ];
 
 export class CreateCentrosTrabajoDto {
     @ApiProperty({
@@ -54,29 +21,26 @@ export class CreateCentrosTrabajoDto {
     direccionCentro?: string
 
     @ApiProperty({
-      description: 'El Código Postal del centro de trabajo, con un formato válido de 5 dígitos',
+      description: 'El Código Postal del centro de trabajo (4-10 dígitos)',
       example: '81200',
       required: false
     })
     @IsString({ message: 'El Código Postal debe ser un string' })
     @IsOptional()
-    // @Matches(/^[0-9]{5}$/, { message: 'El Código Postal debe de tener un formato válido' })
     codigoPostal?: string
     
     @ApiProperty({
-      description: 'El estado donde se encuentra el centro de trabajo',
-      enum: estadosDeMexico,
-      example: 'Sinaloa',
+      description: 'Región/Provincia/Estado donde se encuentra el centro de trabajo',
+      example: 'Sinaloa, Buenos Aires, São Paulo',
       required: false
     })
     @IsString({ message: 'El estado debe ser un string' })
     @IsOptional()
-    // @IsEnum(estadosDeMexico, { message: 'El estado no es válido' })
     estado?: string
 
     @ApiProperty({
-      description: 'El municipio donde se encuentra el centro de trabajo',
-      example: 'Ahome',
+      description: 'Ciudad/Municipio donde se encuentra el centro de trabajo',
+      example: 'Ahome, Bogotá, Lima',
       required: false
     })
     @IsString({ message: 'El municipio debe ser un string' })

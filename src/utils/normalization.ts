@@ -74,8 +74,8 @@ export function normalizeProveedorSaludData(
   if ('nombre' in dto)
     result.nombre = typeof dto.nombre === 'string' ? dto.nombre.trim() : "";
 
-  if ('RFC' in dto)
-    result.RFC = typeof dto.RFC === 'string' ? dto.RFC.trim().toUpperCase() : "";
+  if ('pais' in dto)
+    result.pais = typeof dto.pais === 'string' ? dto.pais.trim() : "";
 
   if ('perfilProveedorSalud' in dto)
     result.perfilProveedorSalud = typeof dto.perfilProveedorSalud === 'string' ? dto.perfilProveedorSalud.trim() : "";
@@ -114,7 +114,7 @@ export function normalizeProveedorSaludData(
   }
 
   if ('semaforizacionActivada' in dto) {
-    result.semaforizacionActivada = typeof dto.semaforizacionActivada === 'boolean' ? dto.semaforizacionActivada : false;
+    result.semaforizacionActivada = typeof dto.semaforizacionActivada === 'boolean' ? dto.semaforizacionActivada : true;
   }
 
   if ('fechaInicioTrial' in dto)

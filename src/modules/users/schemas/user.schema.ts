@@ -18,6 +18,9 @@ export class User {
   phone: string;
 
   @Prop({ required: true, trim: true })
+  country: string;
+
+  @Prop({ required: true, trim: true })
   password: string;
 
   @Prop({ required: true, enum: ['Principal', 'Secundario'] })

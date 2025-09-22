@@ -30,9 +30,9 @@ export class CreateProveedoresSaludDto {
   @IsNotEmpty({ message: 'El nombre no puede estar vacío' })
   nombre: string;
 
-  @IsString({ message: 'El RFC debe ser un string' })
-  @IsNotEmpty({ message: 'El RFC no puede estar vacío' })
-  RFC: string;
+  @IsString({ message: 'El país debe ser un string' })
+  @IsNotEmpty({ message: 'El país no puede estar vacío' })
+  pais: string;
 
   @IsString({ message: 'El perfil del proveedor de salud debe ser un string' })
   @IsNotEmpty({ message: 'El perfil del proveedor de salud no puede estar vacío' })

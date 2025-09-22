@@ -8,7 +8,7 @@ export interface AddOn {
 export class ProveedoresSalud extends Document {
   _id: string;
   nombre: string;
-  RFC?: string;
+  pais?: string;
   perfilProveedorSalud: string;  
   logotipoEmpresa?: {
     data: string;
