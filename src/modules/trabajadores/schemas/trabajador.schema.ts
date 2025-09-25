@@ -53,7 +53,7 @@ export class Trabajador extends Document {
     @Prop({ required: true })
     fechaIngreso: Date;
 
-    @Prop({ required: false })
+    @Prop({ required: false, match: /^$|^\+?[0-9]\d{3,14}$/ })
     telefono: string;
 
     @Prop({ required: true, enum: estadosCiviles })
