@@ -39,32 +39,35 @@ export class CreateAntidopingDto {
     @ApiProperty({
         description: 'Resultado de anfetaminas',
         enum: resultado,
-        example: 'Negativo'
+        example: 'Negativo',
+        required: false
     })
+    @IsOptional()
     @IsString({ message: 'Anfetaminas debe ser un string' })
-    @IsNotEmpty({ message: 'Anfetaminas no puede estar vacía' })    
     @IsEnum(resultado, { message: 'El resultado de anfetaminas debe ser Positivo o Negativo' })
-    anfetaminas: string;
+    anfetaminas?: string;
 
     @ApiProperty({
         description: 'Resultado de metanfetaminas',
         enum: resultado,
-        example: 'Negativo'
+        example: 'Negativo',
+        required: false
     })
+    @IsOptional()
     @IsString({ message: 'Metanfetaminas debe ser un string' })
-    @IsNotEmpty({ message: 'Metanfetaminas no puede estar vacía' })
     @IsEnum(resultado, { message: 'El resultado de metanfetaminas debe ser Positivo o Negativo' })
-    metanfetaminas: string;
+    metanfetaminas?: string;
 
     @ApiProperty({
         description: 'Resultado de opiaceos',
         enum: resultado,
-        example: 'Negativo'
+        example: 'Negativo',
+        required: false
     })
+    @IsOptional()
     @IsString({ message: 'Opiaceos debe ser un string' })
-    @IsNotEmpty({ message: 'Opiaceos no puede estar vacía' })
     @IsEnum(resultado, { message: 'El resultado de opiaceos debe ser Positivo o Negativo' })
-    opiaceos: string;
+    opiaceos?: string;
 
 
     @IsOptional()

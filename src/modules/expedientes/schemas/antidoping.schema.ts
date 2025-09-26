@@ -16,13 +16,13 @@ export class Antidoping extends Document {
     @Prop({ required: true, enum: resultado })
     cocaina: string;
 
-    @Prop({ required: true, enum: resultado })
+    @Prop({ enum: resultado })
     anfetaminas: string;
 
-    @Prop({ required: true, enum: resultado })
+    @Prop({ enum: resultado })
     metanfetaminas: string;
 
-    @Prop({ required: true, enum: resultado })
+    @Prop({ enum: resultado })
     opiaceos: string;
 
     @Prop({ enum: resultado })

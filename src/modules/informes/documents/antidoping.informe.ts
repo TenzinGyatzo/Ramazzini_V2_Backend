@@ -65,11 +65,11 @@ const createTableCell = (text: string, style: string): Content => ({
 });
 
 const createConditionalTableCell = (text: string): Content => ({
-  text: text.toUpperCase(),
+  text: text ? text.toUpperCase() : 'N/A',
   style: 'tableCell',
   alignment: 'center',
   margin: [4, 4, 4, 4],
-  color: text.toUpperCase() === 'POSITIVO' ? 'red' : 'black', // Aplica rojo si es "POSITIVO"
+  color: text && text.toUpperCase() === 'POSITIVO' ? 'red' : 'black', // Aplica rojo si es "POSITIVO"
 });
 
 function formatearFechaUTC(fecha: Date): string {
@@ -150,9 +150,9 @@ interface Antidoping {
   fechaAntidoping: Date;
   marihuana: string;
   cocaina: string;
-  anfetaminas: string;
-  metanfetaminas: string;
-  opiaceos: string;
+  anfetaminas?: string;
+  metanfetaminas?: string;
+  opiaceos?: string;
   benzodiacepinas?: string;
   fenciclidina?: string;
   metadona?: string;
@@ -309,21 +309,21 @@ export const antidopingInforme = (
               createConditionalTableCell(antidoping.cocaina),
               createTableCell('NEGATIVO', 'tableCell'),
             ],
-            [
+            ...(antidoping.anfetaminas ? [[
               createTableCell('ANFETAMINAS', 'sectionHeader'),
               createConditionalTableCell(antidoping.anfetaminas),
               createTableCell('NEGATIVO', 'tableCell'),
-            ],
-            [
+            ]] : []),
+            ...(antidoping.metanfetaminas ? [[
               createTableCell('METANFETAMINAS', 'sectionHeader'),
               createConditionalTableCell(antidoping.metanfetaminas),
               createTableCell('NEGATIVO', 'tableCell'),
-            ],
-            [
+            ]] : []),
+            ...(antidoping.opiaceos ? [[
               createTableCell('OPIACEOS', 'sectionHeader'),
               createConditionalTableCell(antidoping.opiaceos),
               createTableCell('NEGATIVO', 'tableCell'),
-            ],
+            ]] : []),
             ...(antidoping.benzodiacepinas ? [[
               createTableCell('BENZODIACEPINAS', 'sectionHeader'),
               createConditionalTableCell(antidoping.benzodiacepinas),
