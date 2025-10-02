@@ -1989,7 +1989,7 @@ export class InformesService {
     const datosPrevioEspirometria = {
       fechaPrevioEspirometria: previoEspirometria.fechaPrevioEspirometria,
       tabaquismo: previoEspirometria.tabaquismo,
-      paquetesAno: previoEspirometria.paquetesAno,
+      cigarrosSemana: previoEspirometria.cigarrosSemana,
       exposicionHumosBiomasa: previoEspirometria.exposicionHumosBiomasa,
       exposicionLaboralPolvos: previoEspirometria.exposicionLaboralPolvos,
       exposicionVaporesGasesIrritantes: previoEspirometria.exposicionVaporesGasesIrritantes,
@@ -2011,7 +2011,6 @@ export class InformesService {
       embarazoComplicado: previoEspirometria.embarazoComplicado,
       derramePleural: previoEspirometria.derramePleural,
       neumotorax: previoEspirometria.neumotorax,
-      condicionContraindiqueBroncodilatadores: previoEspirometria.condicionContraindiqueBroncodilatadores,
       infartoAgudoAnginaInestable: previoEspirometria.infartoAgudoAnginaInestable,
       aneurismaAorticoConocido: previoEspirometria.aneurismaAorticoConocido,
       inestabilidadHemodinamicaGrave: previoEspirometria.inestabilidadHemodinamicaGrave,

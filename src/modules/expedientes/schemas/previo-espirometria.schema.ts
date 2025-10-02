@@ -5,11 +5,9 @@ import { User } from 'src/modules/users/entities/user.entity';
 
 const siONo = ["Si", "No"];
 
-const tabaquismoOpciones = ["No fuma", "Fuma actualmente", "Exfumador"];
+const tabaquismoOpciones = ["No fuma", "Fuma", "Exfumador"];
 
-const paquetesAnoOpciones = ["0", "<10", "10–20", ">20"];
-
-const exposicionPolvosOpciones = ["Orgánicos", "Inorgánicos", "Ambos", "No"];
+const cigarrosSemanaOpciones = ["0", "<10", "10–20", ">20"];
 
 const disneaOpciones = ["Ninguna", "Al esfuerzo", "En reposo"];
 
@@ -24,13 +22,13 @@ export class PrevioEspirometria extends Document {
     @Prop({ enum: tabaquismoOpciones })
     tabaquismo: string
 
-    @Prop({ enum: paquetesAnoOpciones })
-    paquetesAno: string
+    @Prop({ enum: cigarrosSemanaOpciones })
+    cigarrosSemana: string
 
     @Prop({ enum: siONo })
     exposicionHumosBiomasa: string
 
-    @Prop({ enum: exposicionPolvosOpciones })
+    @Prop({ enum: siONo })
     exposicionLaboralPolvos: string
 
     @Prop({ enum: siONo })
@@ -92,9 +90,6 @@ export class PrevioEspirometria extends Document {
 
     @Prop({ enum: siONo })
     neumotorax: string
-
-    @Prop({ enum: siONo })
-    condicionContraindiqueBroncodilatadores: string
 
     // Contraindicaciones Absolutas
     @Prop({ enum: siONo })

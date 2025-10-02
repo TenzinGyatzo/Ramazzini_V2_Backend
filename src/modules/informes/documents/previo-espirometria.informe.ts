@@ -90,9 +90,9 @@ const createTabaquismoTableCell = (text: string): Content => ({
   style: 'tableCell',
   alignment: 'center',
   margin: [3, 3, 3, 3],
-  bold: text && (text.toUpperCase() === 'FUMAR ACTUALMENTE' || text.toUpperCase() === 'EXFUMADOR'),
-  color: text && text.toUpperCase() === 'FUMAR ACTUALMENTE' ? 'red' : 
-         text && text.toUpperCase() === 'EXFUMADOR' ? '#CD853F' : 'black', // Color ocre
+  bold: text && (text.toUpperCase() === 'FUMA' || text.toUpperCase() === 'FUMAR ACTUALMENTE' || text.toUpperCase() === 'EXFUMADOR'),
+  color: text && (text.toUpperCase() === 'FUMA' || text.toUpperCase() === 'FUMAR ACTUALMENTE') ? 'red' : 
+         text && text.toUpperCase() === 'EXFUMADOR' ? '#CD853F' : 'black', // Fuma -> rojo, Exfumador -> ocre, No fuma -> negro
 });
 
 const createPaquetesAnoTableCell = (text: string): Content => ({
@@ -111,7 +111,7 @@ const createDisneaTableCell = (text: string): Content => ({
   margin: [3, 3, 3, 3],
   bold: text && text.toUpperCase() !== 'NINGUNA',
   color: text && text.toUpperCase() === 'EN REPOSO' ? 'red' : 
-         text && text.toUpperCase() === 'AL ESFUERZO' ? '#CD853F' : 'black', // Color ocre
+         text && text.toUpperCase() === 'AL ESFUERZO' ? '#CD853F' : 'black', // En reposo -> rojo, Al esfuerzo -> ocre, Ninguna -> negro
 });
 
 const createResultadoCuestionarioTableCell = (text: string): Content => ({
@@ -133,6 +133,15 @@ const createExposicionPolvosTableCell = (text: string): Content => ({
   bold: text && text.toUpperCase() !== 'NO',
   color: text && text.toUpperCase() === 'AMBOS' ? 'red' : 
          text && (text.toUpperCase() === 'ORGÁNICOS' || text.toUpperCase() === 'INORGÁNICOS') ? '#CD853F' : 'black',
+});
+
+const createOtrosSintomasTableCell = (text: string): Content => ({
+  text: text ? text.toUpperCase() : '',
+  style: 'tableCell',
+  alignment: 'center',
+  margin: [3, 3, 3, 3],
+  bold: text && text.toUpperCase() !== 'NO',
+  color: text && text.toUpperCase() !== 'NO' ? 'red' : 'black',
 });
 
 function formatearFechaUTC(fecha: Date): string {
@@ -212,7 +221,7 @@ interface Trabajador {
 interface PrevioEspirometria {
   fechaPrevioEspirometria: Date;
   tabaquismo: string;
-  paquetesAno: string;
+  cigarrosSemana: string;
   exposicionHumosBiomasa: string;
   exposicionLaboralPolvos: string;
   exposicionVaporesGasesIrritantes: string;
@@ -234,7 +243,6 @@ interface PrevioEspirometria {
   embarazoComplicado: string;
   derramePleural: string;
   neumotorax: string;
-  condicionContraindiqueBroncodilatadores: string;
   infartoAgudoAnginaInestable: string;
   aneurismaAorticoConocido: string;
   inestabilidadHemodinamicaGrave: string;
@@ -355,12 +363,6 @@ export const previoEspirometriaInforme = (
               { text: 'SEXO', style: 'label' },
               { text: trabajador.sexo, style: 'value' },
             ],
-            [
-              { text: 'ESCOLARIDAD', style: 'label' },
-              { text: trabajador.escolaridad, style: 'value' },
-              { text: 'ANTIGÜEDAD', style: 'label' },
-              { text: trabajador.antiguedad, style: 'value' },
-            ],
           ],
         },
         layout: {
@@ -369,164 +371,177 @@ export const previoEspirometriaInforme = (
           hLineWidth: () => 1,
           vLineWidth: () => 1,
         },
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, 6],
       },
-      // Factores de riesgo respiratorio
-      {
-        text: 'FACTORES DE RIESGO RESPIRATORIO',
-        style: 'sectionHeader',
-        alignment: 'center',
-        margin: [0, 0, 0, 5],
-      },
+      // Factores de riesgo respiratorio y Síntomas respiratorios lado a lado
       {
         columns: [
-          // Tabla izquierda (primeros 3 elementos)
+          // Columna izquierda: FACTORES DE RIESGO RESPIRATORIO
           {
             width: '48%',
-            style: 'table',
-            table: {
-              widths: ['50%', '50%'],
-              body: [
-                [
-                  { text: 'TABAQUISMO', style: 'tableCellBold', alignment: 'center' },
-                  createTabaquismoTableCell(previoEspirometria.tabaquismo?.toString() || ''),
-                ],
-                [
-                  { text: 'PAQUETES-AÑO', style: 'tableCellBold', alignment: 'center' },
-                  createPaquetesAnoTableCell(previoEspirometria.paquetesAno?.toString() || ''),
-                ],
-                [
-                  { text: 'EXPOSICIÓN A HUMOS Y BIOMASA', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.exposicionHumosBiomasa?.toString() || ''),
-                ]
-              ],
-            },
-            layout: {
-              hLineColor: '#a8a29e',
-              vLineColor: '#a8a29e',
-              paddingTop: (i: number, node: any) => 1,
-              paddingBottom: (i: number, node: any) => 1,
-              paddingLeft: (i: number, node: any) => 1,
-              paddingRight: (i: number, node: any) => 1,
-              hLineWidth: () => 0.3,
-              vLineWidth: () => 0.3,
-            },
+            stack: [
+              {
+                text: 'FACTORES DE RIESGO RESPIRATORIO',
+                style: 'sectionHeader',
+                alignment: 'center',
+                margin: [0, 4, 0, 3],
+              },
+              {
+                style: 'table',
+                table: {
+                  widths: ['60%', '20%', '20%'],
+                  body: [
+                    [
+                      { text: 'TABAQUISMO', style: 'tableCellBold', alignment: 'center' },
+                      Object.assign({}, createTabaquismoTableCell(previoEspirometria.tabaquismo?.toString() || ''), { colSpan: 2 }),
+                      {},
+                    ],
+                    [
+                      { text: 'CIGARROS-SEMANA', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                      {},
+                      createPaquetesAnoTableCell(previoEspirometria.cigarrosSemana?.toString() || ''),
+                    ],
+                    [
+                      { text: 'EXPOSICIÓN A HUMOS Y BIOMASA', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                      {},
+                      createConditionalTableCell(previoEspirometria.exposicionHumosBiomasa?.toString() || ''),
+                    ],
+                    [
+                      { text: 'EXPOSICIÓN A POLVOS', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                      {},
+                      createConditionalTableCell(previoEspirometria.exposicionLaboralPolvos?.toString() || ''),
+                    ],
+                    [
+                      { text: 'EXP. VAPORES Y GASES IRRITANTES', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                      {},
+                      createConditionalTableCell(previoEspirometria.exposicionVaporesGasesIrritantes?.toString() || ''),
+                    ],
+                    [
+                      { text: 'TUBERC./INFEC. RESPIRATORIAS', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                      {},
+                      createConditionalTableCell(previoEspirometria.antecedentesTuberculosisInfeccionesRespiratorias?.toString() || ''),
+                    ]
+                  ],
+                },
+                layout: {
+                  hLineColor: '#a8a29e',
+                  vLineColor: '#a8a29e',
+                  paddingTop: (i: number, node: any) => 1,
+                  paddingBottom: (i: number, node: any) => 1,
+                  paddingLeft: (i: number, node: any) => 1,
+                  paddingRight: (i: number, node: any) => 1,
+                  hLineWidth: () => 0.3,
+                  vLineWidth: () => 0.3,
+                },
+              }
+            ]
           },
           // Espacio vacío en el medio
           { width: '4%', text: '' },
-          // Tabla derecha (últimos 3 elementos)
+          // Columna derecha: SÍNTOMAS RESPIRATORIOS
           {
             width: '48%',
-            style: 'table',
-            table: {
-              widths: ['80%', '20%'],
-              body: [
-                [
-                  { text: 'EXPOSICIÓN LABORAL A POLVOS', style: 'tableCellBold', alignment: 'center' },
-                  createExposicionPolvosTableCell(previoEspirometria.exposicionLaboralPolvos?.toString() || ''),
-                ],
-                [
-                  { text: 'EXP. A VAPORES Y GASES IRRITANTES', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.exposicionVaporesGasesIrritantes?.toString() || ''),
-                ],
-                [
-                  { text: 'ANTECEDENTES DE TUBERCULOSIS U OTRAS INFECCIONES RESPIRATORIAS', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.antecedentesTuberculosisInfeccionesRespiratorias?.toString() || ''),
-                ]
-              ],
-            },
-            layout: {
-              hLineColor: '#a8a29e',
-              vLineColor: '#a8a29e',
-              paddingTop: (i: number, node: any) => 1,
-              paddingBottom: (i: number, node: any) => 1,
-              paddingLeft: (i: number, node: any) => 1,
-              paddingRight: (i: number, node: any) => 1,
-              hLineWidth: () => 0.3,
-              vLineWidth: () => 0.3,
-            },
+            stack: [
+              {
+                text: 'SÍNTOMAS RESPIRATORIOS',
+                style: 'sectionHeader',
+                alignment: 'center',
+                margin: [0, 4, 0, 3],
+              },
+              {
+                style: 'table',
+                table: {
+                  widths: ['10%', '10%', '10%', '10%', '10%', '10%', '10%', '10%', '10%', '10%'],
+                  body: [
+                    [
+                      { text: 'TOS CRÓNICA', style: 'tableCellBold', alignment: 'center', colSpan: 8 },
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      Object.assign({}, createConditionalTableCell(previoEspirometria.tosCronica?.toString() || ''), { colSpan: 2 }),
+                      {},
+                    ],
+                    [
+                      { text: 'EXPECTORACIÓN FRECUENTE', style: 'tableCellBold', alignment: 'center', colSpan: 8 },
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      Object.assign({}, createConditionalTableCell(previoEspirometria.expectoracionFrecuente?.toString() || ''), { colSpan: 2 }),
+                      {},
+                    ],
+                    [
+                      { text: 'DISNEA', style: 'tableCellBold', alignment: 'center', colSpan: 4 },
+                      {},
+                      {},
+                      {},
+                      Object.assign({}, createDisneaTableCell(previoEspirometria.disnea?.toString() || ''), { colSpan: 6 }),
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                    ],
+                    [
+                      { text: 'SIBILANCIAS', style: 'tableCellBold', alignment: 'center', colSpan: 8 },
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      Object.assign({}, createConditionalTableCell(previoEspirometria.sibilancias?.toString() || ''), { colSpan: 2 }),
+                      {},
+                    ],
+                    [
+                      { text: 'HEMOPTISIS', style: 'tableCellBold', alignment: 'center', colSpan: 8 },
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      {},
+                      Object.assign({}, createConditionalTableCell(previoEspirometria.hemoptisis?.toString() || ''), { colSpan: 2 }),
+                      {},
+                    ],
+                    ...(previoEspirometria.otrosSintomas ? [[
+                      { text: 'OTROS SÍNTOMAS', style: 'tableCellBold', alignment: 'center', colSpan: 5 },
+                      {},
+                      {},
+                      {},
+                      {},
+                      Object.assign({}, createOtrosSintomasTableCell(previoEspirometria.otrosSintomas?.toString() || ''), { colSpan: 5 }),
+                      {},
+                      {},
+                      {},
+                      {},
+                    ]] : [])
+                  ],
+                },
+                layout: {
+                  hLineColor: '#a8a29e',
+                  vLineColor: '#a8a29e',
+                  paddingTop: (i: number, node: any) => 1,
+                  paddingBottom: (i: number, node: any) => 1,
+                  paddingLeft: (i: number, node: any) => 1,
+                  paddingRight: (i: number, node: any) => 1,
+                  hLineWidth: () => 0.3,
+                  vLineWidth: () => 0.3,
+                },
+              }
+            ]
           }
         ],
-        margin: [0, 0, 0, 5],
-      },
-
-      // Síntomas respiratorios
-      {
-        text: 'SÍNTOMAS RESPIRATORIOS',
-        style: 'sectionHeader',
-        alignment: 'center',
-        margin: [0, 8, 0, 5],
-      },
-      {
-        columns: [
-          // Tabla izquierda (primeros 3 elementos)
-          {
-            width: '48%',
-            style: 'table',
-            table: {
-              widths: ['80%', '20%'],
-              body: [
-                [
-                  { text: 'TOS CRÓNICA', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.tosCronica?.toString() || ''),
-                ],
-                [
-                  { text: 'EXPECTORACIÓN FRECUENTE', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.expectoracionFrecuente?.toString() || ''),
-                ],
-                [
-                  { text: 'DISNEA', style: 'tableCellBold', alignment: 'center' },
-                  createDisneaTableCell(previoEspirometria.disnea?.toString() || ''),
-                ]
-              ],
-            },
-            layout: {
-              hLineColor: '#a8a29e',
-              vLineColor: '#a8a29e',
-              paddingTop: (i: number, node: any) => 1,
-              paddingBottom: (i: number, node: any) => 1,
-              paddingLeft: (i: number, node: any) => 1,
-              paddingRight: (i: number, node: any) => 1,
-              hLineWidth: () => 0.3,
-              vLineWidth: () => 0.3,
-            },
-          },
-          // Espacio vacío en el medio
-          { width: '4%', text: '' },
-          // Tabla derecha (últimos elementos)
-          {
-            width: '48%',
-            style: 'table',
-            table: {
-              widths: ['80%', '20%'],
-              body: [
-                [
-                  { text: 'SIBILANCIAS', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.sibilancias?.toString() || ''),
-                ],
-                [
-                  { text: 'HEMOPTISIS', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.hemoptisis?.toString() || ''),
-                ],
-                ...(previoEspirometria.otrosSintomas ? [[
-                  { text: 'OTROS SÍNTOMAS', style: 'tableCellBold', alignment: 'center' },
-                  { text: previoEspirometria.otrosSintomas?.toString() || '', style: 'tableCell' },
-                ]] : [])
-              ],
-            },
-            layout: {
-              hLineColor: '#a8a29e',
-              vLineColor: '#a8a29e',
-              paddingTop: (i: number, node: any) => 1,
-              paddingBottom: (i: number, node: any) => 1,
-              paddingLeft: (i: number, node: any) => 1,
-              paddingRight: (i: number, node: any) => 1,
-              hLineWidth: () => 0.3,
-              vLineWidth: () => 0.3,
-            },
-          }
-        ],
-        margin: [0, 0, 0, 5],
+        margin: [0, 0, 0, 3],
       },
 
       // Antecedentes médicos relevantes
@@ -534,7 +549,7 @@ export const previoEspirometriaInforme = (
         text: 'ANTECEDENTES MÉDICOS RELEVANTES',
         style: 'sectionHeader',
         alignment: 'center',
-        margin: [0, 8, 0, 5],
+        margin: [0, 8, 0, 3],
       },
       {
         columns: [
@@ -581,15 +596,21 @@ export const previoEspirometriaInforme = (
             width: '48%',
             style: 'table',
             table: {
-              widths: ['50%', '50%'],
+              widths: ['20%', '20%', '20%', '20%', '20%'],
               body: [
                 [
-                  { text: 'MEDICAMENTOS ACTUALES', style: 'tableCellBold', alignment: 'center' },
+                  { text: 'MEDICAMENTOS ACTUALES', style: 'tableCellBold', alignment: 'center', colSpan: 4 },
+                  {},
+                  {},
+                  {},
                   createConditionalTableCell(previoEspirometria.medicamentosActuales?.toString() || ''),
                 ],
                 ...(previoEspirometria.medicamentosActualesEspecificar ? [[
-                  { text: 'ESPECIFICAR MEDICAMENTOS', style: 'tableCellBold', alignment: 'center' },
-                  { text: previoEspirometria.medicamentosActualesEspecificar?.toString() || '', style: 'tableCell' },
+                  { text: 'ESPECIFICAR MEDICAMENTOS', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                  {},
+                  { text: previoEspirometria.medicamentosActualesEspecificar?.toString().toUpperCase() || '', style: 'tableCell', colSpan: 3 },
+                  {},
+                  {},
                 ]] : [])
               ],
             },
@@ -605,7 +626,7 @@ export const previoEspirometriaInforme = (
             },
           }
         ],
-        margin: [0, 0, 0, 5],
+        margin: [0, 0, 0, 3],
       },
 
       // Sección CONTRAINDICACIONES RELATIVAS y ABSOLUTAS lado a lado
@@ -619,7 +640,7 @@ export const previoEspirometriaInforme = (
                 text: 'CONTRAINDICACIONES RELATIVAS',
                 style: 'sectionHeader',
                 alignment: 'center',
-                margin: [0, 8, 0, 5],
+                margin: [0, 8, 0, 3],
               },
               {
                 style: 'table',
@@ -646,10 +667,6 @@ export const previoEspirometriaInforme = (
                       { text: 'NEUMOTÓRAX', style: 'tableCellBold', alignment: 'center' },
                       createConditionalTableCell(previoEspirometria.neumotorax?.toString() || ''),
                     ],
-                    [
-                      { text: 'CONDICIÓN QUE CONTRAINDIQUE BRONCODILATADORES', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.condicionContraindiqueBroncodilatadores?.toString() || ''),
-                    ]
                   ],
                 },
                 layout: {
@@ -662,7 +679,7 @@ export const previoEspirometriaInforme = (
                   hLineWidth: () => 0.3,
                   vLineWidth: () => 0.3,
                 },
-                margin: [0, 0, 0, 5],
+                margin: [0, 0, 0, 3],
               }
             ]
           },
@@ -676,35 +693,35 @@ export const previoEspirometriaInforme = (
                 text: 'CONTRAINDICACIONES ABSOLUTAS',
                 style: 'sectionHeader',
                 alignment: 'center',
-                margin: [0, 8, 0, 5],
+                margin: [0, 8, 0, 3],
               },
       {
         style: 'table',
         table: {
           widths: ['80%', '20%'],
           body: [
-            [
-                      { text: 'INFARTO AGUDO O ANGINA INESTABLE', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.infartoAgudoAnginaInestable?.toString() || ''),
-                    ],
-                    [
-                      { text: 'ANEURISMA AÓRTICO CONOCIDO', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.aneurismaAorticoConocido?.toString() || ''),
-                    ],
-                    [
-                      { text: 'INESTABILIDAD HEMODINÁMICA GRAVE', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.inestabilidadHemodinamicaGrave?.toString() || ''),
-                    ],
-                    [
-                      { text: 'HIPERTENSIÓN INTRACRANEAL', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.hipertensionIntracraneal?.toString() || ''),
-                    ],
-                    [
-                      { text: 'DESPRENDIMIENTO AGUDO DE RETINA', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.desprendimientoAgudoRetina?.toString() || ''),
-                    ]
+                  [
+                    { text: 'IAM/ANGINA INESTABLE', style: 'tableCellBold', alignment: 'center' },
+                    createConditionalTableCell(previoEspirometria.infartoAgudoAnginaInestable?.toString() || ''),
                   ],
-                },
+                  [
+                    { text: 'ANEURISMA AÓRTICO', style: 'tableCellBold', alignment: 'center' },
+                    createConditionalTableCell(previoEspirometria.aneurismaAorticoConocido?.toString() || ''),
+                  ],
+                  [
+                    { text: 'INESTABILIDAD HEMODINÁMICA', style: 'tableCellBold', alignment: 'center' },
+                    createConditionalTableCell(previoEspirometria.inestabilidadHemodinamicaGrave?.toString() || ''),
+                  ],
+                  [
+                    { text: 'HIPERTENSIÓN INTRACRANEAL', style: 'tableCellBold', alignment: 'center' },
+                    createConditionalTableCell(previoEspirometria.hipertensionIntracraneal?.toString() || ''),
+                  ],
+                  [
+                    { text: 'DESPRENDIMIENTO DE RETINA', style: 'tableCellBold', alignment: 'center' },
+                    createConditionalTableCell(previoEspirometria.desprendimientoAgudoRetina?.toString() || ''),
+                  ]
+                ],
+              },
                 layout: {
                   hLineColor: '#a8a29e',
                   vLineColor: '#a8a29e',
@@ -715,7 +732,7 @@ export const previoEspirometriaInforme = (
                   hLineWidth: () => 0.3,
                   vLineWidth: () => 0.3,
                 },
-                margin: [0, 0, 0, 5],
+                margin: [0, 0, 0, 3],
               }
             ]
           }
@@ -727,7 +744,7 @@ export const previoEspirometriaInforme = (
          text: 'RESULTADO',
          style: 'sectionHeader',
          alignment: 'center',
-         margin: [0, 8, 0, 5],
+         margin: [0, 8, 0, 3],
        },
        {
          style: 'table',
@@ -750,7 +767,7 @@ export const previoEspirometriaInforme = (
            hLineWidth: () => 0.3,
            vLineWidth: () => 0.3,
          },
-         margin: [0, 0, 0, 5],
+         margin: [0, 0, 0, 3],
       },
         ],
     // Pie de pagina

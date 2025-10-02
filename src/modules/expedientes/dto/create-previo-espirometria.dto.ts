@@ -4,9 +4,9 @@ import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from "cla
 
 const siONo = ["Si", "No"];
 
-const tabaquismoOpciones = ["No fuma", "Fuma actualmente", "Exfumador"];
+const tabaquismoOpciones = ["No fuma", "Fuma", "Exfumador"];
 
-const paquetesAnoOpciones = ["0", "<10", "10–20", ">20"];
+const cigarrosSemanaOpciones = ["0", "<10", "10–20", ">20"];
 
 const exposicionPolvosOpciones = ["Orgánicos", "Inorgánicos", "Ambos", "No"];
 
@@ -40,13 +40,13 @@ export class CreatePrevioEspirometriaDto {
 
     @ApiProperty({
         description: 'Paquetes-año (si aplica)',
-        enum: paquetesAnoOpciones,
+        enum: cigarrosSemanaOpciones,
         example: '<10'
     })
     @IsString({ message: 'Los paquetes-año deben ser un string' })
     @IsOptional()
-    @IsEnum(paquetesAnoOpciones, { message: 'Los paquetes-año deben ser uno de los siguientes: ' + paquetesAnoOpciones })
-    paquetesAno: string
+    @IsEnum(cigarrosSemanaOpciones, { message: 'Los paquetes-año deben ser uno de los siguientes: ' + cigarrosSemanaOpciones })
+    cigarrosSemana: string
 
     @ApiProperty({
         description: 'Exposición a humos de biomasa',
@@ -256,16 +256,6 @@ export class CreatePrevioEspirometriaDto {
     @IsNotEmpty({ message: 'El neumotórax no puede estar vacío' })
     @IsEnum(siONo, { message: 'El neumotórax debe ser uno de los siguientes: ' + siONo })
     neumotorax: string
-
-    @ApiProperty({
-        description: 'Alguna condición que contraindique broncodilatadores',
-        enum: siONo,
-        example: 'No'
-    })
-    @IsString({ message: 'La condición que contraindique broncodilatadores debe ser un string' })
-    @IsNotEmpty({ message: 'La condición que contraindique broncodilatadores no puede estar vacía' })
-    @IsEnum(siONo, { message: 'La condición que contraindique broncodilatadores debe ser uno de los siguientes: ' + siONo })
-    condicionContraindiqueBroncodilatadores: string
 
     // Contraindicaciones Absolutas
     @ApiProperty({
