@@ -160,6 +160,42 @@ export class InformesController {
     }
   }
 
+  @Get('historiaOtologica/:empresaId/:trabajadorId/:historiaOtologicaId/:userId')
+  async getInformeHistoriaOtologica(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('historiaOtologicaId') historiaOtologicaId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+  
+    try {
+      const rutaPDF = await this.informesService.getInformeHistoriaOtologica(empresaId, trabajadorId, historiaOtologicaId, userId);
+      return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
+    } catch (error) {
+      console.error('[getInformeHistoriaOtologica] Error al generar el informe historia otologica:', error);
+      throw error;
+    }
+  }
+
+  @Get('previoEspirometria/:empresaId/:trabajadorId/:previoEspirometriaId/:userId')
+  async getInformePrevioEspirometria(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('previoEspirometriaId') previoEspirometriaId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+  
+    try {
+      const rutaPDF = await this.informesService.getInformePrevioEspirometria(empresaId, trabajadorId, previoEspirometriaId, userId);
+      return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
+    } catch (error) {
+      console.error('[getInformePrevioEspirometria] Error al generar el informe previo espirometria:', error);
+      throw error;
+    }
+  }
+
   @Get('dashboard/ver/:empresaId/:trabajadorId/:userId')
   async getInformeDashboard(
     @Param('empresaId') empresaId: string,

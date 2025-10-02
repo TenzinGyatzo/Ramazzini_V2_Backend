@@ -1,0 +1,133 @@
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document, Schema as MongooseSchema } from 'mongoose';
+import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
+import { User } from 'src/modules/users/entities/user.entity';
+
+const siONo = ["Si", "No"];
+
+const tabaquismoOpciones = ["No fuma", "Fuma actualmente", "Exfumador"];
+
+const paquetesAnoOpciones = ["0", "<10", "10–20", ">20"];
+
+const exposicionPolvosOpciones = ["Orgánicos", "Inorgánicos", "Ambos", "No"];
+
+const disneaOpciones = ["Ninguna", "Al esfuerzo", "En reposo"];
+
+const resultadoCuestionarioOpciones = ["Procedente", "Procedente con precaución", "No procedente"];
+
+@Schema()
+export class PrevioEspirometria extends Document {
+    @Prop({ required: true })
+    fechaPrevioEspirometria: Date
+
+    // Factores de riesgo respiratorio
+    @Prop({ enum: tabaquismoOpciones })
+    tabaquismo: string
+
+    @Prop({ enum: paquetesAnoOpciones })
+    paquetesAno: string
+
+    @Prop({ enum: siONo })
+    exposicionHumosBiomasa: string
+
+    @Prop({ enum: exposicionPolvosOpciones })
+    exposicionLaboralPolvos: string
+
+    @Prop({ enum: siONo })
+    exposicionVaporesGasesIrritantes: string
+
+    @Prop({ enum: siONo })
+    antecedentesTuberculosisInfeccionesRespiratorias: string
+
+    // Síntomas respiratorios
+    @Prop({ enum: siONo })
+    tosCronica: string
+
+    @Prop({ enum: siONo })
+    expectoracionFrecuente: string
+
+    @Prop({ enum: disneaOpciones })
+    disnea: string
+
+    @Prop({ enum: siONo })
+    sibilancias: string
+
+    @Prop({ enum: siONo })
+    hemoptisis: string
+
+    @Prop()
+    otrosSintomas: string
+
+    // Antecedentes médicos relevantes
+    @Prop({ enum: siONo })
+    asma: string
+
+    @Prop({ enum: siONo })
+    epocBronquitisCronica: string
+
+    @Prop({ enum: siONo })
+    fibrosisPulmonar: string
+
+    @Prop({ enum: siONo })
+    apneaSueno: string
+
+    @Prop({ enum: siONo })
+    medicamentosActuales: string
+
+    @Prop()
+    medicamentosActualesEspecificar: string
+
+    // Contraindicaciones Relativas
+    @Prop({ enum: siONo })
+    cirugiaReciente: string
+
+    @Prop({ enum: siONo })
+    infeccionRespiratoriaActiva: string
+
+    @Prop({ enum: siONo })
+    embarazoComplicado: string
+
+    @Prop({ enum: siONo })
+    derramePleural: string
+
+    @Prop({ enum: siONo })
+    neumotorax: string
+
+    @Prop({ enum: siONo })
+    condicionContraindiqueBroncodilatadores: string
+
+    // Contraindicaciones Absolutas
+    @Prop({ enum: siONo })
+    infartoAgudoAnginaInestable: string
+
+    @Prop({ enum: siONo })
+    aneurismaAorticoConocido: string
+
+    @Prop({ enum: siONo })
+    inestabilidadHemodinamicaGrave: string
+
+    @Prop({ enum: siONo })
+    hipertensionIntracraneal: string
+
+    @Prop({ enum: siONo })
+    desprendimientoAgudoRetina: string
+
+    // Resultado de cuestionario
+    @Prop( { enum: resultadoCuestionarioOpciones })
+    resultadoCuestionario: string
+
+    // Trabajador, ruta al archivo e info de creador y actualizador
+    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
+    idTrabajador: Trabajador;
+
+    @Prop({ required: true })
+    rutaPDF: string;
+
+    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+    createdBy: User;
+  
+    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+    updatedBy: User;
+}
+
+export const PrevioEspirometriaSchema = SchemaFactory.createForClass(PrevioEspirometria).set('timestamps', true);

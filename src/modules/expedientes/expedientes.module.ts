@@ -13,6 +13,8 @@ import { ExploracionFisica, ExploracionFisicaSchema } from './schemas/exploracio
 import { HistoriaClinica, HistoriaClinicaSchema } from './schemas/historia-clinica.schema';
 import { NotaMedica, NotaMedicaSchema } from './schemas/nota-medica.schema';
 import { ControlPrenatal, ControlPrenatalSchema } from './schemas/control-prenatal.schema';
+import { HistoriaOtologica, HistoriaOtologicaSchema } from './schemas/historia-otologica.schema';
+import { PrevioEspirometria, PrevioEspirometriaSchema } from './schemas/previo-espirometria.schema';
 import { Trabajador, TrabajadorSchema } from '../trabajadores/schemas/trabajador.schema';
 import { InformesModule } from '../informes/informes.module';
 import { FilesModule } from '../files/files.module';
@@ -34,6 +36,8 @@ import { PdfCleanerService } from './pdf-cleaner.service';
       { name: HistoriaClinica.name, schema: HistoriaClinicaSchema },
       { name: NotaMedica.name, schema: NotaMedicaSchema },
       { name: ControlPrenatal.name, schema: ControlPrenatalSchema },
+      { name: HistoriaOtologica.name, schema: HistoriaOtologicaSchema },
+      { name: PrevioEspirometria.name, schema: PrevioEspirometriaSchema },
       { name: Trabajador.name, schema: TrabajadorSchema },
     ]),
     forwardRef(() => InformesModule),

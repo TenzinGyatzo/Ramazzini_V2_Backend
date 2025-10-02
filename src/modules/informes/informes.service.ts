@@ -11,6 +11,8 @@ import { exploracionFisicaInforme } from './documents/exploracion-fisica.informe
 import { historiaClinicaInforme } from './documents/historia-clinica.informe';
 import { notaMedicaInforme } from './documents/nota-medica.informe';
 import { controlPrenatalInforme } from './documents/control-prenatal.informe';
+import { historiaOtologicaInforme } from './documents/historia-otologica.informe';
+import { previoEspirometriaInforme } from './documents/previo-espirometria.informe';
 import { dashboardInforme } from './documents/dashboard.informe';
 import { EmpresasService } from '../empresas/empresas.service';
 import { TrabajadoresService } from '../trabajadores/trabajadores.service';
@@ -1823,6 +1825,272 @@ export class InformesService {
       nombreEmpresa,
       datosTrabajador,
       datosControlPrenatal,
+      datosMedicoFirmante,
+      datosProveedorSalud,
+    );
+
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+    return rutaCompleta;
+  }
+
+  async getInformeHistoriaOtologica(empresaId: string, trabajadorId: string, historiaOtologicaId: string, userId: string): Promise<string> {
+    const empresa = await this.empresasService.findOne(empresaId);
+    const nombreEmpresa = empresa.nombreComercial;
+    const trabajador = await this.trabajadoresService.findOne(trabajadorId);
+    const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
+      nombre: trabajador.nombre,
+      nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
+      escolaridad: trabajador.escolaridad,
+      edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
+      puesto: trabajador.puesto,
+      sexo: trabajador.sexo,
+      antiguedad: calcularAntiguedad(
+        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
+      ),
+      telefono: trabajador.telefono,
+      estadoCivil: trabajador.estadoCivil,
+      numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
+    };
+    const historiaOtologica = await this.expedientesService.findDocument('historiaOtologica', historiaOtologicaId);
+    const datosHistoriaOtologica = {
+      fechaHistoriaOtologica: historiaOtologica.fechaHistoriaOtologica,
+      dolorOido: historiaOtologica.dolorOido,
+      supuracionOido: historiaOtologica.supuracionOido,
+      mareoVertigo: historiaOtologica.mareoVertigo,
+      zumbidoTinnitus: historiaOtologica.zumbidoTinnitus,
+      perdidaAudicion: historiaOtologica.perdidaAudicion,
+      oidoTapadoPlenitud: historiaOtologica.oidoTapadoPlenitud,
+      otitisFrecuentesInfancia: historiaOtologica.otitisFrecuentesInfancia,
+      cirugiasOido: historiaOtologica.cirugiasOido,
+      traumatismoCranealBarotrauma: historiaOtologica.traumatismoCranealBarotrauma,
+      usoAudifonos: historiaOtologica.usoAudifonos,
+      historiaFamiliarHipoacusia: historiaOtologica.historiaFamiliarHipoacusia,
+      meningitisInfeccionGraveInfancia: historiaOtologica.meningitisInfeccionGraveInfancia,
+      diabetes: historiaOtologica.diabetes,
+      enfermedadRenal: historiaOtologica.enfermedadRenal,
+      medicamentosOtotoxicos: historiaOtologica.medicamentosOtotoxicos,
+      trabajoAmbientesRuidosos: historiaOtologica.trabajoAmbientesRuidosos,
+      tiempoExposicionLaboral: historiaOtologica.tiempoExposicionLaboral,
+      usoProteccionAuditiva: historiaOtologica.usoProteccionAuditiva,
+      musicaFuerteAudifonos: historiaOtologica.musicaFuerteAudifonos,
+      armasFuegoPasatiemposRuidosos: historiaOtologica.armasFuegoPasatiemposRuidosos,
+      servicioMilitar: historiaOtologica.servicioMilitar,
+      alergias: historiaOtologica.alergias,
+      resfriadoDiaPrueba: historiaOtologica.resfriadoDiaPrueba,
+      otoscopiaOidoDerecho: historiaOtologica.otoscopiaOidoDerecho,
+      otoscopiaOidoIzquierdo: historiaOtologica.otoscopiaOidoIzquierdo,
+      resultadoCuestionario: historiaOtologica.resultadoCuestionario,
+    };
+
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = medicoFirmante
+    ? {
+        nombre: medicoFirmante.nombre || "",
+        tituloProfesional: medicoFirmante.tituloProfesional || "",
+        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
+        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
+        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
+        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
+        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
+        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
+      }
+    : {
+        nombre: "",
+        tituloProfesional: "",
+        numeroCedulaProfesional: "",
+        especialistaSaludTrabajo: "",
+        numeroCedulaEspecialista: "",
+        nombreCredencialAdicional: "",
+        numeroCredencialAdicional: "",
+        firma: null,
+      };
+    const usuario = await this.usersService.findById(userId);
+    const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = proveedorSalud
+    ? {
+        nombre: proveedorSalud.nombre || "",
+        pais: proveedorSalud.pais || "",
+        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
+        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
+        estado: proveedorSalud.estado || "",
+        municipio: proveedorSalud.municipio || "",
+        codigoPostal: proveedorSalud.codigoPostal || "",
+        direccion: proveedorSalud.direccion || "",
+        telefono: proveedorSalud.telefono || "",
+        correoElectronico: proveedorSalud.correoElectronico || "",
+        sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
+      }
+    : {
+        nombre: "",
+        pais: "",
+        perfilProveedorSalud: "",
+        logotipoEmpresa: null,
+        estado: "",
+        municipio: "",
+        codigoPostal: "",
+        direccion: "",
+        telefono: "",
+        correoElectronico: "",
+        sitioWeb: "",
+        colorInforme: "#343A40",
+      };
+
+    const fecha = convertirFechaADDMMAAAA(historiaOtologica.fechaHistoriaOtologica)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Historia Otologica ${fecha}.pdf`;
+    const rutaDirectorio = path.resolve(historiaOtologica.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
+    }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
+    const docDefinition = historiaOtologicaInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      datosHistoriaOtologica,
+      datosMedicoFirmante,
+      datosProveedorSalud,
+    );
+
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+    return rutaCompleta;
+  }
+
+  async getInformePrevioEspirometria(empresaId: string, trabajadorId: string, previoEspirometriaId: string, userId: string): Promise<string> {
+    const empresa = await this.empresasService.findOne(empresaId);
+    const nombreEmpresa = empresa.nombreComercial;
+    const trabajador = await this.trabajadoresService.findOne(trabajadorId);
+    const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
+      nombre: trabajador.nombre,
+      nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
+      escolaridad: trabajador.escolaridad,
+      edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
+      puesto: trabajador.puesto,
+      sexo: trabajador.sexo,
+      antiguedad: calcularAntiguedad(
+        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
+      ),
+      telefono: trabajador.telefono,
+      estadoCivil: trabajador.estadoCivil,
+      numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
+    };
+    const previoEspirometria = await this.expedientesService.findDocument('previoEspirometria', previoEspirometriaId);
+    const datosPrevioEspirometria = {
+      fechaPrevioEspirometria: previoEspirometria.fechaPrevioEspirometria,
+      tabaquismo: previoEspirometria.tabaquismo,
+      paquetesAno: previoEspirometria.paquetesAno,
+      exposicionHumosBiomasa: previoEspirometria.exposicionHumosBiomasa,
+      exposicionLaboralPolvos: previoEspirometria.exposicionLaboralPolvos,
+      exposicionVaporesGasesIrritantes: previoEspirometria.exposicionVaporesGasesIrritantes,
+      antecedentesTuberculosisInfeccionesRespiratorias: previoEspirometria.antecedentesTuberculosisInfeccionesRespiratorias,
+      tosCronica: previoEspirometria.tosCronica,
+      expectoracionFrecuente: previoEspirometria.expectoracionFrecuente,
+      disnea: previoEspirometria.disnea,
+      sibilancias: previoEspirometria.sibilancias,
+      hemoptisis: previoEspirometria.hemoptisis,
+      otrosSintomas: previoEspirometria.otrosSintomas,
+      asma: previoEspirometria.asma,
+      epocBronquitisCronica: previoEspirometria.epocBronquitisCronica,
+      fibrosisPulmonar: previoEspirometria.fibrosisPulmonar,
+      apneaSueno: previoEspirometria.apneaSueno,
+      medicamentosActuales: previoEspirometria.medicamentosActuales,
+      medicamentosActualesEspecificar: previoEspirometria.medicamentosActualesEspecificar,
+      cirugiaReciente: previoEspirometria.cirugiaReciente,
+      infeccionRespiratoriaActiva: previoEspirometria.infeccionRespiratoriaActiva,
+      embarazoComplicado: previoEspirometria.embarazoComplicado,
+      derramePleural: previoEspirometria.derramePleural,
+      neumotorax: previoEspirometria.neumotorax,
+      condicionContraindiqueBroncodilatadores: previoEspirometria.condicionContraindiqueBroncodilatadores,
+      infartoAgudoAnginaInestable: previoEspirometria.infartoAgudoAnginaInestable,
+      aneurismaAorticoConocido: previoEspirometria.aneurismaAorticoConocido,
+      inestabilidadHemodinamicaGrave: previoEspirometria.inestabilidadHemodinamicaGrave,
+      hipertensionIntracraneal: previoEspirometria.hipertensionIntracraneal,
+      desprendimientoAgudoRetina: previoEspirometria.desprendimientoAgudoRetina,
+      resultadoCuestionario: previoEspirometria.resultadoCuestionario,
+    };
+
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = medicoFirmante
+    ? {
+        nombre: medicoFirmante.nombre || "",
+        tituloProfesional: medicoFirmante.tituloProfesional || "",
+        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
+        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
+        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
+        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
+        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
+        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
+      }
+    : {
+        nombre: "",
+        tituloProfesional: "",
+        numeroCedulaProfesional: "",
+        especialistaSaludTrabajo: "",
+        numeroCedulaEspecialista: "",
+        nombreCredencialAdicional: "",
+        numeroCredencialAdicional: "",
+        firma: null,
+      };
+    const usuario = await this.usersService.findById(userId);
+    const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = proveedorSalud
+    ? {
+        nombre: proveedorSalud.nombre || "",
+        pais: proveedorSalud.pais || "",
+        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
+        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
+        estado: proveedorSalud.estado || "",
+        municipio: proveedorSalud.municipio || "",
+        codigoPostal: proveedorSalud.codigoPostal || "",
+        direccion: proveedorSalud.direccion || "",
+        telefono: proveedorSalud.telefono || "",
+        correoElectronico: proveedorSalud.correoElectronico || "",
+        sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
+      }
+    : {
+        nombre: "",
+        pais: "",
+        perfilProveedorSalud: "",
+        logotipoEmpresa: null,
+        estado: "",
+        municipio: "",
+        codigoPostal: "",
+        direccion: "",
+        telefono: "",
+        correoElectronico: "",
+        sitioWeb: "",
+        colorInforme: "#343A40",
+      };
+
+    const fecha = convertirFechaADDMMAAAA(previoEspirometria.fechaPrevioEspirometria)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Previo Espirometria ${fecha}.pdf`;
+    const rutaDirectorio = path.resolve(previoEspirometria.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
+    }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
+    const docDefinition = previoEspirometriaInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      datosPrevioEspirometria,
       datosMedicoFirmante,
       datosProveedorSalud,
     );

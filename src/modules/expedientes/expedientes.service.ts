@@ -13,6 +13,8 @@ import { ExploracionFisica } from './schemas/exploracion-fisica.schema';
 import { HistoriaClinica } from './schemas/historia-clinica.schema';
 import { NotaMedica } from './schemas/nota-medica.schema';
 import { ControlPrenatal } from './schemas/control-prenatal.schema';
+import { HistoriaOtologica } from './schemas/historia-otologica.schema';
+import { PrevioEspirometria } from './schemas/previo-espirometria.schema';
 import { startOfDay, endOfDay } from 'date-fns';
 import { FilesService } from '../files/files.service';
 import { convertirFechaISOaDDMMYYYY } from 'src/utils/dates';
@@ -39,6 +41,8 @@ export class ExpedientesService {
     @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
     @InjectModel(ControlPrenatal.name) private controlPrenatalModel: Model<ControlPrenatal>,
     @InjectModel(Trabajador.name) private trabajadorModel: Model<Trabajador>,
+    @InjectModel(HistoriaOtologica.name) private historiaOtologicaModel: Model<HistoriaOtologica>,
+    @InjectModel(PrevioEspirometria.name) private previoEspirometriaModel: Model<PrevioEspirometria>,
     private readonly filesService: FilesService
   ) {
     this.models = {
@@ -52,7 +56,9 @@ export class ExpedientesService {
       exploracionFisica: this.exploracionFisicaModel,
       historiaClinica: this.historiaClinicaModel,
       notaMedica: this.notaMedicaModel,
-      controlPrenatal: this.controlPrenatalModel
+      controlPrenatal: this.controlPrenatalModel,
+      historiaOtologica: this.historiaOtologicaModel,
+      previoEspirometria: this.previoEspirometriaModel,
     };
 
     this.dateFields = {
@@ -66,7 +72,9 @@ export class ExpedientesService {
       exploracionFisica: 'fechaExploracionFisica',
       historiaClinica: 'fechaHistoriaClinica',
       notaMedica: 'fechaNotaMedica',
-      controlPrenatal: 'fechaInicioControlPrenatal'
+      controlPrenatal: 'fechaInicioControlPrenatal',
+      historiaOtologica: 'fechaHistoriaOtologica',
+      previoEspirometria: 'fechaPrevioEspirometria',
     };
   }
 
