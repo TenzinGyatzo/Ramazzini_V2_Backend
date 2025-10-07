@@ -96,6 +96,16 @@ const createProteccionAuditivaTableCell = (text: string): Content => ({
   fontSize: text && text.toUpperCase() === 'NUNCA' ? 12 : 10 
 });
 
+const createTiempoExposicionTableCell = (text: string): Content => ({
+  text: text ? text.toUpperCase() : '',
+  style: 'tableCell',
+  alignment: 'center',
+  margin: [3, 3, 3, 3],
+  fontSize: text && (text.toUpperCase() === 'NINGUNO' || 
+                      text.toUpperCase() === 'MENOS DE 1 AÑO' || 
+                      text.toUpperCase() === 'MÁS DE 20 AÑOS') ? 10 : 12
+});
+
 const createOtoscopiaTableCell = (text: string): Content => ({
   text: text ? text.toUpperCase() : '',
   style: 'tableCell',
@@ -536,7 +546,7 @@ export const historiaOtologicaInforme = (
                 ],
                 [
                   { text: 'TIEMPO DE EXPOSICIÓN A RUIDO LABORAL', style: 'tableCellBold', alignment: 'center' },
-                  { text: historiaOtologica.tiempoExposicionLaboral?.toString() || '', style: 'tableCell' },
+                  createTiempoExposicionTableCell(historiaOtologica.tiempoExposicionLaboral?.toString() || ''),
                 ],
                 [
                   { text: 'USO DE PROTECCIÓN AUDITIVA', style: 'tableCellBold', alignment: 'center' },

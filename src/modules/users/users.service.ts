@@ -16,6 +16,7 @@ export class UsersService {
     @InjectModel('Antidoping') private antidopingModel: Model<any>,
     @InjectModel('NotaMedica') private notaMedicaModel: Model<any>,
     @InjectModel('DocumentoExterno') private documentoExternoModel: Model<any>,
+    @InjectModel('ProveedorSalud') private proveedorSaludModel: Model<any>,
   ) {}
 
   async register(createUserDto: CreateUserDto) {
@@ -194,6 +195,48 @@ export class UsersService {
           }
           
           return filtro;
+        }
+
+        // Método para obtener estadísticas de todos los usuarios del sistema (solo para administradores)
+        async getAllProductivityStats(fechaInicio?: string, fechaFin?: string) {
+          try {
+            // Obtener todos los usuarios del sistema
+            const usuarios = await this.userModel.find({}).exec();
+
+            const usuariosConEstadisticas = await Promise.all(
+              usuarios.map(async (usuario) => {
+                const estadisticas = await this.getUserDetailedStats(usuario._id.toString(), fechaInicio, fechaFin);
+                
+                // Obtener información del proveedor de salud
+                let proveedorNombre = 'Sin proveedor';
+                if (usuario.idProveedorSalud) {
+                  try {
+                    const proveedor = await this.proveedorSaludModel.findById(usuario.idProveedorSalud).select('nombre').exec();
+                    if (proveedor) {
+                      proveedorNombre = proveedor.nombre;
+                    }
+                  } catch (error) {
+                    console.error('Error al obtener nombre del proveedor:', error);
+                  }
+                }
+
+                return {
+                  _id: usuario._id,
+                  username: usuario.username,
+                  email: usuario.email,
+                  role: usuario.role,
+                  idProveedorSalud: usuario.idProveedorSalud,
+                  proveedorNombre,
+                  productividad: estadisticas
+                };
+              })
+            );
+
+            return usuariosConEstadisticas;
+          } catch (error) {
+            console.error('Error al obtener estadísticas de productividad de todos los usuarios:', error);
+            throw error;
+          }
         }
 }
 

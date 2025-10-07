@@ -233,6 +233,24 @@ export class UsersController {
   }
 
   // Endpoints para estadísticas de productividad
+  @Get('productividad/todos')
+  async getAllProductivityStats(
+    @Res() res: Response,
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin') fechaFin?: string
+  ) {
+    try {
+      const stats = await this.usersService.getAllProductivityStats(
+        fechaInicio, 
+        fechaFin
+      );
+      res.json(stats);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: 'Error al obtener estadísticas de productividad de todos los usuarios' });
+    }
+  }
+
   @Get('productividad/:idProveedorSalud')
   async getProductivityStatsByProveedor(
     @Param('idProveedorSalud') idProveedorSalud: string,

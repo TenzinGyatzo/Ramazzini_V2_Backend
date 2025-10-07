@@ -3,22 +3,23 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
-const siONo = ["Si", "No"];
+const siONo = ["SI", "NO"];
 
-const proteccionAuditivaOpciones = ["Siempre", "A veces", "Nunca"];
+const proteccionAuditivaOpciones = ["NA", "SIEMPRE", "A VECES", "NUNCA"];
 
-const otoscopiaOpciones = ["Permeable", "No permeable"];
+const otoscopiaOpciones = ["PERMEABLE", "NO PERMEABLE"];
 
 const tiempoExposicionOpciones = [
-  "Menos de 1 año",
-  "1 - 5 años", 
-  "6 - 10 años",
-  "11 - 15 años",
-  "16 - 20 años",
-  "Más de 20 años"
+  "NINGUNO",
+  "MENOS DE 1 AÑO",
+  "1 - 5 AÑOS", 
+  "6 - 10 AÑOS",
+  "11 - 15 AÑOS",
+  "16 - 20 AÑOS",
+  "MÁS DE 20 AÑOS"
 ];
 
-const resultadoCuestionarioOpciones = ["Procedente", "Procedente con precaución", "No procedente"];
+const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE"];
 
 @Schema()
 export class HistoriaOtologica extends Document {
@@ -56,9 +57,6 @@ export class HistoriaOtologica extends Document {
 
     @Prop({ enum: siONo })
     usoAudifonos: string
-
-    @Prop({ enum: siONo })
-    historiaFamiliarHipoacusia: string
 
     @Prop({ enum: siONo })
     meningitisInfeccionGraveInfancia: string

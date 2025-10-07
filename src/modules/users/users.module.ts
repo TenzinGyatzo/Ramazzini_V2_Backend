@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User } from './entities/user.entity';
 import { UserSchema } from './schemas/user.schema';
 import { EmailsModule } from '../emails/emails.module';
+import { ProveedorSaludSchema } from '../proveedores-salud/schemas/proveedor-salud.schema';
 // Importar esquemas de expedientes
 import { HistoriaClinicaSchema } from '../expedientes/schemas/historia-clinica.schema';
 import { AptitudPuestoSchema } from '../expedientes/schemas/aptitud-puesto.schema';
@@ -19,6 +20,7 @@ import { DocumentoExternoSchema } from '../expedientes/schemas/documento-externo
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
+      { name: 'ProveedorSalud', schema: ProveedorSaludSchema },
       { name: 'HistoriaClinica', schema: HistoriaClinicaSchema },
       { name: 'AptitudPuesto', schema: AptitudPuestoSchema },
       { name: 'ExploracionFisica', schema: ExploracionFisicaSchema },

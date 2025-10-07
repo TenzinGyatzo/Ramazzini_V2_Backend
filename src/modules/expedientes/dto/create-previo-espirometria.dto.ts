@@ -2,19 +2,15 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-const siONo = ["Si", "No"];
+const siONo = ["SI", "NO"];
 
-const tabaquismoOpciones = ["No fuma", "Fuma", "Exfumador"];
+const tabaquismoOpciones = ["NO FUMA", "FUMA", "EXFUMADOR"];
 
 const cigarrosSemanaOpciones = ["0", "<10", "10–20", ">20"];
 
-const exposicionPolvosOpciones = ["Orgánicos", "Inorgánicos", "Ambos", "No"];
+const disneaOpciones = ["NINGUNA", "AL ESFUERZO", "EN REPOSO"];
 
-const disneaOpciones = ["Ninguna", "Al esfuerzo", "En reposo"];
-
-const medicamentosOpciones = ["Si", "No", "Especificar"];
-
-const resultadoCuestionarioOpciones = ["Procedente", "Procedente con precaución", "No procedente"];
+const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE"];
 
 export class CreatePrevioEspirometriaDto {
 
@@ -60,12 +56,12 @@ export class CreatePrevioEspirometriaDto {
 
     @ApiProperty({
         description: 'Exposición laboral a polvos',
-        enum: exposicionPolvosOpciones,
+        enum: siONo,
         example: 'No'
     })
     @IsString({ message: 'La exposición laboral a polvos debe ser un string' })
     @IsNotEmpty({ message: 'La exposición laboral a polvos no puede estar vacía' })
-    @IsEnum(exposicionPolvosOpciones, { message: 'La exposición laboral a polvos debe ser uno de los siguientes: ' + exposicionPolvosOpciones })
+    @IsEnum(siONo, { message: 'La exposición laboral a polvos debe ser uno de los siguientes: ' + siONo })
     exposicionLaboralPolvos: string
 
     @ApiProperty({
@@ -190,7 +186,7 @@ export class CreatePrevioEspirometriaDto {
 
     @ApiProperty({
         description: 'Medicamentos actuales (broncodilatadores, corticoides, otros)',
-        enum: medicamentosOpciones,
+        enum: siONo,
         example: 'No'
     })
     @IsString({ message: 'Los medicamentos actuales deben ser un string' })

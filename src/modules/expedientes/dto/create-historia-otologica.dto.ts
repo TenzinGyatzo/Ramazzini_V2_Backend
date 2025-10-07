@@ -2,22 +2,23 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-const siONo = ["Si", "No"];
+const siONo = ["SI", "NO"];
 
-const proteccionAuditivaOpciones = ["Siempre", "A veces", "Nunca"];
+const proteccionAuditivaOpciones = ["NA","SIEMPRE", "A VECES", "NUNCA"];
 
-const otoscopiaOpciones = ["Permeable", "No permeable"];
+const otoscopiaOpciones = ["PERMEABLE", "NO PERMEABLE"];
 
 const tiempoExposicionOpciones = [
-  "Menos de 1 año",
-  "1 - 5 años", 
-  "6 - 10 años",
-  "11 - 15 años",
-  "16 - 20 años",
-  "Más de 20 años"
+  "NINGUNO",
+  "MENOS DE 1 AÑO",
+  "1 - 5 AÑOS", 
+  "6 - 10 AÑOS",
+  "11 - 15 AÑOS",
+  "16 - 20 AÑOS",
+  "MÁS DE 20 AÑOS"
 ];
 
-const resultadoCuestionarioOpciones = ["Procedente", "Procedente con precaución", "No procedente"];
+const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE"];
 
 export class CreateHistoriaOtologicaDto {
 
@@ -34,7 +35,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Dolor de oído',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'El dolor de oído debe ser un string' })
     @IsNotEmpty({ message: 'El dolor de oído no puede estar vacío' })
@@ -44,7 +45,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Supuración de oído',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'La supuración de oído debe ser un string' })
     @IsNotEmpty({ message: 'La supuración de oído no puede estar vacía' })
@@ -54,7 +55,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Mareo o vértigo',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'El mareo o vértigo debe ser un string' })
     @IsNotEmpty({ message: 'El mareo o vértigo no puede estar vacío' })
@@ -64,7 +65,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Zumbido (tinnitus)',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'El zumbido (tinnitus) debe ser un string' })
     @IsNotEmpty({ message: 'El zumbido (tinnitus) no puede estar vacío' })
@@ -74,7 +75,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Pérdida de audición (súbita o progresiva)',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'La pérdida de audición debe ser un string' })
     @IsNotEmpty({ message: 'La pérdida de audición no puede estar vacía' })
@@ -84,7 +85,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Oído tapado / plenitud',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'El oído tapado / plenitud debe ser un string' })
     @IsNotEmpty({ message: 'El oído tapado / plenitud no puede estar vacío' })
@@ -95,7 +96,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Otitis frecuentes en la infancia',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'Las otitis frecuentes en la infancia deben ser un string' })
     @IsNotEmpty({ message: 'Las otitis frecuentes en la infancia no pueden estar vacías' })
@@ -105,7 +106,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Cirugías de oído',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'Las cirugías de oído deben ser un string' })
     @IsNotEmpty({ message: 'Las cirugías de oído no pueden estar vacías' })
@@ -115,7 +116,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Traumatismo craneal o barotrauma (vuelo, buceo, golpes)',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'El traumatismo craneal o barotrauma debe ser un string' })
     @IsNotEmpty({ message: 'El traumatismo craneal o barotrauma no puede estar vacío' })
@@ -125,7 +126,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Uso de audífonos',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'El uso de audífonos debe ser un string' })
     @IsNotEmpty({ message: 'El uso de audífonos no puede estar vacío' })
@@ -133,19 +134,9 @@ export class CreateHistoriaOtologicaDto {
     usoAudifonos: string
 
     @ApiProperty({
-        description: 'Historia familiar de hipoacusia',
-        enum: siONo,
-        example: 'No'
-    })
-    @IsString({ message: 'La historia familiar de hipoacusia debe ser un string' })
-    @IsNotEmpty({ message: 'La historia familiar de hipoacusia no puede estar vacía' })
-    @IsEnum(siONo, { message: 'La historia familiar de hipoacusia debe ser uno de los siguientes: ' + siONo })
-    historiaFamiliarHipoacusia: string
-
-    @ApiProperty({
         description: 'Meningitis u otra infección grave en la infancia',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'La meningitis u otra infección grave en la infancia debe ser un string' })
     @IsNotEmpty({ message: 'La meningitis u otra infección grave en la infancia no puede estar vacía' })
@@ -155,7 +146,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Diabetes',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'La diabetes debe ser un string' })
     @IsNotEmpty({ message: 'La diabetes no puede estar vacía' })
@@ -165,7 +156,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Enfermedad renal',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'La enfermedad renal debe ser un string' })
     @IsNotEmpty({ message: 'La enfermedad renal no puede estar vacía' })
@@ -175,7 +166,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Medicamentos ototóxicos recientes (antibióticos, quimioterapia, diuréticos)',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'Los medicamentos ototóxicos recientes deben ser un string' })
     @IsNotEmpty({ message: 'Los medicamentos ototóxicos recientes no pueden estar vacíos' })
@@ -186,7 +177,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Trabajo en ambientes ruidosos',
         enum: siONo,
-        example: 'Si'
+        example: 'SI'
     })
     @IsString({ message: 'El trabajo en ambientes ruidosos debe ser un string' })
     @IsNotEmpty({ message: 'El trabajo en ambientes ruidosos no puede estar vacío' })
@@ -196,7 +187,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Tiempo de exposición laboral',
         enum: tiempoExposicionOpciones,
-        example: '1 - 5 años'
+        example: '1 - 5 AÑOS'
     })
     @IsString({ message: 'El tiempo de exposición laboral debe ser un string' })
     @IsNotEmpty({ message: 'El tiempo de exposición laboral no puede estar vacío' })
@@ -206,7 +197,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Uso de protección auditiva',
         enum: proteccionAuditivaOpciones,
-        example: 'A veces'
+        example: 'A VECES'
     })
     @IsString({ message: 'El uso de protección auditiva debe ser un string' })
     @IsNotEmpty({ message: 'El uso de protección auditiva no puede estar vacío' })
@@ -216,7 +207,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Música fuerte / uso prolongado de audífonos',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'La música fuerte / uso prolongado de audífonos debe ser un string' })
     @IsNotEmpty({ message: 'La música fuerte / uso prolongado de audífonos no puede estar vacía' })
@@ -226,7 +217,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Armas de fuego / pasatiempos ruidosos',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'Las armas de fuego / pasatiempos ruidosos deben ser un string' })
     @IsNotEmpty({ message: 'Las armas de fuego / pasatiempos ruidosos no pueden estar vacías' })
@@ -236,7 +227,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Servicio militar',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'El servicio militar debe ser un string' })
     @IsNotEmpty({ message: 'El servicio militar no puede estar vacío' })
@@ -247,7 +238,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Alergias',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'Las alergias deben ser un string' })
     @IsNotEmpty({ message: 'Las alergias no pueden estar vacías' })
@@ -257,7 +248,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Resfriado el día de la prueba',
         enum: siONo,
-        example: 'No'
+        example: 'NO'
     })
     @IsString({ message: 'El resfriado el día de la prueba debe ser un string' })
     @IsNotEmpty({ message: 'El resfriado el día de la prueba no puede estar vacío' })
@@ -268,7 +259,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Otoscopia oído derecho',
         enum: otoscopiaOpciones,
-        example: 'Permeable'
+        example: 'PERMEABLE'
     })
     @IsString({ message: 'La otoscopia del oído derecho debe ser un string' })
     @IsNotEmpty({ message: 'La otoscopia del oído derecho no puede estar vacía' })
@@ -289,7 +280,7 @@ export class CreateHistoriaOtologicaDto {
     @ApiProperty({
         description: 'Resultado de cuestionario',
         enum: resultadoCuestionarioOpciones,
-        example: 'Procedente'
+        example: 'PROCEDENTE'
     })
     @IsString({ message: 'El resultado de cuestionario debe ser un string' })
     @IsNotEmpty({ message: 'El resultado de cuestionario no puede estar vacío' })

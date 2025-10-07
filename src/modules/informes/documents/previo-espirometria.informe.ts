@@ -741,7 +741,7 @@ export const previoEspirometriaInforme = (
 
        // Sección RESULTADO centrada
        {
-         text: 'RESULTADO',
+         text: 'RESULTADO DEL CUESTIONARIO',
          style: 'sectionHeader',
          alignment: 'center',
          margin: [0, 8, 0, 3],
@@ -752,7 +752,7 @@ export const previoEspirometriaInforme = (
            widths: ['50%', '50%'],
            body: [
                [
-                 { text: 'RESULTADO DEL CUESTIONARIO', style: 'tableCellBold', alignment: 'center' },
+                 { text: 'ESPIROMETRÍA', style: 'tableCellBold', alignment: 'center' },
                  createResultadoCuestionarioTableCell(previoEspirometria.resultadoCuestionario?.toString() || ''),
                ]
           ],

@@ -3,15 +3,15 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
-const siONo = ["Si", "No"];
+const siONo = ["SI", "NO"];
 
-const tabaquismoOpciones = ["No fuma", "Fuma", "Exfumador"];
+const tabaquismoOpciones = ["NO FUMA", "FUMA", "EXFUMADOR"];
 
 const cigarrosSemanaOpciones = ["0", "<10", "10–20", ">20"];
 
-const disneaOpciones = ["Ninguna", "Al esfuerzo", "En reposo"];
+const disneaOpciones = ["NINGUNA", "AL ESFUERZO", "EN REPOSO"];
 
-const resultadoCuestionarioOpciones = ["Procedente", "Procedente con precaución", "No procedente"];
+const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE"];
 
 @Schema()
 export class PrevioEspirometria extends Document {

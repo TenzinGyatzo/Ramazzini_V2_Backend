@@ -626,7 +626,7 @@ export class InformesService {
     const datosTrabajador = {
       primerApellido: trabajador.primerApellido,
       segundoApellido: trabajador.segundoApellido,
-      nombre: trabajador.nombre.toUpperCase(),
+      nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
@@ -856,7 +856,7 @@ export class InformesService {
     const datosTrabajador = {
       primerApellido: trabajador.primerApellido,
       segundoApellido: trabajador.segundoApellido,
-      nombre: trabajador.nombre.toUpperCase(),
+      nombre: trabajador.nombre,
       nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
       escolaridad: trabajador.escolaridad,
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
