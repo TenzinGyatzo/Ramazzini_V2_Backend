@@ -16,6 +16,7 @@ import { PrinterModule } from './modules/printer/printer.module';
 import { DocumentMergerModule } from './modules/document-merger/document-merger.module';
 import { ProveedoresSaludModule } from './modules/proveedores-salud/proveedores-salud.module';
 import { MedicosFirmantesModule } from './modules/medicos-firmantes/medicos-firmantes.module';
+import { EnfermerasFirmantesModule } from './modules/enfermeras-firmantes/enfermeras-firmantes.module';
 import { EmailsModule } from './modules/emails/emails.module';
 import { PagosModule } from './modules/pagos/pagos.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -54,6 +55,7 @@ import { RiesgosTrabajoModule } from './modules/riesgos-trabajo/riesgos-trabajo.
     DocumentMergerModule,
     ProveedoresSaludModule,
     MedicosFirmantesModule,
+    EnfermerasFirmantesModule,
     EmailsModule,
     PagosModule,
     ScheduleModule.forRoot(),

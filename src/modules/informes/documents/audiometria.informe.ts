@@ -208,6 +208,19 @@ interface MedicoFirmante {
   }
 }
 
+interface EnfermeraFirmante {
+  nombre: string;
+  sexo: string;
+  tituloProfesional: string;
+  numeroCedulaProfesional: string;
+  nombreCredencialAdicional: string;
+  numeroCredencialAdicional: string;
+  firma: {
+    data: string;
+    contentType: string;
+  }
+}
+
 interface ProveedorSalud {
   nombre: string;
   pais: string;
@@ -231,12 +244,20 @@ export const audiometriaInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
   audiometria: Audiometria,
-  medicoFirmante: MedicoFirmante,
+  medicoFirmante: MedicoFirmante | null,
+  enfermeraFirmante: EnfermeraFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
 
-  const firma: Content = medicoFirmante.firma?.data
-  ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 65 }
+  // Determinar cuál firmante usar (médico tiene prioridad)
+  const usarMedico = medicoFirmante?.nombre ? true : false;
+  const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
+  
+  // Seleccionar el firmante a usar
+  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : null);
+
+  const firma: Content = firmanteActivo?.firma?.data
+  ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
   : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
@@ -486,23 +507,26 @@ export const audiometriaInforme = (
           columns: [
             {
               text: [
-                medicoFirmante.tituloProfesional && medicoFirmante.nombre
+                // Nombre y título profesional
+                (firmanteActivo?.tituloProfesional && firmanteActivo?.nombre)
                   ? {
-                      text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}\n`,
+                      text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
                       bold: true,
                     }
                   : null,
               
-                medicoFirmante.numeroCedulaProfesional
+                // Cédula profesional (para médicos y enfermeras)
+                firmanteActivo?.numeroCedulaProfesional
                   ? {
                       text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}\n`,
+                        ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                        : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
               
-                medicoFirmante.numeroCedulaEspecialista
+                // Cédula de especialista (solo para médicos)
+                (usarMedico && medicoFirmante?.numeroCedulaEspecialista)
                   ? {
                       text: proveedorSalud.pais === 'MX'
                         ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
@@ -511,19 +535,30 @@ export const audiometriaInforme = (
                     }
                   : null,
               
-                medicoFirmante.nombreCredencialAdicional && medicoFirmante.numeroCredencialAdicional
+                // Credencial adicional
+                (firmanteActivo?.nombreCredencialAdicional && firmanteActivo?.numeroCredencialAdicional)
                 ? {
-                    text: `${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).substring(0, 60)}${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                    text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
                     bold: false,
                   }
                 : null,
+                
+                // Texto específico para enfermeras
+                (usarEnfermera && enfermeraFirmante?.sexo)
+                  ? {
+                      text: enfermeraFirmante.sexo === 'Femenino' 
+                        ? 'Enfermera responsable del estudio\n'
+                        : 'Enfermero responsable del estudio\n',
+                      bold: false,
+                    }
+                  : null,
                 
               ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe        
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(medicoFirmante.firma?.data ? [{
+            ...(firmanteActivo?.firma?.data ? [{
               ...firma,
               margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
             }] : []),

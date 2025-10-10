@@ -7,6 +7,7 @@ import { TrabajadoresModule } from '../trabajadores/trabajadores.module';
 import { ExpedientesModule } from '../expedientes/expedientes.module';
 import { FilesModule } from '../files/files.module';
 import { MedicosFirmantesModule } from '../medicos-firmantes/medicos-firmantes.module';
+import { EnfermerasFirmantesModule } from '../enfermeras-firmantes/enfermeras-firmantes.module';
 import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
 import { UsersModule } from '../users/users.module';
 
@@ -20,6 +21,7 @@ import { UsersModule } from '../users/users.module';
     forwardRef(() => ExpedientesModule),
     FilesModule,
     MedicosFirmantesModule,
+    EnfermerasFirmantesModule,
     ProveedoresSaludModule,
     UsersModule
   ],

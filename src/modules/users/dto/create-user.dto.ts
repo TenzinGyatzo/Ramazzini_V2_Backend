@@ -1,6 +1,6 @@
 import { IsEnum, IsMongoId, IsNotEmpty, IsString } from 'class-validator';
 
-const role = ['Principal', 'Secundario'];
+const role = ['Principal', 'Médico', 'Enfermero/a'];
 
 export class CreateUserDto {
     @IsString()

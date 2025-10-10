@@ -23,7 +23,7 @@ export class User {
   @Prop({ required: true, trim: true })
   password: string;
 
-  @Prop({ required: true, enum: ['Principal', 'Secundario'] })
+  @Prop({ required: true, enum: ['Principal', 'Médico', 'Enfermero/a'] })
   role: string;
 
   @Prop({ default: () => Date.now().toString(32) + Math.random().toString(32).substring(2) })

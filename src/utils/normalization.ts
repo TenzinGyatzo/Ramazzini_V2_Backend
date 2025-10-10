@@ -8,6 +8,8 @@ import { CreateProveedoresSaludDto } from 'src/modules/proveedores-salud/dto/cre
 import { UpdateProveedoresSaludDto } from 'src/modules/proveedores-salud/dto/update-proveedores-salud.dto';
 import { CreateMedicoFirmanteDto } from 'src/modules/medicos-firmantes/dto/create-medico-firmante.dto';
 import { UpdateMedicoFirmanteDto } from 'src/modules/medicos-firmantes/dto/update-medico-firmante.dto';
+import { CreateEnfermeraFirmanteDto } from 'src/modules/enfermeras-firmantes/dto/create-enfermera-firmante.dto';
+import { UpdateEnfermeraFirmanteDto } from 'src/modules/enfermeras-firmantes/dto/update-enfermera-firmante.dto';
 
 export function normalizeEmpresaData(dto: CreateEmpresaDto | UpdateEmpresaDto) {
   return {
@@ -162,6 +164,35 @@ export function normalizeMedicoFirmanteData(
       ? {
           data: dto.firmaConAntefirma.data.trim(),
           contentType: dto.firmaConAntefirma.contentType.trim(),
+        }
+      : undefined,
+  };
+
+  // ✅ Verificar y eliminar idUser si está vacío
+  if (!dto.idUser || dto.idUser.trim() === "") {
+    delete normalizedDto.idUser;
+  } else {
+    normalizedDto.idUser = dto.idUser.trim();
+  }
+
+  return normalizedDto;
+}
+
+export function normalizeEnfermeraFirmanteData(
+  dto: CreateEnfermeraFirmanteDto | UpdateEnfermeraFirmanteDto,
+) {
+  const normalizedDto = {
+    ...dto,
+    nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : "",
+    sexo: typeof dto.sexo === 'string' ? dto.sexo.trim() : "",
+    tituloProfesional: typeof dto.tituloProfesional === 'string' ? dto.tituloProfesional.trim() : "",
+    numeroCedulaProfesional: typeof dto.numeroCedulaProfesional === 'string' ? dto.numeroCedulaProfesional.trim() : "",
+    nombreCredencialAdicional: typeof dto.nombreCredencialAdicional === 'string' ? dto.nombreCredencialAdicional.trim() : "",
+    numeroCredencialAdicional: typeof dto.numeroCredencialAdicional === 'string' ? dto.numeroCredencialAdicional.trim() : "",
+    firma: dto.firma && typeof dto.firma.data === 'string' && typeof dto.firma.contentType === 'string'
+      ? {
+          data: dto.firma.data.trim(),
+          contentType: dto.firma.contentType.trim(),
         }
       : undefined,
   };
