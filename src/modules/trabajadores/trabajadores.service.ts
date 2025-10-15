@@ -327,6 +327,21 @@ export class TrabajadoresService {
       };
     };
 
+    // Helpers para audiometría
+    function isNum(v: any): v is number {
+      return typeof v === 'number' && Number.isFinite(v);
+    }
+
+    function getCaidaMaximaDb(a: any): number | null {
+      const keys = [
+        'oidoDerecho125','oidoDerecho250','oidoDerecho500','oidoDerecho1000','oidoDerecho2000','oidoDerecho3000','oidoDerecho4000','oidoDerecho6000','oidoDerecho8000',
+        'oidoIzquierdo125','oidoIzquierdo250','oidoIzquierdo500','oidoIzquierdo1000','oidoIzquierdo2000','oidoIzquierdo3000','oidoIzquierdo4000','oidoIzquierdo6000','oidoIzquierdo8000',
+      ];
+      const valores = keys.map(k => a?.[k]).filter(isNum) as number[];
+      if (!valores.length) return null;
+      return Math.max(...valores);
+    }
+
     // 1. Obtener todos los trabajadores del centro
     const trabajadores = await this.trabajadorModel
       .find({ idCentroTrabajo: centroId })
@@ -365,6 +380,7 @@ export class TrabajadoresService {
       aptitudes: [],
       consultas: [],
       hbc: [],
+      pab: [],
       trabajadoresEvaluados: []
     };
 
@@ -520,7 +536,17 @@ export class TrabajadoresService {
     // 17. MÉTODO DE AUDIOMETRÍA, PERDIDA AUDITIVA BILATERAL y HIPOACUSIA BILATERAL COMBINADA – Obtener la más reciente por trabajador activo
     const audiometrias = await this.audiometriaModel
     .find({ idTrabajador: { $in: idsActivos }, ...rangoFecha('fechaAudiometria') })
-    .select('idTrabajador hipoacusiaBilateralCombinada fechaAudiometria metodoAudiometria perdidaAuditivaBilateralAMA')
+    .select([
+      'idTrabajador',
+      'fechaAudiometria',
+      'metodoAudiometria',
+      'hipoacusiaBilateralCombinada',
+      'perdidaAuditivaBilateralAMA',
+      // umbrales OD
+      'oidoDerecho125','oidoDerecho250','oidoDerecho500','oidoDerecho1000','oidoDerecho2000','oidoDerecho3000','oidoDerecho4000','oidoDerecho6000','oidoDerecho8000',
+      // umbrales OI
+      'oidoIzquierdo125','oidoIzquierdo250','oidoIzquierdo500','oidoIzquierdo1000','oidoIzquierdo2000','oidoIzquierdo3000','oidoIzquierdo4000','oidoIzquierdo6000','oidoIzquierdo8000',
+    ])
     .lean();
     
     const audiometriasMap = new Map<string, any>();
@@ -541,11 +567,20 @@ export class TrabajadoresService {
       }))
     );
 
+    // NUEVO: construir bloque audiometría resumida
+    (dashboardData as any).audiometriaResumen = Array.from(audiometriasMap.values()).map((a) => ({
+      metodoAudiometria: a.metodoAudiometria ?? null,
+      hipoacusiaBilateralCombinada: isNum(a.hipoacusiaBilateralCombinada) ? a.hipoacusiaBilateralCombinada : null,
+      perdidaAuditivaBilateralAMA: isNum(a.perdidaAuditivaBilateralAMA) ? a.perdidaAuditivaBilateralAMA : null,
+      caidaMaxDb: getCaidaMaximaDb(a),
+    }));
+
     const trabajadoresEvaluadosSet = new Set([
       ...exploracionesMap.keys(),
       ...historiasMap.keys(),
       ...examenesMap.keys(),
       ...aptitudesMap.keys(),
+      ...audiometriasMap.keys(),
     ]);
 
     dashboardData.trabajadoresEvaluados = Array.from(trabajadoresEvaluadosSet);
