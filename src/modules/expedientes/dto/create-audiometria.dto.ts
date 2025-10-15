@@ -2,12 +2,18 @@ import { Type } from "class-transformer";
 import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, Validate } from "class-validator";
 import { IsValidAudiometryValueConstraint } from "../validators/audiometry.validator";
 
+const metodoAudiometriaOpciones = ["AMA", "LFT"];
+
 export class CreateAudiometriaDto {
 
     @IsDate({ message: 'La fecha de la audiometría debe ser una fecha' })
     @Type(() => Date)
     @IsNotEmpty({ message: 'La fecha de la audiometría no puede estar vacía' })
     fechaAudiometria: Date;
+
+    @IsOptional()
+    @IsEnum(metodoAudiometriaOpciones, { message: 'El método de audiometría debe ser alguno de los siguientes: ' + metodoAudiometriaOpciones })
+    metodoAudiometria: string;
 
     @IsOptional()
     @IsNumber({ maxDecimalPlaces: 0 })
@@ -57,6 +63,19 @@ export class CreateAudiometriaDto {
     @IsOptional()
     @IsNumber({ maxDecimalPlaces: 3 })
     porcentajePerdidaOD?: number;
+
+    // Campos específicos para AMA
+    @IsOptional()
+    @IsNumber({ maxDecimalPlaces: 3 })
+    perdidaAuditivaBilateralAMA?: number;
+
+    @IsOptional()
+    @IsNumber({ maxDecimalPlaces: 3 })
+    perdidaMonauralOD_AMA?: number;
+
+    @IsOptional()
+    @IsNumber({ maxDecimalPlaces: 3 })
+    perdidaMonauralOI_AMA?: number;
     
     @IsOptional()
     @IsNumber({ maxDecimalPlaces: 0 })

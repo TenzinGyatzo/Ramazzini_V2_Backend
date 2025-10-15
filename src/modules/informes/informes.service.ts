@@ -520,6 +520,7 @@ export class InformesService {
     );
     const datosAudiometria = {
       fechaAudiometria: audiometria.fechaAudiometria,
+      metodoAudiometria: audiometria.metodoAudiometria || 'AMA', // Agregar método de audiometría
       oidoDerecho125: audiometria.oidoDerecho125,
       oidoDerecho250: audiometria.oidoDerecho250,
       oidoDerecho500: audiometria.oidoDerecho500,
@@ -530,6 +531,10 @@ export class InformesService {
       oidoDerecho6000: audiometria.oidoDerecho6000,
       oidoDerecho8000: audiometria.oidoDerecho8000,
       porcentajePerdidaOD: audiometria.porcentajePerdidaOD,
+      // Campos específicos para AMA
+      perdidaAuditivaBilateralAMA: audiometria.perdidaAuditivaBilateralAMA,
+      perdidaMonauralOD_AMA: audiometria.perdidaMonauralOD_AMA,
+      perdidaMonauralOI_AMA: audiometria.perdidaMonauralOI_AMA,
       oidoIzquierdo125: audiometria.oidoIzquierdo125,
       oidoIzquierdo250: audiometria.oidoIzquierdo250,
       oidoIzquierdo500: audiometria.oidoIzquierdo500,

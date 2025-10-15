@@ -45,7 +45,6 @@ export class TrabajadoresController {
     const trabajador = await this.trabajadoresService.create(createTrabajadorDto);
     return { message: 'Trabajador registrado', data: trabajador };
   }
-  
 
   @Get('/trabajadores')
   @ApiOperation({ summary: 'Obtiene todos los trabajadores de un centro de trabajo' })

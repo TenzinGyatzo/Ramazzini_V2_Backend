@@ -3,10 +3,15 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
+const metodoAudiometriaOpciones = ["AMA", "LFT"];
+
 @Schema()
 export class Audiometria extends Document {
     @Prop({ required: true })
     fechaAudiometria: Date;
+
+    @Prop({ enum: metodoAudiometriaOpciones })
+    metodoAudiometria: string;
 
     @Prop()
     oidoDerecho125?: number;
@@ -37,6 +42,16 @@ export class Audiometria extends Document {
 
     @Prop()
     porcentajePerdidaOD?: number;
+
+    // Campos específicos para AMA
+    @Prop()
+    perdidaAuditivaBilateralAMA?: number;
+
+    @Prop()
+    perdidaMonauralOD_AMA?: number;
+
+    @Prop()
+    perdidaMonauralOI_AMA?: number;
 
     @Prop()
     oidoIzquierdo125?: number;

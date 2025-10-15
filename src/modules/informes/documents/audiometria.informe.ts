@@ -166,6 +166,7 @@ interface Trabajador {
 
 interface Audiometria {
   fechaAudiometria: Date;
+  metodoAudiometria: string; // AMA o LFT
   oidoDerecho125: number;
   oidoDerecho250: number;
   oidoDerecho500: number;
@@ -176,6 +177,10 @@ interface Audiometria {
   oidoDerecho6000: number;
   oidoDerecho8000: number;
   porcentajePerdidaOD: number;
+  // Campos específicos para AMA
+  perdidaAuditivaBilateralAMA?: number;
+  perdidaMonauralOD_AMA?: number;
+  perdidaMonauralOI_AMA?: number;
   oidoIzquierdo125: number;
   oidoIzquierdo250: number;
   oidoIzquierdo500: number;
@@ -239,6 +244,179 @@ interface ProveedorSalud {
   colorInforme: string;
 }
 
+// ==================== FUNCIONES DE CÁLCULO DINÁMICO ====================
+
+// Función para calcular PTA AMA (500, 1000, 2000, 3000 Hz)
+const calcularPTA_AMA = (audiometria: Audiometria, oido: 'Derecho' | 'Izquierdo'): number => {
+  const frecuencias = [500, 1000, 2000, 3000];
+  const valores = frecuencias.map(freq => {
+    const campo = `oido${oido}${freq}` as keyof Audiometria;
+    return (audiometria[campo] as number) || 0;
+  });
+  
+  const suma = valores.reduce((acc, val) => acc + val, 0);
+  return suma / frecuencias.length;
+};
+
+// Función para calcular PTA LFT Rango A (250, 500, 1000, 2000 Hz)
+const calcularPTA_LFT_RangoA = (audiometria: Audiometria, oido: 'Derecho' | 'Izquierdo'): number => {
+  const frecuencias = [250, 500, 1000, 2000];
+  const valores = frecuencias.map(freq => {
+    const campo = `oido${oido}${freq}` as keyof Audiometria;
+    return (audiometria[campo] as number) || 0;
+  });
+  
+  const suma = valores.reduce((acc, val) => acc + val, 0);
+  return suma / frecuencias.length;
+};
+
+// Función para calcular PTA LFT Rango B (2000, 3000, 4000, 6000 Hz)
+const calcularPTA_LFT_RangoB = (audiometria: Audiometria, oido: 'Derecho' | 'Izquierdo'): number => {
+  const frecuencias = [2000, 3000, 4000, 6000];
+  const valores = frecuencias.map(freq => {
+    const campo = `oido${oido}${freq}` as keyof Audiometria;
+    return (audiometria[campo] as number) || 0;
+  });
+  
+  const suma = valores.reduce((acc, val) => acc + val, 0);
+  return suma / frecuencias.length;
+};
+
+// Función para calcular porcentaje por oído según método
+const calcularPorcentajePorOido = (audiometria: Audiometria, oido: 'Derecho' | 'Izquierdo'): { porcentaje: number; frecuencias: number[]; metodo: string; rango?: string } => {
+  const metodo = audiometria.metodoAudiometria || 'AMA';
+  
+  if (metodo === 'AMA') {
+    // Para AMA: usar valores guardados si están disponibles, sino calcular
+    let porcentaje: number;
+    if (oido === 'Derecho' && audiometria.perdidaMonauralOD_AMA !== undefined) {
+      porcentaje = audiometria.perdidaMonauralOD_AMA;
+    } else if (oido === 'Izquierdo' && audiometria.perdidaMonauralOI_AMA !== undefined) {
+      porcentaje = audiometria.perdidaMonauralOI_AMA;
+    } else {
+      // Fallback: calcular dinámicamente
+      const pta = calcularPTA_AMA(audiometria, oido);
+      porcentaje = Math.max(0, (pta - 25)) * 1.5;
+    }
+    
+    return {
+      porcentaje: Math.round(porcentaje * 100) / 100,
+      frecuencias: [500, 1000, 2000, 3000],
+      metodo: 'AMA'
+    };
+  } else if (metodo === 'LFT') {
+    // LFT: Elegir entre Rango A y Rango B, el que produzca mayor porcentaje
+    const ptaA = calcularPTA_LFT_RangoA(audiometria, oido);
+    const ptaB = calcularPTA_LFT_RangoB(audiometria, oido);
+    
+    const porcentajeA = ptaA * 0.8;
+    const porcentajeB = ptaB * 0.8;
+    
+    if (porcentajeA >= porcentajeB) {
+      return {
+        porcentaje: Math.round(porcentajeA * 100) / 100,
+        frecuencias: [250, 500, 1000, 2000],
+        metodo: 'LFT',
+        rango: 'A'
+      };
+    } else {
+      return {
+        porcentaje: Math.round(porcentajeB * 100) / 100,
+        frecuencias: [2000, 3000, 4000, 6000],
+        metodo: 'LFT',
+        rango: 'B'
+      };
+    }
+  }
+  
+  // Fallback al método anterior si no se reconoce el método
+  const frecuencias = [500, 1000, 2000, 4000];
+  const valores = frecuencias.map(freq => {
+    const campo = `oido${oido}${freq}` as keyof Audiometria;
+    return (audiometria[campo] as number) || 0;
+  });
+  
+  const promedio = valores.reduce((acc, val) => acc + val, 0) / frecuencias.length;
+  const porcentaje = promedio * 0.8;
+  
+  return {
+    porcentaje: Math.round(porcentaje * 100) / 100,
+    frecuencias: frecuencias,
+    metodo: 'LEGACY'
+  };
+};
+
+// Función para calcular resultado binaural según método
+const calcularResultadoBinaural = (audiometria: Audiometria): { porcentaje: number; metodo: string; etiqueta: string } => {
+  const metodo = audiometria.metodoAudiometria || 'AMA';
+  
+  if (metodo === 'AMA') {
+    // Para AMA: usar valor guardado si está disponible, sino calcular
+    if (audiometria.perdidaAuditivaBilateralAMA !== undefined) {
+      return {
+        porcentaje: audiometria.perdidaAuditivaBilateralAMA,
+        metodo: 'AMA',
+        etiqueta: 'Pérdida auditiva bilateral'
+      };
+    } else {
+      // Fallback: calcular dinámicamente
+      const resultadoOD = calcularPorcentajePorOido(audiometria, 'Derecho');
+      const resultadoOI = calcularPorcentajePorOido(audiometria, 'Izquierdo');
+      
+      const menor = Math.min(resultadoOD.porcentaje, resultadoOI.porcentaje);
+      const mayor = Math.max(resultadoOD.porcentaje, resultadoOI.porcentaje);
+      
+      const bilateral = ((5 * menor) + mayor) / 6;
+      return {
+        porcentaje: Math.round(bilateral * 100) / 100,
+        metodo: 'AMA',
+        etiqueta: 'Pérdida auditiva bilateral'
+      };
+    }
+  } else if (metodo === 'LFT') {
+    // Para LFT: calcular dinámicamente (usar valores legacy)
+    const resultadoOD = calcularPorcentajePorOido(audiometria, 'Derecho');
+    const resultadoOI = calcularPorcentajePorOido(audiometria, 'Izquierdo');
+    
+    const menor = Math.min(resultadoOD.porcentaje, resultadoOI.porcentaje);
+    const mayor = Math.max(resultadoOD.porcentaje, resultadoOI.porcentaje);
+    
+    // LFT (HBC %): (7*menor + 1*mayor) / 8 y luego aplicar redondeo LFT
+    let hbc = ((7 * menor) + mayor) / 8;
+    
+    // Aplicar redondeo LFT: décimas 0.0–0.5 hacia abajo, 0.6–0.9 hacia arriba
+    const decimal = hbc % 1;
+    if (decimal >= 0.6) {
+      hbc = Math.ceil(hbc);
+    } else {
+      hbc = Math.floor(hbc);
+    }
+    
+    return {
+      porcentaje: hbc,
+      metodo: 'LFT',
+      etiqueta: 'Hipoacusia bilateral combinada (HBC)'
+    };
+  }
+  
+  // Fallback
+  return {
+    porcentaje: audiometria.hipoacusiaBilateralCombinada || 0,
+    metodo: 'LEGACY',
+    etiqueta: 'Hipoacusia bilateral combinada'
+  };
+};
+
+// Función para obtener el texto del diagnóstico según el método
+const obtenerTextoDiagnosticoBilateral = (metodo: string): string => {
+  if (metodo === 'AMA') {
+    return 'PÉRDIDA AUDITIVA BILATERAL';
+  } else if (metodo === 'LFT') {
+    return 'HIPOACUSIA BILATERAL COMBINADA';
+  }
+  return 'HIPOACUSIA BILATERAL COMBINADA'; // Valor por defecto
+};
+
 // ==================== INFORME PRINCIPAL ====================
 export const audiometriaInforme = (
   nombreEmpresa: string,
@@ -252,6 +430,12 @@ export const audiometriaInforme = (
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
+
+  // Calcular resultados dinámicos
+  const resultadoOD = calcularPorcentajePorOido(audiometria, 'Derecho');
+  const resultadoOI = calcularPorcentajePorOido(audiometria, 'Izquierdo');
+  const resultadoBinaural = calcularResultadoBinaural(audiometria);
+  const textoDiagnosticoBilateral = obtenerTextoDiagnosticoBilateral(audiometria.metodoAudiometria || 'AMA');
   
   // Seleccionar el firmante a usar
   const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : null);
@@ -388,7 +572,7 @@ export const audiometriaInforme = (
               { text: audiometria.oidoDerecho4000?.toString() || '', style: 'tableCell' },
               { text: audiometria.oidoDerecho6000?.toString() || '', style: 'tableCell' },
               { text: audiometria.oidoDerecho8000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.porcentajePerdidaOD?.toString() || '', style: 'tableCell' },
+              { text: resultadoOD.porcentaje?.toString() || '', style: 'tableCell' },
             ],
             // Oído Izquierdo
             [
@@ -402,13 +586,13 @@ export const audiometriaInforme = (
               { text: audiometria.oidoIzquierdo4000?.toString() || '', style: 'tableCell' },
               { text: audiometria.oidoIzquierdo6000?.toString() || '', style: 'tableCell' },
               { text: audiometria.oidoIzquierdo8000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.porcentajePerdidaOI?.toString() || '', style: 'tableCell' },
+              { text: resultadoOI.porcentaje?.toString() || '', style: 'tableCell' },
             ],
-            // Pérdida Bilateral Combinada
+            // Pérdida Bilateral Combinada - Texto dinámico según método
             [
-              { text: 'Hipoacusia Bilateral Combinada', style: 'tableCellBold', alignment: 'left', colSpan: 10 },
+              { text: textoDiagnosticoBilateral, style: 'tableCellBold', alignment: 'left', colSpan: 10 },
               {}, {}, {}, {}, {}, {}, {}, {}, {},
-              { text: audiometria.hipoacusiaBilateralCombinada?.toString() || '', style: 'tableCellBoldCenter' },
+              { text: resultadoBinaural.porcentaje?.toString() || '', style: 'tableCellBoldCenter' },
             ],
           ],
         },
@@ -423,6 +607,18 @@ export const audiometriaInforme = (
           vLineWidth: () => 0.3,
         },
         margin: [0, 0, 0, 8],
+      },
+
+      // Leyenda discreta con método y frecuencias
+      {
+        text: `Método: ${audiometria.metodoAudiometria || 'AMA'}${audiometria.metodoAudiometria === 'AMA' 
+          ? ' - Frecuencias fijas: 500, 1000, 2000, 3000 Hz' 
+          : ` - OD: [${resultadoOD.frecuencias.join(', ')}] Hz${resultadoOD.rango ? ` (Rango ${resultadoOD.rango})` : ''} | OI: [${resultadoOI.frecuencias.join(', ')}] Hz${resultadoOI.rango ? ` (Rango ${resultadoOI.rango})` : ''}`}`,
+        fontSize: 8,
+        alignment: 'center',
+        color: '#666666',
+        italics: true,
+        margin: [0, 0, 0, 8] as [number, number, number, number],
       },
 
       // Gráfica audiométrica - solo mostrar si existe
@@ -453,11 +649,11 @@ export const audiometriaInforme = (
         style: 'paragraph'
       }] : []),
 
-      // Diagnóstico
+      // Diagnóstico - Dinámico según método
       {
         text: [
           { text: `DIAGNÓSTICO:`, bold: true },
-          { text: audiometria.diagnosticoAudiometria ? ` ${audiometria.diagnosticoAudiometria.toUpperCase()} HBC DE ${audiometria.hipoacusiaBilateralCombinada}% ` : '', bold: true, fontSize: 12 },
+          { text: audiometria.diagnosticoAudiometria ? ` ${audiometria.diagnosticoAudiometria.toUpperCase()} ${audiometria.metodoAudiometria === 'AMA' ? 'PA' : 'HBC'} DE ${resultadoBinaural.porcentaje}% ` : '', bold: true, fontSize: 12 },
         ] as any,
         margin: [0, 0, 0, 10] as [number, number, number, number],
         style: 'paragraph'

@@ -150,6 +150,20 @@ export class TrabajadoresService {
       }
     }
 
+    // AUDIOMETRIA
+    const audiometrias = await this.audiometriaModel
+      .find({ idTrabajador: { $in: trabajadoresIds } })
+      .lean();
+    
+    const audiometriasMap = new Map<string, any>();
+    for (const audiometria of audiometrias) {
+      const id = audiometria.idTrabajador.toString();
+      const actual = audiometriasMap.get(id);
+      if (!actual || new Date(audiometria.fechaAudiometria) > new Date(actual.fechaAudiometria)) {
+        audiometriasMap.set(id, audiometria);
+      }
+    }
+
     // RIESGOS DE TRABAJO
     const riesgos = await this.riesgoTrabajoModel
       .find({ idTrabajador: { $in: trabajadoresIds } })
@@ -171,6 +185,7 @@ export class TrabajadoresService {
       const exploracion = exploracionesMap.get(id);
       const examenVista = examenesVistaMap.get(id);
       const consulta = consultasMap.get(id);
+      const audiometria = audiometriasMap.get(id);
   
       return {
         ...trabajador,
@@ -219,7 +234,15 @@ export class TrabajadoresService {
               fechaNotaMedica: format(new Date(consulta.fechaNotaMedica), 'dd/MM/yyyy') ?? null,
             }
           : null,
-          riesgosTrabajo: riesgosMap.get(id) ?? [],
+        riesgosTrabajo: riesgosMap.get(id) ?? [],
+        audiometriaResumen: audiometria
+          ? {
+              hipoacusiaBilateralCombinada: audiometria.hipoacusiaBilateralCombinada ?? null,
+              perdidaAuditivaBilateralAMA: audiometria.perdidaAuditivaBilateralAMA ?? null,
+              metodoAudiometria: audiometria.metodoAudiometria ?? null,
+              diagnosticoAudiometria: audiometria.diagnosticoAudiometria ?? null,
+            }
+          : null,
       };
     });
   
@@ -341,6 +364,7 @@ export class TrabajadoresService {
       daltonismo: [],
       aptitudes: [],
       consultas: [],
+      hbc: [],
       trabajadoresEvaluados: []
     };
 
@@ -493,6 +517,30 @@ export class TrabajadoresService {
       }))
     );
 
+    // 17. MÉTODO DE AUDIOMETRÍA, PERDIDA AUDITIVA BILATERAL y HIPOACUSIA BILATERAL COMBINADA – Obtener la más reciente por trabajador activo
+    const audiometrias = await this.audiometriaModel
+    .find({ idTrabajador: { $in: idsActivos }, ...rangoFecha('fechaAudiometria') })
+    .select('idTrabajador hipoacusiaBilateralCombinada fechaAudiometria metodoAudiometria perdidaAuditivaBilateralAMA')
+    .lean();
+    
+    const audiometriasMap = new Map<string, any>();
+    for (const audiometria of audiometrias) {
+      const id = audiometria.idTrabajador.toString();
+      const actual = audiometriasMap.get(id);
+      if (!actual || new Date(audiometria.fechaAudiometria) > new Date(actual.fechaAudiometria)) {
+          audiometriasMap.set(id, audiometria);
+        }
+    }
+
+    // Agregar datos de HBC al dashboardData
+    dashboardData.hbc.push(
+      Array.from(audiometriasMap.values()).map((audiometria) => ({
+        hipoacusiaBilateralCombinada: audiometria.hipoacusiaBilateralCombinada ?? null,
+        metodoAudiometria: audiometria.metodoAudiometria ?? null,
+        perdidaAuditivaBilateralAMA: audiometria.perdidaAuditivaBilateralAMA ?? null,
+      }))
+    );
+
     const trabajadoresEvaluadosSet = new Set([
       ...exploracionesMap.keys(),
       ...historiasMap.keys(),
@@ -512,6 +560,7 @@ export class TrabajadoresService {
         ...historiasMap.keys(),
         ...examenesMap.keys(),
         ...aptitudesMap.keys(),
+        ...audiometriasMap.keys(),
       ]);
       
       // Filtrar trabajadores activos que tienen evaluaciones en el período
