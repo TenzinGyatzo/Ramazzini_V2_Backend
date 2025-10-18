@@ -35,6 +35,55 @@ export class User {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProveedoresSalud', required: true })
   idProveedorSalud: string
 
+@Prop({
+  type: {
+    gestionarEmpresas: { type: Boolean, default: false },
+    gestionarCentrosTrabajo: { type: Boolean, default: false },
+    gestionarTrabajadores: { type: Boolean, default: false },
+    gestionarDocumentosDiagnostico: { type: Boolean, default: false },
+    gestionarDocumentosEvaluacion: { type: Boolean, default: false },
+    gestionarDocumentosExternos: { type: Boolean, default: false },
+    gestionarCuestionariosAdicionales: { type: Boolean, default: false }
+  },
+    default: function() {
+      // Permisos por defecto según rol
+      if (this.role === 'Médico') {
+        return {
+          gestionarEmpresas: false,
+          gestionarCentrosTrabajo: false,
+          gestionarTrabajadores: true,
+          gestionarDocumentosDiagnostico: true,
+          gestionarDocumentosEvaluacion: true,
+          gestionarDocumentosExternos: true,
+          gestionarCuestionariosAdicionales: true
+        };
+      } else if (this.role === 'Enfermero/a') {
+        return {
+          gestionarEmpresas: false,
+          gestionarCentrosTrabajo: false,
+          gestionarTrabajadores: true,
+          gestionarDocumentosDiagnostico: false,
+          gestionarDocumentosEvaluacion: true,
+          gestionarDocumentosExternos: true,
+          gestionarCuestionariosAdicionales: true
+        };
+      }
+      return {};
+    }
+  })
+  permisos: {
+    gestionarEmpresas: boolean;
+    gestionarCentrosTrabajo: boolean;
+    gestionarTrabajadores: boolean;
+    gestionarDocumentosDiagnostico: boolean;
+    gestionarDocumentosEvaluacion: boolean;
+    gestionarDocumentosExternos: boolean;
+    gestionarCuestionariosAdicionales: boolean;
+  };
+
+  @Prop({ default: true })
+  cuentaActiva: boolean;
+
   async checkPassword(inputPassword: string): Promise<boolean> {
     return bcrypt.compare(inputPassword, this.password);
   }

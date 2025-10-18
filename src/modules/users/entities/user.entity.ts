@@ -9,5 +9,15 @@ export class User extends Document {
     role: string;
     token: string;
     idProveedorSalud: string;
+  permisos?: {
+    gestionarEmpresas: boolean;
+    gestionarCentrosTrabajo: boolean;
+    gestionarTrabajadores: boolean;
+    gestionarDocumentosDiagnostico: boolean;
+    gestionarDocumentosEvaluacion: boolean;
+    gestionarDocumentosExternos: boolean;
+    gestionarCuestionariosAdicionales: boolean;
+  };
+    cuentaActiva?: boolean;
     checkPassword: (inputPassword: string) => Promise<boolean>;
 }

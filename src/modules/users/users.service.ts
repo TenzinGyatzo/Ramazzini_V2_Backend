@@ -48,6 +48,22 @@ export class UsersService {
     return this.userModel.findOneAndDelete({ email }).exec();
   }
 
+  async updateUserPermissions(userId: string, permisos: any): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $set: { permisos } },
+      { new: true }
+    ).exec();
+  }
+
+  async toggleAccountStatus(userId: string, cuentaActiva: boolean): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $set: { cuentaActiva } },
+      { new: true }
+    ).exec();
+  }
+
         // Métodos para estadísticas de productividad
         async getProductivityStatsByProveedor(idProveedorSalud: string, fechaInicio?: string, fechaFin?: string) {
           try {
