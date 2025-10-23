@@ -16,6 +16,7 @@ import { ExploracionFisica } from '../expedientes/schemas/exploracion-fisica.sch
 import { HistoriaClinica } from '../expedientes/schemas/historia-clinica.schema';
 import { NotaMedica } from '../expedientes/schemas/nota-medica.schema';
 import { CentrosTrabajoService } from '../centros-trabajo/centros-trabajo.service';
+import { User } from '../users/schemas/user.schema';
 
 @Injectable()
 export class EmpresasService {
@@ -31,6 +32,7 @@ export class EmpresasService {
     @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
     @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>,
     @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
+    @InjectModel('User') private userModel: Model<User>,
     private centrosTrabajoService: CentrosTrabajoService
   ) {}
 
@@ -40,7 +42,29 @@ export class EmpresasService {
     return createdEmpresa.save();
   }
 
-  async findAll(idProveedorSalud: string): Promise<Empresa[]> { // Pruebas o Los Mochis
+  async findAll(idProveedorSalud: string, userId?: string): Promise<Empresa[]> { 
+    // Si se proporciona userId, verificar permisos del usuario
+    if (userId) {
+      const user = await this.userModel.findById(userId).exec();
+      if (user && user.role === 'Principal') {
+        // Usuario Principal ve todas las empresas del proveedor
+        return this.empresaModel.find({ idProveedorSalud: idProveedorSalud }).sort({ nombreComercial: 1 }).exec();
+      } else if (user) {
+        // Verificar si tiene permiso de acceso completo
+        if (user.permisos?.accesoCompletoEmpresasCentros) {
+          // Usuario con permiso completo ve todas las empresas del proveedor
+          return this.empresaModel.find({ idProveedorSalud: idProveedorSalud }).sort({ nombreComercial: 1 }).exec();
+        } else {
+          // Otros usuarios solo ven empresas asignadas
+          return this.empresaModel.find({ 
+            _id: { $in: user.empresasAsignadas || [] },
+            idProveedorSalud: idProveedorSalud 
+          }).sort({ nombreComercial: 1 }).exec();
+        }
+      }
+    }
+    
+    // Comportamiento por defecto: todas las empresas del proveedor
     return this.empresaModel.find({ idProveedorSalud: idProveedorSalud }).sort({ nombreComercial: 1 }).exec();
   }
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile, InternalServerErrorException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, UseInterceptors, UploadedFile, InternalServerErrorException, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { EmpresasService } from './empresas.service';
@@ -69,9 +69,9 @@ export class EmpresasController {
   @Get('empresas/:idProveedorSalud')
   @ApiOperation({ summary: 'Obtiene todas las empresas' })
   @ApiResponse({ status: 200, description: 'Empresas obtenidas exitosamente' })
-  async findAll(@Param('idProveedorSalud') idProveedorSalud: string) {
+  async findAll(@Param('idProveedorSalud') idProveedorSalud: string, @Query('userId') userId?: string) {
 
-    const empresas = await this.empresasService.findAll(idProveedorSalud);
+    const empresas = await this.empresasService.findAll(idProveedorSalud, userId);
     return empresas || [];
   }
 

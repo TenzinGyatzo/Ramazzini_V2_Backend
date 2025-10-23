@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, InternalServerErrorException, Query } from '@nestjs/common';
 import { CentrosTrabajoService } from './centros-trabajo.service';
 import { CreateCentrosTrabajoDto } from './dto/create-centros-trabajo.dto';
 import { UpdateCentrosTrabajoDto } from './dto/update-centros-trabajo.dto';
@@ -33,7 +33,7 @@ export class CentrosTrabajoController {
   @ApiOperation({ summary: 'Obtiene todos los centros de trabajo de una empresa' })
   @ApiResponse({ status: 200, description: 'Centros de Trabajo encontrados exitosamente | Esta empresa no tiene centros de trabajo registrados' })
   @ApiResponse({ status: 400, description: 'El ID proporcionado no es válido' })
-  async findCentersByCompany(@Param('empresaId') empresaId: string) {
+  async findCentersByCompany(@Param('empresaId') empresaId: string, @Query('userId') userId?: string) {
     if (!isValidObjectId(empresaId)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
@@ -46,6 +46,7 @@ export class CentrosTrabajoController {
   
     return centrosTrabajo;
   }
+
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtiene un centro de trabajo por su ID' })

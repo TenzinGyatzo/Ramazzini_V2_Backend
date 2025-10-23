@@ -13,6 +13,7 @@ import { ExamenVista, ExamenVistaSchema } from '../expedientes/schemas/examen-vi
 import { ExploracionFisica, ExploracionFisicaSchema } from '../expedientes/schemas/exploracion-fisica.schema';
 import { HistoriaClinica, HistoriaClinicaSchema } from '../expedientes/schemas/historia-clinica.schema';
 import { NotaMedica, NotaMedicaSchema } from '../expedientes/schemas/nota-medica.schema';
+import { User, UserSchema } from '../users/schemas/user.schema';
 import { FilesModule } from '../files/files.module';
 import { CentrosTrabajoModule } from '../centros-trabajo/centros-trabajo.module';
 import { TrabajadoresModule } from '../trabajadores/trabajadores.module';
@@ -31,6 +32,7 @@ import { TrabajadoresModule } from '../trabajadores/trabajadores.module';
       { name: ExploracionFisica.name, schema: ExploracionFisicaSchema },
       { name: HistoriaClinica.name, schema: HistoriaClinicaSchema },
       { name: NotaMedica.name, schema: NotaMedicaSchema },
+      { name: User.name, schema: UserSchema },
     ]),
     FilesModule, // Importar FilesModule para poder usar FilesService
     forwardRef(() => CentrosTrabajoModule), // Importar si hay referencias cruzadas

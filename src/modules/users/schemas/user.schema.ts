@@ -43,11 +43,27 @@ export class User {
     gestionarDocumentosDiagnostico: { type: Boolean, default: false },
     gestionarDocumentosEvaluacion: { type: Boolean, default: false },
     gestionarDocumentosExternos: { type: Boolean, default: false },
-    gestionarCuestionariosAdicionales: { type: Boolean, default: false }
+    gestionarCuestionariosAdicionales: { type: Boolean, default: false },
+    accesoCompletoEmpresasCentros: { type: Boolean, default: false },
+    accesoDashboardSalud: { type: Boolean, default: false },
+    accesoRiesgosTrabajo: { type: Boolean, default: false }
   },
     default: function() {
       // Permisos por defecto según rol
-      if (this.role === 'Médico') {
+      if (this.role === 'Principal') {
+        return {
+          gestionarEmpresas: true,
+          gestionarCentrosTrabajo: true,
+          gestionarTrabajadores: true,
+          gestionarDocumentosDiagnostico: true,
+          gestionarDocumentosEvaluacion: true,
+          gestionarDocumentosExternos: true,
+          gestionarCuestionariosAdicionales: true,
+          accesoCompletoEmpresasCentros: true,
+          accesoDashboardSalud: true,
+          accesoRiesgosTrabajo: true
+        };
+      } else if (this.role === 'Médico') {
         return {
           gestionarEmpresas: false,
           gestionarCentrosTrabajo: false,
@@ -55,7 +71,10 @@ export class User {
           gestionarDocumentosDiagnostico: true,
           gestionarDocumentosEvaluacion: true,
           gestionarDocumentosExternos: true,
-          gestionarCuestionariosAdicionales: true
+          gestionarCuestionariosAdicionales: true,
+          accesoCompletoEmpresasCentros: false,
+          accesoDashboardSalud: true,
+          accesoRiesgosTrabajo: true
         };
       } else if (this.role === 'Enfermero/a') {
         return {
@@ -65,7 +84,10 @@ export class User {
           gestionarDocumentosDiagnostico: false,
           gestionarDocumentosEvaluacion: true,
           gestionarDocumentosExternos: true,
-          gestionarCuestionariosAdicionales: true
+          gestionarCuestionariosAdicionales: true,
+          accesoCompletoEmpresasCentros: false,
+          accesoDashboardSalud: true,
+          accesoRiesgosTrabajo: true
         };
       }
       return {};
@@ -79,10 +101,19 @@ export class User {
     gestionarDocumentosEvaluacion: boolean;
     gestionarDocumentosExternos: boolean;
     gestionarCuestionariosAdicionales: boolean;
+    accesoCompletoEmpresasCentros: boolean;
+    accesoDashboardSalud: boolean;
+    accesoRiesgosTrabajo: boolean;
   };
 
   @Prop({ default: true })
   cuentaActiva: boolean;
+
+  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'Empresa', default: [] })
+  empresasAsignadas: string[];
+
+  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'CentroTrabajo', default: [] })
+  centrosTrabajoAsignados: string[];
 
   async checkPassword(inputPassword: string): Promise<boolean> {
     return bcrypt.compare(inputPassword, this.password);

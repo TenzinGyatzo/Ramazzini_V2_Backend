@@ -17,6 +17,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePermissionsDto } from './dto/update-permissions.dto';
+import { UpdateAssignmentsDto } from './dto/update-assignments.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { UserDocument } from './schemas/user.schema';
 import { generateJWT } from 'src/utils/jwt';
@@ -359,6 +360,58 @@ export class UsersController {
       res.json({ msg: `Cuenta ${estado} correctamente`, user });
     } catch (error) {
       console.error('Error al cambiar estado de cuenta:', error);
+      res.status(500).json({ msg: 'Error interno del servidor' });
+    }
+  }
+
+  @Patch('asignaciones/:userId')
+  async updateUserAssignments(
+    @Param('userId') userId: string,
+    @Body() updateAssignmentsDto: UpdateAssignmentsDto,
+    @Res() res: Response
+  ) {
+    try {
+      const user = await this.usersService.updateUserAssignments(userId, updateAssignmentsDto);
+      if (!user) {
+        return res.status(404).json({ msg: 'Usuario no encontrado' });
+      }
+      res.json({ msg: 'Asignaciones actualizadas correctamente', user });
+    } catch (error) {
+      console.error('Error al actualizar asignaciones:', error);
+      res.status(500).json({ msg: 'Error interno del servidor' });
+    }
+  }
+
+  @Get('asignaciones/:userId/centros-trabajo')
+  async getUserCentrosTrabajo(
+    @Param('userId') userId: string,
+    @Res() res: Response
+  ) {
+    try {
+      const centrosTrabajo = await this.usersService.getUserCentrosTrabajo(userId);
+      res.json(centrosTrabajo || []);
+    } catch (error) {
+      console.error('Error al obtener centros de trabajo del usuario:', error);
+      res.status(500).json({ msg: 'Error interno del servidor' });
+    }
+  }
+
+  @Get('asignaciones/:userId')
+  async getUserAssignments(
+    @Param('userId') userId: string,
+    @Res() res: Response
+  ) {
+    try {
+      const user = await this.usersService.getUserAssignments(userId);
+      if (!user) {
+        return res.status(404).json({ msg: 'Usuario no encontrado' });
+      }
+      res.json({
+        empresasAsignadas: user.empresasAsignadas || [],
+        centrosTrabajoAsignados: user.centrosTrabajoAsignados || []
+      });
+    } catch (error) {
+      console.error('Error al obtener asignaciones:', error);
       res.status(500).json({ msg: 'Error interno del servidor' });
     }
   }

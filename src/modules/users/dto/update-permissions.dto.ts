@@ -28,4 +28,16 @@ export class UpdatePermissionsDto {
   @IsBoolean()
   @IsOptional()
   gestionarCuestionariosAdicionales?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  accesoCompletoEmpresasCentros?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  accesoDashboardSalud?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  accesoRiesgosTrabajo?: boolean;
 }

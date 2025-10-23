@@ -15,6 +15,7 @@ import { ExploracionFisica } from '../expedientes/schemas/exploracion-fisica.sch
 import { HistoriaClinica } from '../expedientes/schemas/historia-clinica.schema';
 import { NotaMedica } from '../expedientes/schemas/nota-medica.schema';
 import { TrabajadoresService } from '../trabajadores/trabajadores.service';
+import { User } from '../users/schemas/user.schema';
 
 @Injectable()
 export class CentrosTrabajoService {
@@ -29,6 +30,7 @@ export class CentrosTrabajoService {
     @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
     @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>,
     @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
+    @InjectModel('User') private userModel: Model<User>,
     private trabajadoresService: TrabajadoresService
   ) {}
 
@@ -40,6 +42,29 @@ export class CentrosTrabajoService {
 
   async findCentersByCompany(id: string): Promise<CentroTrabajo[]> {
     return await this.centroTrabajoModel.find({ idEmpresa: id }).exec();
+  }
+
+  async findByUserAssignments(userId: string): Promise<CentroTrabajo[]> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      return [];
+    }
+
+    if (user.role === 'Principal') {
+      // Usuario Principal ve todos los centros de trabajo
+      return await this.centroTrabajoModel.find({}).exec();
+    }
+
+    // Verificar si tiene permiso de acceso completo
+    if (user.permisos?.accesoCompletoEmpresasCentros) {
+      // Usuario con permiso completo ve todos los centros de trabajo
+      return await this.centroTrabajoModel.find({}).exec();
+    }
+
+    // Otros usuarios solo ven centros asignados
+    return await this.centroTrabajoModel.find({ 
+      _id: { $in: user.centrosTrabajoAsignados || [] }
+    }).exec();
   }
 
   async findOne(id: string): Promise<CentroTrabajo> {

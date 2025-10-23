@@ -17,7 +17,12 @@ export class User extends Document {
     gestionarDocumentosEvaluacion: boolean;
     gestionarDocumentosExternos: boolean;
     gestionarCuestionariosAdicionales: boolean;
+    accesoCompletoEmpresasCentros: boolean;
+    accesoDashboardSalud: boolean;
+    accesoRiesgosTrabajo: boolean;
   };
     cuentaActiva?: boolean;
+    empresasAsignadas?: string[];
+    centrosTrabajoAsignados?: string[];
     checkPassword: (inputPassword: string) => Promise<boolean>;
 }

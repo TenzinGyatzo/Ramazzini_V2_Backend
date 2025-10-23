@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -15,6 +15,7 @@ import { AudiometriaSchema } from '../expedientes/schemas/audiometria.schema';
 import { AntidopingSchema } from '../expedientes/schemas/antidoping.schema';
 import { NotaMedicaSchema } from '../expedientes/schemas/nota-medica.schema';
 import { DocumentoExternoSchema } from '../expedientes/schemas/documento-externo.schema';
+import { CentrosTrabajoModule } from '../centros-trabajo/centros-trabajo.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { DocumentoExternoSchema } from '../expedientes/schemas/documento-externo
       { name: 'DocumentoExterno', schema: DocumentoExternoSchema },
     ]),
     EmailsModule,  // Importa el módulo que exporta el EmailsService
+    forwardRef(() => CentrosTrabajoModule),
   ],
   controllers: [UsersController],
   providers: [UsersService],

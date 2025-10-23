@@ -3,6 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserDocument } from '../users/schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateAssignmentsDto } from './dto/update-assignments.dto';
+import { CentrosTrabajoService } from '../centros-trabajo/centros-trabajo.service';
 
 @Injectable()
 export class UsersService {
@@ -17,6 +19,7 @@ export class UsersService {
     @InjectModel('NotaMedica') private notaMedicaModel: Model<any>,
     @InjectModel('DocumentoExterno') private documentoExternoModel: Model<any>,
     @InjectModel('ProveedorSalud') private proveedorSaludModel: Model<any>,
+    private centrosTrabajoService: CentrosTrabajoService,
   ) {}
 
   async register(createUserDto: CreateUserDto) {
@@ -62,6 +65,18 @@ export class UsersService {
       { $set: { cuentaActiva } },
       { new: true }
     ).exec();
+  }
+
+  async updateUserAssignments(userId: string, assignmentsDto: UpdateAssignmentsDto): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $set: assignmentsDto },
+      { new: true }
+    ).exec();
+  }
+
+  async getUserAssignments(userId: string): Promise<UserDocument | null> {
+    return this.userModel.findById(userId).select('empresasAsignadas centrosTrabajoAsignados').exec();
   }
 
         // Métodos para estadísticas de productividad
@@ -254,5 +269,9 @@ export class UsersService {
             throw error;
           }
         }
+
+  async getUserCentrosTrabajo(userId: string): Promise<any[]> {
+    return this.centrosTrabajoService.findByUserAssignments(userId);
+  }
 }
 
