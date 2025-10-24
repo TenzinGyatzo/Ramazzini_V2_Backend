@@ -376,8 +376,10 @@ export const notaMedicaInforme = (
           { text: `${trabajador.puesto}`, bold: true },
           { text: `, con escolaridad ` },
           { text: `${trabajador.escolaridad}`, bold: true },
-          { text: ` y una antigüedad de ` },
-          { text: `${trabajador.antiguedad}`, bold: true },
+          ...(trabajador.antiguedad && trabajador.antiguedad !== '-' ? [
+            { text: ` y una antigüedad de ` },
+            { text: `${trabajador.antiguedad}`, bold: true }
+          ] : []),
           { text: `. Estado civil: ` },
           { text: `${trabajador.estadoCivil}`, bold: true },
           ...(trabajador.numeroEmpleado && trabajador.numeroEmpleado.trim() !== '' ? [

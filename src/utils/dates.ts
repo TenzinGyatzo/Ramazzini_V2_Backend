@@ -69,7 +69,18 @@ function calcularEdad(dateString: string): number {
   }
 
 function calcularAntiguedad(dateString: string): string {
+  // Si no hay fecha de ingreso, retornar guión
+  if (!dateString || dateString === '' || dateString === 'No recuerda') {
+    return '-';
+  }
+
   const fechaIngreso = new Date(dateString);
+  
+  // Validar que la fecha sea válida
+  if (isNaN(fechaIngreso.getTime())) {
+    return 'Fecha inválida';
+  }
+
   const fechaIngresoMilisegundos = fechaIngreso.getTime();
   const hoy = new Date();
   const hoyMilisegundos = new Date().getTime();

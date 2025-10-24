@@ -66,9 +66,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -225,9 +225,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -505,9 +505,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -683,9 +683,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -913,9 +913,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -1046,9 +1046,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -1216,9 +1216,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -1409,9 +1409,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -1638,9 +1638,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -1780,9 +1780,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -2009,9 +2009,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -2163,9 +2163,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -2320,9 +2320,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: calcularAntiguedad(
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
         convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ),
+      ) : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,

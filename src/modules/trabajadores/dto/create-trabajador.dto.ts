@@ -92,12 +92,12 @@ export class CreateTrabajadorDto {
 
     @ApiProperty({
       description: 'Fecha de ingreso al trabajo, sirve para calcular antigüedad dinamicamente',
-      example: '2023-10-01T07:00:00.000+00:00'
+      example: '2023-10-01T07:00:00.000+00:00',
+      required: false
     })
-    @IsDate({ message: 'La fecha de ingreso debe ser una fecha' })
+    @IsOptional()
     @Type(() => Date)
-    @IsNotEmpty({ message: 'La fecha de ingreso no puede estar vacía' })
-    fechaIngreso: Date;
+    fechaIngreso?: Date;
 
     @ApiProperty({
       description: 'Número de teléfono del trabajador (opcional, formato internacional)',

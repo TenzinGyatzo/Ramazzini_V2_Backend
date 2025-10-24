@@ -11,7 +11,7 @@ export class Trabajador extends Document {
     sexo: string;
     escolaridad: string;
     puesto: string;
-    fechaIngreso: Date;
+    fechaIngreso?: Date;
     telefono: string;
     estadoCivil: string;
     numeroEmpleado: string;

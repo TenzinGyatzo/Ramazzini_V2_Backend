@@ -50,7 +50,7 @@ export class Trabajador extends Document {
     @Prop({ required: true })
     puesto: string;
 
-    @Prop({ required: true })
+    @Prop({ required: false })
     fechaIngreso: Date;
 
     @Prop({ required: false, match: /^$|^\+?[0-9]\d{3,14}$/ })

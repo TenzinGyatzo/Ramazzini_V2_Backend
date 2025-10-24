@@ -1258,9 +1258,8 @@ export class TrabajadoresService {
       }
     }
 
-    if (!worker.fechaIngreso) {
-      errors.push('La fecha de ingreso es requerida');
-    } else {
+    // La fecha de ingreso ahora es opcional
+    if (worker.fechaIngreso) {
       const parsedDate = this.parseExcelDate(worker.fechaIngreso);
       if (!parsedDate) {
         errors.push(`Fecha de ingreso inválida: ${worker.fechaIngreso}`);
@@ -1644,7 +1643,7 @@ export class TrabajadoresService {
         Sexo: trabajador.sexo,
         Escolaridad: trabajador.escolaridad,
         Puesto: trabajador.puesto,
-        Antiguedad: fechaIngresoStr ? calcularAntiguedad(fechaIngresoStr) : 'Desconocido',
+        Antiguedad: fechaIngresoStr ? calcularAntiguedad(fechaIngresoStr) : '-',
         Telefono: trabajador.telefono,
         EstadoCivil: trabajador.estadoCivil,
         NumeroEmpleado: trabajador.numeroEmpleado || '',
