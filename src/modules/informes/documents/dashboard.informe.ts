@@ -1,3 +1,4 @@
+// Creo que este archivo ya no se usa
 import type {
   Content,
   StyleDictionary,

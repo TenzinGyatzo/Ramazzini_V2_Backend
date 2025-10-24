@@ -9,6 +9,8 @@ import {
   UseInterceptors,
   UploadedFile,
   NotFoundException,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
 import { ProveedoresSaludService } from './proveedores-salud.service';
 import { CreateProveedoresSaludDto } from './dto/create-proveedores-salud.dto';
@@ -19,6 +21,7 @@ import path from 'path';
 import { BadRequestException } from '@nestjs/common';
 import { isValidObjectId } from 'mongoose';
 import { isAfter, addDays } from 'date-fns';
+import * as fs from 'fs';
 
 @Controller('proveedores-salud')
 export class ProveedoresSaludController {
@@ -325,6 +328,46 @@ export class ProveedoresSaludController {
       throw new BadRequestException('ID de proveedor de salud inválido');
     }
     return this.proveedoresSaludService.getReglasPuntaje(idProveedorSalud);
+  }
+
+  @Get('/logo/:filename')
+  async getLogo(@Param('filename') filename: string, @Res() res: any) {
+    try {
+      const logoPath = path.resolve(
+        __dirname,
+        `../../../../${process.env.PROVIDERS_UPLOADS_DIR}`,
+        filename
+      );
+
+      // Verificar que el archivo existe
+      if (!fs.existsSync(logoPath)) {
+        throw new NotFoundException('Logo no encontrado');
+      }
+
+      // Leer el archivo
+      const file = fs.createReadStream(logoPath);
+      
+      // Determinar el tipo de contenido basado en la extensión
+      const ext = path.extname(filename).toLowerCase();
+      let contentType = 'image/png';
+      if (ext === '.jpg' || ext === '.jpeg') {
+        contentType = 'image/jpeg';
+      }
+
+      // Configurar headers CORS
+      res.set({
+        'Content-Type': contentType,
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Cache-Control': 'public, max-age=31536000', // Cache por 1 año
+      });
+
+      // Enviar el archivo
+      file.pipe(res);
+    } catch (error) {
+      throw new NotFoundException('Logo no encontrado');
+    }
   }
 
   @Patch('/reglas-puntaje/:idProveedorSalud')
