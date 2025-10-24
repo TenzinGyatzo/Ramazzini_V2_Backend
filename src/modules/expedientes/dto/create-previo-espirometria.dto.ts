@@ -10,7 +10,7 @@ const cigarrosSemanaOpciones = ["0", "<10", "10–20", ">20"];
 
 const disneaOpciones = ["NINGUNA", "AL ESFUERZO", "EN REPOSO"];
 
-const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE"];
+const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE", "OTRO"];
 
 export class CreatePrevioEspirometriaDto {
 
@@ -314,6 +314,14 @@ export class CreatePrevioEspirometriaDto {
     @IsNotEmpty({ message: 'El resultado de cuestionario no puede estar vacío' })
     @IsEnum(resultadoCuestionarioOpciones, { message: 'El resultado de cuestionario debe ser uno de los siguientes: ' + resultadoCuestionarioOpciones })
     resultadoCuestionario: string
+
+    @ApiProperty({
+        description: 'Resultado de cuestionario personalizado (cuando se selecciona OTRO)',
+        example: 'Requiere evaluación adicional por especialista'
+    })
+    @IsString({ message: 'El resultado de cuestionario personalizado debe ser un string' })
+    @IsOptional()
+    resultadoCuestionarioPersonalizado: string
 
     // Trabajador, ruta al archivo e info de creador y actualizador
     @ApiProperty({

@@ -19,7 +19,7 @@ const tiempoExposicionOpciones = [
   "MÁS DE 20 AÑOS"
 ];
 
-const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE"];
+const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE", "OTRO"];
 
 @Schema()
 export class HistoriaOtologica extends Document {
@@ -106,6 +106,9 @@ export class HistoriaOtologica extends Document {
     // Resultado de cuestionario
     @Prop( { enum: resultadoCuestionarioOpciones })
     resultadoCuestionario: string
+
+    @Prop()
+    resultadoCuestionarioPersonalizado: string
 
     // Trabajador, ruta al archivo e info de creador y actualizador
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })

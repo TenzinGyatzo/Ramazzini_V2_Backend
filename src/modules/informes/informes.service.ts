@@ -2046,6 +2046,7 @@ export class InformesService {
       otoscopiaOidoDerecho: historiaOtologica.otoscopiaOidoDerecho,
       otoscopiaOidoIzquierdo: historiaOtologica.otoscopiaOidoIzquierdo,
       resultadoCuestionario: historiaOtologica.resultadoCuestionario,
+      resultadoCuestionarioPersonalizado: historiaOtologica.resultadoCuestionarioPersonalizado,
     };
 
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
@@ -2203,6 +2204,7 @@ export class InformesService {
       hipertensionIntracraneal: previoEspirometria.hipertensionIntracraneal,
       desprendimientoAgudoRetina: previoEspirometria.desprendimientoAgudoRetina,
       resultadoCuestionario: previoEspirometria.resultadoCuestionario,
+      resultadoCuestionarioPersonalizado: previoEspirometria.resultadoCuestionarioPersonalizado,
     };
 
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);

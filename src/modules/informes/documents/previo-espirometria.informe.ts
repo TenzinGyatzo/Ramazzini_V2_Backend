@@ -114,16 +114,24 @@ const createDisneaTableCell = (text: string): Content => ({
          text && text.toUpperCase() === 'AL ESFUERZO' ? '#CD853F' : 'black', // En reposo -> rojo, Al esfuerzo -> ocre, Ninguna -> negro
 });
 
-const createResultadoCuestionarioTableCell = (text: string): Content => ({
-  text: text ? text.toUpperCase() : '',
-  style: 'tableCell',
-  alignment: 'center',
-  margin: [3, 3, 3, 3],
-  bold: true,
-  color: text && text.toUpperCase() === 'PROCEDENTE' ? 'green' : 
-         text && text.toUpperCase() === 'PROCEDENTE CON PRECAUCIÓN' ? '#CD853F' : // Color ocre
-         text && text.toUpperCase() === 'NO PROCEDENTE' ? 'red' : 'black',
-});
+const createResultadoCuestionarioTableCell = (text: string, textoPersonalizado?: string): Content => {
+  // Si el resultado es "OTRO" y hay texto personalizado, usar el texto personalizado
+  const textoFinal = text && text.toUpperCase() === 'OTRO' && textoPersonalizado 
+    ? textoPersonalizado.toUpperCase() 
+    : text ? text.toUpperCase() : '';
+    
+  return {
+    text: textoFinal,
+    style: 'tableCell',
+    alignment: 'center',
+    margin: [3, 3, 3, 3],
+    bold: true,
+    color: text && text.toUpperCase() === 'PROCEDENTE' ? 'green' : 
+           text && text.toUpperCase() === 'PROCEDENTE CON PRECAUCIÓN' ? '#CD853F' : // Color ocre
+           text && text.toUpperCase() === 'NO PROCEDENTE' ? 'red' : 
+           text && text.toUpperCase() === 'OTRO' ? '#404040' : 'black', // Color gris oscuro para OTRO
+  };
+};
 
 const createExposicionPolvosTableCell = (text: string): Content => ({
   text: text ? text.toUpperCase() : '',
@@ -249,6 +257,7 @@ interface PrevioEspirometria {
   hipertensionIntracraneal: string;
   desprendimientoAgudoRetina: string;
   resultadoCuestionario: string;
+  resultadoCuestionarioPersonalizado: string;
 }
 
 interface MedicoFirmante {
@@ -774,7 +783,10 @@ export const previoEspirometriaInforme = (
            body: [
                [
                  { text: 'ESPIROMETRÍA', style: 'tableCellBold', alignment: 'center' },
-                 createResultadoCuestionarioTableCell(previoEspirometria.resultadoCuestionario?.toString() || ''),
+                 createResultadoCuestionarioTableCell(
+                   previoEspirometria.resultadoCuestionario?.toString() || '',
+                   previoEspirometria.resultadoCuestionarioPersonalizado?.toString()
+                 ),
                ]
           ],
         },

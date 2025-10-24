@@ -11,7 +11,7 @@ const cigarrosSemanaOpciones = ["0", "<10", "10–20", ">20"];
 
 const disneaOpciones = ["NINGUNA", "AL ESFUERZO", "EN REPOSO"];
 
-const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE"];
+const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE", "OTRO"];
 
 @Schema()
 export class PrevioEspirometria extends Document {
@@ -110,6 +110,9 @@ export class PrevioEspirometria extends Document {
     // Resultado de cuestionario
     @Prop( { enum: resultadoCuestionarioOpciones })
     resultadoCuestionario: string
+
+    @Prop()
+    resultadoCuestionarioPersonalizado: string
 
     // Trabajador, ruta al archivo e info de creador y actualizador
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })

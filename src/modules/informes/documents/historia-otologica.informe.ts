@@ -115,16 +115,24 @@ const createOtoscopiaTableCell = (text: string): Content => ({
   color: text && text.toUpperCase() === 'NO PERMEABLE' ? 'red' : 'black',
 });
 
-const createResultadoCuestionarioTableCell = (text: string): Content => ({
-  text: text ? text.toUpperCase() : '',
-  style: 'tableCell',
-  alignment: 'center',
-  margin: [3, 3, 3, 3],
-  bold: true,
-  color: text && text.toUpperCase() === 'PROCEDENTE' ? 'green' : 
-         text && text.toUpperCase() === 'PROCEDENTE CON PRECAUCIÓN' ? '#CD853F' : // Color ocre
-         text && text.toUpperCase() === 'NO PROCEDENTE' ? 'red' : 'black',
-});
+const createResultadoCuestionarioTableCell = (text: string, textoPersonalizado?: string): Content => {
+  // Si el resultado es "OTRO" y hay texto personalizado, usar el texto personalizado
+  const textoFinal = text && text.toUpperCase() === 'OTRO' && textoPersonalizado 
+    ? textoPersonalizado.toUpperCase() 
+    : text ? text.toUpperCase() : '';
+    
+  return {
+    text: textoFinal,
+    style: 'tableCell',
+    alignment: 'center',
+    margin: [3, 3, 3, 3],
+    bold: true,
+    color: text && text.toUpperCase() === 'PROCEDENTE' ? 'green' : 
+           text && text.toUpperCase() === 'PROCEDENTE CON PRECAUCIÓN' ? '#CD853F' : // Color ocre
+           text && text.toUpperCase() === 'NO PROCEDENTE' ? 'red' : 
+           text && text.toUpperCase() === 'OTRO' ? '#404040' : 'black', // Color gris oscuro para OTRO
+  };
+};
 
 function formatearFechaUTC(fecha: Date): string {
   if (!fecha || isNaN(fecha.getTime())) return '';
@@ -228,6 +236,7 @@ interface HistoriaOtologica {
   otoscopiaOidoDerecho: string;
   otoscopiaOidoIzquierdo: string;
   resultadoCuestionario: string;
+  resultadoCuestionarioPersonalizado: string;
 }
 
 interface MedicoFirmante {
@@ -724,7 +733,10 @@ export const historiaOtologicaInforme = (
            body: [
                [
                  { text: 'AUDIOMETRÍA', style: 'tableCellBold', alignment: 'center' },
-                 createResultadoCuestionarioTableCell(historiaOtologica.resultadoCuestionario?.toString() || ''),
+                 createResultadoCuestionarioTableCell(
+                   historiaOtologica.resultadoCuestionario?.toString() || '',
+                   historiaOtologica.resultadoCuestionarioPersonalizado?.toString()
+                 ),
                ]
            ],
          },
