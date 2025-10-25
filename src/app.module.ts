@@ -21,6 +21,7 @@ import { EmailsModule } from './modules/emails/emails.module';
 import { PagosModule } from './modules/pagos/pagos.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RiesgosTrabajoModule } from './modules/riesgos-trabajo/riesgos-trabajo.module';
+import { InformePersonalizacionModule } from './modules/informe-personalizacion/informe-personalizacion.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { RiesgosTrabajoModule } from './modules/riesgos-trabajo/riesgos-trabajo.
     PagosModule,
     ScheduleModule.forRoot(),
     RiesgosTrabajoModule,
+    InformePersonalizacionModule,
   ],
 })
 export class AppModule {}
