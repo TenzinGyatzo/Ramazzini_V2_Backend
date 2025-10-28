@@ -1316,17 +1316,15 @@ export class TrabajadoresService {
       }
     }
 
-    // ✅ SOLUCIÓN: Validar NSS (opcional, pero si existe debe tener 11 dígitos)
+    // Validar Identificador de Seguridad Social (opcional, LATAM: 4-30 chars alfanuméricos y separadores comunes)
     if (worker.nss && typeof worker.nss === 'string') {
       const nssNormalizado = String(worker.nss).trim();
       if (nssNormalizado !== '') {
-        // Aceptar solo números, pero permitir que venga como texto
-        const nssLimpio = nssNormalizado.replace(/[^0-9]/g, '');
-        if (nssLimpio.length !== 11) {
-          errors.push(`El NSS debe tener exactamente 11 dígitos. Recibido: ${nssLimpio.length} dígitos`);
+        const permitido = /^[A-Za-z0-9\s\-_.\/]{4,30}$/;
+        if (!permitido.test(nssNormalizado)) {
+          errors.push('El identificador de seguridad social debe tener 4-30 caracteres alfanuméricos y puede incluir - _ . / y espacios');
         } else {
-          // Guardar el NSS normalizado (solo números)
-          cleanedData.nss = nssLimpio;
+          cleanedData.nss = nssNormalizado;
         }
       }
     }

@@ -8,6 +8,7 @@ import { ExpedientesModule } from '../expedientes/expedientes.module';
 import { FilesModule } from '../files/files.module';
 import { MedicosFirmantesModule } from '../medicos-firmantes/medicos-firmantes.module';
 import { EnfermerasFirmantesModule } from '../enfermeras-firmantes/enfermeras-firmantes.module';
+import { TecnicosFirmantesModule } from '../tecnicos-firmantes/tecnicos-firmantes.module';
 import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
 import { UsersModule } from '../users/users.module';
 
@@ -22,6 +23,7 @@ import { UsersModule } from '../users/users.module';
     FilesModule,
     MedicosFirmantesModule,
     EnfermerasFirmantesModule,
+    TecnicosFirmantesModule,
     ProveedoresSaludModule,
     UsersModule
   ],

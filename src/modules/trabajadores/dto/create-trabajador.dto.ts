@@ -130,13 +130,14 @@ export class CreateTrabajadorDto {
     numeroEmpleado?: string;
 
     @ApiProperty({
-      description: 'Número de seguro social del trabajador (opcional, 11 dígitos)',
-      example: '12345678901',
+      description: 'Identificador de seguridad social (opcional, LATAM: 4-30 chars alfanuméricos y separadores)',
+      example: 'CL-12.345.678-9',
       required: false
     })
     @IsOptional()
-    @IsString({ message: 'El número de seguro social debe ser un string' })
-    @Matches(/^$|^[0-9]{11}$/, { message: 'El número de seguro social debe estar vacío o tener 11 dígitos' })
+    @IsString({ message: 'El identificador de seguridad social debe ser un string' })
+    @Matches(/^$|^[A-Za-z0-9\s\-_.\/]{4,30}$/,
+      { message: 'Debe estar vacío o tener 4-30 caracteres alfanuméricos y - _ . / espacios' })
     nss?: string;
 
     // Agentes de Riesgo

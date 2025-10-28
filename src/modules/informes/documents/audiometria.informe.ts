@@ -226,6 +226,19 @@ interface EnfermeraFirmante {
   }
 }
 
+interface TecnicoFirmante {
+  nombre: string;
+  sexo: string;
+  tituloProfesional: string;
+  numeroCedulaProfesional: string;
+  nombreCredencialAdicional: string;
+  numeroCredencialAdicional: string;
+  firma: {
+    data: string;
+    contentType: string;
+  }
+}
+
 interface ProveedorSalud {
   nombre: string;
   pais: string;
@@ -424,12 +437,14 @@ export const audiometriaInforme = (
   audiometria: Audiometria,
   medicoFirmante: MedicoFirmante | null,
   enfermeraFirmante: EnfermeraFirmante | null,
+  tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
 
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
+  const usarTecnico = !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
 
   // Calcular resultados dinámicos
   const resultadoOD = calcularPorcentajePorOido(audiometria, 'Derecho');
@@ -438,7 +453,7 @@ export const audiometriaInforme = (
   const textoDiagnosticoBilateral = obtenerTextoDiagnosticoBilateral(audiometria.metodoAudiometria || 'AMA');
   
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : null);
+  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : (usarTecnico ? tecnicoFirmante : null));
 
   const firma: Content = firmanteActivo?.firma?.data
   ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
@@ -745,6 +760,16 @@ export const audiometriaInforme = (
                       text: enfermeraFirmante.sexo === 'Femenino' 
                         ? 'Enfermera responsable del estudio\n'
                         : 'Enfermero responsable del estudio\n',
+                      bold: false,
+                    }
+                  : null,
+
+                // Texto específico para técnicos
+                (usarTecnico && tecnicoFirmante?.sexo)
+                  ? {
+                      text: tecnicoFirmante.sexo === 'Femenino' 
+                        ? 'Responsable del estudio\n'
+                        : 'Responsable del estudio\n',
                       bold: false,
                     }
                   : null,

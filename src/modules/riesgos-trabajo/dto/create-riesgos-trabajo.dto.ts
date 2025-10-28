@@ -23,8 +23,10 @@ export class CreateRiesgosTrabajoDto {
     recaida?: string;
 
     @IsOptional()
-    @IsString({ message: 'El NSS debe ser una cadena de texto' })
-    @Length(11, 11, { message: 'El NSS debe tener exactamente 11 caracteres' })
+    @IsString({ message: 'El identificador de seguridad social debe ser una cadena de texto' })
+    // Permitir 4-30 alfanumérico y separadores comunes
+    // Nota: Se valida en servicio de trabajadores también
+    @Length(4, 30, { message: 'El identificador debe tener entre 4 y 30 caracteres' })
     NSS?: string;
 
     @IsOptional()

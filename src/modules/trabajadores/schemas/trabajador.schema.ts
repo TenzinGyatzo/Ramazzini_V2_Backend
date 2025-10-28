@@ -62,7 +62,7 @@ export class Trabajador extends Document {
     @Prop({ required: false, match: /^$|^[0-9]{1,7}$/, unique: false })
     numeroEmpleado: string;
 
-    @Prop({ required: false, match: /^$|^[0-9]{11}$/, unique: false })
+    @Prop({ required: false, match: /^$|^[A-Za-z0-9\s\-_.\/]{4,30}$/, unique: false })
     nss: string;
     
     @Prop({ required: false, default: [] })

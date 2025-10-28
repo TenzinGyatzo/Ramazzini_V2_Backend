@@ -39,15 +39,15 @@ export class CreateEmpresaDto {
   razonSocial?: string;
 
   @ApiProperty({
-    description: 'RFC de la empresa',
-    example: 'BTK123456Y32',
+    description: 'RFC/Registro Patronal de la empresa (opcional, alfanumérico con separadores)',
+    example: 'BTK123456Y32 o REG-123456',
     required: false
   })
   @IsString({ message: 'El RFC debe ser un string' })
   @IsOptional()
-  // @Matches(/^[A-ZÑ&]{3,4}\d{2}\d{2}\d{2}[A-Z\d]{3}$/, {
-  //   message: 'El RFC debe de tener un formato válido',
-  // })
+  @Matches(/^$|^[A-ZÑÁÉÍÓÚ&]{2,8}[\s\-\._]?[A-Z0-9ÑÁÉÍÓÚ\s\-\._]{4,20}$/i, {
+    message: 'El identificador de empresa debe tener entre 6 y 28 caracteres alfanuméricos con separadores',
+  })
   RFC?: string;
 
   @ApiProperty({

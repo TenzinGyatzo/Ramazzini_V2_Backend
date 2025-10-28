@@ -12,11 +12,17 @@ import { CreateEnfermeraFirmanteDto } from 'src/modules/enfermeras-firmantes/dto
 import { UpdateEnfermeraFirmanteDto } from 'src/modules/enfermeras-firmantes/dto/update-enfermera-firmante.dto';
 
 export function normalizeEmpresaData(dto: CreateEmpresaDto | UpdateEmpresaDto) {
+  // Normalizar RFC: eliminar espacios y convertir a mayúsculas
+  // Mantener separadores (guiones, puntos, guiones bajos) para flexibilidad
+  const normalizeRFC = dto.RFC 
+    ? dto.RFC.trim().toUpperCase().replace(/\s+/g, '') 
+    : undefined;
+  
   return {
     ...dto,
     nombreComercial: dto.nombreComercial?.trim(),
     razonSocial: dto.razonSocial?.trim(),
-    RFC: dto.RFC?.trim().toUpperCase(),
+    RFC: normalizeRFC,
     giroDeEmpresa: dto.giroDeEmpresa?.trim(),
     logotipoEmpresa: dto.logotipoEmpresa
       ? {

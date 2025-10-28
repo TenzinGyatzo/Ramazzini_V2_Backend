@@ -23,7 +23,7 @@ export class User {
   @Prop({ required: true, trim: true })
   password: string;
 
-  @Prop({ required: true, enum: ['Principal', 'Médico', 'Enfermero/a'] })
+  @Prop({ required: true, enum: ['Principal', 'Médico', 'Enfermero/a', 'Administrativo', 'Técnico Evaluador'] })
   role: string;
 
   @Prop({ default: () => Date.now().toString(32) + Math.random().toString(32).substring(2) })
@@ -88,6 +88,32 @@ export class User {
           accesoCompletoEmpresasCentros: false,
           accesoDashboardSalud: true,
           accesoRiesgosTrabajo: true
+        };
+      } else if (this.role === 'Administrativo') {
+        return {
+          gestionarEmpresas: true,
+          gestionarCentrosTrabajo: true,
+          gestionarTrabajadores: true,
+          gestionarDocumentosDiagnostico: false,
+          gestionarDocumentosEvaluacion: false,
+          gestionarDocumentosExternos: true,
+          gestionarCuestionariosAdicionales: false,
+          accesoCompletoEmpresasCentros: true,
+          accesoDashboardSalud: true,
+          accesoRiesgosTrabajo: true
+        };
+      } else if (this.role === 'Técnico Evaluador') {
+        return {
+          gestionarEmpresas: false,
+          gestionarCentrosTrabajo: false,
+          gestionarTrabajadores: true,
+          gestionarDocumentosDiagnostico: false,
+          gestionarDocumentosEvaluacion: true,
+          gestionarDocumentosExternos: true,
+          gestionarCuestionariosAdicionales: true,
+          accesoCompletoEmpresasCentros: false,
+          accesoDashboardSalud: true,
+          accesoRiesgosTrabajo: false
         };
       }
       return {};

@@ -266,6 +266,19 @@ interface EnfermeraFirmante {
   }
 }
 
+interface TecnicoFirmante {
+  nombre: string;
+  sexo: string;
+  tituloProfesional: string;
+  numeroCedulaProfesional: string;
+  nombreCredencialAdicional: string;
+  numeroCredencialAdicional: string;
+  firma: {
+    data: string;
+    contentType: string;
+  }
+}
+
 interface ProveedorSalud {
   nombre: string;
   pais: string;
@@ -291,15 +304,17 @@ export const historiaOtologicaInforme = (
   historiaOtologica: HistoriaOtologica,
   medicoFirmante: MedicoFirmante | null,
   enfermeraFirmante: EnfermeraFirmante | null,
+  tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
 
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
-  
+  const usarTecnico = !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
+
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : null);
+  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : (usarTecnico ? tecnicoFirmante : null));
 
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
@@ -827,6 +842,16 @@ export const historiaOtologicaInforme = (
                       text: enfermeraFirmante.sexo === 'Femenino' 
                         ? 'Enfermera responsable del cuestionaro\n'
                         : 'Enfermero responsable del cuestionaro\n',
+                      bold: false,
+                    }
+                  : null,
+
+                // Texto específico para técnicos
+                (usarTecnico && tecnicoFirmante?.sexo)
+                  ? {
+                      text: tecnicoFirmante.sexo === 'Femenino' 
+                        ? 'Responsable de la evaluación\n'
+                        : 'Responsable de la evaluación\n',
                       bold: false,
                     }
                   : null,
