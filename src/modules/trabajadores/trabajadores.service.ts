@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Trabajador } from './entities/trabajador.entity';
@@ -23,6 +23,8 @@ import { ControlPrenatal } from '../expedientes/schemas/control-prenatal.schema'
 import { FilesService } from '../files/files.service';
 import { RiesgoTrabajo } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
 import { CentroTrabajo } from '../centros-trabajo/schemas/centro-trabajo.schema';
+import { User } from '../users/schemas/user.schema';
+import { Empresa } from '../empresas/schemas/empresa.schema';
 
 @Injectable()
 export class TrabajadoresService {
@@ -40,6 +42,8 @@ export class TrabajadoresService {
   @InjectModel(ControlPrenatal.name) private controlPrenatalModel: Model<ControlPrenatal>,
   @InjectModel(RiesgoTrabajo.name) private riesgoTrabajoModel: Model<RiesgoTrabajo>,
   @InjectModel(CentroTrabajo.name) private centroTrabajoModel: Model<CentroTrabajo>,
+  @InjectModel(User.name) private userModel: Model<User>,
+  @InjectModel(Empresa.name) private empresaModel: Model<Empresa>,
   private filesService: FilesService) {}
 
   async create(createTrabajadorDto: CreateTrabajadorDto): Promise<Trabajador> {
@@ -660,15 +664,15 @@ export class TrabajadoresService {
     return await this.trabajadorModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();
   }
 
-  async transferirTrabajador(trabajadorId: string, nuevoCentroId: string, updatedBy: string): Promise<Trabajador> {
+  async transferirTrabajador(trabajadorId: string, nuevoCentroId: string, userId: string): Promise<Trabajador> {
     // Validar que el trabajador existe
-    const trabajador = await this.trabajadorModel.findById(trabajadorId).exec();
+    const trabajador = await this.trabajadorModel.findById(trabajadorId).populate('idCentroTrabajo').exec();
     if (!trabajador) {
       throw new BadRequestException('Trabajador no encontrado');
     }
 
-    // Validar que el nuevo centro de trabajo existe
-    const nuevoCentro = await this.centroTrabajoModel.findById(nuevoCentroId).exec();
+    // Validar que el nuevo centro de trabajo existe y obtener empresa
+    const nuevoCentro = await this.centroTrabajoModel.findById(nuevoCentroId).populate('idEmpresa').exec();
     if (!nuevoCentro) {
       throw new BadRequestException('Centro de trabajo destino no encontrado');
     }
@@ -678,23 +682,310 @@ export class TrabajadoresService {
       throw new BadRequestException('El trabajador ya pertenece a este centro de trabajo');
     }
 
-    // Validar unicidad del número de empleado en el nuevo centro si existe
-    // if (trabajador.numeroEmpleado) {
-    //   await this.validateNumeroEmpleadoUniqueness(trabajador.numeroEmpleado, nuevoCentroId);
-    // }
+    // Obtener usuario y validar permisos
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new ForbiddenException('Usuario no encontrado');
+    }
+
+    // Obtener centro actual del trabajador con empresa
+    const centroActual = await this.centroTrabajoModel.findById(trabajador.idCentroTrabajo).populate('idEmpresa').exec();
+    if (!centroActual) {
+      throw new BadRequestException('Centro de trabajo actual no encontrado');
+    }
+
+    // Validar que ambos centros pertenezcan al mismo proveedor de salud
+    const empresaActual = await this.empresaModel.findById((centroActual.idEmpresa as any)._id || centroActual.idEmpresa).exec();
+    const empresaDestino = await this.empresaModel.findById((nuevoCentro.idEmpresa as any)._id || nuevoCentro.idEmpresa).exec();
+
+    if (!empresaActual || !empresaDestino) {
+      throw new BadRequestException('No se pudo validar la información de las empresas');
+    }
+
+    if (empresaActual.idProveedorSalud.toString() !== empresaDestino.idProveedorSalud.toString()) {
+      throw new BadRequestException('No se puede transferir trabajadores entre centros de trabajo de diferentes proveedores de salud');
+    }
+
+    // Validar permisos del usuario
+    if (user.role === 'Principal') {
+      // Usuario Principal puede transferir a cualquier centro del mismo proveedor
+    } else if (user.permisos?.accesoCompletoEmpresasCentros) {
+      // Usuario con acceso completo puede transferir a cualquier centro del mismo proveedor
+    } else {
+      // Usuario con permisos limitados: verificar que el nuevo centro esté en sus asignaciones
+      const centrosAsignados = user.centrosTrabajoAsignados || [];
+      if (!centrosAsignados.includes(nuevoCentroId)) {
+        throw new ForbiddenException('No tiene permiso para transferir a este centro de trabajo');
+      }
+    }
+
+    // Validar unicidad del número de empleado a nivel empresa destino (ignorando al propio trabajador)
+    if (trabajador.numeroEmpleado) {
+      await this.validateNumeroEmpleadoUniqueness(
+        trabajador.numeroEmpleado,
+        nuevoCentroId,
+        trabajadorId
+      );
+    }
 
     // Actualizar el centro de trabajo del trabajador y establecer fecha de transferencia
     const trabajadorActualizado = await this.trabajadorModel.findByIdAndUpdate(
       trabajadorId,
       {
         idCentroTrabajo: nuevoCentroId,
-        updatedBy: updatedBy,
+        updatedBy: userId,
         fechaTransferencia: new Date()
       },
       { new: true }
     ).exec();
 
+    // Log de resumen de transferencia (para auditoría/seguimiento en consola)
+    try {
+      const nombreCompleto = [trabajador.nombre, trabajador.primerApellido, trabajador.segundoApellido]
+        .filter(Boolean)
+        .join(' ');
+      const resumen = {
+        trabajadorId: trabajador._id?.toString?.() || trabajadorId,
+        trabajador: nombreCompleto,
+        de: {
+          empresaId: (empresaActual as any)._id?.toString?.(),
+          empresa: (empresaActual as any).nombreComercial || (empresaActual as any).razonSocial,
+          centroId: (centroActual as any)._id?.toString?.(),
+          centro: (centroActual as any).nombreCentro,
+        },
+        a: {
+          empresaId: (empresaDestino as any)._id?.toString?.(),
+          empresa: (empresaDestino as any).nombreComercial || (empresaDestino as any).razonSocial,
+          centroId: (nuevoCentro as any)._id?.toString?.(),
+          centro: (nuevoCentro as any).nombreCentro,
+        },
+        ejecutadoPor: userId,
+        fecha: new Date().toISOString(),
+      };
+      // eslint-disable-next-line no-console
+      console.log('[TRANSFERENCIA-TRABAJADOR] Resumen:', resumen);
+    } catch (e) {
+      // Silenciar cualquier error de logging para no afectar el flujo principal
+    }
+
     return trabajadorActualizado;
+  }
+
+  async getCentrosDisponiblesParaTransferencia(userId: string, excluirCentroId?: string, idProveedorSalud?: string): Promise<any> {
+    const t0 = Date.now();
+    // Obtener usuario
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new ForbiddenException('Usuario no encontrado');
+    }
+    const tUser = Date.now();
+
+    // Obtener empresas disponibles según permisos
+    let empresasDisponibles = [];
+    
+    if (user.role === 'Principal' || user.permisos?.accesoCompletoEmpresasCentros) {
+      // Para Principal o acceso completo, preferir el proveedor del usuario; si no hay, no filtrar por proveedor
+      const filtro: any = {};
+      if (user.idProveedorSalud) {
+        filtro.idProveedorSalud = user.idProveedorSalud;
+      } else if (idProveedorSalud) {
+        filtro.idProveedorSalud = idProveedorSalud;
+      }
+      empresasDisponibles = await this.empresaModel.find(filtro).sort({ nombreComercial: 1 }).exec();
+    } else {
+      // Otros usuarios solo ven empresas asignadas
+      const filtro: any = { _id: { $in: user.empresasAsignadas || [] } };
+      if (idProveedorSalud) filtro.idProveedorSalud = idProveedorSalud;
+      empresasDisponibles = await this.empresaModel.find(filtro).sort({ nombreComercial: 1 }).exec();
+    }
+    const tEmpresas = Date.now();
+
+    // Resolver centros en una sola consulta y agrupar por empresa para evitar N+1
+    const empresasIds = empresasDisponibles.map((e: any) => e._id);
+    const esAccesoCompleto = user.role === 'Principal' || user.permisos?.accesoCompletoEmpresasCentros;
+    const filtroCentros: any = { idEmpresa: { $in: empresasIds } };
+    if (!esAccesoCompleto) {
+      const centrosAsignados = user.centrosTrabajoAsignados || [];
+      filtroCentros._id = { $in: centrosAsignados };
+    }
+
+    let centros = await this.centroTrabajoModel.find(filtroCentros).exec();
+    const tCentrosQuery = Date.now();
+    if (excluirCentroId) {
+      centros = centros.filter(c => c._id.toString() !== excluirCentroId);
+    }
+
+    const centrosPorEmpresa = new Map<string, any[]>();
+    for (const c of centros) {
+      const key = c.idEmpresa?.toString?.() || '';
+      if (!key) continue;
+      const arr = centrosPorEmpresa.get(key) || [];
+      arr.push(c);
+      centrosPorEmpresa.set(key, arr);
+    }
+
+    const resultado = [] as any[];
+    for (const empresa of empresasDisponibles) {
+      const key = (empresa as any)._id?.toString?.();
+      const centrosEmpresa = centrosPorEmpresa.get(key) || [];
+      if (centrosEmpresa.length === 0) continue;
+      resultado.push({
+        _id: empresa._id,
+        nombreComercial: (empresa as any).nombreComercial,
+        razonSocial: (empresa as any).razonSocial,
+        centros: centrosEmpresa.map((centro: any) => ({
+          _id: centro._id,
+          nombreCentro: centro.nombreCentro,
+          direccionCentro: centro.direccionCentro,
+          codigoPostal: centro.codigoPostal,
+          estado: centro.estado,
+          municipio: centro.municipio,
+          idEmpresa: centro.idEmpresa,
+        })),
+      });
+    }
+    const tBuild = Date.now();
+
+    const res = { empresas: resultado };
+    try {
+      const total = Date.now() - t0;
+      const dtUser = tUser - t0;
+      const dtEmpresas = tEmpresas - tUser;
+      const dtCentros = tCentrosQuery - tEmpresas;
+      const dtBuild = tBuild - tCentrosQuery;
+      const numEmpresas = empresasDisponibles.length;
+      const numCentros = centros.length;
+      console.log(`[TRANSFERENCIAS][service] total=${total}ms user=${dtUser}ms empresas=${dtEmpresas}ms centrosQuery=${dtCentros}ms build=${dtBuild}ms empresasCount=${numEmpresas} centrosCount=${numCentros}`);
+    } catch {}
+    return res;
+  }
+
+  async getOpcionesTransferenciaPaginado(
+    userId: string,
+    q: string,
+    page: number,
+    limit: number,
+    excluirCentroId?: string,
+    idProveedorSalud?: string,
+  ): Promise<{ empresas: any[]; total: number; page: number; limit: number }> {
+    // Obtener usuario
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new ForbiddenException('Usuario no encontrado');
+    }
+
+    // Filtro base por proveedor y permisos
+    const filtroEmpresas: any = {};
+    if (user.role === 'Principal' || user.permisos?.accesoCompletoEmpresasCentros) {
+      if (user.idProveedorSalud) filtroEmpresas.idProveedorSalud = user.idProveedorSalud;
+      else if (idProveedorSalud) filtroEmpresas.idProveedorSalud = idProveedorSalud;
+    } else {
+      filtroEmpresas._id = { $in: user.empresasAsignadas || [] };
+      if (idProveedorSalud) filtroEmpresas.idProveedorSalud = idProveedorSalud;
+    }
+
+    // Búsqueda por q en nombre/razón/RFC
+    const term = (q || '').trim();
+    if (term) {
+      const re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filtroEmpresas.$or = [
+        { nombreComercial: re },
+        { razonSocial: re },
+        { RFC: re },
+        { rfc: re },
+      ];
+    }
+
+    // Contar total de empresas que cumplen filtro
+    const total = await this.empresaModel.countDocuments(filtroEmpresas).exec();
+
+    // Paginar empresas
+    const empresas = await this.empresaModel
+      .find(filtroEmpresas)
+      .sort({ nombreComercial: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean()
+      .exec();
+
+    // Obtener centros en un solo query para todas las empresas de la página (evita N+1)
+    const empresaIds = empresas.map((e) => e._id);
+    let filtroCentros: any = { idEmpresa: { $in: empresaIds } };
+    // Permisos por usuario
+    if (!(user.role === 'Principal' || user.permisos?.accesoCompletoEmpresasCentros)) {
+      const centrosAsignados = (user as any).centrosTrabajoAsignados || [];
+      filtroCentros = { ...filtroCentros, _id: { $in: centrosAsignados } };
+    }
+    if (excluirCentroId) {
+      filtroCentros = { ...filtroCentros, _id: { ...(filtroCentros._id || {}), $ne: excluirCentroId } };
+    }
+
+    const centros = await this.centroTrabajoModel
+      .find(
+        filtroCentros,
+        { nombreCentro: 1, direccionCentro: 1, codigoPostal: 1, estado: 1, municipio: 1, idEmpresa: 1 }
+      )
+      .lean()
+      .exec();
+
+    const centrosPorEmpresa = new Map<string, any[]>();
+    for (const c of centros) {
+      const key = (c.idEmpresa as any).toString();
+      if (!centrosPorEmpresa.has(key)) centrosPorEmpresa.set(key, []);
+      centrosPorEmpresa.get(key)!.push(c);
+    }
+
+    const empresasConCentros = empresas
+      .map((empresa) => {
+        const lista = centrosPorEmpresa.get(empresa._id.toString()) || [];
+        if (!lista.length) return null;
+        return {
+          _id: empresa._id,
+          nombreComercial: empresa.nombreComercial,
+          razonSocial: empresa.razonSocial,
+          RFC: (empresa as any).RFC,
+          rfc: (empresa as any).rfc,
+          centros: lista.map((centro) => ({
+            _id: centro._id,
+            nombreCentro: centro.nombreCentro,
+            direccionCentro: centro.direccionCentro,
+            codigoPostal: centro.codigoPostal,
+            estado: centro.estado,
+            municipio: centro.municipio,
+            idEmpresa: centro.idEmpresa,
+          })),
+        };
+      })
+      .filter(Boolean) as any[];
+
+    return { empresas: empresasConCentros, total, page, limit };
+  }
+
+  async contarTrabajadoresPorCentros(userId: string, centroIds: string[]): Promise<Record<string, number>> {
+    // Validación básica
+    const idsLimpios = centroIds
+      .filter(Boolean)
+      .map((id) => id.toString())
+      .filter((id) => id.length === 24);
+
+    if (!idsLimpios.length) return {};
+
+    // Nota: permisos finos por centro se podrían validar aquí si es necesario
+    const pipeline = [
+      { $match: { idCentroTrabajo: { $in: idsLimpios as any } } },
+      { $group: { _id: '$idCentroTrabajo', count: { $sum: 1 } } },
+    ];
+
+    const resultados = await (this.trabajadorModel as any).aggregate(pipeline).exec();
+    const mapa: Record<string, number> = {};
+    for (const r of resultados) {
+      mapa[r._id.toString()] = r.count;
+    }
+    // Asegurar que todos los ids aparezcan aunque sea con 0
+    for (const id of idsLimpios) {
+      if (mapa[id] == null) mapa[id] = 0;
+    }
+    return mapa;
   }
 
   private processWorkerData(worker) {
@@ -1664,7 +1955,7 @@ export class TrabajadoresService {
    * @param idCentroTrabajo - ID del centro de trabajo
    * @throws BadRequestException si el número ya existe en la empresa
    */
-  private async validateNumeroEmpleadoUniqueness(numeroEmpleado: string, idCentroTrabajo: string): Promise<void> {
+  private async validateNumeroEmpleadoUniqueness(numeroEmpleado: string, idCentroTrabajo: string, excludeTrabajadorId?: string): Promise<void> {
     // Obtener el centro de trabajo para encontrar la empresa
     const centroTrabajo = await this.centroTrabajoModel.findById(idCentroTrabajo).exec();
     if (!centroTrabajo) {
@@ -1679,10 +1970,14 @@ export class TrabajadoresService {
     const idsCentrosEmpresa = centrosEmpresa.map(ct => ct._id);
 
     // Verificar si ya existe un trabajador con ese número en la empresa
-    const trabajadorExistente = await this.trabajadorModel.findOne({
+    const filter: any = {
       numeroEmpleado: numeroEmpleado,
       idCentroTrabajo: { $in: idsCentrosEmpresa }
-    }).exec();
+    };
+    if (excludeTrabajadorId) {
+      filter._id = { $ne: excludeTrabajadorId };
+    }
+    const trabajadorExistente = await this.trabajadorModel.findOne(filter).exec();
 
     if (trabajadorExistente) {
       throw new BadRequestException(`El número de empleado ${numeroEmpleado} ya está registrado`);

@@ -41,3 +41,8 @@ export class Empresa extends Document {
 }
 
 export const EmpresaSchema = SchemaFactory.createForClass(Empresa).set('timestamps', true);
+// Índices para acelerar búsqueda y filtros
+EmpresaSchema.index({ nombreComercial: 1 });
+EmpresaSchema.index({ razonSocial: 1 });
+EmpresaSchema.index({ RFC: 1 }, { unique: true, sparse: true });
+EmpresaSchema.index({ idProveedorSalud: 1 });

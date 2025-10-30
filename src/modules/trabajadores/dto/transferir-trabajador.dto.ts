@@ -9,12 +9,4 @@ export class TransferirTrabajadorDto {
   @IsMongoId({ message: 'El ID de centro de trabajo debe ser un ObjectId válido' })
   @IsNotEmpty({ message: 'El ID de centro de trabajo no puede estar vacío' })
   nuevoCentroId: string;
-
-  @ApiProperty({
-    description: 'El ID del usuario que realiza la transferencia',
-    example: '60d9f70fc39b3c1b8f0d6c0b'
-  })
-  @IsMongoId({ message: 'El ID de usuario debe ser un ObjectId válido' })
-  @IsNotEmpty({ message: 'El ID de usuario no puede estar vacío' })
-  updatedBy: string;
 } 

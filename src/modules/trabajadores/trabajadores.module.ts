@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose'
 import { TrabajadoresService } from './trabajadores.service';
 import { TrabajadoresController } from './trabajadores.controller';
+import { TransferenciasController } from './transferencias.controller';
 import { Trabajador, TrabajadorSchema } from './schemas/trabajador.schema'
 import { Antidoping, AntidopingSchema } from '../expedientes/schemas/antidoping.schema';
 import { AptitudPuesto, AptitudPuestoSchema } from '../expedientes/schemas/aptitud-puesto.schema';
@@ -17,6 +18,8 @@ import { NotaMedica, NotaMedicaSchema } from '../expedientes/schemas/nota-medica
 import { RiesgoTrabajo, RiesgoTrabajoSchema } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
 import { FilesModule } from '../files/files.module';
 import { CentroTrabajo, CentroTrabajoSchema } from '../centros-trabajo/schemas/centro-trabajo.schema';
+import { User, UserSchema } from '../users/schemas/user.schema';
+import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
 
 @Module({
   imports: [
@@ -35,10 +38,12 @@ import { CentroTrabajo, CentroTrabajoSchema } from '../centros-trabajo/schemas/c
       { name: ControlPrenatal.name, schema: ControlPrenatalSchema },
       { name: RiesgoTrabajo.name, schema: RiesgoTrabajoSchema },
       { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
+      { name: User.name, schema: UserSchema },
+      { name: Empresa.name, schema: EmpresaSchema },
     ]),
     FilesModule,
   ],
-  controllers: [TrabajadoresController],
+  controllers: [TrabajadoresController, TransferenciasController],
   providers: [TrabajadoresService],
   exports: [TrabajadoresService]
 })

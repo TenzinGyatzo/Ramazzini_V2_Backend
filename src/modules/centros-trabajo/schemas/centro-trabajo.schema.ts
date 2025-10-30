@@ -31,3 +31,6 @@ export class CentroTrabajo extends Document {
 }
 
 export const CentroTrabajoSchema = SchemaFactory.createForClass(CentroTrabajo).set('timestamps', true);
+// Índices para relación y ordenación frecuente
+CentroTrabajoSchema.index({ idEmpresa: 1 });
+CentroTrabajoSchema.index({ nombreCentro: 1 });
