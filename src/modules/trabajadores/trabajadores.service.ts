@@ -855,7 +855,6 @@ export class TrabajadoresService {
       const dtBuild = tBuild - tCentrosQuery;
       const numEmpresas = empresasDisponibles.length;
       const numCentros = centros.length;
-      console.log(`[TRANSFERENCIAS][service] total=${total}ms user=${dtUser}ms empresas=${dtEmpresas}ms centrosQuery=${dtCentros}ms build=${dtBuild}ms empresasCount=${numEmpresas} centrosCount=${numCentros}`);
     } catch {}
     return res;
   }

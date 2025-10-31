@@ -5,7 +5,7 @@ import { UpdateCentrosTrabajoDto } from './dto/update-centros-trabajo.dto';
 import { isValidObjectId } from 'mongoose';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-@Controller('api/:empresaId')
+@Controller('api/:empresaId([0-9a-fA-F]{24})')
 @ApiTags('Centros de Trabajo')
 export class CentrosTrabajoController {
   constructor(private readonly centrosTrabajoService: CentrosTrabajoService) {}

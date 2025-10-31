@@ -14,7 +14,7 @@ interface JwtPayload {
   id: string;
 }
 
-@Controller('api/:empresaId/:centroId')
+@Controller('api/:empresaId([0-9a-fA-F]{24})/:centroId([0-9a-fA-F]{24})')
 @ApiTags('Trabajadores')
 export class TrabajadoresController {
   constructor(private readonly trabajadoresService: TrabajadoresService) {}
