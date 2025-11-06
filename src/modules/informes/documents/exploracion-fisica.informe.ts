@@ -958,6 +958,8 @@ export const exploracionFisicaInforme = (
                   ? {
                       text: proveedorSalud.pais === 'MX' 
                         ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                        : proveedorSalud.pais === 'GT'
+                        ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
                         : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
                       bold: false,
                     }

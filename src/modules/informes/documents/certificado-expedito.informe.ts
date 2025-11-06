@@ -334,6 +334,10 @@ export const certificadoExpeditoInforme = (
               ? medicoFirmante.tituloProfesional === 'Dra.'
                 ? 'La suscrita Médica Cirujano, con cédula profesional número '
                 : 'El suscrito Médico Cirujano, con cédula profesional número '
+              : proveedorSalud.pais === 'GT'
+              ? medicoFirmante.tituloProfesional === 'Dra.'
+                ? 'La suscrita Médica Cirujano, con colegiado activo número '
+                : 'El suscrito Médico Cirujano, con colegiado activo número '
               : medicoFirmante.tituloProfesional === 'Dra.'
                 ? 'La suscrita Médica Cirujano, con registro profesional número '
                 : 'El suscrito Médico Cirujano, con registro profesional número ',
@@ -393,7 +397,9 @@ export const certificadoExpeditoInforme = (
       },
       {
         text: [
-          { text: `Que, habiendo practicado reconocimiento médico en esta fecha, ${trabajador.sexo === 'Femenino' ? 'a la' : 'al'} C. ` },
+          { text: proveedorSalud.pais === 'GT' 
+            ? `Que, habiendo practicado reconocimiento médico en esta fecha, ${trabajador.sexo === 'Femenino' ? 'a la' : 'a'} ` 
+            : `Que, habiendo practicado reconocimiento médico en esta fecha, ${trabajador.sexo === 'Femenino' ? 'a la' : 'al'} C. ` },
           { text: formatearNombreTrabajadorCertificado(trabajador).toUpperCase(), bold: true },
           { text: ' de ' },
           { text: String(trabajador.edad), bold: true },
@@ -417,7 +423,13 @@ export const certificadoExpeditoInforme = (
 
       {
         text: [
-          { text: 'Por lo anterior se establece que el C. ' },
+          { text: proveedorSalud.pais === 'GT' 
+            ? trabajador.sexo === 'Femenino'
+            ? 'Por lo anterior se establece que la ' 
+            : 'Por lo anterior se establece que el '
+            : trabajador.sexo === 'Femenino'
+            ? 'Por lo anterior se establece que la C. '
+            : 'Por lo anterior se establece que el C. ' },
           { text: formatearNombreTrabajadorCertificado(trabajador).toUpperCase(), bold: true },
           { text: ' ' },
           {
@@ -468,11 +480,17 @@ export const certificadoExpeditoInforme = (
       {
         text: [
           {
-        text: `Expido el presente certificado médico a petición de ${trabajador.sexo === "Femenino" ? "la" : "el"} C. `,
+        text: proveedorSalud.pais === 'GT' 
+          ? `Expido el presente certificado médico a petición de ${trabajador.sexo === "Femenino" ? "la" : "el"} ` 
+          : trabajador.sexo === "Femenino"
+          ? 'Expido el presente certificado médico a petición de la C. '
+          : 'Expido el presente certificado médico a petición de el C. ',
           },
           { text: formatearNombreTrabajadorCertificado(trabajador).toUpperCase(), bold: true },
           {
-        text: ` para fines de prevención y detección oportuna de padecimientos que pudieran afectar la salud del trabajador y su rendimiento laboral, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
+        text: proveedorSalud.pais === 'GT'
+          ? ` para fines de prevención y detección oportuna de padecimientos que pudieran afectar la salud del trabajador y su rendimiento laboral, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, el ${formatearFechaUTC(certificado.fechaCertificadoExpedito)}.`
+          : ` para fines de prevención y detección oportuna de padecimientos que pudieran afectar la salud del trabajador y su rendimiento laboral, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
           },
         ],
         style: 'paragraph',

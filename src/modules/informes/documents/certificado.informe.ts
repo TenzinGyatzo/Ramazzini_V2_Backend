@@ -28,13 +28,6 @@ const styles: StyleDictionary = {
 };
 
 // ==================== CONTENIDO ====================
-const headerText: Content = {
-  text: '          CERTIFICADO MÉDICO DE NO IMPEDIMENTO FÍSICO (SALUD FÍSICA)\n',
-  style: 'header',
-  alignment: 'right',
-  margin: [0, 35, 40, 0],
-};
-
 const campoFirma: Content = {
   stack: [
     // Línea horizontal para la firma
@@ -333,6 +326,17 @@ export const certificadoInforme = (
   ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
   : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
 
+  const tituloInforme = proveedorSalud.pais === 'GT' 
+    ? '                                                                                            CERTIFICADO MÉDICO\n'
+    : '          CERTIFICADO MÉDICO DE NO IMPEDIMENTO FÍSICO (SALUD FÍSICA)\n';
+
+  const headerText: Content = {
+    text: tituloInforme,
+    style: 'header',
+    alignment: 'right',
+    margin: [0, 35, 40, 0],
+  };
+
   return {
     pageSize: 'LETTER',
     pageMargins: [40, 70, 40, 60],
@@ -379,6 +383,10 @@ export const certificadoInforme = (
               ? medicoFirmante.tituloProfesional === 'Dra.'
                 ? 'La suscrita Médica Cirujano, con cédula profesional número '
                 : 'El suscrito Médico Cirujano, con cédula profesional número '
+              : proveedorSalud.pais === 'GT'
+              ? medicoFirmante.tituloProfesional === 'Dra.'
+                ? 'La suscrita Médica Cirujano, con colegiado activo número '
+                : 'El suscrito Médico Cirujano, con colegiado activo número '
               : medicoFirmante.tituloProfesional === 'Dra.'
                 ? 'La suscrita Médica Cirujano, con registro profesional número '
                 : 'El suscrito Médico Cirujano, con registro profesional número ',
@@ -438,7 +446,11 @@ export const certificadoInforme = (
       },
       {
         text: [
-          { text: 'Que, habiendo practicado reconocimiento médico en esta fecha, al C. ' },
+          { text: proveedorSalud.pais === 'GT' 
+            ? 'Que, habiendo practicado reconocimiento médico en esta fecha, a ' 
+            : trabajador.sexo === 'Femenino'
+            ? 'Que, habiendo practicado reconocimiento médico en esta fecha, a la C. '
+            : 'Que, habiendo practicado reconocimiento médico en esta fecha, al C. ' },
           { text: formatearNombreTrabajadorCertificado(trabajador), bold: true },
           { text: ' de ' },
           { text: String(trabajador.edad), bold: true },
@@ -470,8 +482,13 @@ export const certificadoInforme = (
       },
       {
         text: [
-          { text: 'Por lo anterior se establece que el C. ' },
+          { text: proveedorSalud.pais === 'GT' 
+            ? 'Por lo anterior se establece que ' 
+            : trabajador.sexo === 'Femenino'
+            ? 'Por lo anterior se establece que la C. '
+            : 'Por lo anterior se establece que el C. ' },
           { text: formatearNombreTrabajadorCertificado(trabajador), bold: true },
+          ...(proveedorSalud.pais === 'GT' && trabajador.sexo === 'Femenino' ? [{ text: ' ' }] : []),
           {
         text: certificado.impedimentosFisicos,
           },
@@ -486,11 +503,17 @@ export const certificadoInforme = (
       {
         text: [
           {
-        text: 'Expido el presente certificado médico a petición de el C. ',
+        text: proveedorSalud.pais === 'GT' 
+          ? 'Expido el presente certificado médico a petición de ' 
+          : trabajador.sexo === 'Femenino'
+          ? 'Expido el presente certificado médico a petición de la C. '
+          : 'Expido el presente certificado médico a petición de el C. ',
           },
           { text: formatearNombreTrabajadorCertificado(trabajador), bold: true },
           {
-        text: ` para los usos legales a que haya lugar, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
+        text: proveedorSalud.pais === 'GT'
+          ? ` para los usos legales a que haya lugar, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, el ${formatearFechaUTC(certificado.fechaCertificado)}.`
+          : ` para los usos legales a que haya lugar, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
           },
         ],
         style: 'paragraph',
@@ -508,6 +531,24 @@ export const certificadoInforme = (
       {
         text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}`,
         fontSize: 12,
+        bold: false,
+        alignment: 'center',
+        margin: [0, 0, 0, 0],
+      },
+      {
+        text: proveedorSalud.pais === 'MX'
+          ? `Cédula profesional No. ${medicoFirmante.numeroCedulaProfesional}.`
+          : proveedorSalud.pais === 'GT'
+          ? `Colegiado Activo No. ${medicoFirmante.numeroCedulaProfesional}.`
+          : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}.`,
+        fontSize: 10,
+        bold: false,
+        alignment: 'center',
+        margin: [0, 0, 0, 0],
+      },
+      {
+        text: `${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}.`,
+        fontSize: 10,
         bold: false,
         alignment: 'center',
         margin: [0, 0, 0, 0],
