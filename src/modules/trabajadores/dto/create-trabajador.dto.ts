@@ -140,6 +140,18 @@ export class CreateTrabajadorDto {
       { message: 'Debe estar vacío o tener 4-30 caracteres alfanuméricos y - _ . / espacios' })
     nss?: string;
 
+    @ApiProperty({
+      description: 'Identificador CURP u homólogo LATAM (opcional, permite combinación alfanumérica y separadores comunes)',
+      example: 'ROAJ850102-HNLRRN08',
+      required: false
+    })
+    @IsOptional()
+    @IsString({ message: 'El identificador CURP debe ser un string' })
+    @Matches(/^$|^[A-Za-z0-9\s\-_.\/#]{4,30}$/, {
+      message: 'Debe estar vacío o contener 4-30 caracteres alfanuméricos y puede incluir - _ . / # espacios'
+    })
+    curp?: string;
+
     // Agentes de Riesgo
     @IsOptional()
     @IsString({ each: true, message: 'Cada agente de riesgo debe ser un string' })

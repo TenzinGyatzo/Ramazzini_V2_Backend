@@ -265,7 +265,7 @@ export class TrabajadoresService {
   
     // Paso 2: Obtener los trabajadores de esos centros
     const trabajadores = await this.trabajadorModel
-      .find({ idCentroTrabajo: { $in: centroIds } }, '_id primerApellido segundoApellido nombre sexo puesto fechaNacimiento fechaIngreso idCentroTrabajo numeroEmpleado nss')
+      .find({ idCentroTrabajo: { $in: centroIds } }, '_id primerApellido segundoApellido nombre sexo puesto fechaNacimiento fechaIngreso idCentroTrabajo numeroEmpleado nss curp')
       .lean();
   
     const trabajadoresIds = trabajadores.map(t => t._id);
@@ -297,6 +297,7 @@ export class TrabajadoresService {
         idCentroTrabajo: trabajador?.idCentroTrabajo ?? null,
         numeroEmpleado: trabajador?.numeroEmpleado ?? null,
         nss: trabajador?.nss ?? null,
+        curp: trabajador?.curp ?? null,
       };
     });
   
@@ -1001,6 +1002,7 @@ export class TrabajadoresService {
         estadoCivil: worker.estadoCivil ? String(worker.estadoCivil).trim() : '',
         numeroEmpleado: worker.numeroEmpleado ? String(worker.numeroEmpleado).trim() : '',
         nss: worker.nss ? String(worker.nss).trim() : '',
+        curp: worker.curp ? String(worker.curp).trim() : '',
         agentesRiesgoActuales: worker.agentesRiesgoActuales || [],
         estadoLaboral: 'Activo', // ✅ VALOR FIJO: Todos los trabajadores importados tienen estado "Activo"
         idCentroTrabajo: worker.idCentroTrabajo,
@@ -1013,7 +1015,8 @@ export class TrabajadoresService {
       // ✅ ELIMINADO: No se capturan valores originales del estado laboral
       telefonoOriginal: worker.originalValues?.telefono && worker.originalValues.telefono !== (worker.telefono ? String(worker.telefono).trim() : '') ? worker.originalValues.telefono : undefined,
       numeroEmpleadoOriginal: worker.originalValues?.numeroEmpleado && worker.originalValues.numeroEmpleado !== (worker.numeroEmpleado ? String(worker.numeroEmpleado).trim() : '') ? worker.originalValues.numeroEmpleado : undefined,
-      nssOriginal: worker.originalValues?.nss && worker.originalValues.nss !== (worker.nss ? String(worker.nss).trim() : '') ? worker.originalValues.nss : undefined
+      nssOriginal: worker.originalValues?.nss && worker.originalValues.nss !== (worker.nss ? String(worker.nss).trim() : '') ? worker.originalValues.nss : undefined,
+      curpOriginal: worker.originalValues?.curp && worker.originalValues.curp !== (worker.curp ? String(worker.curp).trim() : '') ? worker.originalValues.curp : undefined
     };
         
     return result;
@@ -1401,7 +1404,8 @@ export class TrabajadoresService {
       // ✅ ELIMINADO: No se capturan valores originales del estado laboral
       telefono: worker.telefono && typeof worker.telefono === 'string' && worker.telefono.trim() !== '' ? worker.telefono : null,
       numeroEmpleado: worker.numeroEmpleado && typeof worker.numeroEmpleado === 'string' && worker.numeroEmpleado.trim() !== '' ? worker.numeroEmpleado : null,
-      nss: worker.nss && typeof worker.nss === 'string' && worker.nss.trim() !== '' ? worker.nss : null
+      nss: worker.nss && typeof worker.nss === 'string' && worker.nss.trim() !== '' ? worker.nss : null,
+      curp: worker.curp && typeof worker.curp === 'string' && worker.curp.trim() !== '' ? worker.curp : null
     };
     
     // Limpiar strings eliminando espacios y convirtiendo a string
@@ -1415,6 +1419,7 @@ export class TrabajadoresService {
     if (cleaned.estadoCivil) cleaned.estadoCivil = String(cleaned.estadoCivil).trim();
     if (cleaned.numeroEmpleado) cleaned.numeroEmpleado = String(cleaned.numeroEmpleado).trim();
     if (cleaned.nss) cleaned.nss = String(cleaned.nss).trim();
+    if (cleaned.curp) cleaned.curp = String(cleaned.curp).trim();
     // ✅ ELIMINADO: No se procesa el estado laboral del Excel
     
     // Normalizar enumeraciones - solo loguear si hay cambios reales
@@ -1486,6 +1491,15 @@ export class TrabajadoresService {
     }
     if (cleaned.estadoCivil === 'null' || cleaned.estadoCivil === 'undefined' || cleaned.estadoCivil === '') {
       cleaned.estadoCivil = null;
+    }
+    if (cleaned.numeroEmpleado === 'null' || cleaned.numeroEmpleado === 'undefined' || cleaned.numeroEmpleado === '') {
+      cleaned.numeroEmpleado = null;
+    }
+    if (cleaned.nss === 'null' || cleaned.nss === 'undefined' || cleaned.nss === '') {
+      cleaned.nss = null;
+    }
+    if (cleaned.curp === 'null' || cleaned.curp === 'undefined' || cleaned.curp === '') {
+      cleaned.curp = null;
     }
     
     // Limpiar fechas - convertir strings vacíos a null
@@ -1619,6 +1633,19 @@ export class TrabajadoresService {
       }
     }
 
+    // Validar CURP u homólogo LATAM (opcional, permite separadores comunes)
+    if (worker.curp && typeof worker.curp === 'string') {
+      const curpNormalizada = String(worker.curp).trim();
+      if (curpNormalizada !== '') {
+        const permitidoCurp = /^[A-Za-z0-9\s\-_.\/#]{4,30}$/;
+        if (!permitidoCurp.test(curpNormalizada)) {
+          errors.push('El identificador CURP debe tener 4-30 caracteres alfanuméricos y puede incluir - _ . / # y espacios');
+        } else {
+          cleanedData.curp = curpNormalizada;
+        }
+      }
+    }
+
     return {
       isValid: errors.length === 0,
       errors,
@@ -1669,7 +1696,8 @@ export class TrabajadoresService {
                 estadoCivilOriginal: processedWorker.estadoCivilOriginal,
                 telefonoOriginal: processedWorker.telefonoOriginal,
                 numeroEmpleadoOriginal: processedWorker.numeroEmpleadoOriginal,
-                nssOriginal: processedWorker.nssOriginal
+                nssOriginal: processedWorker.nssOriginal,
+                curpOriginal: processedWorker.curpOriginal
             };
             
             resultados.push({ success: true, worker: workerWithOriginals });
@@ -1935,7 +1963,8 @@ export class TrabajadoresService {
         Telefono: trabajador.telefono,
         EstadoCivil: trabajador.estadoCivil,
         NumeroEmpleado: trabajador.numeroEmpleado || '',
-        NSS: trabajador.nss || ''
+        NSS: trabajador.nss || '',
+        CURP: trabajador.curp || ''
       };
     });
 

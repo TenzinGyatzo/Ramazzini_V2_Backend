@@ -2,6 +2,7 @@ import type {
   Content,
   StyleDictionary,
   TDocumentDefinitions,
+  TableCell,
 } from 'pdfmake/interfaces';
 import { formatearNombreTrabajador } from '../../../utils/names';
 import { Interface } from 'readline';
@@ -291,6 +292,8 @@ interface Trabajador {
   telefono: string;
   estadoCivil: string;
   numeroEmpleado: string;
+  nss?: string;
+  curp?: string;
 }
 
 interface Aptitud {
@@ -453,6 +456,57 @@ export const aptitudPuestoInforme = (
       ? `OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion} - ${examenVista.sinCorreccionLejanaInterpretacion}, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
       : `OI: 20/${examenVista.ojoIzquierdoLejanaConCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaConCorreccion} - ${examenVista.conCorreccionLejanaInterpretacion} Corregida, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
     : 'No se cuenta con examen visual';
+
+  const identificadorLabel =
+    proveedorSalud.pais === 'MX'
+      ? 'CURP'
+      : proveedorSalud.pais === 'PA'
+      ? 'CÉDULA IDENTIDAD'
+      : proveedorSalud.pais === 'GT'
+      ? 'DPI'
+      : 'IDENTIFICACIÓN';
+
+const datosTrabajadorBody: TableCell[][] = [
+    [
+      { text: 'NOMBRE', style: 'label' },
+      { text: formatearNombreTrabajador(trabajador), style: 'value' },
+      { text: 'NACIMIENTO', style: 'label' },
+      { text: trabajador.nacimiento, style: 'value' },
+    ],
+    [
+      { text: 'ESCOLARIDAD', style: 'label' },
+      { text: trabajador.escolaridad, style: 'value' },
+      { text: 'EDAD', style: 'label' },
+      { text: trabajador.edad, style: 'value' },
+    ],
+    [
+      { text: 'PUESTO', style: 'label' },
+      { text: trabajador.puesto, style: 'value' },
+      { text: 'SEXO', style: 'label' },
+      { text: trabajador.sexo, style: 'value' },
+    ],
+    [
+      { text: 'ANTIGÜEDAD', style: 'label' },
+      { text: trabajador.antiguedad, style: 'value' },
+      { text: 'TELEFONO', style: 'label' },
+      { text: trabajador.telefono, style: 'value' },
+    ],
+    [
+      { text: 'ESTADO CIVIL', style: 'label' },
+      { text: trabajador.estadoCivil, style: 'value' },
+      { text: 'NUM. DE EMPLEADO', style: 'label' },
+    { text: trabajador.numeroEmpleado || '-', style: 'value' },
+    ],
+  ];
+
+if (trabajador.nss || trabajador.curp) {
+  datosTrabajadorBody.push([
+    { text: 'NSS', style: 'label' },
+    { text: trabajador.nss || '-', style: 'value' },
+    { text: identificadorLabel, style: 'label' },
+    { text: trabajador.curp || '-', style: 'value' },
+  ]);
+}
 
   const resumenYAlteraciones = [
     [
@@ -620,39 +674,8 @@ export const aptitudPuestoInforme = (
       {
         style: 'table',
         table: {
-          widths: ['15%', '45%', '20%', '20%'],
-          body: [
-            [
-              { text: 'NOMBRE', style: 'label' },
-              { text: formatearNombreTrabajador(trabajador), style: 'value' },
-              { text: 'NACIMIENTO', style: 'label' },
-              { text: trabajador.nacimiento, style: 'value' },
-            ],
-            [
-              { text: 'ESCOLARIDAD', style: 'label' },
-              { text: trabajador.escolaridad, style: 'value' },
-              { text: 'EDAD', style: 'label' },
-              { text: trabajador.edad, style: 'value' },
-            ],
-            [
-              { text: 'PUESTO', style: 'label' },
-              { text: trabajador.puesto, style: 'value' },
-              { text: 'SEXO', style: 'label' },
-              { text: trabajador.sexo, style: 'value' },
-            ],
-            [
-              { text: 'ANTIGÜEDAD', style: 'label' },
-              { text: trabajador.antiguedad, style: 'value' },
-              { text: 'TELEFONO', style: 'label' },
-              { text: trabajador.telefono, style: 'value' },
-            ],
-            [
-              { text: 'ESTADO CIVIL', style: 'label' },
-              { text: trabajador.estadoCivil, style: 'value' },
-              { text: 'NUM. DE EMPLEADO', style: 'label' },
-              { text: trabajador.numeroEmpleado || '-', style: 'value' },
-            ],
-          ],
+          widths: ['15%', '40%', '20%', '25%'],
+          body: datosTrabajadorBody,
         },
         layout: {
           hLineColor: '#e5e7eb',

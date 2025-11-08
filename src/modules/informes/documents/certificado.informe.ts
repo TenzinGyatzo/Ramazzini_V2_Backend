@@ -194,6 +194,7 @@ interface Trabajador {
   sexo: string;
   escolaridad: string;
   antiguedad: string;
+  curp?: string;
 }
 
 interface Certificado {
@@ -310,6 +311,15 @@ export const certificadoInforme = (
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
+
+  const identificadorLabel =
+    proveedorSalud.pais === 'MX'
+      ? 'CURP'
+      : proveedorSalud.pais === 'PA'
+      ? 'Cédula de Identidad Personal'
+      : proveedorSalud.pais === 'GT'
+      ? 'Documento Personal de Identificación'
+      : 'Número de Identificación Personal';
 
   const firma: Content = medicoFirmante.firma?.data
   ? { 
@@ -452,6 +462,13 @@ export const certificadoInforme = (
             ? 'Que, habiendo practicado reconocimiento médico en esta fecha, a la C. '
             : 'Que, habiendo practicado reconocimiento médico en esta fecha, al C. ' },
           { text: formatearNombreTrabajadorCertificado(trabajador), bold: true },
+          ...(trabajador.curp
+            ? [
+                { text: ` (${identificadorLabel}: ` },
+                { text: trabajador.curp, bold: true },
+                { text: ')' },
+              ]
+            : []),
           { text: ' de ' },
           { text: String(trabajador.edad), bold: true },
           { text: ' años de edad. ' },

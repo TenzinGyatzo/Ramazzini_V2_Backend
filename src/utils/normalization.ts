@@ -66,6 +66,7 @@ export function normalizeTrabajadorData(
     estadoCivil: dto.estadoCivil?.trim(),
     numeroEmpleado: dto.numeroEmpleado?.trim(),
     nss: dto.nss?.trim(),
+    curp: dto.curp?.trim(),
     estadoLaboral: dto.estadoLaboral?.trim(),
     agentesRiesgoActuales: dto.agentesRiesgoActuales?.map(agent => agent.trim()),
     idCentroTrabajo: dto.idCentroTrabajo?.trim(),

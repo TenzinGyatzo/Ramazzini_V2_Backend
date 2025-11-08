@@ -75,6 +75,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
 
     const antidoping = await this.expedientesService.findDocument(
@@ -255,6 +256,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
 
     const aptitud = await this.expedientesService.findDocument(
@@ -535,6 +537,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
 
     const audiometria = await this.expedientesService.findDocument(
@@ -735,6 +738,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
 
     const certificado = await this.expedientesService.findDocument(
@@ -965,6 +969,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
 
     const certificado = await this.expedientesService.findDocument(
@@ -1098,6 +1103,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
 
     const examenVista = await this.expedientesService.findDocument(
@@ -1290,6 +1296,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
 
     const exploracionFisica = await this.expedientesService.findDocument(
@@ -1505,6 +1512,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
 
     const historiaClinica = await this.expedientesService.findDocument(
@@ -1756,6 +1764,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
     const notaMedica = await this.expedientesService.findDocument('notaMedica', notaMedicaId);
     const datosNotaMedica = {
@@ -1898,6 +1907,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
     const controlPrenatal = await this.expedientesService.findDocument('controlPrenatal', controlPrenatalId);
     const datosControlPrenatal = {
@@ -2149,6 +2159,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
     const historiaOtologica = await this.expedientesService.findDocument('historiaOtologica', historiaOtologicaId);
     const datosHistoriaOtologica = {
@@ -2326,6 +2337,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
     const previoEspirometria = await this.expedientesService.findDocument('previoEspirometria', previoEspirometriaId);
     const datosPrevioEspirometria = {
@@ -2506,6 +2518,7 @@ export class InformesService {
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
+      curp: trabajador.curp,
     };
 
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);

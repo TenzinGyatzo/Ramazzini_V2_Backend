@@ -64,6 +64,9 @@ export class Trabajador extends Document {
 
     @Prop({ required: false, match: /^$|^[A-Za-z0-9\s\-_.\/]{4,30}$/, unique: false })
     nss: string;
+
+    @Prop({ required: false, match: /^$|^[A-Za-z0-9\s\-_.\/#]{4,30}$/, unique: false })
+    curp: string;
     
     @Prop({ required: false, default: [] })
     agentesRiesgoActuales: string[];
