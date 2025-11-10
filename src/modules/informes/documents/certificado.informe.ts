@@ -473,26 +473,30 @@ export const certificadoInforme = (
           { text: String(trabajador.edad), bold: true },
           { text: ' años de edad. ' },
 
-          { text: `Presenta IMC: ${exploracionFisica.indiceMasaCorporal} (${exploracionFisica.categoriaIMC}). ` },
-          { text: `Frecuencia cardiaca de ${exploracionFisica.frecuenciaCardiaca} lpm (${exploracionFisica.categoriaFrecuenciaCardiaca}). ` },
-          { text: `Saturación de oxígeno del ${exploracionFisica.saturacionOxigeno}% (${exploracionFisica.categoriaSaturacionOxigeno}). ` },
-          { text: `Tensión arterial ${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg (${exploracionFisica.categoriaTensionArterial || 'no especificada'}). ` },
+          ...(proveedorSalud.pais === 'PA'
+            ? [{ text: 'Se hace constar la práctica del examen médico conforme a los procedimientos establecidos.' }]
+            : [
+                { text: `Presenta IMC: ${exploracionFisica.indiceMasaCorporal} (${exploracionFisica.categoriaIMC}). ` },
+                { text: `Frecuencia cardiaca de ${exploracionFisica.frecuenciaCardiaca} lpm (${exploracionFisica.categoriaFrecuenciaCardiaca}). ` },
+                { text: `Saturación de oxígeno del ${exploracionFisica.saturacionOxigeno}% (${exploracionFisica.categoriaSaturacionOxigeno}). ` },
+                { text: `Tensión arterial ${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg (${exploracionFisica.categoriaTensionArterial || 'no especificada'}). ` },
 
-          { text: `Examen visual con agudeza lejana sin corrección: OI 20/${examenVista.ojoIzquierdoLejanaSinCorreccion} y OD 20/${examenVista.ojoDerechoLejanaSinCorreccion} ` },
-          { text: `(${examenVista.sinCorreccionLejanaInterpretacion || 'categoría no disponible'}). ` },
+                { text: `Examen visual con agudeza lejana sin corrección: OI 20/${examenVista.ojoIzquierdoLejanaSinCorreccion} y OD 20/${examenVista.ojoDerechoLejanaSinCorreccion} ` },
+                { text: `(${examenVista.sinCorreccionLejanaInterpretacion || 'categoría no disponible'}). ` },
 
-          ...(examenVista.interpretacionIshihara === 'Daltonismo'
-            ? [{ text: 'Se detecta alteración en la percepción cromática (Daltonismo). ' }]
-            : examenVista.interpretacionIshihara === 'Normal'
-              ? [{ text: 'No se detectan alteraciones en la percepción cromática. ' }]
-              : [{ text: 'No se cuenta con resultado de prueba de percepción cromática. ' }]),
+                ...(examenVista.interpretacionIshihara === 'Daltonismo'
+                  ? [{ text: 'Se detecta alteración en la percepción cromática (Daltonismo). ' }]
+                  : examenVista.interpretacionIshihara === 'Normal'
+                    ? [{ text: 'No se detectan alteraciones en la percepción cromática. ' }]
+                    : [{ text: 'No se cuenta con resultado de prueba de percepción cromática. ' }]),
 
-          { text: generarTextoExploracionFisica(exploracionFisica) },
-          
-          ...(exploracionFisica.resumenExploracionFisica === 'Se encuentra clínicamente sano' ||
-            exploracionFisica.resumenExploracionFisica === 'Se encuentra clínicamente sana'
-            ? [{ text: `${exploracionFisica.resumenExploracionFisica}.` }]
-            : [])
+                { text: generarTextoExploracionFisica(exploracionFisica) },
+                
+                ...(exploracionFisica.resumenExploracionFisica === 'Se encuentra clínicamente sano' ||
+                  exploracionFisica.resumenExploracionFisica === 'Se encuentra clínicamente sana'
+                  ? [{ text: `${exploracionFisica.resumenExploracionFisica}.` }]
+                  : [])
+              ])
         ],
         style: 'paragraph',
         margin: [0, 20, 0, 0],
