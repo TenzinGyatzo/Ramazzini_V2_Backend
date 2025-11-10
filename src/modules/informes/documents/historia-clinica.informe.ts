@@ -235,8 +235,8 @@ interface HistoriaClinica {
   accidentesEspecificar?: string;
   quirurgicos?: string;
   quirurgicosEspecificar?: string;
-  traumaticos?: string;
-  traumaticosEspecificar?: string;
+  otros?: string;
+  otrosEspecificar?: string;
   alcoholismo?: string;
   alcoholismoEspecificar?: string;
   tabaquismo?: string;
@@ -498,9 +498,9 @@ export const historiaClinicaInforme = (
       'QUIRÚRGICOS',
     ),
     createRow(
-      historiaClinica.traumaticos,
-      historiaClinica.traumaticosEspecificar,
-      'TRAUMÁTICOS',
+      historiaClinica.otros,
+      historiaClinica.otrosEspecificar,
+      'OTROS',
     ),
   ];
 

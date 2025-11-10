@@ -181,9 +181,9 @@ export class HistoriaClinica extends Document {
     quirurgicosEspecificar: string;
 
     @Prop({ enum: siONo })
-    traumaticos: string;
+    otros: string;
     @Prop()
-    traumaticosEspecificar: string;
+    otrosEspecificar: string;
 
 
     // Antecedentes Personales No Patológicos

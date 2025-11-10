@@ -241,12 +241,12 @@ export class CreateHistoriaClinicaDto {
     quirurgicosEspecificar: string;
     
     @IsOptional()
-    @IsEnum(siONo, { message: 'traumaticos debe ser Si o No' })
-    traumaticos: string;
+    @IsEnum(siONo, { message: 'otros debe ser Si o No' })
+    otros: string;
     
     @IsOptional()
-    @IsString({ message: 'traumaticosEspecificar debe ser un string' })
-    traumaticosEspecificar: string;
+    @IsString({ message: 'otrosEspecificar debe ser un string' })
+    otrosEspecificar: string;
     
 
     // Antecedentes Personales No Patológicos

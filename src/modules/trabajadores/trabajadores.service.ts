@@ -204,7 +204,7 @@ export class TrabajadoresService {
               epilepticosPP: historia.epilepticosPP ?? null,
               accidentes: historia.accidentes ?? null,
               quirurgicos: historia.quirurgicos ?? null,
-              traumaticos: historia.traumaticos ?? null,
+              otros: historia.otros ?? null,
               alcoholismo: historia.alcoholismoEspecificar ?? null,
               tabaquismo: historia.tabaquismoEspecificar ?? null,
               accidenteLaboral: historia.accidenteLaboral ?? null,
@@ -427,7 +427,7 @@ export class TrabajadoresService {
     // 8. HISTORIAS CLÍNICAS – Obtener la más reciente por trabajador activo
     const historias = await this.historiaClinicaModel
     .find({ idTrabajador: { $in: idsActivos }, ...rangoFecha('fechaHistoriaClinica') })
-    .select('idTrabajador alcoholismo tabaquismo diabeticosPP hipertensivosPP cardiopaticosPP epilepticosPP respiratorios alergicos lumbalgias accidentes quirurgicos traumaticos fechaHistoriaClinica')
+    .select('idTrabajador alcoholismo tabaquismo diabeticosPP hipertensivosPP cardiopaticosPP epilepticosPP respiratorios alergicos lumbalgias accidentes quirurgicos otros fechaHistoriaClinica')
     .lean();
 
     const historiasMap = new Map<string, any>();
@@ -465,7 +465,7 @@ export class TrabajadoresService {
         lumbalgias: historia.lumbalgias ?? null,
         accidentes: historia.accidentes ?? null,
         quirurgicos: historia.quirurgicos ?? null,
-        traumaticos: historia.traumaticos ?? null
+        otros: historia.otros ?? null
       }))
     );
 

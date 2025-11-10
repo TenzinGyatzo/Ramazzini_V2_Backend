@@ -1563,8 +1563,8 @@ export class InformesService {
       accidentesEspecificar: historiaClinica.accidentesEspecificar,
       quirurgicos: historiaClinica.quirurgicos,
       quirurgicosEspecificar: historiaClinica.quirurgicosEspecificar,
-      traumaticos: historiaClinica.traumaticos,
-      traumaticosEspecificar: historiaClinica.traumaticosEspecificar,
+      otros: historiaClinica.otros,
+      otrosEspecificar: historiaClinica.otrosEspecificar,
       // Antecedentes Personales No Patologicos
       alcoholismo: historiaClinica.alcoholismo,
       alcoholismoEspecificar: historiaClinica.alcoholismoEspecificar,
