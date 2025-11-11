@@ -30,6 +30,10 @@ export class CreateMedicoFirmanteDto {
   tituloProfesional?: string;
 
   @IsOptional()
+  @IsString({ message: 'La universidad debe ser un string' })
+  universidad?: string;
+
+  @IsOptional()
   @IsString({ message: 'El numero de cédula profesional debe ser un string' })
   numeroCedulaProfesional?: string;
 

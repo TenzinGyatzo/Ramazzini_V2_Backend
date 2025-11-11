@@ -5,6 +5,7 @@ export class MedicoFirmante extends Document {
     _id: string;
     nombre: string;
     tituloProfesional?: string;
+    universidad?: string;
     numeroCedulaProfesional?: string;
     especialistaSaludTrabajo?: string;
     numeroCedulaEspecialista?: string;

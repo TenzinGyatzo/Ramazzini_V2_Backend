@@ -40,6 +40,8 @@ import { CreateHistoriaOtologicaDto } from './dto/create-historia-otologica.dto'
 import { UpdateHistoriaOtologicaDto } from './dto/update-historia-otologica.dto';
 import { CreatePrevioEspirometriaDto } from './dto/create-previo-espirometria.dto';
 import { UpdatePrevioEspirometriaDto } from './dto/update-previo-espirometria.dto';
+import { CreateRecetaDto } from './dto/create-receta.dto';
+import { UpdateRecetaDto } from './dto/update-receta.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import path from 'path';
@@ -65,6 +67,7 @@ export class ExpedientesController {
     controlPrenatal: CreateControlPrenatalDto,
     historiaOtologica: CreateHistoriaOtologicaDto,
     previoEspirometria: CreatePrevioEspirometriaDto,
+    receta: CreateRecetaDto,
   };
 
   private updateDtos = {
@@ -81,6 +84,7 @@ export class ExpedientesController {
     controlPrenatal: UpdateControlPrenatalDto,
     historiaOtologica: UpdateHistoriaOtologicaDto,
     previoEspirometria: UpdatePrevioEspirometriaDto,
+    receta: UpdateRecetaDto,
   };
 
   @Post(':documentType/crear')

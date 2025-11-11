@@ -156,6 +156,7 @@ export function normalizeMedicoFirmanteData(
     ...dto,
     nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : "",
     tituloProfesional: typeof dto.tituloProfesional === 'string' ? dto.tituloProfesional.trim() : "",
+    universidad: typeof dto.universidad === 'string' ? dto.universidad.trim() : "",
     numeroCedulaProfesional: typeof dto.numeroCedulaProfesional === 'string' ? dto.numeroCedulaProfesional.trim() : "",
     especialistaSaludTrabajo: typeof dto.especialistaSaludTrabajo === 'string' ? dto.especialistaSaludTrabajo.trim() : "",
     numeroCedulaEspecialista: typeof dto.numeroCedulaEspecialista === 'string' ? dto.numeroCedulaEspecialista.trim() : "",

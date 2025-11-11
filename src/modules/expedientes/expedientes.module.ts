@@ -15,6 +15,7 @@ import { NotaMedica, NotaMedicaSchema } from './schemas/nota-medica.schema';
 import { ControlPrenatal, ControlPrenatalSchema } from './schemas/control-prenatal.schema';
 import { HistoriaOtologica, HistoriaOtologicaSchema } from './schemas/historia-otologica.schema';
 import { PrevioEspirometria, PrevioEspirometriaSchema } from './schemas/previo-espirometria.schema';
+import { Receta, RecetaSchema } from './schemas/receta.schema';
 import { Trabajador, TrabajadorSchema } from '../trabajadores/schemas/trabajador.schema';
 import { InformesModule } from '../informes/informes.module';
 import { FilesModule } from '../files/files.module';
@@ -39,6 +40,7 @@ import { PdfCleanerService } from './pdf-cleaner.service';
       { name: HistoriaOtologica.name, schema: HistoriaOtologicaSchema },
       { name: PrevioEspirometria.name, schema: PrevioEspirometriaSchema },
       { name: Trabajador.name, schema: TrabajadorSchema },
+      { name: Receta.name, schema: RecetaSchema },
     ]),
     forwardRef(() => InformesModule),
     FilesModule, // Nuevo módulo
