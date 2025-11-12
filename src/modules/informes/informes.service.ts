@@ -61,31 +61,34 @@ export class InformesService {
       nombreCredencialAdicional?: string;
       numeroCredencialAdicional?: string;
       firma?: { data: string; contentType: string } | null;
+      [key: string]: any; // Permitir campos adicionales
     } | null,
   ) {
-    return medicoFirmante
-      ? {
-          nombre: medicoFirmante.nombre || '',
-          tituloProfesional: medicoFirmante.tituloProfesional || '',
-          universidad: medicoFirmante.universidad || '',
-          numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
-          especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || '',
-          numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || '',
-          nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || '',
-          numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || '',
-          firma: medicoFirmante.firma || null,
-        }
-      : {
-          nombre: '',
-          tituloProfesional: '',
-          universidad: '',
-          numeroCedulaProfesional: '',
-          especialistaSaludTrabajo: '',
-          numeroCedulaEspecialista: '',
-          nombreCredencialAdicional: '',
-          numeroCredencialAdicional: '',
-          firma: null,
-        };
+    if (!medicoFirmante) {
+      return {
+        nombre: '',
+        tituloProfesional: '',
+        universidad: '',
+        numeroCedulaProfesional: '',
+        especialistaSaludTrabajo: '',
+        numeroCedulaEspecialista: '',
+        nombreCredencialAdicional: '',
+        numeroCredencialAdicional: '',
+        firma: null,
+      };
+    }
+    
+    return {
+      nombre: medicoFirmante.nombre || '',
+      tituloProfesional: medicoFirmante.tituloProfesional || '',
+      universidad: medicoFirmante.universidad || '',
+      numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
+      especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || '',
+      numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || '',
+      nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || '',
+      numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || '',
+      firma: medicoFirmante.firma || null,
+    };
   }
 
   async getInformeAntidoping(
@@ -139,7 +142,14 @@ export class InformesService {
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
-            ...medicoFirmante,
+            nombre: medicoFirmante.nombre,
+            tituloProfesional: medicoFirmante.tituloProfesional,
+            universidad: medicoFirmante.universidad,
+            numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+            especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+            numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+            nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+            numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
             firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
           }
         : null,
@@ -446,7 +456,14 @@ export class InformesService {
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
-            ...medicoFirmante,
+            nombre: medicoFirmante.nombre,
+            tituloProfesional: medicoFirmante.tituloProfesional,
+            universidad: medicoFirmante.universidad,
+            numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+            especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+            numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+            nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+            numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
             firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
           }
         : null,
@@ -596,7 +613,14 @@ export class InformesService {
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
-            ...medicoFirmante,
+            nombre: medicoFirmante.nombre,
+            tituloProfesional: medicoFirmante.tituloProfesional,
+            universidad: medicoFirmante.universidad,
+            numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+            especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+            numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+            nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+            numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
             firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
           }
         : null,
@@ -864,7 +888,14 @@ export class InformesService {
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
-            ...medicoFirmante,
+            nombre: medicoFirmante.nombre,
+            tituloProfesional: medicoFirmante.tituloProfesional,
+            universidad: medicoFirmante.universidad,
+            numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+            especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+            numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+            nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+            numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
             firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
           }
         : null,
@@ -985,7 +1016,14 @@ export class InformesService {
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
-            ...medicoFirmante,
+            nombre: medicoFirmante.nombre,
+            tituloProfesional: medicoFirmante.tituloProfesional,
+            universidad: medicoFirmante.universidad,
+            numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+            especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+            numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+            nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+            numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
             firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
           }
         : null,
@@ -1120,7 +1158,14 @@ export class InformesService {
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
-            ...medicoFirmante,
+            nombre: medicoFirmante.nombre,
+            tituloProfesional: medicoFirmante.tituloProfesional,
+            universidad: medicoFirmante.universidad,
+            numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+            especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+            numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+            nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+            numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
             firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
           }
         : null,

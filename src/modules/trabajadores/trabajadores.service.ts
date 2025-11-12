@@ -25,6 +25,7 @@ import { RiesgoTrabajo } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema'
 import { CentroTrabajo } from '../centros-trabajo/schemas/centro-trabajo.schema';
 import { User } from '../users/schemas/user.schema';
 import { Empresa } from '../empresas/schemas/empresa.schema';
+import { Receta } from '../expedientes/schemas/receta.schema';
 
 @Injectable()
 export class TrabajadoresService {
@@ -39,6 +40,7 @@ export class TrabajadoresService {
   @InjectModel(ExploracionFisica.name) private exploracionFisicaModel: Model<ExploracionFisica>,
   @InjectModel(HistoriaClinica.name) private historiaClinicaModel: Model<HistoriaClinica>,
   @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
+  @InjectModel(Receta.name) private recetaModel: Model<Receta>,
   @InjectModel(ControlPrenatal.name) private controlPrenatalModel: Model<ControlPrenatal>,
   @InjectModel(RiesgoTrabajo.name) private riesgoTrabajoModel: Model<RiesgoTrabajo>,
   @InjectModel(CentroTrabajo.name) private centroTrabajoModel: Model<CentroTrabajo>,
@@ -1764,6 +1766,7 @@ export class TrabajadoresService {
       ControlPrenatal: 'fechaInicioControlPrenatal',
       DocumentoExterno: 'fechaDocumento', // Este es clave para Documento Externo
       NotaMedica: 'fechaNotaMedica',
+      Receta: 'fechaReceta',
     };
   
     // Determinar el tipo de documento con el nombre del modelo en Mongoose
@@ -1797,6 +1800,7 @@ export class TrabajadoresService {
       CertificadoExpedito: 'Certificado Expedito',
       ControlPrenatal: 'Control Prenatal',
       NotaMedica: 'Nota Medica',
+      Receta: 'Receta',
     };
   
     // Si es un Documento Externo, construir el nombre dinámicamente
@@ -1892,6 +1896,7 @@ export class TrabajadoresService {
             this.controlPrenatalModel.find({ idTrabajador: id }).session(session).exec(),
             this.documentoExternoModel.find({ idTrabajador: id }).session(session).exec(),
             this.notaMedicaModel.find({ idTrabajador: id }).session(session).exec(),
+            this.recetaModel.find({ idTrabajador: id }).session(session).exec(),
             this.riesgoTrabajoModel.find({ idTrabajador: id }).session(session).exec(),
           ])
         ).flat();
@@ -1910,6 +1915,7 @@ export class TrabajadoresService {
             this.controlPrenatalModel.deleteMany({ idTrabajador: id }).session(session),
             this.documentoExternoModel.deleteMany({ idTrabajador: id }).session(session),
             this.notaMedicaModel.deleteMany({ idTrabajador: id }).session(session),
+            this.recetaModel.deleteMany({ idTrabajador: id }).session(session),
             this.riesgoTrabajoModel.deleteMany({ idTrabajador: id }).session(session),
           ]);
   
