@@ -349,6 +349,25 @@ export class ExpedientesService {
     }
   }
 
+  async getMotivoExamenReciente(trabajadorId: string): Promise<{ motivoExamen: string | null }> {
+    try {
+      const historiaClinica = await this.historiaClinicaModel
+        .findOne({ idTrabajador: trabajadorId })
+        .sort({ fechaHistoriaClinica: -1 })
+        .select('motivoExamen')
+        .exec();
+
+      if (historiaClinica?.motivoExamen) {
+        return { motivoExamen: historiaClinica.motivoExamen };
+      }
+
+      return { motivoExamen: null };
+    } catch (error) {
+      console.error('Error al consultar motivoExamen reciente:', error);
+      throw new BadRequestException('Error al consultar el motivoExamen reciente');
+    }
+  }
+
   private async actualizarUpdatedAtTrabajador(trabajadorId: string) {
     if (!trabajadorId) return;
     await this.trabajadorModel.findByIdAndUpdate(trabajadorId, { updatedAt: new Date() });

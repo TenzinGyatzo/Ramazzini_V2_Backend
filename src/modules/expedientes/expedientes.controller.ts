@@ -202,6 +202,20 @@ export class ExpedientesController {
     }
   }
 
+  @Get('historiaClinica/motivo-examen-reciente')
+  async getMotivoExamenReciente(@Param('trabajadorId') trabajadorId: string) {
+    try {
+      const motivoExamenData = await this.expedientesService.getMotivoExamenReciente(trabajadorId);
+      return {
+        message: 'MotivoExamen consultado exitosamente',
+        data: motivoExamenData
+      };
+    } catch (error) {
+      console.error('Error al consultar motivoExamen:', error);
+      throw new BadRequestException('Error al consultar el motivoExamen reciente');
+    }
+  }
+
   @Get(':documentType')
   async findDocuments(
     @Param('trabajadorId') trabajadorId: string,
