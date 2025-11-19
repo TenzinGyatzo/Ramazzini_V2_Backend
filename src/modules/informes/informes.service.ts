@@ -1152,6 +1152,16 @@ export class InformesService {
       placasCorrectas: examenVista.placasCorrectas,
       porcentajeIshihara: examenVista.porcentajeIshihara,
       interpretacionIshihara: examenVista.interpretacionIshihara,
+      testEstereopsis: examenVista.testEstereopsis,
+      testCampoVisual: examenVista.testCampoVisual,
+      coverTest: examenVista.coverTest,
+      esferaOjoIzquierdo: examenVista.esferaOjoIzquierdo,
+      cilindroOjoIzquierdo: examenVista.cilindroOjoIzquierdo,
+      adicionOjoIzquierdo: examenVista.adicionOjoIzquierdo,
+      esferaOjoDerecho: examenVista.esferaOjoDerecho,
+      cilindroOjoDerecho: examenVista.cilindroOjoDerecho,
+      adicionOjoDerecho: examenVista.adicionOjoDerecho,
+      diagnosticoRecomendaciones: examenVista.diagnosticoRecomendaciones,
     };
 
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);

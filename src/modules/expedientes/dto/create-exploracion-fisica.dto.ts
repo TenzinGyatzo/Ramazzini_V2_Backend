@@ -135,7 +135,7 @@ export class CreateExploracionFisicaDto {
 
     @IsOptional()
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(80)
+    @Min(70)
     @Max(100)
     saturacionOxigeno: number;
 

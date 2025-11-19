@@ -79,6 +79,39 @@ export class ExamenVista extends Document {
     @Prop({ required: true, enum: ishiharaInterpretaciones })
     interpretacionIshihara: string
 
+    // Pruebas de función ocular
+    @Prop()
+    testEstereopsis: string
+
+    @Prop()
+    testCampoVisual: string
+
+    @Prop()
+    coverTest: string
+
+    // Receta Final
+    @Prop()
+    esferaOjoIzquierdo: string
+
+    @Prop()
+    cilindroOjoIzquierdo: string
+
+    @Prop()
+    adicionOjoIzquierdo: string
+
+    @Prop()
+    esferaOjoDerecho: string
+
+    @Prop()
+    cilindroOjoDerecho: string
+
+    @Prop()
+    adicionOjoDerecho: string
+
+    // Diagnóstico y recomendaciones
+    @Prop()
+    diagnosticoRecomendaciones: string
+
     // Trabajador, ruta al archivo e info de creador y actualizador
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
     idTrabajador: Trabajador;

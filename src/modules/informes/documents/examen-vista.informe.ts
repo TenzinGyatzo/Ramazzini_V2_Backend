@@ -173,6 +173,16 @@ interface ExamenVista {
   placasCorrectas: number;
   porcentajeIshihara: number;
   interpretacionIshihara: string;
+  testEstereopsis?: string;
+  testCampoVisual?: string;
+  coverTest?: string;
+  esferaOjoIzquierdo?: string;
+  cilindroOjoIzquierdo?: string;
+  adicionOjoIzquierdo?: string;
+  esferaOjoDerecho?: string;
+  cilindroOjoDerecho?: string;
+  adicionOjoDerecho?: string;
+  diagnosticoRecomendaciones?: string;
 }
 
 interface MedicoFirmante {
@@ -545,7 +555,152 @@ export const examenVistaInforme = (
           paddingRight: (i: number, node: any) => 2,
         },
         margin: [0, 0, 0, 10],
-      }
+      },
+      // Secciones adicionales solo para Guatemala
+      ...(proveedorSalud.pais === 'GT' ? [
+        // Pruebas de función ocular
+        {
+          style: 'table',
+          table: {
+            widths: ['33.33%', '33.33%', '*'],
+            body: [
+              // Encabezado
+              [
+                {
+                  text: 'PRUEBAS DE FUNCIÓN OCULAR',
+                  style: 'tableHeader',
+                  colSpan: 3,
+                  alignment: 'center',
+                },
+                {},
+                {},
+              ],
+              [
+                { text: 'TEST DE ESTEREOPSIS', style: 'tableHeader', alignment: 'center' },
+                { text: 'CAMPOS VISUALES', style: 'tableHeader', alignment: 'center' },
+                { text: 'COVER TEST', style: 'tableHeader', alignment: 'center' },
+              ],
+              // Fila de datos
+              [
+                examenVista.testEstereopsis || '',
+                examenVista.testCampoVisual || '',
+                examenVista.coverTest || '',
+              ].map((text) => ({
+                text: text || ' ', // Espacio en blanco si está vacío para mantener el recuadro visible
+                style: 'tableCell',
+                alignment: 'center',
+              })),
+            ],
+          },
+          layout: {
+            hLineWidth: () => 0.5,
+            vLineWidth: () => 0.5,
+            hLineColor: '#e5e7eb',
+            vLineColor: '#e5e7eb',
+            paddingTop: (i: number, node: any) => 0,
+            paddingBottom: (i: number, node: any) => 0,
+            paddingLeft: (i: number, node: any) => 2,
+            paddingRight: (i: number, node: any) => 2,
+          },
+        margin: [0, 0, 0, 10] as [number, number, number, number],
+      },
+      // Receta Final
+        {
+          style: 'table',
+          table: {
+            widths: ['20%', '40%', '40%'],
+            body: [
+              // Encabezado
+              [
+                {
+                  text: 'RECETA FINAL',
+                  style: 'tableHeader',
+                  colSpan: 3,
+                  alignment: 'center',
+                },
+                {},
+                {},
+              ],
+              [
+                { text: '-', style: 'tableHeader', alignment: 'center' },
+                { text: 'OJO IZQUIERDO', style: 'tableHeader', alignment: 'center' },
+                { text: 'OJO DERECHO', style: 'tableHeader', alignment: 'center' },
+              ],
+              // Filas de datos
+              ...[
+                [
+                  'ESFERA',
+                  examenVista.esferaOjoIzquierdo || '',
+                  examenVista.esferaOjoDerecho || '',
+                ],
+                [
+                  'CILINDRO',
+                  examenVista.cilindroOjoIzquierdo || '',
+                  examenVista.cilindroOjoDerecho || '',
+                ],
+                [
+                  'ADICIÓN',
+                  examenVista.adicionOjoIzquierdo || '',
+                  examenVista.adicionOjoDerecho || '',
+                ],
+              ].map((row) =>
+                row.map((text, i) => ({
+                  text,
+                  style: i === 0 ? 'tableCellBold' : 'tableCell',
+                  alignment: 'center',
+                })),
+              ),
+            ],
+          },
+          layout: {
+            hLineWidth: () => 0.5,
+            vLineWidth: () => 0.5,
+            hLineColor: '#e5e7eb',
+            vLineColor: '#e5e7eb',
+            paddingTop: (i: number, node: any) => 0,
+            paddingBottom: (i: number, node: any) => 0,
+            paddingLeft: (i: number, node: any) => 2,
+            paddingRight: (i: number, node: any) => 2,
+          },
+          margin: [0, 0, 0, 10] as [number, number, number, number],
+        },
+        // Diagnóstico y recomendaciones
+        {
+          style: 'table',
+          table: {
+            widths: ['100%'],
+            body: [
+              // Encabezado
+              [
+                {
+                  text: 'DIAGNÓSTICO Y RECOMENDACIONES',
+                  style: 'tableHeader',
+                  alignment: 'center',
+                },
+              ],
+              // Contenido
+              [
+                {
+                  text: examenVista.diagnosticoRecomendaciones || ' ', // Espacio en blanco si está vacío para mantener el recuadro visible
+                  style: 'tableCell',
+                  alignment: 'center',
+                },
+              ],
+            ],
+          },
+          layout: {
+            hLineWidth: () => 0.5,
+            vLineWidth: () => 0.5,
+            hLineColor: '#e5e7eb',
+            vLineColor: '#e5e7eb',
+            paddingTop: (i: number, node: any) => 0,
+            paddingBottom: (i: number, node: any) => 0,
+            paddingLeft: (i: number, node: any) => 2,
+            paddingRight: (i: number, node: any) => 2,
+          },
+          margin: [0, 0, 0, 10] as [number, number, number, number],
+        },
+      ] : []),
     ],
     // Pie de pagina
     footer: {

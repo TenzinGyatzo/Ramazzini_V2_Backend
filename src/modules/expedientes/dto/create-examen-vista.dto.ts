@@ -203,6 +203,99 @@ export class CreateExamenVistaDto {
     @IsEnum(ishiharaInterpretaciones, { message: 'La interpretación de la prueba Ishihara debe ser uno de los siguientes: ' + ishiharaInterpretaciones })
     interpretacionIshihara: string
 
+    // Pruebas de función ocular
+    @ApiProperty({
+        description: 'Test de estereopsis',
+        example: 'Normal',
+        required: false
+    })
+    @IsString({ message: 'El test de estereopsis debe ser un string' })
+    @IsOptional()
+    testEstereopsis: string
+
+    @ApiProperty({
+        description: 'Test de campo visual',
+        example: 'Normal',
+        required: false
+    })
+    @IsString({ message: 'El test de campo visual debe ser un string' })
+    @IsOptional()
+    testCampoVisual: string
+
+    @ApiProperty({
+        description: 'Cover test',
+        example: 'Normal',
+        required: false
+    })
+    @IsString({ message: 'El cover test debe ser un string' })
+    @IsOptional()
+    coverTest: string
+
+    // Receta Final
+    @ApiProperty({
+        description: 'Esfera del ojo izquierdo',
+        example: '+2.00',
+        required: false
+    })
+    @IsString({ message: 'La esfera del ojo izquierdo debe ser un string' })
+    @IsOptional()
+    esferaOjoIzquierdo: string
+
+    @ApiProperty({
+        description: 'Cilindro del ojo izquierdo',
+        example: '-0.50',
+        required: false
+    })
+    @IsString({ message: 'El cilindro del ojo izquierdo debe ser un string' })
+    @IsOptional()
+    cilindroOjoIzquierdo: string
+
+    @ApiProperty({
+        description: 'Adición del ojo izquierdo',
+        example: '+1.50',
+        required: false
+    })
+    @IsString({ message: 'La adición del ojo izquierdo debe ser un string' })
+    @IsOptional()
+    adicionOjoIzquierdo: string
+
+    @ApiProperty({
+        description: 'Esfera del ojo derecho',
+        example: '+2.00',
+        required: false
+    })
+    @IsString({ message: 'La esfera del ojo derecho debe ser un string' })
+    @IsOptional()
+    esferaOjoDerecho: string
+
+    @ApiProperty({
+        description: 'Cilindro del ojo derecho',
+        example: '-0.50',
+        required: false
+    })
+    @IsString({ message: 'El cilindro del ojo derecho debe ser un string' })
+    @IsOptional()
+    cilindroOjoDerecho: string
+
+    @ApiProperty({
+        description: 'Adición del ojo derecho',
+        example: '+1.50',
+        required: false
+    })
+    @IsString({ message: 'La adición del ojo derecho debe ser un string' })
+    @IsOptional()
+    adicionOjoDerecho: string
+
+    // Diagnóstico y recomendaciones
+    @ApiProperty({
+        description: 'Diagnóstico y recomendaciones',
+        example: 'Se recomienda el uso de lentes para corrección visual',
+        required: false
+    })
+    @IsString({ message: 'El diagnóstico y recomendaciones debe ser un string' })
+    @IsOptional()
+    diagnosticoRecomendaciones: string
+
     // RESTO
     @ApiProperty({
         description: 'El ID del trabajador',
