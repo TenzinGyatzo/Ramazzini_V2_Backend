@@ -141,6 +141,18 @@ export class InformesController {
   }
 
   // Cuestionarios
+    
+  @Get('constanciaAptitud/:empresaId/:trabajadorId/:constanciaAptitudId/:userId')
+  async getInformeConstanciaAptitud(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('constanciaAptitudId') constanciaAptitudId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+    const rutaPDF = await this.informesService.getInformeConstanciaAptitud(empresaId, trabajadorId, constanciaAptitudId, userId);
+    return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
+  }
 
   @Get('controlPrenatal/:empresaId/:trabajadorId/:controlPrenatalId/:userId')
   async getInformeControlPrenatal(

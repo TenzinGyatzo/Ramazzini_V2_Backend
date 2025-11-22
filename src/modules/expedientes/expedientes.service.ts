@@ -15,6 +15,7 @@ import { NotaMedica } from './schemas/nota-medica.schema';
 import { ControlPrenatal } from './schemas/control-prenatal.schema';
 import { HistoriaOtologica } from './schemas/historia-otologica.schema';
 import { PrevioEspirometria } from './schemas/previo-espirometria.schema';
+import { ConstanciaAptitud } from './schemas/constancia-aptitud.schema';
 import { Receta } from './schemas/receta.schema';
 import { startOfDay, endOfDay } from 'date-fns';
 import { FilesService } from '../files/files.service';
@@ -45,6 +46,7 @@ export class ExpedientesService {
     @InjectModel(HistoriaOtologica.name) private historiaOtologicaModel: Model<HistoriaOtologica>,
     @InjectModel(PrevioEspirometria.name) private previoEspirometriaModel: Model<PrevioEspirometria>,
     @InjectModel(Receta.name) private recetaModel: Model<Receta>,
+    @InjectModel(ConstanciaAptitud.name) private constanciaAptitudModel: Model<ConstanciaAptitud>,
     private readonly filesService: FilesService
   ) {
     this.models = {
@@ -62,6 +64,7 @@ export class ExpedientesService {
       historiaOtologica: this.historiaOtologicaModel,
       previoEspirometria: this.previoEspirometriaModel,
       receta: this.recetaModel,
+      constanciaAptitud: this.constanciaAptitudModel,
     };
 
     this.dateFields = {
@@ -79,6 +82,7 @@ export class ExpedientesService {
       historiaOtologica: 'fechaHistoriaOtologica',
       previoEspirometria: 'fechaPrevioEspirometria',
       receta: 'fechaReceta',
+      constanciaAptitud: 'fechaConstanciaAptitud',
     };
   }
 

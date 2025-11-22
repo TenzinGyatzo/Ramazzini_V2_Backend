@@ -16,6 +16,7 @@ import { CertificadoExpedito, CertificadoExpeditoSchema } from '../expedientes/s
 import { ControlPrenatal, ControlPrenatalSchema } from '../expedientes/schemas/control-prenatal.schema';
 import { NotaMedica, NotaMedicaSchema } from '../expedientes/schemas/nota-medica.schema';
 import { Receta, RecetaSchema } from '../expedientes/schemas/receta.schema';
+import { ConstanciaAptitud, ConstanciaAptitudSchema } from '../expedientes/schemas/constancia-aptitud.schema';
 import { RiesgoTrabajo, RiesgoTrabajoSchema } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
 import { FilesModule } from '../files/files.module';
 import { CentroTrabajo, CentroTrabajoSchema } from '../centros-trabajo/schemas/centro-trabajo.schema';
@@ -38,6 +39,7 @@ import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
       { name: CertificadoExpedito.name, schema: CertificadoExpeditoSchema },
       { name: ControlPrenatal.name, schema: ControlPrenatalSchema },
       { name: Receta.name, schema: RecetaSchema },
+      { name: ConstanciaAptitud.name, schema: ConstanciaAptitudSchema },
       { name: RiesgoTrabajo.name, schema: RiesgoTrabajoSchema },
       { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
       { name: User.name, schema: UserSchema },

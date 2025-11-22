@@ -13,6 +13,7 @@ import { notaMedicaInforme } from './documents/nota-medica.informe';
 import { controlPrenatalInforme } from './documents/control-prenatal.informe';
 import { historiaOtologicaInforme } from './documents/historia-otologica.informe';
 import { previoEspirometriaInforme } from './documents/previo-espirometria.informe';
+import { constanciaAptitudInforme } from './documents/constancia-aptitud.informe';
 import { recetaInforme } from './documents/receta.informe';
 import { dashboardInforme } from './documents/dashboard.informe';
 import { EmpresasService } from '../empresas/empresas.service';
@@ -33,7 +34,6 @@ import { MedicosFirmantesService } from '../medicos-firmantes/medicos-firmantes.
 import { EnfermerasFirmantesService } from '../enfermeras-firmantes/enfermeras-firmantes.service';
 import { TecnicosFirmantesService } from '../tecnicos-firmantes/tecnicos-firmantes.service';
 import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.service';
-import { se } from 'date-fns/locale';
 
 @Injectable()
 export class InformesService {
@@ -530,6 +530,126 @@ export class InformesService {
       datosExamenVista,
       datosAudiometria,
       datosAntidoping,
+      datosMedicoFirmante,
+      datosProveedorSalud,
+    );
+
+    // Generar y guardar el PDF
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+
+    return rutaCompleta; // Retorna la ruta del archivo generado
+  }
+
+  async getInformeConstanciaAptitud(
+    empresaId: string,
+    trabajadorId: string,
+    constanciaAptitudId: string,
+    userId: string,
+  ): Promise<string> {
+    const empresa = await this.empresasService.findOne(empresaId);
+    const nombreEmpresa = empresa.nombreComercial;
+
+    const trabajador = await this.trabajadoresService.findOne(trabajadorId);
+    const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
+      nombre: trabajador.nombre,
+      nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
+      escolaridad: trabajador.escolaridad,
+      edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
+      puesto: trabajador.puesto,
+      sexo: trabajador.sexo,
+      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
+        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
+      ) : '-',
+      telefono: trabajador.telefono,
+      estadoCivil: trabajador.estadoCivil,
+      numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
+      curp: trabajador.curp,
+    };
+
+    const constanciaAptitud = await this.expedientesService.findDocument(
+      'constanciaAptitud',
+      constanciaAptitudId,
+    );
+    const datosConstanciaAptitud = {
+      fechaConstanciaAptitud: constanciaAptitud.fechaConstanciaAptitud,
+    };
+
+    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = this.mapMedicoFirmante(
+      medicoFirmante
+        ? {
+            nombre: medicoFirmante.nombre,
+            tituloProfesional: medicoFirmante.tituloProfesional,
+            universidad: medicoFirmante.universidad,
+            numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional,
+            especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo,
+            numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
+            nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
+            numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
+            firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
+          }
+        : null,
+    );
+
+    const usuario = await this.usersService.findById(userId);
+     const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    } 
+
+    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const datosProveedorSalud = proveedorSalud
+    ? {
+        nombre: proveedorSalud.nombre || "",
+        pais: proveedorSalud.pais || "",
+        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
+        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
+        estado: proveedorSalud.estado || "",
+        municipio: proveedorSalud.municipio || "",
+        codigoPostal: proveedorSalud.codigoPostal || "",
+        direccion: proveedorSalud.direccion || "",
+        telefono: proveedorSalud.telefono || "",
+        correoElectronico: proveedorSalud.correoElectronico || "",
+        sitioWeb: proveedorSalud.sitioWeb || "",
+        colorInforme: proveedorSalud.colorInforme || "#343A40",
+        semaforizacionActivada: proveedorSalud.semaforizacionActivada || false,
+      }
+    : {
+        nombre: "",
+        pais: "",
+        perfilProveedorSalud: "",
+        logotipoEmpresa: null,
+        estado: "",
+        municipio: "",
+        codigoPostal: "",
+        direccion: "",
+        telefono: "",
+        correoElectronico: "",
+        sitioWeb: "",
+        colorInforme: "#343A40",
+        semaforizacionActivada: false,
+      };
+
+    // Formatear la fecha para el nombre del archivo
+    const fecha = convertirFechaADDMMAAAA(constanciaAptitud.fechaConstanciaAptitud)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+    const nombreArchivo = `Constancia de Aptitud ${fecha}.pdf`;
+
+    // Obtener la ruta específica del documento
+    const rutaDirectorio = path.resolve(constanciaAptitud.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
+    }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
+
+    const docDefinition = constanciaAptitudInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      datosConstanciaAptitud,
       datosMedicoFirmante,
       datosProveedorSalud,
     );
