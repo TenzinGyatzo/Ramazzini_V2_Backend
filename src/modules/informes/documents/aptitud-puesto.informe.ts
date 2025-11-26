@@ -226,7 +226,8 @@ const numeroEnLetras = (n: number) => {
   return {
     5: 'cinco',
     6: 'seis',
-    10: 'diez'
+    10: 'diez',
+    12: 'doce'
   }[n] || n.toString();
 };
 
@@ -256,7 +257,9 @@ const obtenerResumenAntidoping = (a: any) => {
     { key: 'fenciclidina', label: 'Fenciclidina' },
     { key: 'metadona', label: 'Metadona' },
     { key: 'barbituricos', label: 'Barbitúricos' },
-    { key: 'antidepresivosTriciclicos', label: 'Antidepresivos Tricíclicos' }
+    { key: 'antidepresivosTriciclicos', label: 'Antidepresivos Tricíclicos' },
+    { key: 'metilendioximetanfetamina', label: 'Metilendioximetanfetamina' },
+    { key: 'ketamina', label: 'Ketamina' }
   ];
 
   const evaluados = campos.filter(c => {

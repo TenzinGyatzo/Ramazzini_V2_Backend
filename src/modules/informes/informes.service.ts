@@ -136,6 +136,8 @@ export class InformesService {
       metadona: antidoping.metadona || null,
       barbituricos: antidoping.barbituricos || null,
       antidepresivosTriciclicos: antidoping.antidepresivosTriciclicos || null,
+      metilendioximetanfetamina: antidoping.metilendioximetanfetamina || null,
+      ketamina: antidoping.ketamina || null,
     };
 
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
@@ -449,6 +451,8 @@ export class InformesService {
           barbituricos: nearestAntidoping.barbituricos || null,
           antidepresivosTriciclicos:
             nearestAntidoping.antidepresivosTriciclicos || null,
+          metilendioximetanfetamina: nearestAntidoping.metilendioximetanfetamina || null,
+          ketamina: nearestAntidoping.ketamina || null,
         }
       : null;
 

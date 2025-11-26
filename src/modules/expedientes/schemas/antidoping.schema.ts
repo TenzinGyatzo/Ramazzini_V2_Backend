@@ -40,6 +40,12 @@ export class Antidoping extends Document {
     @Prop({ enum: resultado })
     antidepresivosTriciclicos: string;
 
+    @Prop({ enum: resultado })
+    metilendioximetanfetamina: string;
+
+    @Prop({ enum: resultado })
+    ketamina: string;
+
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
     idTrabajador: Trabajador;
 

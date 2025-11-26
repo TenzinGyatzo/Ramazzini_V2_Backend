@@ -96,6 +96,28 @@ export class CreateAntidopingDto {
     antidepresivosTriciclicos?: string;
 
     @ApiProperty({
+        description: 'Resultado de metilendioximetanfetamina',
+        enum: resultado,
+        example: 'Negativo',
+        required: false
+    })
+    @IsOptional()
+    @IsString({ message: 'Metilendioximetanfetamina debe ser un string' })
+    @IsEnum(resultado, { message: 'El resultado de metilendioximetanfetamina debe ser Positivo o Negativo' })
+    metilendioximetanfetamina?: string;
+
+    @ApiProperty({
+        description: 'Resultado de ketamina',
+        enum: resultado,
+        example: 'Negativo',
+        required: false
+    })
+    @IsOptional()
+    @IsString({ message: 'Ketamina debe ser un string' })
+    @IsEnum(resultado, { message: 'El resultado de ketamina debe ser Positivo o Negativo' })
+    ketamina?: string;
+
+    @ApiProperty({
         description: 'El ID del trabajador',
         example: '671fe9cc00fcb5611b10686e',
     })

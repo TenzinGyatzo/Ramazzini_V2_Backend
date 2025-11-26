@@ -158,6 +158,8 @@ interface Antidoping {
   metadona?: string;
   barbituricos?: string;
   antidepresivosTriciclicos?: string;
+  metilendioximetanfetamina?: string;
+  ketamina?: string;
 }
 
 interface MedicoFirmante {
@@ -328,7 +330,7 @@ export const antidopingInforme = (
       {
         style: 'table',
         table: {
-          widths: ['33.33%', '33.33%', '33.33%'],
+          widths: ['45%', '27.5%', '27.5%'],
           body: [
             [
               createTableCell('DROGAS DE ABUSO', 'tableHeader'),
@@ -336,53 +338,63 @@ export const antidopingInforme = (
               createTableCell('VALOR DE REFERENCIA', 'tableHeader'),
             ],
             [
-              createTableCell('MARIHUANA', 'sectionHeader'),
+              createTableCell('MARIHUANA (THC)', 'sectionHeader'),
               createConditionalTableCell(antidoping.marihuana),
               createTableCell('NEGATIVO', 'tableCell'),
             ],
             [
-              createTableCell('COCAINA', 'sectionHeader'),
+              createTableCell('COCAINA (COC)', 'sectionHeader'),
               createConditionalTableCell(antidoping.cocaina),
               createTableCell('NEGATIVO', 'tableCell'),
             ],
             ...(antidoping.anfetaminas ? [[
-              createTableCell('ANFETAMINAS', 'sectionHeader'),
+              createTableCell('ANFETAMINAS (AMP)', 'sectionHeader'),
               createConditionalTableCell(antidoping.anfetaminas),
               createTableCell('NEGATIVO', 'tableCell'),
             ]] : []),
             ...(antidoping.metanfetaminas ? [[
-              createTableCell('METANFETAMINAS', 'sectionHeader'),
+              createTableCell('METANFETAMINAS (MET)', 'sectionHeader'),
               createConditionalTableCell(antidoping.metanfetaminas),
               createTableCell('NEGATIVO', 'tableCell'),
             ]] : []),
             ...(antidoping.opiaceos ? [[
-              createTableCell('OPIACEOS', 'sectionHeader'),
+              createTableCell('OPIACEOS (OPI)', 'sectionHeader'),
               createConditionalTableCell(antidoping.opiaceos),
               createTableCell('NEGATIVO', 'tableCell'),
             ]] : []),
             ...(antidoping.benzodiacepinas ? [[
-              createTableCell('BENZODIACEPINAS', 'sectionHeader'),
+              createTableCell('BENZODIACEPINAS (BZO)', 'sectionHeader'),
               createConditionalTableCell(antidoping.benzodiacepinas),
               createTableCell('NEGATIVO', 'tableCell'),
             ]] : []),
             ...(antidoping.fenciclidina ? [[
-              createTableCell('FENCICLIDINA', 'sectionHeader'),
+              createTableCell('FENCICLIDINA (PCP)', 'sectionHeader'),
               createConditionalTableCell(antidoping.fenciclidina),
               createTableCell('NEGATIVO', 'tableCell'),
             ]] : []),
             ...(antidoping.metadona ? [[
-              createTableCell('METADONA', 'sectionHeader'),
+              createTableCell('METADONA (MTD)', 'sectionHeader'),
               createConditionalTableCell(antidoping.metadona),
               createTableCell('NEGATIVO', 'tableCell'),
             ]] : []),
             ...(antidoping.barbituricos ? [[
-              createTableCell('BARBITURICOS', 'sectionHeader'),
+              createTableCell('BARBITURICOS (BAR)', 'sectionHeader'),
               createConditionalTableCell(antidoping.barbituricos),
               createTableCell('NEGATIVO', 'tableCell'),
             ]] : []),
             ...(antidoping.antidepresivosTriciclicos ? [[
-              createTableCell('ANTIDEPRESIVOS T.', 'sectionHeader'),
+              createTableCell('ANTIDEPRESIVOS T. (TCA)', 'sectionHeader'),
               createConditionalTableCell(antidoping.antidepresivosTriciclicos),
+              createTableCell('NEGATIVO', 'tableCell'),
+            ]] : []),
+            ...(antidoping.metilendioximetanfetamina ? [[
+              createTableCell('METILENDIOXIMETANFETAMINA (MDMA)', 'sectionHeader'),
+              createConditionalTableCell(antidoping.metilendioximetanfetamina),
+              createTableCell('NEGATIVO', 'tableCell'),
+            ]] : []),
+            ...(antidoping.ketamina ? [[
+              createTableCell('KETAMINA (KET)', 'sectionHeader'),
+              createConditionalTableCell(antidoping.ketamina),
               createTableCell('NEGATIVO', 'tableCell'),
             ]] : []),
           ],
