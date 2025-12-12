@@ -8,6 +8,7 @@ const nivelesEscolaridad = [
   "Primaria",
   "Secundaria",
   "Preparatoria",
+  "Diversificado",
   "Licenciatura",
   "Maestría",
   "Doctorado",
@@ -72,13 +73,13 @@ export class CreateTrabajadorDto {
     @ApiProperty({
       description: 'Último nivel de estudios completado',
       enum: nivelesEscolaridad,
-      example: 'Preparatoria'
+    example: 'Diversificado'
     })
     @IsString({ message: 'La escolaridad debe ser un string' })
     @IsNotEmpty({ message: 'La escolaridad no puede estar vacía' })
     @IsEnum(nivelesEscolaridad, {
-      message:
-        'La escolaridad debe ser Primaria, Secundaria, Preparatoria, Licenciatura, Maestría, Doctorado o Nula',
+        message:
+        'La escolaridad debe ser Primaria, Secundaria, Preparatoria, Diversificado, Licenciatura, Maestría, Doctorado o Nula',
     })
     escolaridad: string;
 

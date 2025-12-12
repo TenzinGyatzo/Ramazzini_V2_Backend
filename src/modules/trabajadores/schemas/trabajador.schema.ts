@@ -9,6 +9,7 @@ const nivelesEscolaridad = [
   "Primaria",
   "Secundaria",
   "Preparatoria",
+  "Diversificado",
   "Licenciatura",
   "Maestría",
   "Doctorado",
