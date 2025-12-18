@@ -9,6 +9,9 @@ import moment from 'moment';
 import * as xlsx from 'xlsx';
 import { format } from 'date-fns';
 import { calcularEdad, calcularAntiguedad } from 'src/utils/dates';
+import { validateCURP } from 'src/utils/curp-validator.util';
+import { NOM024ComplianceUtil } from 'src/utils/nom024-compliance.util';
+import { CatalogsService } from '../catalogs/catalogs.service';
 import { Antidoping } from '../expedientes/schemas/antidoping.schema';
 import { AptitudPuesto } from '../expedientes/schemas/aptitud-puesto.schema';
 import { Audiometria } from '../expedientes/schemas/audiometria.schema';
@@ -48,7 +51,172 @@ export class TrabajadoresService {
   @InjectModel(CentroTrabajo.name) private centroTrabajoModel: Model<CentroTrabajo>,
   @InjectModel(User.name) private userModel: Model<User>,
   @InjectModel(Empresa.name) private empresaModel: Model<Empresa>,
-  private filesService: FilesService) {}
+  private filesService: FilesService,
+  private nom024Util: NOM024ComplianceUtil,
+  private catalogsService: CatalogsService) {}
+
+  /**
+   * Get proveedorSaludId from idCentroTrabajo
+   * CentroTrabajo -> Empresa -> ProveedorSalud
+   */
+  private async getProveedorSaludIdFromCentroTrabajo(idCentroTrabajo: string): Promise<string | null> {
+    try {
+      const centroTrabajo = await this.centroTrabajoModel.findById(idCentroTrabajo).lean();
+      if (!centroTrabajo || !centroTrabajo.idEmpresa) {
+        return null;
+      }
+
+      const empresa = await this.empresaModel.findById(centroTrabajo.idEmpresa).lean();
+      if (!empresa || !empresa.idProveedorSalud) {
+        return null;
+      }
+
+      return empresa.idProveedorSalud.toString();
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Validate NOM-024 person identification fields (MX providers only)
+   */
+  private async validateNOM024PersonFields(
+    dto: CreateTrabajadorDto | UpdateTrabajadorDto,
+    proveedorSaludId: string | null
+  ): Promise<void> {
+    if (!proveedorSaludId) {
+      // If we can't determine provider, allow (backward compatibility)
+      return;
+    }
+
+    const requiresCompliance = await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+
+    if (!requiresCompliance) {
+      // Non-MX provider: fields are optional, no validation needed
+      return;
+    }
+
+    // MX provider: validate required fields and catalog codes
+    const errors: string[] = [];
+
+    // 1. Validate entidadNacimiento (required for MX)
+    if (!dto.entidadNacimiento || dto.entidadNacimiento.trim() === '') {
+      errors.push('Entidad de nacimiento es obligatoria para proveedores en México (NOM-024)');
+    } else {
+      const entidadNac = dto.entidadNacimiento.trim().toUpperCase();
+      // Allow edge case codes: NE (Extranjero), 00 (No disponible)
+      if (entidadNac !== 'NE' && entidadNac !== '00') {
+        const isValid = await this.catalogsService.validateINEGI('estado', entidadNac);
+        if (!isValid) {
+          errors.push(`Entidad de nacimiento inválida: ${entidadNac}. Debe ser código INEGI válido (01-32, NE, o 00)`);
+        }
+      }
+    }
+
+    // 2. Validate nacionalidad (required for MX)
+    if (!dto.nacionalidad || dto.nacionalidad.trim() === '') {
+      errors.push('Nacionalidad es obligatoria para proveedores en México (NOM-024)');
+    } else {
+      const nacionalidad = dto.nacionalidad.trim().toUpperCase();
+      // Allow edge case code: NND (No disponible)
+      if (nacionalidad !== 'NND') {
+        const isValid = await this.catalogsService.validateNacionalidad(nacionalidad);
+        if (!isValid) {
+          errors.push(`Nacionalidad inválida: ${nacionalidad}. Debe ser código RENAPO válido (ej: MEX, USA, NND)`);
+        }
+      }
+    }
+
+    // 3. Validate entidadResidencia (required for MX)
+    if (!dto.entidadResidencia || dto.entidadResidencia.trim() === '') {
+      errors.push('Entidad de residencia es obligatoria para proveedores en México (NOM-024)');
+    } else {
+      const entidadRes = dto.entidadResidencia.trim().toUpperCase();
+      // Allow edge case codes: NE (Extranjero), 00 (No disponible)
+      if (entidadRes !== 'NE' && entidadRes !== '00') {
+        const isValid = await this.catalogsService.validateINEGI('estado', entidadRes);
+        if (!isValid) {
+          errors.push(`Entidad de residencia inválida: ${entidadRes}. Debe ser código INEGI válido (01-32, NE, o 00)`);
+        }
+      }
+    }
+
+    // 4. Validate municipioResidencia (required for MX if entidadResidencia is valid)
+    if (dto.entidadResidencia && dto.entidadResidencia.trim() !== '' && 
+        dto.entidadResidencia.trim().toUpperCase() !== 'NE' && 
+        dto.entidadResidencia.trim().toUpperCase() !== '00') {
+      if (!dto.municipioResidencia || dto.municipioResidencia.trim() === '') {
+        errors.push('Municipio de residencia es obligatorio para proveedores en México cuando se especifica entidad de residencia (NOM-024)');
+      } else {
+        const municipioRes = dto.municipioResidencia.trim();
+        const entidadRes = dto.entidadResidencia.trim().toUpperCase();
+        // Hierarchical validation: municipio must belong to estado
+        const isValid = await this.catalogsService.validateINEGI('municipio', municipioRes, entidadRes);
+        if (!isValid) {
+          errors.push(`Municipio de residencia inválido: ${municipioRes}. No pertenece a la entidad ${entidadRes}`);
+        }
+      }
+    }
+
+    // 5. Validate localidadResidencia (required for MX if municipioResidencia is provided)
+    if (dto.municipioResidencia && dto.municipioResidencia.trim() !== '') {
+      if (!dto.localidadResidencia || dto.localidadResidencia.trim() === '') {
+        errors.push('Localidad de residencia es obligatoria para proveedores en México cuando se especifica municipio de residencia (NOM-024)');
+      } else {
+        const localidadRes = dto.localidadResidencia.trim();
+        const municipioRes = dto.municipioResidencia.trim();
+        const entidadRes = dto.entidadResidencia?.trim().toUpperCase() || '';
+        
+        // Hierarchical validation: localidad must belong to municipio (within estado)
+        if (entidadRes && entidadRes !== 'NE' && entidadRes !== '00') {
+          const parentKey = `${entidadRes}-${municipioRes}`;
+          const isValid = await this.catalogsService.validateINEGI('localidad', localidadRes, parentKey);
+          if (!isValid) {
+            errors.push(`Localidad de residencia inválida: ${localidadRes}. No pertenece al municipio ${municipioRes} de la entidad ${entidadRes}`);
+          }
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new BadRequestException(errors.join('; '));
+    }
+  }
+
+  /**
+   * Validate CURP according to NOM-024 requirements (MX providers only)
+   */
+  private async validateCURPForMX(curp: string | undefined, proveedorSaludId: string | null): Promise<void> {
+    if (!proveedorSaludId) {
+      // If we can't determine provider, allow (backward compatibility)
+      return;
+    }
+
+    const requiresCompliance = await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+
+    if (requiresCompliance) {
+      // MX provider: CURP is mandatory and must be valid
+      if (!curp || curp.trim() === '') {
+        throw new BadRequestException('CURP es obligatorio para proveedores de salud en México (NOM-024)');
+      }
+
+      // Normalize CURP (uppercase, trim)
+      const normalizedCurp = curp.trim().toUpperCase();
+      const validation = validateCURP(normalizedCurp);
+
+      if (!validation.isValid) {
+        throw new BadRequestException(`CURP inválido: ${validation.errors.join(', ')}`);
+      }
+    } else {
+      // Non-MX provider: CURP is optional, but if provided, it should be valid format
+      if (curp && curp.trim() !== '') {
+        const normalizedCurp = curp.trim().toUpperCase();
+        const formatValidation = validateCURP(normalizedCurp);
+        // For non-MX, we allow invalid format but log a warning
+        // This maintains backward compatibility
+      }
+    }
+  }
 
   async create(createTrabajadorDto: CreateTrabajadorDto): Promise<Trabajador> {
     const normalizedDto = normalizeTrabajadorData(createTrabajadorDto);
@@ -56,6 +224,25 @@ export class TrabajadoresService {
     // Validar unicidad del número de empleado a nivel empresa si se proporciona
     if (normalizedDto.numeroEmpleado) {
       await this.validateNumeroEmpleadoUniqueness(normalizedDto.numeroEmpleado, normalizedDto.idCentroTrabajo);
+    }
+
+    // Validate NOM-024 fields for MX providers
+    const proveedorSaludId = await this.getProveedorSaludIdFromCentroTrabajo(normalizedDto.idCentroTrabajo);
+    await this.validateNOM024PersonFields(normalizedDto, proveedorSaludId);
+    await this.validateCURPForMX(normalizedDto.curp, proveedorSaludId);
+
+    // Normalize fields to uppercase if provided
+    if (normalizedDto.curp) {
+      normalizedDto.curp = normalizedDto.curp.trim().toUpperCase();
+    }
+    if (normalizedDto.entidadNacimiento) {
+      normalizedDto.entidadNacimiento = normalizedDto.entidadNacimiento.trim().toUpperCase();
+    }
+    if (normalizedDto.nacionalidad) {
+      normalizedDto.nacionalidad = normalizedDto.nacionalidad.trim().toUpperCase();
+    }
+    if (normalizedDto.entidadResidencia) {
+      normalizedDto.entidadResidencia = normalizedDto.entidadResidencia.trim().toUpperCase();
     }
     
     try {
@@ -652,18 +839,48 @@ export class TrabajadoresService {
   async update(id: string, updateTrabajadorDto: UpdateTrabajadorDto): Promise<Trabajador> {
     const normalizedDto = normalizeTrabajadorData(updateTrabajadorDto);
     
+    // Obtener el trabajador actual
+    const trabajadorActual = await this.trabajadorModel.findById(id).exec();
+    if (!trabajadorActual) {
+      throw new BadRequestException('Trabajador no encontrado');
+    }
+
     // Validar unicidad del número de empleado a nivel empresa si se proporciona
     if (normalizedDto.numeroEmpleado) {
-      // Obtener el trabajador actual para verificar si está cambiando el número
-      const trabajadorActual = await this.trabajadorModel.findById(id).exec();
-      if (!trabajadorActual) {
-        throw new BadRequestException('Trabajador no encontrado');
-      }
-      
       // Solo validar si el número está cambiando
       if (trabajadorActual.numeroEmpleado !== normalizedDto.numeroEmpleado) {
         await this.validateNumeroEmpleadoUniqueness(normalizedDto.numeroEmpleado, trabajadorActual.idCentroTrabajo.toString());
       }
+    }
+
+    // Validate NOM-024 fields for MX providers (use idCentroTrabajo from current worker if not updated)
+    const idCentroTrabajo = normalizedDto.idCentroTrabajo || trabajadorActual.idCentroTrabajo.toString();
+    const proveedorSaludId = await this.getProveedorSaludIdFromCentroTrabajo(idCentroTrabajo);
+    
+    // Merge current worker data with update DTO for validation
+    const mergedDto = {
+      ...trabajadorActual.toObject(),
+      ...normalizedDto,
+    } as CreateTrabajadorDto;
+    
+    await this.validateNOM024PersonFields(mergedDto, proveedorSaludId);
+    
+    // Use updated CURP if provided, otherwise use current CURP for validation
+    const curpToValidate = normalizedDto.curp !== undefined ? normalizedDto.curp : trabajadorActual.curp;
+    await this.validateCURPForMX(curpToValidate, proveedorSaludId);
+
+    // Normalize fields to uppercase if provided
+    if (normalizedDto.curp) {
+      normalizedDto.curp = normalizedDto.curp.trim().toUpperCase();
+    }
+    if (normalizedDto.entidadNacimiento) {
+      normalizedDto.entidadNacimiento = normalizedDto.entidadNacimiento.trim().toUpperCase();
+    }
+    if (normalizedDto.nacionalidad) {
+      normalizedDto.nacionalidad = normalizedDto.nacionalidad.trim().toUpperCase();
+    }
+    if (normalizedDto.entidadResidencia) {
+      normalizedDto.entidadResidencia = normalizedDto.entidadResidencia.trim().toUpperCase();
     }
     
     return await this.trabajadorModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();

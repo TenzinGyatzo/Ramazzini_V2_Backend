@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
 import { User } from 'src/modules/users/entities/user.entity';
+import { DocumentoEstado } from '../enums/documento-estado.enum';
 
 const siONo = ["Si", "No"];
 
@@ -312,7 +313,20 @@ export class HistoriaClinica extends Document {
 
     // Resumen de la historia clínica
     @Prop()
-    resumenHistoriaClinica: string;
+    resumenHistoriaClinica: string; // Free-text summary (kept for backward compatibility)
+
+    // NOM-024: CIE-10 Diagnosis Codes
+    @Prop({ 
+        required: false,
+        match: /^$|^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, // CIE-10 format: A00.0 or A00
+    })
+    codigoCIE10Principal?: string;
+
+    @Prop({ 
+        type: [String],
+        required: false,
+    })
+    codigosCIE10Secundarios?: string[];
 
     // Trabajador, ruta al archivo e info de creador y actualizador
     @Prop({
@@ -330,6 +344,20 @@ export class HistoriaClinica extends Document {
 
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
     updatedBy: User;
+
+    // Document State Management (NOM-024)
+    @Prop({ 
+        enum: DocumentoEstado, 
+        required: true, 
+        default: DocumentoEstado.BORRADOR 
+    })
+    estado: DocumentoEstado;
+
+    @Prop({ required: false })
+    fechaFinalizacion?: Date;
+
+    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
+    finalizadoPor?: User;
 }
 
 export const HistoriaClinicaSchema = SchemaFactory.createForClass(HistoriaClinica).set('timestamps', true);

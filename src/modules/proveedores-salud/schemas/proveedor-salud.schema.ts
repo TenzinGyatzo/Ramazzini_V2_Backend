@@ -22,6 +22,13 @@ export class ProveedorSalud extends Document {
   pais: string;
   @Prop({ required: true, enum: perfiles })
   perfilProveedorSalud: string;
+  // NOM-024: CLUES (Clave Única de Establecimiento de Salud)
+  // 11 alphanumeric characters, required for MX providers
+  @Prop({ 
+    required: false,
+    match: /^$|^[A-Z0-9]{11}$/,
+  })
+  clues?: string;
   @Prop({
     type: {
       data: { type: String },

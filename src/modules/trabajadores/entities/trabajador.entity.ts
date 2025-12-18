@@ -17,6 +17,11 @@ export class Trabajador extends Document {
     numeroEmpleado: string;
     nss: string;
     curp: string;
+    entidadNacimiento?: string;
+    nacionalidad?: string;
+    entidadResidencia?: string;
+    municipioResidencia?: string;
+    localidadResidencia?: string;
     agentesRiesgoActuales: string;
     estadoLaboral: string;
     idCentroTrabajo: CentroTrabajo | string;

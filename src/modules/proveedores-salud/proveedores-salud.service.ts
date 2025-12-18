@@ -1,17 +1,111 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { CreateProveedoresSaludDto } from './dto/create-proveedores-salud.dto';
 import { UpdateProveedoresSaludDto } from './dto/update-proveedores-salud.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ProveedorSalud } from './schemas/proveedor-salud.schema';
 import { Model, Types } from 'mongoose';
 import { normalizeProveedorSaludData } from 'src/utils/normalization';
+import { NOM024ComplianceUtil } from 'src/utils/nom024-compliance.util';
+import { CatalogsService } from '../catalogs/catalogs.service';
 
 @Injectable()
 export class ProveedoresSaludService {
-  constructor(@InjectModel(ProveedorSalud.name) private proveedoresSaludModel: Model<ProveedorSalud>) {}
+  constructor(
+    @InjectModel(ProveedorSalud.name) private proveedoresSaludModel: Model<ProveedorSalud>,
+    @Inject(forwardRef(() => NOM024ComplianceUtil))
+    private nom024Util: NOM024ComplianceUtil,
+    private catalogsService: CatalogsService,
+  ) {}
+
+  /**
+   * Validate CLUES according to NOM-024 requirements (MX providers only)
+   * Used for update operations where we have the proveedorSaludId
+   */
+  private async validateCLUESForMX(clues: string | undefined, proveedorSaludId: string): Promise<void> {
+    const requiresCompliance = await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+
+    if (requiresCompliance) {
+      // MX provider: CLUES is mandatory and must be valid
+      if (!clues || clues.trim() === '') {
+        throw new BadRequestException('CLUES es obligatorio para proveedores de salud en México (NOM-024)');
+      }
+
+      const normalizedClues = clues.trim().toUpperCase();
+
+      // Validate format (11 alphanumeric characters)
+      if (!/^[A-Z0-9]{11}$/.test(normalizedClues)) {
+        throw new BadRequestException('CLUES debe tener exactamente 11 caracteres alfanuméricos');
+      }
+
+      // Validate against catalog
+      const isValid = await this.catalogsService.validateCLUES(normalizedClues);
+      if (!isValid) {
+        throw new BadRequestException(`CLUES inválido: ${normalizedClues}. No se encuentra en el catálogo de establecimientos de salud`);
+      }
+
+      // Validate that establishment is in operation
+      const isInOperation = await this.catalogsService.validateCLUESInOperation(normalizedClues);
+      if (!isInOperation) {
+        const cluesEntry = await this.catalogsService.getCLUESEntry(normalizedClues);
+        const estatus = cluesEntry?.estatus || 'Desconocido';
+        throw new BadRequestException(`CLUES ${normalizedClues} no está en operación. Estatus actual: ${estatus}`);
+      }
+    } else {
+      // Non-MX provider: CLUES is optional, but if provided, validate format
+      if (clues && clues.trim() !== '') {
+        const normalizedClues = clues.trim().toUpperCase();
+        if (!/^[A-Z0-9]{11}$/.test(normalizedClues)) {
+          throw new BadRequestException('CLUES debe tener exactamente 11 caracteres alfanuméricos');
+        }
+        // For non-MX, we don't validate against catalog (backward compatibility)
+      }
+    }
+  }
 
   async create(createProveedoresSaludDto: CreateProveedoresSaludDto): Promise<ProveedorSalud> {
     const normalizedDto = normalizeProveedorSaludData(createProveedoresSaludDto);
+
+    // Validate CLUES for MX providers
+    // Check directly from pais field since we're creating a new provider
+    const isMX = normalizedDto.pais && normalizedDto.pais.toUpperCase() === 'MX';
+    
+    if (isMX) {
+      // MX provider: CLUES is mandatory and must be valid
+      if (!normalizedDto.clues || normalizedDto.clues.trim() === '') {
+        throw new BadRequestException('CLUES es obligatorio para proveedores de salud en México (NOM-024)');
+      }
+
+      const normalizedClues = normalizedDto.clues.trim().toUpperCase();
+
+      // Validate format (11 alphanumeric characters)
+      if (!/^[A-Z0-9]{11}$/.test(normalizedClues)) {
+        throw new BadRequestException('CLUES debe tener exactamente 11 caracteres alfanuméricos');
+      }
+
+      // Validate against catalog
+      const isValid = await this.catalogsService.validateCLUES(normalizedClues);
+      if (!isValid) {
+        throw new BadRequestException(`CLUES inválido: ${normalizedClues}. No se encuentra en el catálogo de establecimientos de salud`);
+      }
+
+      // Validate that establishment is in operation
+      const isInOperation = await this.catalogsService.validateCLUESInOperation(normalizedClues);
+      if (!isInOperation) {
+        const cluesEntry = await this.catalogsService.getCLUESEntry(normalizedClues);
+        const estatus = cluesEntry?.estatus || 'Desconocido';
+        throw new BadRequestException(`CLUES ${normalizedClues} no está en operación. Estatus actual: ${estatus}`);
+      }
+
+      normalizedDto.clues = normalizedClues;
+    } else if (normalizedDto.clues) {
+      // Non-MX but CLUES provided: validate format only
+      const normalizedClues = normalizedDto.clues.trim().toUpperCase();
+      if (!/^[A-Z0-9]{11}$/.test(normalizedClues)) {
+        throw new BadRequestException('CLUES debe tener exactamente 11 caracteres alfanuméricos');
+      }
+      normalizedDto.clues = normalizedClues;
+    }
+
     const createdProveedorSalud = new this.proveedoresSaludModel(normalizedDto);
     return createdProveedorSalud.save();
   }
@@ -36,6 +130,34 @@ export class ProveedoresSaludService {
     if (!proveedor) throw new Error('Proveedor de salud no encontrado');
 
     const normalizedDto = normalizeProveedorSaludData(updateDto);
+
+    // Validate CLUES for MX providers
+    // Use current proveedor.pais or updated pais from DTO
+    const paisToCheck = normalizedDto.pais || proveedor.pais;
+    const isMX = paisToCheck && paisToCheck.toUpperCase() === 'MX';
+    
+    if (isMX) {
+      // Use current CLUES if not being updated, otherwise use new CLUES
+      const cluesToValidate = normalizedDto.clues !== undefined ? normalizedDto.clues : proveedor.clues;
+      await this.validateCLUESForMX(cluesToValidate, id);
+      
+      // Normalize CLUES if being updated
+      if (normalizedDto.clues) {
+        normalizedDto.clues = normalizedDto.clues.trim().toUpperCase();
+      }
+    } else if (normalizedDto.clues) {
+      // Non-MX but CLUES provided: validate format only
+      const normalizedClues = normalizedDto.clues.trim().toUpperCase();
+      if (!/^[A-Z0-9]{11}$/.test(normalizedClues)) {
+        throw new BadRequestException('CLUES debe tener exactamente 11 caracteres alfanuméricos');
+      }
+      normalizedDto.clues = normalizedClues;
+    }
+
+    // Normalize CLUES to uppercase if provided
+    if (normalizedDto.clues) {
+      normalizedDto.clues = normalizedDto.clues.trim().toUpperCase();
+    }
 
     // ✅ Asegura que también se actualicen los valores vacíos como ""
     for (const key in normalizedDto) {

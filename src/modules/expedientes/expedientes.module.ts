@@ -17,10 +17,15 @@ import { HistoriaOtologica, HistoriaOtologicaSchema } from './schemas/historia-o
 import { PrevioEspirometria, PrevioEspirometriaSchema } from './schemas/previo-espirometria.schema';
 import { ConstanciaAptitud, ConstanciaAptitudSchema } from './schemas/constancia-aptitud.schema';
 import { Receta, RecetaSchema } from './schemas/receta.schema';
+import { Lesion, LesionSchema } from './schemas/lesion.schema';
 import { Trabajador, TrabajadorSchema } from '../trabajadores/schemas/trabajador.schema';
 import { InformesModule } from '../informes/informes.module';
 import { FilesModule } from '../files/files.module';
 import { PdfCleanerService } from './pdf-cleaner.service';
+import { CentroTrabajo, CentroTrabajoSchema } from '../centros-trabajo/schemas/centro-trabajo.schema';
+import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
+import { NOM024ComplianceModule } from '../nom024-compliance/nom024-compliance.module';
+import { CatalogsModule } from '../catalogs/catalogs.module';
 
 @Module({
   controllers: [ExpedientesController],
@@ -43,9 +48,14 @@ import { PdfCleanerService } from './pdf-cleaner.service';
       { name: ConstanciaAptitud.name, schema: ConstanciaAptitudSchema },
       { name: Trabajador.name, schema: TrabajadorSchema },
       { name: Receta.name, schema: RecetaSchema },
+      { name: Lesion.name, schema: LesionSchema },
+      { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
+      { name: Empresa.name, schema: EmpresaSchema },
     ]),
     forwardRef(() => InformesModule),
-    FilesModule, // Nuevo módulo
+    FilesModule,
+    NOM024ComplianceModule,
+    CatalogsModule,
   ],
   exports: [ExpedientesService]
 })

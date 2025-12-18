@@ -66,8 +66,50 @@ export class Trabajador extends Document {
     @Prop({ required: false, match: /^$|^[A-Za-z0-9\s\-_.\/]{4,30}$/, unique: false })
     nss: string;
 
-    @Prop({ required: false, match: /^$|^[A-Za-z0-9\s\-_.\/#]{4,30}$/, unique: false })
+    @Prop({ 
+      required: false, 
+      // RENAPO format: [A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d (18 chars, uppercase)
+      // Allow empty string for non-MX providers, but enforce strict format when provided
+      match: /^$|^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/, 
+      unique: false 
+    })
     curp: string;
+
+    // NOM-024 Person Identification Fields
+    // Entidad de nacimiento (INEGI state code, 2 chars): 01-32, NE (Extranjero), 00 (No disponible)
+    @Prop({ 
+      required: false,
+      match: /^$|^(0[1-9]|[12][0-9]|3[0-2]|NE|00)$/,
+    })
+    entidadNacimiento?: string;
+
+    // Nacionalidad (RENAPO nationality code, 3 chars): e.g., MEX, USA, NND (No disponible)
+    @Prop({ 
+      required: false,
+      match: /^$|^[A-Z]{3}$/,
+    })
+    nacionalidad?: string;
+
+    // Entidad de residencia (INEGI state code, 2 chars): 01-32, NE (Extranjero), 00 (No disponible)
+    @Prop({ 
+      required: false,
+      match: /^$|^(0[1-9]|[12][0-9]|3[0-2]|NE|00)$/,
+    })
+    entidadResidencia?: string;
+
+    // Municipio de residencia (INEGI municipality code, 3 chars): 001-999
+    @Prop({ 
+      required: false,
+      match: /^$|^[0-9]{3}$/,
+    })
+    municipioResidencia?: string;
+
+    // Localidad de residencia (INEGI locality code, 4 chars): 0001-9999
+    @Prop({ 
+      required: false,
+      match: /^$|^[0-9]{4}$/,
+    })
+    localidadResidencia?: string;
     
     @Prop({ required: false, default: [] })
     agentesRiesgoActuales: string[];

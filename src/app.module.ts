@@ -23,6 +23,8 @@ import { PagosModule } from './modules/pagos/pagos.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RiesgosTrabajoModule } from './modules/riesgos-trabajo/riesgos-trabajo.module';
 import { InformePersonalizacionModule } from './modules/informe-personalizacion/informe-personalizacion.module';
+import { CatalogsModule } from './modules/catalogs/catalogs.module';
+import { NOM024ComplianceModule } from './modules/nom024-compliance/nom024-compliance.module';
 
 @Module({
   imports: [
@@ -46,6 +48,8 @@ import { InformePersonalizacionModule } from './modules/informe-personalizacion/
       serveRoot: '/expedientes-medicos', // Prefijo en la URL
     }),
 
+    CatalogsModule,
+    NOM024ComplianceModule,
     EmpresasModule,
     CentrosTrabajoModule,
     TrabajadoresModule,

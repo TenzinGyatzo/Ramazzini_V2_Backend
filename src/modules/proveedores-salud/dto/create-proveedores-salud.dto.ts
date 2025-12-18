@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsBoolean, IsNumber, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsBoolean, IsNumber, IsArray, ValidateNested, Matches } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 const perfiles = [
@@ -38,6 +38,14 @@ export class CreateProveedoresSaludDto {
   @IsNotEmpty({ message: 'El perfil del proveedor de salud no puede estar vacío' })
   @IsEnum(perfiles, { message: 'El perfil del proveedor de salud debe ser uno de los valores predefinidos' })
   perfilProveedorSalud: string;
+
+  @IsOptional()
+  @IsString({ message: 'El CLUES debe ser un string' })
+  @Matches(/^$|^[A-Z0-9]{11}$/, {
+    message: 'CLUES debe tener exactamente 11 caracteres alfanuméricos (solo letras mayúsculas y números)'
+  })
+  @Transform(({ value }) => value?.toString().toUpperCase().trim() || '')
+  clues?: string;
 
   @IsOptional()
   @Type(() => LogotipoDto)

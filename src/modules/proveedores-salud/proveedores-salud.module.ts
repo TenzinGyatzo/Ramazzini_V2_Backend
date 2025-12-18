@@ -6,7 +6,9 @@ import { ProveedorSalud, ProveedorSaludSchema } from './schemas/proveedor-salud.
 
 @Module({
   imports: [
-      MongooseModule.forFeature([{ name: ProveedorSalud.name, schema: ProveedorSaludSchema }]), 
+      MongooseModule.forFeature([{ name: ProveedorSalud.name, schema: ProveedorSaludSchema }]),
+      // Note: NOM024ComplianceModule and CatalogsModule are @Global() modules
+      // They are available throughout the application without explicit import
   ],
   controllers: [ProveedoresSaludController],
   providers: [ProveedoresSaludService],

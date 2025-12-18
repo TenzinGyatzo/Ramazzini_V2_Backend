@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, IsArray, Matches } from "class-validator";
 
 const siONo = ["Si", "No"];
 
@@ -425,7 +425,21 @@ export class CreateHistoriaClinicaDto {
     // Resumen de la Historia Clinica
     @IsOptional()
     @IsString({ message: 'resumenHistoriaClinica debe ser un string' })
-    resumenHistoriaClinica: string;
+    resumenHistoriaClinica: string; // Free-text summary (backward compatibility)
+
+    // NOM-024: CIE-10 Diagnosis Codes
+    @IsOptional()
+    @IsString({ message: 'El código CIE-10 principal debe ser un string' })
+    @Matches(/^$|^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, {
+        message: 'El código CIE-10 principal debe tener el formato A00.0 o A00 (letra seguida de 2-3 dígitos opcionalmente con punto y 1-2 dígitos)'
+    })
+    codigoCIE10Principal?: string;
+
+    @IsOptional()
+    @IsArray({ message: 'Los códigos CIE-10 secundarios deben ser un array' })
+    @IsString({ each: true, message: 'Cada código CIE-10 secundario debe ser un string' })
+    @Matches(/^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, { each: true, message: 'Cada código CIE-10 secundario debe tener el formato A00.0 o A00' })
+    codigosCIE10Secundarios?: string[];
 
     // Trabajador, ruta al archivo e info de creador y actualizador
     @ApiProperty({

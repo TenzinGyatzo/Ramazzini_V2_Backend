@@ -4,6 +4,7 @@ import { TrabajadoresService } from './trabajadores.service';
 import { TrabajadoresController } from './trabajadores.controller';
 import { TransferenciasController } from './transferencias.controller';
 import { Trabajador, TrabajadorSchema } from './schemas/trabajador.schema'
+import { NOM024ComplianceModule } from '../nom024-compliance/nom024-compliance.module';
 import { Antidoping, AntidopingSchema } from '../expedientes/schemas/antidoping.schema';
 import { AptitudPuesto, AptitudPuestoSchema } from '../expedientes/schemas/aptitud-puesto.schema';
 import { Certificado, CertificadoSchema } from '../expedientes/schemas/certificado.schema';
@@ -46,6 +47,7 @@ import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
       { name: Empresa.name, schema: EmpresaSchema },
     ]),
     FilesModule,
+    NOM024ComplianceModule,
   ],
   controllers: [TrabajadoresController, TransferenciasController],
   providers: [TrabajadoresService],

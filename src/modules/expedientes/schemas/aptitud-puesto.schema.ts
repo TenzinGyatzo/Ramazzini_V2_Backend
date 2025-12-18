@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
 import { User } from 'src/modules/users/entities/user.entity';
+import { DocumentoEstado } from '../enums/documento-estado.enum';
 
 const tipoAptitud = [
     "Apto Sin Restricciones",
@@ -93,6 +94,20 @@ export class AptitudPuesto extends Document {
   
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
     updatedBy: User;
+
+    // Document State Management (NOM-024)
+    @Prop({ 
+        enum: DocumentoEstado, 
+        required: true, 
+        default: DocumentoEstado.BORRADOR 
+    })
+    estado: DocumentoEstado;
+
+    @Prop({ required: false })
+    fechaFinalizacion?: Date;
+
+    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
+    finalizadoPor?: User;
 }
 
 export const AptitudPuestoSchema = SchemaFactory.createForClass(AptitudPuesto).set('timestamps', true);

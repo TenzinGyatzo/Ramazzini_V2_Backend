@@ -11,9 +11,13 @@ import {
   ValidationPipe,
   UseInterceptors,
   UploadedFile,
+  Request,
 } from '@nestjs/common';
 import { ExpedientesService } from './expedientes.service';
 import { isValidObjectId } from 'mongoose';
+import { CatalogsService } from '../catalogs/catalogs.service';
+import { CatalogType } from '../catalogs/interfaces/catalog-entry.interface';
+import { Query } from '@nestjs/common';
 import { CreateAntidopingDto } from './dto/create-antidoping.dto';
 import { UpdateAntidopingDto } from './dto/update-antidoping.dto';
 import { CreateAptitudDto } from './dto/create-aptitud.dto';
@@ -42,6 +46,8 @@ import { CreatePrevioEspirometriaDto } from './dto/create-previo-espirometria.dt
 import { UpdatePrevioEspirometriaDto } from './dto/update-previo-espirometria.dto';
 import { CreateConstanciaAptitudDto } from './dto/create-constancia-aptitud.dto';
 import { UpdateConstanciaAptitudDto } from './dto/update-constancia-aptitud.dto';
+import { CreateLesionDto } from './dto/create-lesion.dto';
+import { UpdateLesionDto } from './dto/update-lesion.dto';
 import { CreateRecetaDto } from './dto/create-receta.dto';
 import { UpdateRecetaDto } from './dto/update-receta.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -52,7 +58,10 @@ import { convertirFechaISOaDDMMYYYY } from '../../utils/dates';
 
 @Controller('api/expedientes/:trabajadorId/documentos')
 export class ExpedientesController {
-  constructor(private readonly expedientesService: ExpedientesService) {}
+  constructor(
+    private readonly expedientesService: ExpedientesService,
+    private readonly catalogsService: CatalogsService,
+  ) {}
 
   // Mapeo de los DTOs correspondientes a cada tipo de documento
   private createDtos = {
@@ -305,6 +314,164 @@ export class ExpedientesController {
     } catch (error) {
       console.error('Error detallado:', error);
       throw new BadRequestException(`Error al actualizar el ${documentType}`);
+    }
+  }
+
+  @Post(':documentType/:id/finalizar')
+  async finalizarDocumento(
+    @Param('documentType') documentType: string,
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    if (!this.expedientesService['models'] || !this.expedientesService['models'][documentType]) {
+      throw new BadRequestException(
+        `Tipo de documento ${documentType} no soportado`,
+      );
+    }
+
+    // Get userId from request (should be set by auth middleware)
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      throw new BadRequestException('Usuario no autenticado');
+    }
+
+    try {
+      const finalizedDocument = await this.expedientesService.finalizarDocumento(
+        documentType,
+        id,
+        userId,
+      );
+      return { message: `${documentType} finalizado`, data: finalizedDocument };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('cie10/search')
+  async searchCIE10(@Query('q') query: string, @Query('limit') limit?: number) {
+    if (!query || query.trim() === '') {
+      throw new BadRequestException('El parámetro de búsqueda "q" es requerido');
+    }
+
+    const searchLimit = limit ? Math.min(Math.max(1, parseInt(limit.toString())), 100) : 50;
+    const results = await this.catalogsService.searchCatalog(
+      CatalogType.CIE10,
+      query.trim(),
+      searchLimit,
+    );
+
+    return {
+      results: results.map(entry => ({
+        code: entry.code,
+        description: entry.description,
+      })),
+      count: results.length,
+    };
+  }
+
+  // GIIS-B013: Lesion CRUD Endpoints
+  @Post('lesion')
+  async createLesion(
+    @Body() createLesionDto: CreateLesionDto,
+  ) {
+    try {
+      const lesion = await this.expedientesService.createLesion(createLesionDto);
+      return { message: 'Lesión creada exitosamente', data: lesion };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('lesion/:id')
+  async findLesion(@Param('id') id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+    const lesion = await this.expedientesService.findLesion(id);
+    if (!lesion) {
+      return {
+        message: `No se encontró la lesión con id ${id}`,
+      };
+    }
+    return lesion;
+  }
+
+  @Get('lesiones/:trabajadorId')
+  async findLesionesByTrabajador(@Param('trabajadorId') trabajadorId: string) {
+    if (!isValidObjectId(trabajadorId)) {
+      throw new BadRequestException('El ID del trabajador no es válido');
+    }
+    const lesiones = await this.expedientesService.findLesionesByTrabajador(trabajadorId);
+    return lesiones;
+  }
+
+  @Patch('lesion/:id')
+  async updateLesion(
+    @Param('id') id: string,
+    @Body() updateLesionDto: UpdateLesionDto,
+  ) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    const dtoInstance = Object.assign(
+      new UpdateLesionDto(),
+      Object.fromEntries(Object.entries(updateLesionDto).filter(([_, v]) => v !== undefined))
+    );
+
+    await new ValidationPipe({ whitelist: true }).transform(dtoInstance, {
+      type: 'body',
+      metatype: UpdateLesionDto,
+    });
+
+    try {
+      const updatedLesion = await this.expedientesService.updateLesion(id, dtoInstance);
+      return { message: 'Lesión actualizada exitosamente', data: updatedLesion };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Delete('lesion/:id')
+  async deleteLesion(@Param('id') id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    const deleted = await this.expedientesService.deleteLesion(id);
+    if (!deleted) {
+      return {
+        message: `La lesión con id ${id} no existe o ya ha sido eliminada`,
+      };
+    }
+    return {
+      message: `La lesión con id ${id} ha sido eliminada exitosamente`,
+    };
+  }
+
+  @Post('lesion/:id/finalizar')
+  async finalizarLesion(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      throw new BadRequestException('Usuario no autenticado');
+    }
+
+    try {
+      const finalizedLesion = await this.expedientesService.finalizarLesion(id, userId);
+      return { message: 'Lesión finalizada exitosamente', data: finalizedLesion };
+    } catch (error) {
+      throw error;
     }
   }
   

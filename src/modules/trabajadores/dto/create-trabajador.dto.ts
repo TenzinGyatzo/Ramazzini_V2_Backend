@@ -142,16 +142,79 @@ export class CreateTrabajadorDto {
     nss?: string;
 
     @ApiProperty({
-      description: 'Identificador CURP u homólogo LATAM (opcional, permite combinación alfanumérica y separadores comunes)',
-      example: 'ROAJ850102-HNLRRN08',
+      description: 'CURP según formato RENAPO (18 caracteres). Obligatorio para proveedores MX, opcional para otros países. Formato: [A-Z]{4}\\d{6}[HM][A-Z]{5}[0-9A-Z]\\d',
+      example: 'ROAJ850102HDFLRN08',
       required: false
     })
     @IsOptional()
     @IsString({ message: 'El identificador CURP debe ser un string' })
-    @Matches(/^$|^[A-Za-z0-9\s\-_.\/#]{4,30}$/, {
-      message: 'Debe estar vacío o contener 4-30 caracteres alfanuméricos y puede incluir - _ . / # espacios'
+    // RENAPO format: [A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d (18 chars, uppercase)
+    // Allow empty for non-MX providers, but enforce strict format when provided
+    @Matches(/^$|^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/, {
+      message: 'CURP debe tener exactamente 18 caracteres en formato RENAPO: 4 letras, 6 dígitos, H o M, 5 letras, 1 alfanumérico, 1 dígito. Ejemplo: ROAJ850102HDFLRN08'
     })
     curp?: string;
+
+    // NOM-024 Person Identification Fields
+    @ApiProperty({
+      description: 'Entidad de nacimiento (código INEGI 2 dígitos: 01-32, NE para Extranjero, 00 para No disponible). Obligatorio para proveedores MX.',
+      example: '01',
+      required: false
+    })
+    @IsOptional()
+    @IsString({ message: 'La entidad de nacimiento debe ser un string' })
+    @Matches(/^$|^(0[1-9]|[12][0-9]|3[0-2]|NE|00)$/, {
+      message: 'Entidad de nacimiento debe ser código INEGI válido (01-32, NE, o 00)'
+    })
+    entidadNacimiento?: string;
+
+    @ApiProperty({
+      description: 'Nacionalidad (código RENAPO 3 letras, ej: MEX, USA, NND para No disponible). Obligatorio para proveedores MX.',
+      example: 'MEX',
+      required: false
+    })
+    @IsOptional()
+    @IsString({ message: 'La nacionalidad debe ser un string' })
+    @Matches(/^$|^[A-Z]{3}$/, {
+      message: 'Nacionalidad debe ser código RENAPO válido (3 letras mayúsculas, ej: MEX, USA, NND)'
+    })
+    nacionalidad?: string;
+
+    @ApiProperty({
+      description: 'Entidad de residencia (código INEGI 2 dígitos: 01-32, NE para Extranjero, 00 para No disponible). Obligatorio para proveedores MX.',
+      example: '01',
+      required: false
+    })
+    @IsOptional()
+    @IsString({ message: 'La entidad de residencia debe ser un string' })
+    @Matches(/^$|^(0[1-9]|[12][0-9]|3[0-2]|NE|00)$/, {
+      message: 'Entidad de residencia debe ser código INEGI válido (01-32, NE, o 00)'
+    })
+    entidadResidencia?: string;
+
+    @ApiProperty({
+      description: 'Municipio de residencia (código INEGI 3 dígitos: 001-999). Obligatorio para proveedores MX cuando entidadResidencia está presente.',
+      example: '001',
+      required: false
+    })
+    @IsOptional()
+    @IsString({ message: 'El municipio de residencia debe ser un string' })
+    @Matches(/^$|^[0-9]{3}$/, {
+      message: 'Municipio de residencia debe ser código INEGI válido (3 dígitos, ej: 001)'
+    })
+    municipioResidencia?: string;
+
+    @ApiProperty({
+      description: 'Localidad de residencia (código INEGI 4 dígitos: 0001-9999). Obligatorio para proveedores MX cuando municipioResidencia está presente.',
+      example: '0001',
+      required: false
+    })
+    @IsOptional()
+    @IsString({ message: 'La localidad de residencia debe ser un string' })
+    @Matches(/^$|^[0-9]{4}$/, {
+      message: 'Localidad de residencia debe ser código INEGI válido (4 dígitos, ej: 0001)'
+    })
+    localidadResidencia?: string;
 
     // Agentes de Riesgo
     @IsOptional()
