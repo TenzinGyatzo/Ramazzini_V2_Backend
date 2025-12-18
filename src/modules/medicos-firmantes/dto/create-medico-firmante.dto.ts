@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import {
   IsString,
   IsNotEmpty,
@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsMongoId,
   IsOptional,
+  Matches,
 } from 'class-validator';
 
 const titulos = ['Dr.', 'Dra.'];
@@ -70,5 +71,17 @@ export class CreateMedicoFirmanteDto {
   @IsMongoId({ message: 'El ID de "idUser" no es válido' })
   @IsNotEmpty({ message: 'El ID del usuario no puede estar vacío' })
   idUser: string;
+
+  // NOM-024: CURP for healthcare professionals
+  // Required for MX providers, optional for non-MX (validation in service layer)
+  @IsOptional()
+  @IsString({ message: 'El CURP debe ser un string' })
+  @Transform(({ value }) => value?.trim().toUpperCase())
+  @Matches(/^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/, {
+    message:
+      'CURP debe tener exactamente 18 caracteres con el formato: 4 letras, 6 dígitos, H/M, 5 letras, 1 alfanumérico, 1 dígito',
+  })
+  curp?: string;
+
   static firma: { data: string; contentType: string };
 }

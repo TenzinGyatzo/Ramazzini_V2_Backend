@@ -45,6 +45,7 @@ import {
 } from './schemas/constancia-aptitud.schema';
 import { Receta, RecetaSchema } from './schemas/receta.schema';
 import { Lesion, LesionSchema } from './schemas/lesion.schema';
+import { Deteccion, DeteccionSchema } from './schemas/deteccion.schema';
 import {
   Trabajador,
   TrabajadorSchema,
@@ -82,6 +83,7 @@ import { CatalogsModule } from '../catalogs/catalogs.module';
       { name: Trabajador.name, schema: TrabajadorSchema },
       { name: Receta.name, schema: RecetaSchema },
       { name: Lesion.name, schema: LesionSchema },
+      { name: Deteccion.name, schema: DeteccionSchema },
       { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
       { name: Empresa.name, schema: EmpresaSchema },
     ]),

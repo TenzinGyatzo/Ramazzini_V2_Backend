@@ -11,10 +11,26 @@ import {
 } from './interfaces/catalog-entry.interface';
 
 /**
+ * Validation result for GIIS catalog validation
+ */
+export interface GIISValidationResult {
+  valid: boolean;
+  catalogLoaded: boolean;
+  message?: string;
+}
+
+/**
  * Catalog Service
  *
  * Loads and caches NOM-024 mandatory catalogs from CSV files.
  * Provides validation and search methods for catalog entries.
+ *
+ * Supports two categories of catalogs:
+ * - BASE (10): Required catalogs that MUST be present for full functionality
+ * - GIIS (8): Optional catalogs (GIIS-B013 + GIIS-B019) that are not publicly available from DGIS
+ *
+ * GIIS catalogs are loaded opportunistically. If missing, validation methods return
+ * non-blocking results (true) and emit warnings instead of errors.
  */
 @Injectable()
 export class CatalogsService implements OnModuleInit {
@@ -28,9 +44,12 @@ export class CatalogsService implements OnModuleInit {
   private municipioCache = new Map<string, Map<string, CatalogEntry>>(); // estadoCode -> Map<municipioCode, entry>
   private localidadCache = new Map<string, Map<string, CatalogEntry>>(); // municipioKey -> Map<localidadCode, entry>
 
+  // Track which GIIS catalogs have emitted a warning (to avoid log spam)
+  private giisWarningEmitted = new Set<CatalogType>();
+
   // Catalog file mappings
-  // Note: GIIS-B013 catalogs are optional until CSV files are available
   private readonly catalogFiles: Partial<Record<CatalogType, string>> = {
+    // Base catalogs (10)
     [CatalogType.CIE10]: 'diagnosticos.csv',
     [CatalogType.CLUES]: 'establecimientos_salud.csv',
     [CatalogType.ENTIDADES_FEDERATIVAS]: 'enitades_federativas.csv',
@@ -41,12 +60,45 @@ export class CatalogsService implements OnModuleInit {
     [CatalogType.RELIGIONES]: 'cat_religiones.csv',
     [CatalogType.LENGUAS_INDIGENAS]: 'lenguas_indigenas.csv',
     [CatalogType.FORMACION_ACADEMICA]: 'formacion_academica.csv',
-    // GIIS-B013 Catalogs (optional - files may not exist yet)
+    // GIIS-B013 Catalogs (4) - Optional
     [CatalogType.SITIO_OCURRENCIA]: 'cat_sitio_ocurrencia.csv',
     [CatalogType.AGENTE_LESION]: 'cat_agente_lesion.csv',
     [CatalogType.AREA_ANATOMICA]: 'cat_area_anatomica.csv',
     [CatalogType.CONSECUENCIA]: 'cat_consecuencia.csv',
+    // GIIS-B019 Catalogs (4) - Optional
+    [CatalogType.TIPO_PERSONAL]: 'cat_tipo_personal.csv',
+    [CatalogType.SERVICIOS_DET]: 'cat_servicios_det.csv',
+    [CatalogType.AFILIACION]: 'cat_afiliacion.csv',
+    [CatalogType.PAIS]: 'cat_pais.csv',
   };
+
+  // Define which catalogs are optional (GIIS)
+  private readonly optionalCatalogs: CatalogType[] = [
+    // GIIS-B013
+    CatalogType.SITIO_OCURRENCIA,
+    CatalogType.AGENTE_LESION,
+    CatalogType.AREA_ANATOMICA,
+    CatalogType.CONSECUENCIA,
+    // GIIS-B019
+    CatalogType.TIPO_PERSONAL,
+    CatalogType.SERVICIOS_DET,
+    CatalogType.AFILIACION,
+    CatalogType.PAIS,
+  ];
+
+  // Base catalogs (required)
+  private readonly baseCatalogs: CatalogType[] = [
+    CatalogType.CIE10,
+    CatalogType.CLUES,
+    CatalogType.ENTIDADES_FEDERATIVAS,
+    CatalogType.MUNICIPIOS,
+    CatalogType.LOCALIDADES,
+    CatalogType.CODIGOS_POSTALES,
+    CatalogType.NACIONALIDADES,
+    CatalogType.RELIGIONES,
+    CatalogType.LENGUAS_INDIGENAS,
+    CatalogType.FORMACION_ACADEMICA,
+  ];
 
   async onModuleInit() {
     this.logger.log('Initializing catalog service...');
@@ -60,19 +112,11 @@ export class CatalogsService implements OnModuleInit {
   private async loadAllCatalogs(): Promise<void> {
     const catalogsPath = join(process.cwd(), 'catalogs', 'normalized');
 
-    // GIIS-B013 catalogs that may not be available (DGIS does not publish them publicly)
-    const optionalCatalogs = [
-      CatalogType.SITIO_OCURRENCIA,
-      CatalogType.AGENTE_LESION,
-      CatalogType.AREA_ANATOMICA,
-      CatalogType.CONSECUENCIA,
-    ];
-
     const loadPromises = Object.entries(this.catalogFiles)
-      .filter(([_, filename]) => filename) // Filter out undefined entries
+      .filter(([, filename]) => filename) // Filter out undefined entries
       .map(([type, filename]) => {
         const catalogType = type as CatalogType;
-        const isOptional = optionalCatalogs.includes(catalogType);
+        const isOptional = this.optionalCatalogs.includes(catalogType);
 
         return this.loadCatalog(
           catalogType,
@@ -80,7 +124,7 @@ export class CatalogsService implements OnModuleInit {
         ).catch((error) => {
           if (isOptional) {
             this.logger.warn(
-              `Optional catalog ${filename} not found (GIIS-B013 catalog not publicly available). Continuing without strict validation.`,
+              `Optional GIIS catalog ${filename} not found (DGIS does not publish these publicly). Continuing without strict validation.`,
             );
           } else {
             this.logger.error(
@@ -271,7 +315,7 @@ export class CatalogsService implements OnModuleInit {
           };
 
         default:
-          // Generic mapping for other catalogs
+          // Generic mapping for other catalogs (including GIIS catalogs)
           const code =
             record.codigo || record.code || record.CATALOG_KEY || record.CODIGO;
           const description =
@@ -350,17 +394,41 @@ export class CatalogsService implements OnModuleInit {
   }
 
   /**
-   * Log cache statistics
+   * Log cache statistics with separate base vs GIIS counts
    */
   private logCacheStatistics(): void {
+    let baseLoaded = 0;
+    let giisLoaded = 0;
+
+    for (const catalog of this.baseCatalogs) {
+      if (this.catalogCaches.has(catalog)) {
+        baseLoaded++;
+      }
+    }
+
+    for (const catalog of this.optionalCatalogs) {
+      if (this.catalogCaches.has(catalog)) {
+        giisLoaded++;
+      }
+    }
+
     this.logger.log('=== Catalog Cache Statistics ===');
+    this.logger.log(`Base catalogs loaded: ${baseLoaded}/10`);
+    this.logger.log(`GIIS optional catalogs loaded: ${giisLoaded}/8`);
+    this.logger.log('--- Detailed counts ---');
+
     for (const [type, cache] of this.catalogCaches) {
       this.logger.log(`${type}: ${cache.size} entries`);
     }
+
     this.logger.log(`Estado index: ${this.estadoCache.size} entries`);
     this.logger.log(`Municipio index: ${this.municipioCache.size} estados`);
     this.logger.log(`Localidad index: ${this.localidadCache.size} municipios`);
   }
+
+  // ===========================================================================
+  // BASE CATALOG VALIDATION METHODS
+  // ===========================================================================
 
   /**
    * Validate CIE-10 diagnostic code
@@ -501,6 +569,211 @@ export class CatalogsService implements OnModuleInit {
     return cache.has(code);
   }
 
+  // ===========================================================================
+  // GIIS-B013 CATALOG VALIDATION METHODS (Optional)
+  // ===========================================================================
+
+  /**
+   * Validate GIIS Sitio de Ocurrencia code (GIIS-B013)
+   *
+   * If catalog is not loaded, returns a non-blocking result (valid=true).
+   */
+  validateGIISSitioOcurrencia(code: number | string): GIISValidationResult {
+    return this.validateGIISCatalog(
+      CatalogType.SITIO_OCURRENCIA,
+      code,
+      'Sitio Ocurrencia',
+    );
+  }
+
+  /**
+   * Validate GIIS Agente de Lesión code (GIIS-B013)
+   *
+   * If catalog is not loaded, returns a non-blocking result (valid=true).
+   */
+  validateGIISAgenteLesion(code: number | string): GIISValidationResult {
+    return this.validateGIISCatalog(
+      CatalogType.AGENTE_LESION,
+      code,
+      'Agente Lesión',
+    );
+  }
+
+  /**
+   * Validate GIIS Area Anatómica code (GIIS-B013)
+   *
+   * If catalog is not loaded, returns a non-blocking result (valid=true).
+   */
+  validateGIISAreaAnatomica(code: number | string): GIISValidationResult {
+    return this.validateGIISCatalog(
+      CatalogType.AREA_ANATOMICA,
+      code,
+      'Area Anatómica',
+    );
+  }
+
+  /**
+   * Validate GIIS Consecuencia code (GIIS-B013)
+   *
+   * If catalog is not loaded, returns a non-blocking result (valid=true).
+   */
+  validateGIISConsecuencia(code: number | string): GIISValidationResult {
+    return this.validateGIISCatalog(
+      CatalogType.CONSECUENCIA,
+      code,
+      'Consecuencia',
+    );
+  }
+
+  // ===========================================================================
+  // GIIS-B019 CATALOG VALIDATION METHODS (Optional)
+  // ===========================================================================
+
+  /**
+   * Validate GIIS Tipo de Personal code (GIIS-B019)
+   *
+   * If catalog is not loaded, returns a non-blocking result (valid=true).
+   */
+  validateGIISTipoPersonal(code: number | string): GIISValidationResult {
+    return this.validateGIISCatalog(
+      CatalogType.TIPO_PERSONAL,
+      code,
+      'Tipo Personal',
+    );
+  }
+
+  /**
+   * Validate GIIS Servicios de Detección code (GIIS-B019)
+   *
+   * If catalog is not loaded, returns a non-blocking result (valid=true).
+   */
+  validateGIISServiciosDet(code: number | string): GIISValidationResult {
+    return this.validateGIISCatalog(
+      CatalogType.SERVICIOS_DET,
+      code,
+      'Servicios Det',
+    );
+  }
+
+  /**
+   * Validate GIIS Afiliación code (GIIS-B019)
+   *
+   * If catalog is not loaded, returns a non-blocking result (valid=true).
+   */
+  validateGIISAfiliacion(code: number | string): GIISValidationResult {
+    return this.validateGIISCatalog(CatalogType.AFILIACION, code, 'Afiliación');
+  }
+
+  /**
+   * Validate GIIS País code (GIIS-B019)
+   *
+   * If catalog is not loaded, returns a non-blocking result (valid=true).
+   */
+  validateGIISPais(code: number | string): GIISValidationResult {
+    return this.validateGIISCatalog(CatalogType.PAIS, code, 'País');
+  }
+
+  // ===========================================================================
+  // GENERIC GIIS VALIDATION HELPER
+  // ===========================================================================
+
+  /**
+   * Generic GIIS catalog validation
+   *
+   * Behavior:
+   * - If catalog loaded: validates code exists (returns valid=true/false)
+   * - If catalog NOT loaded: returns valid=true (non-blocking) + emits single WARN per process lifetime
+   */
+  private validateGIISCatalog(
+    catalogType: CatalogType,
+    code: number | string,
+    catalogName: string,
+  ): GIISValidationResult {
+    const cache = this.catalogCaches.get(catalogType);
+    const codeStr = String(code);
+
+    if (!cache) {
+      // Catalog not loaded - return non-blocking result
+      // Emit warning only once per catalog type per process lifetime
+      if (!this.giisWarningEmitted.has(catalogType)) {
+        this.logger.warn(
+          `GIIS catalog "${catalogName}" not loaded. ` +
+            `Validation bypassed for code: ${codeStr}. ` +
+            `This warning will not repeat for this catalog type.`,
+        );
+        this.giisWarningEmitted.add(catalogType);
+      }
+
+      return {
+        valid: true, // Non-blocking
+        catalogLoaded: false,
+        message: `Optional GIIS catalog "${catalogName}" not available. Validation bypassed.`,
+      };
+    }
+
+    // Catalog loaded - perform actual validation
+    const isValid = cache.has(codeStr);
+
+    return {
+      valid: isValid,
+      catalogLoaded: true,
+      message: isValid
+        ? undefined
+        : `Code "${codeStr}" not found in GIIS catalog "${catalogName}"`,
+    };
+  }
+
+  /**
+   * Check if a GIIS catalog is loaded
+   */
+  isGIISCatalogLoaded(catalogType: CatalogType): boolean {
+    return (
+      this.optionalCatalogs.includes(catalogType) &&
+      this.catalogCaches.has(catalogType)
+    );
+  }
+
+  /**
+   * Get statistics about loaded catalogs
+   */
+  getCatalogStats(): {
+    baseLoaded: number;
+    baseTotal: number;
+    giisLoaded: number;
+    giisTotal: number;
+    loadedCatalogs: CatalogType[];
+  } {
+    const loadedCatalogs: CatalogType[] = [];
+    let baseLoaded = 0;
+    let giisLoaded = 0;
+
+    for (const catalog of this.baseCatalogs) {
+      if (this.catalogCaches.has(catalog)) {
+        baseLoaded++;
+        loadedCatalogs.push(catalog);
+      }
+    }
+
+    for (const catalog of this.optionalCatalogs) {
+      if (this.catalogCaches.has(catalog)) {
+        giisLoaded++;
+        loadedCatalogs.push(catalog);
+      }
+    }
+
+    return {
+      baseLoaded,
+      baseTotal: 10,
+      giisLoaded,
+      giisTotal: 8,
+      loadedCatalogs,
+    };
+  }
+
+  // ===========================================================================
+  // GENERIC CATALOG ACCESS METHODS
+  // ===========================================================================
+
   /**
    * Get catalog entry by code
    */
@@ -545,5 +818,44 @@ export class CatalogsService implements OnModuleInit {
     }
 
     return results;
+  }
+
+  // ===========================================================================
+  // TEST HELPERS (for injecting mock data in tests)
+  // ===========================================================================
+
+  /**
+   * Inject mock catalog data (for testing only)
+   *
+   * @param catalogType - The catalog type to inject
+   * @param entries - Array of catalog entries to inject
+   */
+  injectMockCatalog(catalogType: CatalogType, entries: CatalogEntry[]): void {
+    const cache = new Map<string, CatalogEntry>();
+    for (const entry of entries) {
+      cache.set(entry.code, entry);
+    }
+    this.catalogCaches.set(catalogType, cache);
+    this.logger.debug(
+      `Injected ${entries.length} mock entries for ${catalogType}`,
+    );
+  }
+
+  /**
+   * Clear a catalog (for testing only)
+   *
+   * @param catalogType - The catalog type to clear
+   */
+  clearCatalog(catalogType: CatalogType): void {
+    this.catalogCaches.delete(catalogType);
+    this.giisWarningEmitted.delete(catalogType);
+    this.logger.debug(`Cleared catalog ${catalogType}`);
+  }
+
+  /**
+   * Reset all warning flags (for testing only)
+   */
+  resetWarningFlags(): void {
+    this.giisWarningEmitted.clear();
   }
 }

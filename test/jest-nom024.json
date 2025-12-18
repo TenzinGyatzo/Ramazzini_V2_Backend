@@ -1,0 +1,30 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "testRegex": "test/nom024/.*\\.nom024\\.spec\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/src/$1"
+  },
+  "collectCoverageFrom": [
+    "src/modules/catalogs/**/*.ts",
+    "src/modules/expedientes/**/*.ts",
+    "src/modules/trabajadores/**/*.ts",
+    "src/modules/proveedores-salud/**/*.ts",
+    "src/modules/medicos-firmantes/**/*.ts",
+    "src/modules/enfermeras-firmantes/**/*.ts",
+    "src/modules/tecnicos-firmantes/**/*.ts",
+    "src/modules/giis-export/**/*.ts",
+    "src/utils/*.ts",
+    "!**/*.module.ts",
+    "!**/main.ts"
+  ],
+  "coverageDirectory": "./coverage/nom024",
+  "coverageReporters": ["text", "lcov", "html"],
+  "verbose": true,
+  "testTimeout": 60000
+}
+

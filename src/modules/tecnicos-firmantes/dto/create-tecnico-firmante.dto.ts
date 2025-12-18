@@ -1,5 +1,12 @@
-import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 class FirmaDto {
   @ApiProperty({ description: 'Nombre de archivo de la firma' })
@@ -53,4 +60,19 @@ export class CreateTecnicoFirmanteDto {
   @IsMongoId()
   @IsNotEmpty()
   idUser: string;
+
+  // NOM-024: CURP for healthcare professionals
+  // Required for MX providers, optional for non-MX (validation in service layer)
+  @ApiProperty({
+    required: false,
+    description: 'CURP del técnico (requerido para proveedores MX)',
+  })
+  @IsOptional()
+  @IsString({ message: 'El CURP debe ser un string' })
+  @Transform(({ value }) => value?.trim().toUpperCase())
+  @Matches(/^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/, {
+    message:
+      'CURP debe tener exactamente 18 caracteres con el formato: 4 letras, 6 dígitos, H/M, 5 letras, 1 alfanumérico, 1 dígito',
+  })
+  curp?: string;
 }

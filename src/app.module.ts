@@ -25,6 +25,7 @@ import { RiesgosTrabajoModule } from './modules/riesgos-trabajo/riesgos-trabajo.
 import { InformePersonalizacionModule } from './modules/informe-personalizacion/informe-personalizacion.module';
 import { CatalogsModule } from './modules/catalogs/catalogs.module';
 import { NOM024ComplianceModule } from './modules/nom024-compliance/nom024-compliance.module';
+import { GIISExportModule } from './modules/giis-export/giis-export.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { NOM024ComplianceModule } from './modules/nom024-compliance/nom024-compl
 
     CatalogsModule,
     NOM024ComplianceModule,
+    GIISExportModule,
     EmpresasModule,
     CentrosTrabajoModule,
     TrabajadoresModule,

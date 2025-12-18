@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { calcularEdad, calcularAntiguedad } from 'src/utils/dates';
 import { validateCURP } from 'src/utils/curp-validator.util';
 import { NOM024ComplianceUtil } from 'src/utils/nom024-compliance.util';
+import { validateTrabajadorNames } from 'src/utils/name-validator.util';
 import { CatalogsService } from '../catalogs/catalogs.service';
 import { Antidoping } from '../expedientes/schemas/antidoping.schema';
 import { AptitudPuesto } from '../expedientes/schemas/aptitud-puesto.schema';
@@ -285,6 +286,67 @@ export class TrabajadoresService {
     }
   }
 
+  /**
+   * Validate NOM-024 name format rules for Trabajador names
+   * - MX providers: Strict enforcement (block saves with errors)
+   * - Non-MX providers: Warnings only (log but allow saves)
+   *
+   * Rules enforced:
+   * - Uppercase only (handled by normalization)
+   * - Maximum 50 characters per field
+   * - No abbreviations (DR., ING., LIC., SR., SRA., PROF., etc.)
+   * - No trailing periods
+   */
+  private async validateNOM024NameFormat(
+    nombre: string | undefined,
+    primerApellido: string | undefined,
+    segundoApellido: string | undefined,
+    proveedorSaludId: string | null,
+  ): Promise<void> {
+    const validation = validateTrabajadorNames(
+      nombre,
+      primerApellido,
+      segundoApellido,
+    );
+
+    // Log warnings for all providers
+    if (validation.warnings.length > 0) {
+      console.warn(
+        `NOM-024 Name Format Warnings: ${validation.warnings.join('; ')}`,
+      );
+    }
+
+    if (!proveedorSaludId) {
+      // If we can't determine provider, allow (backward compatibility)
+      // But still log errors as warnings
+      if (!validation.isValid) {
+        console.warn(
+          `NOM-024 Name Format Issues (provider unknown): ${validation.errors.join('; ')}`,
+        );
+      }
+      return;
+    }
+
+    const requiresCompliance =
+      await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+
+    if (requiresCompliance) {
+      // MX provider: Strict enforcement - throw errors
+      if (!validation.isValid) {
+        throw new BadRequestException(
+          `NOM-024: ${validation.errors.join('. ')}`,
+        );
+      }
+    } else {
+      // Non-MX provider: Log warnings only, do not block
+      if (!validation.isValid) {
+        console.warn(
+          `NOM-024 Name Format Issues (non-MX provider): ${validation.errors.join('; ')}`,
+        );
+      }
+    }
+  }
+
   async create(createTrabajadorDto: CreateTrabajadorDto): Promise<Trabajador> {
     const normalizedDto = normalizeTrabajadorData(createTrabajadorDto);
 
@@ -302,6 +364,14 @@ export class TrabajadoresService {
     );
     await this.validateNOM024PersonFields(normalizedDto, proveedorSaludId);
     await this.validateCURPForMX(normalizedDto.curp, proveedorSaludId);
+
+    // NOM-024: Validate name format (MX strict, non-MX warnings)
+    await this.validateNOM024NameFormat(
+      normalizedDto.nombre,
+      normalizedDto.primerApellido,
+      normalizedDto.segundoApellido,
+      proveedorSaludId,
+    );
 
     // Normalize fields to uppercase if provided
     if (normalizedDto.curp) {
@@ -1098,6 +1168,15 @@ export class TrabajadoresService {
         ? normalizedDto.curp
         : trabajadorActual.curp;
     await this.validateCURPForMX(curpToValidate, proveedorSaludId);
+
+    // NOM-024: Validate name format (MX strict, non-MX warnings)
+    // Use merged values for validation
+    await this.validateNOM024NameFormat(
+      mergedDto.nombre,
+      mergedDto.primerApellido,
+      mergedDto.segundoApellido,
+      proveedorSaludId,
+    );
 
     // Normalize fields to uppercase if provided
     if (normalizedDto.curp) {

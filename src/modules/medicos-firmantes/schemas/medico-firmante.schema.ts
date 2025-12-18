@@ -41,6 +41,10 @@ export class MedicoFirmante extends Document {
   firmaConAntefirma?: object;
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   idUser: User;
+
+  // NOM-024: CURP for healthcare professionals (required for MX providers)
+  @Prop()
+  curp?: string;
 }
 
 export const MedicoFirmanteSchema =

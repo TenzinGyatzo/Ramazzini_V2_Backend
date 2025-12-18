@@ -80,6 +80,23 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 - Website - [https://nestjs.com](https://nestjs.com/)
 - Twitter - [@nestframework](https://twitter.com/nestframework)
 
+## NOM-024 Migration Scripts
+
+Read-only scripts for CIE-10 diagnosis data analysis:
+
+```bash
+# Set MongoDB connection
+export MONGODB_URI="mongodb://..."
+
+# Analyze diagnosis distribution
+npx ts-node scripts/migration/analyze-diagnosis-migration.ts --confirm-readonly
+
+# Export for medical review
+npx ts-node scripts/migration/export-diagnosis-for-review.ts --confirm-readonly
+```
+
+See [scripts/migration/README.md](scripts/migration/README.md) for full documentation.
+
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

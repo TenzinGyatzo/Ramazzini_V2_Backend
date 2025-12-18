@@ -54,9 +54,10 @@ export function normalizeTrabajadorData(
 ) {
   return {
     ...dto,
-    primerApellido: dto.primerApellido?.trim(),
-    segundoApellido: dto.segundoApellido?.trim(),
-    nombre: dto.nombre?.trim(),
+    // NOM-024: Names normalized to uppercase
+    primerApellido: dto.primerApellido?.trim().toUpperCase(),
+    segundoApellido: dto.segundoApellido?.trim().toUpperCase(),
+    nombre: dto.nombre?.trim().toUpperCase(),
     fechaNacimiento: dto.fechaNacimiento,
     sexo: dto.sexo?.trim(),
     escolaridad: dto.escolaridad?.trim(),
@@ -171,7 +172,7 @@ export function normalizeProveedorSaludData(
 export function normalizeMedicoFirmanteData(
   dto: CreateMedicoFirmanteDto | UpdateMedicoFirmanteDto,
 ) {
-  const normalizedDto = {
+  const normalizedDto: any = {
     ...dto,
     nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : '',
     tituloProfesional:
@@ -220,6 +221,11 @@ export function normalizeMedicoFirmanteData(
         : undefined,
   };
 
+  // NOM-024: Normalize CURP to uppercase
+  if ('curp' in dto && dto.curp) {
+    normalizedDto.curp = dto.curp.trim().toUpperCase();
+  }
+
   // ✅ Verificar y eliminar idUser si está vacío
   if (!dto.idUser || dto.idUser.trim() === '') {
     delete normalizedDto.idUser;
@@ -233,7 +239,7 @@ export function normalizeMedicoFirmanteData(
 export function normalizeEnfermeraFirmanteData(
   dto: CreateEnfermeraFirmanteDto | UpdateEnfermeraFirmanteDto,
 ) {
-  const normalizedDto = {
+  const normalizedDto: any = {
     ...dto,
     nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : '',
     sexo: typeof dto.sexo === 'string' ? dto.sexo.trim() : '',
@@ -263,6 +269,11 @@ export function normalizeEnfermeraFirmanteData(
           }
         : undefined,
   };
+
+  // NOM-024: Normalize CURP to uppercase
+  if ('curp' in dto && dto.curp) {
+    normalizedDto.curp = dto.curp.trim().toUpperCase();
+  }
 
   // ✅ Verificar y eliminar idUser si está vacío
   if (!dto.idUser || dto.idUser.trim() === '') {

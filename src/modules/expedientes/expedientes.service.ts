@@ -24,6 +24,7 @@ import { PrevioEspirometria } from './schemas/previo-espirometria.schema';
 import { ConstanciaAptitud } from './schemas/constancia-aptitud.schema';
 import { Receta } from './schemas/receta.schema';
 import { Lesion } from './schemas/lesion.schema';
+import { Deteccion } from './schemas/deteccion.schema';
 import { startOfDay, endOfDay } from 'date-fns';
 import { FilesService } from '../files/files.service';
 import { convertirFechaISOaDDMMYYYY } from 'src/utils/dates';
@@ -35,6 +36,10 @@ import { NOM024ComplianceUtil } from '../../utils/nom024-compliance.util';
 import { CentroTrabajo } from '../centros-trabajo/schemas/centro-trabajo.schema';
 import { Empresa } from '../empresas/schemas/empresa.schema';
 import { CatalogsService } from '../catalogs/catalogs.service';
+import {
+  validateVitalSigns,
+  extractVitalSignsFromDTO,
+} from '../../utils/vital-signs-validator.util';
 
 @Injectable()
 export class ExpedientesService {
@@ -67,6 +72,7 @@ export class ExpedientesService {
     @InjectModel(ConstanciaAptitud.name)
     private constanciaAptitudModel: Model<ConstanciaAptitud>,
     @InjectModel(Lesion.name) private lesionModel: Model<Lesion>,
+    @InjectModel(Deteccion.name) private deteccionModel: Model<Deteccion>,
     @InjectModel(CentroTrabajo.name)
     private centroTrabajoModel: Model<CentroTrabajo>,
     @InjectModel(Empresa.name) private empresaModel: Model<Empresa>,
@@ -196,6 +202,9 @@ export class ExpedientesService {
         createDto,
         createDto.idTrabajador,
       );
+
+      // NOM-024: Validate vital signs (MX strict, non-MX warnings)
+      await this.validateVitalSignsForNOM024(createDto, createDto.idTrabajador);
     }
 
     const createdDocument = new model(createDto);
@@ -282,6 +291,78 @@ export class ExpedientesService {
     }
   }
 
+  /**
+   * Validate vital signs for NOM-024 compliance
+   * - MX providers: Strict enforcement (throw errors)
+   * - Non-MX providers: Warnings only (log but allow)
+   *
+   * Validates:
+   * - Individual vital sign ranges (BP, HR, RR, Temp, SpO2)
+   * - Blood pressure consistency (systolic > diastolic)
+   * - Anthropometric consistency (weight/height/BMI)
+   *
+   * @param dto - DTO containing vital signs
+   * @param trabajadorId - Trabajador ID to determine provider country
+   */
+  private async validateVitalSignsForNOM024(
+    dto: any,
+    trabajadorId: string,
+  ): Promise<void> {
+    // Extract vital signs from DTO
+    const vitalSigns = extractVitalSignsFromDTO(dto);
+
+    // Check if any vital signs are present
+    const hasVitalSigns = Object.values(vitalSigns).some(
+      (v) => v !== undefined && v !== null,
+    );
+    if (!hasVitalSigns) {
+      return; // No vital signs to validate
+    }
+
+    // Validate vital signs
+    const validation = validateVitalSigns(vitalSigns);
+
+    // Log warnings for all providers
+    if (validation.warnings.length > 0) {
+      console.warn(
+        `NOM-024 Vital Signs Warnings: ${validation.warnings.join('; ')}`,
+      );
+    }
+
+    // Get provider country
+    const proveedorSaludId =
+      await this.getProveedorSaludIdFromTrabajador(trabajadorId);
+
+    if (!proveedorSaludId) {
+      // If we can't determine provider, allow (backward compatibility)
+      if (!validation.isValid) {
+        console.warn(
+          `NOM-024 Vital Signs Issues (provider unknown): ${validation.errors.join('; ')}`,
+        );
+      }
+      return;
+    }
+
+    const requiresCompliance =
+      await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+
+    if (requiresCompliance) {
+      // MX provider: Strict enforcement - throw errors
+      if (!validation.isValid) {
+        throw new BadRequestException(
+          `NOM-024: ${validation.errors.join('. ')}`,
+        );
+      }
+    } else {
+      // Non-MX provider: Log warnings only, do not block
+      if (!validation.isValid) {
+        console.warn(
+          `NOM-024 Vital Signs Issues (non-MX provider): ${validation.errors.join('; ')}`,
+        );
+      }
+    }
+  }
+
   async updateOrCreateDocument(
     documentType: string,
     id: string,
@@ -331,6 +412,9 @@ export class ExpedientesService {
     }
 
     const oldFecha = new Date(existingDocument[dateField]);
+
+    // NOM-024: Validate vital signs before saving (MX strict, non-MX warnings)
+    await this.validateVitalSignsForNOM024(updateDto, trabajadorId);
 
     let result;
     if (newFecha.toISOString() !== oldFecha.toISOString()) {
@@ -1074,6 +1158,491 @@ export class ExpedientesService {
     await this.trabajadorModel.findByIdAndUpdate(trabajadorId, {
       updatedAt: new Date(),
     });
+  }
+
+  // ==================== GIIS-B019 Detección Methods ====================
+
+  /**
+   * GIIS-B019: Validate Detección-specific business rules
+   *
+   * Note: Official DGIS catalogs (TIPO_PERSONAL, SERVICIOS_DET, AFILIACION, PAIS)
+   * are NOT publicly available. Best-effort validation is applied.
+   */
+  private async validateDeteccionRules(
+    deteccionDto: any,
+    trabajadorId: string,
+  ): Promise<void> {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Get provider info to determine MX vs non-MX
+    const proveedorSaludId =
+      await this.getProveedorSaludIdFromTrabajador(trabajadorId);
+    const requiresCompliance = proveedorSaludId
+      ? await this.nom024Util.requiresNOM024Compliance(proveedorSaludId)
+      : false;
+
+    // Get Trabajador for age/sex validation
+    const trabajador = await this.trabajadorModel.findById(trabajadorId).lean();
+    if (!trabajador) {
+      errors.push('Trabajador no encontrado');
+      throw new BadRequestException(errors.join('; '));
+    }
+
+    // Calculate age
+    const fechaNacimiento = new Date(trabajador.fechaNacimiento);
+    const fechaDeteccion = new Date(deteccionDto.fechaDeteccion);
+    const edadEnDeteccion = Math.floor(
+      (fechaDeteccion.getTime() - fechaNacimiento.getTime()) /
+        (365.25 * 24 * 60 * 60 * 1000),
+    );
+
+    // Determine sex (convert string to number for GIIS)
+    const sexoMasculino = trabajador.sexo === 'Masculino';
+    const sexoFemenino = trabajador.sexo === 'Femenino';
+
+    // === MX Provider: Strict Validation ===
+    if (requiresCompliance) {
+      // Core required fields for MX
+      if (!deteccionDto.fechaDeteccion) {
+        errors.push('NOM-024: Fecha de detección es obligatoria para MX');
+      }
+      if (!deteccionDto.curpPrestador) {
+        errors.push('NOM-024: CURP del prestador es obligatorio para MX');
+      }
+      if (!deteccionDto.tipoPersonal) {
+        errors.push('NOM-024: Tipo de personal es obligatorio para MX');
+      }
+      if (!deteccionDto.servicioAtencion) {
+        errors.push('NOM-024: Servicio de atención es obligatorio para MX');
+      }
+
+      // CLUES validation for MX
+      if (!deteccionDto.clues) {
+        // Try to derive from ProveedorSalud
+        warnings.push(
+          'CLUES no proporcionado. Se intentará derivar del ProveedorSalud.',
+        );
+      }
+
+      // Temporal validation: fechaDeteccion <= fechaActual
+      if (fechaDeteccion > new Date()) {
+        errors.push('La fecha de detección no puede ser futura');
+      }
+
+      // Validate fechaNacimiento <= fechaDeteccion
+      if (fechaDeteccion < fechaNacimiento) {
+        errors.push(
+          'La fecha de detección no puede ser anterior a la fecha de nacimiento',
+        );
+      }
+    }
+
+    // === Vitals Range Validation (both MX and non-MX when provided) ===
+
+    // Blood pressure consistency
+    if (
+      deteccionDto.tensionArterialSistolica !== undefined &&
+      deteccionDto.tensionArterialDiastolica !== undefined
+    ) {
+      if (
+        deteccionDto.tensionArterialSistolica <
+        deteccionDto.tensionArterialDiastolica
+      ) {
+        const msg = 'Tensión arterial: sistólica debe ser >= diastólica';
+        if (requiresCompliance) {
+          errors.push(msg);
+        } else {
+          warnings.push(msg);
+        }
+      }
+    }
+
+    // Glucemia requires tipoMedicion if > 0
+    if (
+      deteccionDto.glucemia !== undefined &&
+      deteccionDto.glucemia > 0 &&
+      !deteccionDto.tipoMedicionGlucemia
+    ) {
+      const msg =
+        'Si glucemia > 0, tipo de medición (ayuno/casual) es requerido';
+      if (requiresCompliance) {
+        errors.push(msg);
+      } else {
+        warnings.push(msg);
+      }
+    }
+
+    // === Age-Based Block Validation (MX strict, non-MX warning) ===
+
+    // Mental health block: age >= 10
+    const mentalHealthFields = ['depresion', 'ansiedad'];
+    for (const field of mentalHealthFields) {
+      if (
+        deteccionDto[field] !== undefined &&
+        deteccionDto[field] !== -1 &&
+        edadEnDeteccion < 10
+      ) {
+        const msg = `Campo ${field} requiere edad >= 10 años (edad actual: ${edadEnDeteccion})`;
+        if (requiresCompliance) {
+          errors.push(msg);
+        } else {
+          warnings.push(msg);
+        }
+      }
+    }
+
+    // Geriatrics block: age >= 60
+    const geriatricsFields = [
+      'deterioroMemoria',
+      'riesgoCaidas',
+      'alteracionMarcha',
+      'dependenciaABVD',
+      'necesitaCuidador',
+    ];
+    for (const field of geriatricsFields) {
+      if (
+        deteccionDto[field] !== undefined &&
+        deteccionDto[field] !== -1 &&
+        edadEnDeteccion < 60
+      ) {
+        const msg = `Campo ${field} requiere edad >= 60 años (edad actual: ${edadEnDeteccion})`;
+        if (requiresCompliance) {
+          errors.push(msg);
+        } else {
+          warnings.push(msg);
+        }
+      }
+    }
+
+    // Chronic diseases block: age >= 20
+    const chronicFields = [
+      'riesgoDiabetes',
+      'riesgoHipertension',
+      'obesidad',
+      'dislipidemia',
+    ];
+    for (const field of chronicFields) {
+      if (
+        deteccionDto[field] !== undefined &&
+        deteccionDto[field] !== -1 &&
+        edadEnDeteccion < 20
+      ) {
+        const msg = `Campo ${field} requiere edad >= 20 años (edad actual: ${edadEnDeteccion})`;
+        if (requiresCompliance) {
+          errors.push(msg);
+        } else {
+          warnings.push(msg);
+        }
+      }
+    }
+
+    // === Sex-Based Validation ===
+
+    // Cancer cervicouterino: Mujeres 25-64
+    if (
+      deteccionDto.cancerCervicouterino !== undefined &&
+      deteccionDto.cancerCervicouterino !== -1
+    ) {
+      if (!sexoFemenino) {
+        const msg = 'Cáncer cervicouterino solo aplica a mujeres';
+        if (requiresCompliance) errors.push(msg);
+        else warnings.push(msg);
+      }
+      if (edadEnDeteccion < 25 || edadEnDeteccion > 64) {
+        const msg = `Cáncer cervicouterino requiere edad 25-64 años (edad actual: ${edadEnDeteccion})`;
+        if (requiresCompliance) errors.push(msg);
+        else warnings.push(msg);
+      }
+    }
+
+    // VPH: Mujeres 35-64
+    if (deteccionDto.vph !== undefined && deteccionDto.vph !== -1) {
+      if (!sexoFemenino) {
+        const msg = 'VPH solo aplica a mujeres';
+        if (requiresCompliance) errors.push(msg);
+        else warnings.push(msg);
+      }
+      if (edadEnDeteccion < 35 || edadEnDeteccion > 64) {
+        const msg = `VPH requiere edad 35-64 años (edad actual: ${edadEnDeteccion})`;
+        if (requiresCompliance) errors.push(msg);
+        else warnings.push(msg);
+      }
+    }
+
+    // Hiperplasia prostática: Hombres >= 40
+    if (
+      deteccionDto.hiperplasiaProstatica !== undefined &&
+      deteccionDto.hiperplasiaProstatica !== -1
+    ) {
+      if (!sexoMasculino) {
+        const msg = 'Hiperplasia prostática solo aplica a hombres';
+        if (requiresCompliance) errors.push(msg);
+        else warnings.push(msg);
+      }
+      if (edadEnDeteccion < 40) {
+        const msg = `Hiperplasia prostática requiere edad >= 40 años (edad actual: ${edadEnDeteccion})`;
+        if (requiresCompliance) errors.push(msg);
+        else warnings.push(msg);
+      }
+    }
+
+    // Violencia mujer: Mujeres >= 15
+    if (
+      deteccionDto.violenciaMujer !== undefined &&
+      deteccionDto.violenciaMujer !== -1
+    ) {
+      if (!sexoFemenino) {
+        const msg = 'Violencia mujer solo aplica a mujeres';
+        if (requiresCompliance) errors.push(msg);
+        else warnings.push(msg);
+      }
+      if (edadEnDeteccion < 15) {
+        const msg = `Violencia mujer requiere edad >= 15 años (edad actual: ${edadEnDeteccion})`;
+        if (requiresCompliance) errors.push(msg);
+        else warnings.push(msg);
+      }
+    }
+
+    // === Trabajador Social Exclusion Rule ===
+    // tipoPersonal == 30 disables clinical detections
+    if (deteccionDto.tipoPersonal === 30) {
+      const clinicalFields = [
+        'depresion',
+        'ansiedad',
+        'consumoAlcohol',
+        'consumoTabaco',
+        'consumoDrogas',
+        'resultadoVIH',
+        'resultadoSifilis',
+        'resultadoHepatitisB',
+        'cancerMama',
+        ...geriatricsFields,
+      ];
+      for (const field of clinicalFields) {
+        if (deteccionDto[field] !== undefined && deteccionDto[field] !== -1) {
+          const msg = `Campo ${field} no permitido para Trabajador Social (tipoPersonal=30)`;
+          if (requiresCompliance) errors.push(msg);
+          else warnings.push(msg);
+        }
+      }
+    }
+
+    // Log warnings
+    if (warnings.length > 0) {
+      console.warn(`GIIS-B019 Detección Warnings: ${warnings.join('; ')}`);
+    }
+
+    // Throw errors for MX providers
+    if (errors.length > 0) {
+      throw new BadRequestException(errors.join('; '));
+    }
+  }
+
+  /**
+   * Get CLUES from ProveedorSalud
+   */
+  private async getCluesFromProveedorSalud(
+    trabajadorId: string,
+  ): Promise<string | null> {
+    const proveedorSaludId =
+      await this.getProveedorSaludIdFromTrabajador(trabajadorId);
+    if (!proveedorSaludId) return null;
+
+    try {
+      // Import ProveedorSalud model dynamically to avoid circular dependency
+      const proveedorSalud = await this.empresaModel
+        .findOne({ idProveedorSalud: proveedorSaludId })
+        .populate('idProveedorSalud')
+        .lean();
+
+      return (proveedorSalud?.idProveedorSalud as any)?.clues || null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * GIIS-B019: Create Detección record
+   */
+  async createDeteccion(createDto: any): Promise<any> {
+    await this.validateDeteccionRules(createDto, createDto.idTrabajador);
+
+    // Try to derive CLUES if not provided
+    if (!createDto.clues) {
+      const derivedClues = await this.getCluesFromProveedorSalud(
+        createDto.idTrabajador,
+      );
+      if (derivedClues) {
+        createDto.clues = derivedClues;
+      }
+    }
+
+    const createdDeteccion = new this.deteccionModel(createDto);
+    const savedDeteccion = await createdDeteccion.save();
+
+    if (createDto.idTrabajador) {
+      await this.actualizarUpdatedAtTrabajador(createDto.idTrabajador);
+    }
+
+    return savedDeteccion;
+  }
+
+  /**
+   * GIIS-B019: Update Detección record
+   */
+  async updateDeteccion(id: string, updateDto: any): Promise<any> {
+    const existingDeteccion = await this.deteccionModel.findById(id).exec();
+
+    if (!existingDeteccion) {
+      throw new BadRequestException(`Detección con ID ${id} no encontrada`);
+    }
+
+    // Check immutability for MX providers
+    if (existingDeteccion.estado === DocumentoEstado.FINALIZADO) {
+      const proveedorSaludId =
+        await this.getProveedorSaludIdFromDocument(existingDeteccion);
+      if (proveedorSaludId) {
+        const requiresCompliance =
+          await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+        if (requiresCompliance) {
+          throw new ForbiddenException(
+            'No se puede actualizar una detección finalizada. Los registros finalizados son inmutables para proveedores en México según NOM-024.',
+          );
+        }
+      }
+    }
+
+    const mergedDto = {
+      ...existingDeteccion.toObject(),
+      ...updateDto,
+    };
+
+    await this.validateDeteccionRules(
+      mergedDto,
+      mergedDto.idTrabajador.toString(),
+    );
+
+    const updatedDeteccion = await this.deteccionModel
+      .findByIdAndUpdate(id, updateDto, { new: true })
+      .exec();
+
+    if (updatedDeteccion && updatedDeteccion.idTrabajador) {
+      await this.actualizarUpdatedAtTrabajador(
+        (updateDto.idTrabajador || existingDeteccion.idTrabajador).toString(),
+      );
+    }
+
+    return updatedDeteccion;
+  }
+
+  /**
+   * GIIS-B019: Find Detección by ID
+   */
+  async findDeteccion(id: string): Promise<any> {
+    return this.deteccionModel.findById(id).exec();
+  }
+
+  /**
+   * GIIS-B019: Find all Detecciones for a trabajador
+   */
+  async findDeteccionesByTrabajador(trabajadorId: string): Promise<any[]> {
+    return this.deteccionModel
+      .find({ idTrabajador: trabajadorId })
+      .sort({ fechaDeteccion: -1 })
+      .exec();
+  }
+
+  /**
+   * GIIS-B019: Delete Detección
+   */
+  async deleteDeteccion(id: string): Promise<boolean> {
+    const deteccion = await this.deteccionModel.findById(id).exec();
+    if (!deteccion) {
+      throw new BadRequestException(`Detección con ID ${id} no encontrada`);
+    }
+
+    // Check if finalized for MX (block deletion)
+    if (deteccion.estado === DocumentoEstado.FINALIZADO) {
+      const proveedorSaludId =
+        await this.getProveedorSaludIdFromDocument(deteccion);
+      if (proveedorSaludId) {
+        const requiresCompliance =
+          await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+        if (requiresCompliance) {
+          throw new ForbiddenException(
+            'No se puede eliminar una detección finalizada para proveedores en México.',
+          );
+        }
+      }
+    }
+
+    await this.deteccionModel.findByIdAndDelete(id).exec();
+    return true;
+  }
+
+  /**
+   * GIIS-B019: Finalize Detección
+   */
+  async finalizarDeteccion(id: string, userId: string): Promise<any> {
+    const deteccion = await this.deteccionModel.findById(id).exec();
+
+    if (!deteccion) {
+      throw new BadRequestException(`Detección con ID ${id} no encontrada`);
+    }
+
+    if (deteccion.estado === DocumentoEstado.FINALIZADO) {
+      throw new BadRequestException('La detección ya está finalizada');
+    }
+
+    if (deteccion.estado === DocumentoEstado.ANULADO) {
+      throw new BadRequestException(
+        'No se puede finalizar una detección anulada',
+      );
+    }
+
+    // For MX: Re-validate required fields before finalization
+    const proveedorSaludId =
+      await this.getProveedorSaludIdFromDocument(deteccion);
+    if (proveedorSaludId) {
+      const requiresCompliance =
+        await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+      if (requiresCompliance) {
+        // Validate required fields for finalization
+        const errors: string[] = [];
+        if (!deteccion.curpPrestador) {
+          errors.push('CURP del prestador es obligatorio para finalizar');
+        }
+        if (!deteccion.tipoPersonal) {
+          errors.push('Tipo de personal es obligatorio para finalizar');
+        }
+        if (!deteccion.servicioAtencion) {
+          errors.push('Servicio de atención es obligatorio para finalizar');
+        }
+        if (!deteccion.clues) {
+          errors.push('CLUES es obligatorio para finalizar');
+        }
+        if (errors.length > 0) {
+          throw new BadRequestException(
+            `NOM-024: No se puede finalizar - ${errors.join('; ')}`,
+          );
+        }
+      }
+    }
+
+    deteccion.estado = DocumentoEstado.FINALIZADO;
+    deteccion.fechaFinalizacion = new Date();
+    deteccion.finalizadoPor = userId as any;
+
+    const savedDeteccion = await deteccion.save();
+
+    if (deteccion.idTrabajador) {
+      await this.actualizarUpdatedAtTrabajador(
+        deteccion.idTrabajador.toString(),
+      );
+    }
+
+    return savedDeteccion;
   }
 }
 

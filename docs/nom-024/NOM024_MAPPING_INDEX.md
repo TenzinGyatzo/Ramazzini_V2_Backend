@@ -368,7 +368,10 @@ Este documento mapea los requerimientos de NOM-024-SSA3-2012 y GIIS aplicables a
 
 ## Resumen Ejecutivo de Cumplimiento
 
-### Por Categoría
+> **Nota:** Esta sección refleja el estado **pre-Phase 1** como referencia histórica.
+> Consultar `docs/nom-024/PHASE1_FINAL_REPORT.md` para el estado actual post-implementación.
+
+### Estado Pre-Phase 1 (Referencia Histórica)
 
 | Categoría | Compliant | Partially Compliant | Missing | Total |
 |-----------|-----------|---------------------|---------|-------|
@@ -383,30 +386,42 @@ Este documento mapea los requerimientos de NOM-024-SSA3-2012 y GIIS aplicables a
 | Catálogos | 0 | 0 | 7 | 7 |
 | **TOTAL** | **5** | **14** | **38** | **57** |
 
-### Estado General: ⚠️ **PARTIALLY COMPLIANT**
+---
 
-**Porcentaje de cumplimiento aproximado:** ~8% compliant, ~25% partially compliant, ~67% missing
+## Estado Post-Phase 1 (Diciembre 2024)
 
-### Prioridades Críticas para Implementación
+### ✅ Phase 1 Completado
 
-1. **🔴 CRÍTICO (Bloqueante):**
-   - CLUES en documentos médicos
-   - CURP obligatorio y validación RENAPO
-   - CIE-10 para diagnósticos (estructura)
-   - Estado de documento (finalizado/borrador)
-   - Inmutabilidad post-finalización
+| Área | Estado | Evidencia |
+|------|--------|-----------|
+| Catálogos base (10) | ✅ Integrados | `src/modules/catalogs/` |
+| Catálogos GIIS (8) | ⚠️ Opcionales (DGIS no publica) | `src/modules/catalogs/` |
+| CURP validación | ✅ RENAPO + checksum | `src/utils/curp-validator.util.ts` |
+| CLUES en ProveedorSalud | ✅ Implementado | `src/modules/proveedores-salud/` |
+| Estado documento | ✅ BORRADOR/FINALIZADO/ANULADO | `src/modules/expedientes/enums/` |
+| Inmutabilidad | ✅ Enforced (MX only) | `src/modules/expedientes/` |
+| CIE-10 diagnósticos | ✅ Validación integrada | `src/modules/catalogs/` |
+| GIIS-B013 Lesion | ✅ Entidad completa | `src/modules/expedientes/schemas/lesion.schema.ts` |
+| GIIS-B019 Deteccion | ✅ Entidad completa | `src/modules/expedientes/schemas/deteccion.schema.ts` |
+| Export transformation | ✅ Pipe-delimited | `src/modules/giis-export/` |
+| Test suite | ✅ 8 archivos NOM-024 | `test/nom024/` |
 
-2. **🟡 ALTO (Requerido para intercambio):**
-   - Entidad Nacimiento y Nacionalidad en Trabajador
-   - Domicilio geográfico con códigos INEGI
-   - Folio interno institucional
-   - Estructura para múltiples diagnósticos
-   - Integración de catálogos como servicios
+### Prioridades Completadas en Phase 1
 
-3. **🟢 MEDIO (Mejoras):**
-   - Validaciones de formato (mayúsculas, longitudes)
-   - Campos faltantes en signos vitales
-   - Estructuras específicas para GIIS-B013, B019, B015
+1. ~~**🔴 CRÍTICO:** CLUES en documentos~~ ✅
+2. ~~**🔴 CRÍTICO:** CURP obligatorio + validación RENAPO~~ ✅
+3. ~~**🔴 CRÍTICO:** CIE-10 estructura~~ ✅
+4. ~~**🔴 CRÍTICO:** Estado de documento~~ ✅
+5. ~~**🔴 CRÍTICO:** Inmutabilidad~~ ✅
+6. ~~**🟡 ALTO:** Entidad Nacimiento/Nacionalidad~~ ✅
+7. ~~**🟡 ALTO:** Integración catálogos~~ ✅
+8. ~~**🟢 MEDIO:** Validaciones formato~~ ✅
+9. ~~**🟢 MEDIO:** GIIS-B013, B019~~ ✅
+
+### Pendiente para Fases Futuras
+
+- **Phase 2:** Generación archivos, 3DES, scheduling, delivery
+- **Phase 3:** GIIS-B015 Consulta Externa, portal DGIS
 
 ---
 

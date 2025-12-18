@@ -48,6 +48,8 @@ import { CreateConstanciaAptitudDto } from './dto/create-constancia-aptitud.dto'
 import { UpdateConstanciaAptitudDto } from './dto/update-constancia-aptitud.dto';
 import { CreateLesionDto } from './dto/create-lesion.dto';
 import { UpdateLesionDto } from './dto/update-lesion.dto';
+import { CreateDeteccionDto } from './dto/create-deteccion.dto';
+import { UpdateDeteccionDto } from './dto/update-deteccion.dto';
 import { CreateRecetaDto } from './dto/create-receta.dto';
 import { UpdateRecetaDto } from './dto/update-receta.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -523,5 +525,119 @@ export class ExpedientesController {
     return {
       message: `El documento de tipo ${documentType} con id ${id} ha sido eliminado exitosamente`,
     };
+  }
+
+  // ==================== GIIS-B019 Detección CRUD Endpoints ====================
+
+  @Post('deteccion')
+  async createDeteccion(@Body() createDeteccionDto: CreateDeteccionDto) {
+    try {
+      const deteccion =
+        await this.expedientesService.createDeteccion(createDeteccionDto);
+      return { message: 'Detección creada exitosamente', data: deteccion };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('deteccion/:id')
+  async findDeteccion(@Param('id') id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+    const deteccion = await this.expedientesService.findDeteccion(id);
+    if (!deteccion) {
+      return {
+        message: `No se encontró la detección con id ${id}`,
+      };
+    }
+    return deteccion;
+  }
+
+  @Get('detecciones/:trabajadorId')
+  async findDeteccionesByTrabajador(
+    @Param('trabajadorId') trabajadorId: string,
+  ) {
+    if (!isValidObjectId(trabajadorId)) {
+      throw new BadRequestException('El ID del trabajador no es válido');
+    }
+    const detecciones =
+      await this.expedientesService.findDeteccionesByTrabajador(trabajadorId);
+    return detecciones;
+  }
+
+  @Patch('deteccion/:id')
+  async updateDeteccion(
+    @Param('id') id: string,
+    @Body() updateDeteccionDto: UpdateDeteccionDto,
+  ) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    const dtoInstance = Object.assign(
+      new UpdateDeteccionDto(),
+      Object.fromEntries(
+        Object.entries(updateDeteccionDto).filter(([_, v]) => v !== undefined),
+      ),
+    );
+
+    await new ValidationPipe({ whitelist: true }).transform(dtoInstance, {
+      type: 'body',
+      metatype: UpdateDeteccionDto,
+    });
+
+    try {
+      const updatedDeteccion = await this.expedientesService.updateDeteccion(
+        id,
+        dtoInstance,
+      );
+      return {
+        message: 'Detección actualizada exitosamente',
+        data: updatedDeteccion,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Delete('deteccion/:id')
+  async deleteDeteccion(@Param('id') id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    const deleted = await this.expedientesService.deleteDeteccion(id);
+    if (!deleted) {
+      return {
+        message: `La detección con id ${id} no existe o ya ha sido eliminada`,
+      };
+    }
+    return {
+      message: `La detección con id ${id} ha sido eliminada exitosamente`,
+    };
+  }
+
+  @Post('deteccion/:id/finalizar')
+  async finalizarDeteccion(@Param('id') id: string, @Request() req: any) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      throw new BadRequestException('Usuario no autenticado');
+    }
+
+    try {
+      const finalizedDeteccion =
+        await this.expedientesService.finalizarDeteccion(id, userId);
+      return {
+        message: 'Detección finalizada exitosamente',
+        data: finalizedDeteccion,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 }

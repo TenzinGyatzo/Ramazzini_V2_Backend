@@ -30,6 +30,10 @@ export class EnfermeraFirmante extends Document {
   firma?: object;
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   idUser: User;
+
+  // NOM-024: CURP for healthcare professionals (required for MX providers)
+  @Prop()
+  curp?: string;
 }
 
 export const EnfermeraFirmanteSchema =

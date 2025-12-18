@@ -142,6 +142,7 @@ describe('Lesion Validation - Without GIIS-B013 Catalog Dependencies', () => {
           provide: getModelToken('ConstanciaAptitud'),
           useValue: createMockModel(),
         },
+        { provide: getModelToken('Deteccion'), useValue: createMockModel() },
         {
           provide: getModelToken(Trabajador.name),
           useValue: mockTrabajadorModel,

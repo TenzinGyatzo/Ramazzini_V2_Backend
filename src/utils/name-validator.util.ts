@@ -1,0 +1,269 @@
+/**
+ * NOM-024 Name Validator Utility
+ *
+ * Validates and normalizes person names according to NOM-024 requirements.
+ * Enforces rules for Mexican providers, provides warnings for non-MX.
+ */
+
+/**
+ * Common abbreviations that are NOT allowed in NOM-024 names
+ * These include professional titles, honorifics, and common abbreviations
+ */
+const FORBIDDEN_ABBREVIATIONS = [
+  // Professional titles
+  'DR.',
+  'DRA.',
+  'ING.',
+  'LIC.',
+  'ARQ.',
+  'C.P.',
+  'CP.',
+  'MTRO.',
+  'MTRA.',
+  'PROF.',
+  'PROFA.',
+  // Honorifics
+  'SR.',
+  'SRA.',
+  'SRTA.',
+  'DON',
+  'DOÑA',
+  // Military/Police ranks
+  'GRAL.',
+  'CNEL.',
+  'CAP.',
+  'TTE.',
+  'CMTE.',
+  // Religious
+  'PBRO.',
+  'HNA.',
+  'FRAY',
+  // Other common abbreviations
+  'JR.',
+  'JR',
+  'III',
+  'II',
+  'IV',
+];
+
+/**
+ * Patterns that indicate abbreviations (ending with period after short text)
+ */
+const ABBREVIATION_PATTERNS = [
+  /^[A-Z]{1,4}\.\s*/i, // Starts with 1-4 letters followed by period
+  /\s[A-Z]{1,4}\.\s*/i, // Word with 1-4 letters followed by period
+  /\s[A-Z]{1,4}\.$/i, // Ends with 1-4 letters followed by period
+];
+
+export interface NameValidationResult {
+  isValid: boolean;
+  normalizedValue: string;
+  errors: string[];
+  warnings: string[];
+}
+
+/**
+ * Detects if a name contains forbidden abbreviations
+ *
+ * @param name - Name string to check
+ * @returns Array of found abbreviations
+ */
+export function detectAbbreviations(name: string): string[] {
+  if (!name || typeof name !== 'string') {
+    return [];
+  }
+
+  const upperName = name.toUpperCase().trim();
+  const foundAbbreviations: string[] = [];
+
+  // Check against known abbreviations
+  for (const abbr of FORBIDDEN_ABBREVIATIONS) {
+    // Check if name starts with abbreviation
+    if (upperName.startsWith(abbr + ' ') || upperName === abbr) {
+      foundAbbreviations.push(abbr);
+      continue;
+    }
+    // Check if name contains abbreviation as separate word
+    if (
+      upperName.includes(' ' + abbr + ' ') ||
+      upperName.endsWith(' ' + abbr)
+    ) {
+      foundAbbreviations.push(abbr);
+    }
+  }
+
+  // Check for pattern-based abbreviations
+  for (const pattern of ABBREVIATION_PATTERNS) {
+    if (pattern.test(upperName)) {
+      // Extract the abbreviation that matched
+      const match = upperName.match(pattern);
+      if (match && match[0]) {
+        const abbr = match[0].trim();
+        if (!foundAbbreviations.includes(abbr)) {
+          foundAbbreviations.push(abbr);
+        }
+      }
+    }
+  }
+
+  return foundAbbreviations;
+}
+
+/**
+ * Removes detected abbreviations from a name
+ *
+ * @param name - Name string to clean
+ * @returns Cleaned name without abbreviations
+ */
+export function removeAbbreviations(name: string): string {
+  if (!name || typeof name !== 'string') {
+    return '';
+  }
+
+  let cleaned = name.toUpperCase().trim();
+
+  // Remove known abbreviations
+  for (const abbr of FORBIDDEN_ABBREVIATIONS) {
+    // Remove from start
+    const startPattern = new RegExp(`^${escapeRegex(abbr)}\\s+`, 'i');
+    cleaned = cleaned.replace(startPattern, '');
+    // Remove from middle/end
+    const middlePattern = new RegExp(`\\s+${escapeRegex(abbr)}(\\s+|$)`, 'gi');
+    cleaned = cleaned.replace(middlePattern, ' ');
+  }
+
+  // Clean up multiple spaces and trim
+  return cleaned.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Escapes special regex characters in a string
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Validates a name field according to NOM-024 rules
+ *
+ * @param name - Name value to validate
+ * @param fieldName - Human-readable field name for error messages
+ * @param maxLength - Maximum allowed length (default 50)
+ * @returns NameValidationResult with validation status and normalized value
+ */
+export function validateNameField(
+  name: string | undefined | null,
+  fieldName: string,
+  maxLength: number = 50,
+): NameValidationResult {
+  const result: NameValidationResult = {
+    isValid: true,
+    normalizedValue: '',
+    errors: [],
+    warnings: [],
+  };
+
+  // Handle empty/null
+  if (!name || typeof name !== 'string' || name.trim() === '') {
+    result.normalizedValue = '';
+    return result; // Empty is handled separately (required vs optional)
+  }
+
+  // Normalize: trim and uppercase
+  const normalizedName = name.trim().toUpperCase();
+  result.normalizedValue = normalizedName;
+
+  // Check max length
+  if (normalizedName.length > maxLength) {
+    result.isValid = false;
+    result.errors.push(
+      `${fieldName} excede el límite de ${maxLength} caracteres (tiene ${normalizedName.length})`,
+    );
+  }
+
+  // Check for abbreviations
+  const abbreviations = detectAbbreviations(normalizedName);
+  if (abbreviations.length > 0) {
+    result.isValid = false;
+    result.errors.push(
+      `${fieldName} contiene abreviaciones no permitidas: ${abbreviations.join(', ')}. ` +
+        'NOM-024 requiere nombres completos sin abreviaciones.',
+    );
+    // Provide cleaned version
+    result.normalizedValue = removeAbbreviations(normalizedName);
+  }
+
+  // Check for trailing periods (often leftover from abbreviations)
+  if (normalizedName.endsWith('.')) {
+    result.isValid = false;
+    result.errors.push(
+      `${fieldName} no debe terminar con punto (posible abreviación)`,
+    );
+    result.normalizedValue = normalizedName.replace(/\.+$/, '').trim();
+  }
+
+  // Check for invalid characters (only letters, spaces, accents, hyphens allowed)
+  const invalidChars = normalizedName.match(/[^A-ZÁÉÍÓÚÜÑ\s\-']/g);
+  if (invalidChars && invalidChars.length > 0) {
+    result.warnings.push(
+      `${fieldName} contiene caracteres inusuales: ${[...new Set(invalidChars)].join(', ')}`,
+    );
+  }
+
+  return result;
+}
+
+/**
+ * Validates all name fields for a Trabajador
+ *
+ * @param nombre - First name(s)
+ * @param primerApellido - First surname (paternal)
+ * @param segundoApellido - Second surname (maternal, optional)
+ * @returns Combined validation result
+ */
+export function validateTrabajadorNames(
+  nombre: string | undefined | null,
+  primerApellido: string | undefined | null,
+  segundoApellido: string | undefined | null,
+): {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  normalized: {
+    nombre: string;
+    primerApellido: string;
+    segundoApellido: string;
+  };
+} {
+  const nombreResult = validateNameField(nombre, 'Nombre');
+  const primerApellidoResult = validateNameField(
+    primerApellido,
+    'Primer apellido',
+  );
+  const segundoApellidoResult = validateNameField(
+    segundoApellido,
+    'Segundo apellido',
+  );
+
+  return {
+    isValid:
+      nombreResult.isValid &&
+      primerApellidoResult.isValid &&
+      segundoApellidoResult.isValid,
+    errors: [
+      ...nombreResult.errors,
+      ...primerApellidoResult.errors,
+      ...segundoApellidoResult.errors,
+    ],
+    warnings: [
+      ...nombreResult.warnings,
+      ...primerApellidoResult.warnings,
+      ...segundoApellidoResult.warnings,
+    ],
+    normalized: {
+      nombre: nombreResult.normalizedValue,
+      primerApellido: primerApellidoResult.normalizedValue,
+      segundoApellido: segundoApellidoResult.normalizedValue,
+    },
+  };
+}
