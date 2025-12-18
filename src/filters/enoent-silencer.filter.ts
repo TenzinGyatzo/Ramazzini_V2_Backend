@@ -37,7 +37,7 @@ export class EnoentSilencerFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const payload = exception.getResponse(); // <-- aquí viene el array de errores del ValidationPipe
       this.logger.warn(
-        `[BadRequestException] ${request.method} ${request.url} -> ${JSON.stringify(payload)}`
+        `[BadRequestException] ${request.method} ${request.url} -> ${JSON.stringify(payload)}`,
       );
       return response.status(status).json(payload);
     }
@@ -47,20 +47,32 @@ export class EnoentSilencerFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const payload = exception.getResponse();
       this.logger.error(
-        `[HttpException] ${request.method} ${request.url} -> ${JSON.stringify(payload)}`
+        `[HttpException] ${request.method} ${request.url} -> ${JSON.stringify(payload)}`,
       );
-      return response.status(status).json(
-        typeof payload === 'string' ? { statusCode: status, message: payload } : payload
-      );
+      return response
+        .status(status)
+        .json(
+          typeof payload === 'string'
+            ? { statusCode: status, message: payload }
+            : payload,
+        );
     }
 
     // 4) Fallback para errores inesperados (no tumba el proceso)
     const message =
-      (typeof exception === 'object' && exception && (exception as any)['message']) ||
+      (typeof exception === 'object' &&
+        exception &&
+        (exception as any)['message']) ||
       'Internal server error';
     const stack =
-      (typeof exception === 'object' && exception && (exception as any)['stack']) || '';
-    this.logger.error(`[UnknownException] ${request.method} ${request.url}: ${message}`, stack);
+      (typeof exception === 'object' &&
+        exception &&
+        (exception as any)['stack']) ||
+      '';
+    this.logger.error(
+      `[UnknownException] ${request.method} ${request.url}: ${message}`,
+      stack,
+    );
 
     return response.status(500).json({
       statusCode: 500,

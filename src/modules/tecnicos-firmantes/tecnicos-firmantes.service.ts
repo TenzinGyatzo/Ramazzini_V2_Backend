@@ -8,7 +8,10 @@ import { normalizeEnfermeraFirmanteData } from 'src/utils/normalization';
 
 @Injectable()
 export class TecnicosFirmantesService {
-  constructor(@InjectModel(TecnicoFirmante.name) private tecnicoModel: Model<TecnicoFirmante>) {}
+  constructor(
+    @InjectModel(TecnicoFirmante.name)
+    private tecnicoModel: Model<TecnicoFirmante>,
+  ) {}
 
   async create(dto: CreateTecnicoFirmanteDto) {
     // Reusar normalización similar a enfermera
@@ -29,9 +32,14 @@ export class TecnicosFirmantesService {
     return this.tecnicoModel.findOne({ idUser }).exec();
   }
 
-  async update(id: string, dto: UpdateTecnicoFirmanteDto): Promise<TecnicoFirmante> {
+  async update(
+    id: string,
+    dto: UpdateTecnicoFirmanteDto,
+  ): Promise<TecnicoFirmante> {
     const normalized = normalizeEnfermeraFirmanteData(dto as any);
-    return this.tecnicoModel.findByIdAndUpdate(id, normalized, { new: true }).exec();
+    return this.tecnicoModel
+      .findByIdAndUpdate(id, normalized, { new: true })
+      .exec();
   }
 
   async remove(id: string): Promise<boolean> {
@@ -39,5 +47,3 @@ export class TecnicosFirmantesService {
     return result !== null;
   }
 }
-
-

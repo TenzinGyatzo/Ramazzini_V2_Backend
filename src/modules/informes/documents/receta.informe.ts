@@ -91,11 +91,12 @@ function construirSignosVitales(notaMedica): Content {
     }
   };
 
-  agregarDato('TA', 
-    notaMedica.tensionArterialSistolica && notaMedica.tensionArterialDiastolica 
-      ? `${notaMedica.tensionArterialSistolica}/${notaMedica.tensionArterialDiastolica}` 
-      : null, 
-    ' mmHg'
+  agregarDato(
+    'TA',
+    notaMedica.tensionArterialSistolica && notaMedica.tensionArterialDiastolica
+      ? `${notaMedica.tensionArterialSistolica}/${notaMedica.tensionArterialDiastolica}`
+      : null,
+    ' mmHg',
   );
   agregarDato('FC', notaMedica.frecuenciaCardiaca, ' lpm');
   agregarDato('FR', notaMedica.frecuenciaRespiratoria, ' lpm');
@@ -103,12 +104,9 @@ function construirSignosVitales(notaMedica): Content {
   agregarDato('SatO2', notaMedica.saturacionOxigeno, '%');
 
   return {
-    text: [
-      { text: 'Signos Vitales: ', bold: true },
-      ...signosVitales
-    ],
+    text: [{ text: 'Signos Vitales: ', bold: true }, ...signosVitales],
     margin: [0, 0, 0, 10],
-    style: 'paragraph'
+    style: 'paragraph',
   };
 }
 
@@ -124,9 +122,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -150,27 +148,27 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
@@ -208,7 +206,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface EnfermeraFirmante {
@@ -221,7 +219,7 @@ interface EnfermeraFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -251,29 +249,35 @@ export const recetaInforme = (
   enfermeraFirmante: EnfermeraFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
-  
+
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : null);
+  const firmanteActivo = usarMedico
+    ? medicoFirmante
+    : usarEnfermera
+      ? enfermeraFirmante
+      : null;
 
   const firma: Content = firmanteActivo?.firma?.data
-  ? {
-      image: `assets/signatories/${firmanteActivo.firma.data}`,
-      width: 80,
-      alignment: 'center' as const,
-      margin: [0, 10, 0, 0] as [number, number, number, number],
-    }
-  : { text: '' };
+    ? {
+        image: `assets/signatories/${firmanteActivo.firma.data}`,
+        width: 80,
+        alignment: 'center' as const,
+        margin: [0, 10, 0, 0] as [number, number, number, number],
+      }
+    : { text: '' };
 
   const universidadFirmante = (() => {
     if (
       firmanteActivo &&
-      typeof (firmanteActivo as { universidad?: unknown }).universidad === 'string'
+      typeof (firmanteActivo as { universidad?: unknown }).universidad ===
+        'string'
     ) {
-      const universidad = (firmanteActivo as { universidad?: string }).universidad?.trim();
+      const universidad = (
+        firmanteActivo as { universidad?: string }
+      ).universidad?.trim();
       if (universidad) {
         return universidad;
       }
@@ -282,8 +286,16 @@ export const recetaInforme = (
   })();
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   return {
     pageSize: 'LETTER',
@@ -298,19 +310,19 @@ export const recetaInforme = (
         table: {
           widths: ['100%'],
           body: [
-        [
-          {
-            text: [
-          { text: 'Fecha: ', style: 'fecha', bold: false },
-          {
-            text: formatearFechaUTC(receta.fechaReceta),
-            style: 'fecha',
-            bold: true,
-          },
+            [
+              {
+                text: [
+                  { text: 'Fecha: ', style: 'fecha', bold: false },
+                  {
+                    text: formatearFechaUTC(receta.fechaReceta),
+                    style: 'fecha',
+                    bold: true,
+                  },
+                ],
+                margin: [0, 3, 0, 0],
+              },
             ],
-            margin: [0, 3, 0, 0],
-          },
-        ],
           ],
         },
         layout: 'noBorders',
@@ -322,25 +334,27 @@ export const recetaInforme = (
         table: {
           widths: ['70%', '30%'],
           body: [
-        [
-          {
-            text: formatearNombreTrabajador(trabajador),
-            style: 'nombreEmpresa',
-            alignment: 'left',
-            margin: [0, 0, 0, 0],
-          },
-          {
-            text: [
-          { text: 'CEL: ', style: 'fecha', bold: false },
-          {
-            text: trabajador.telefono ? `${trabajador.telefono}` : 'No disponible',
-            style: 'fecha',
-            bold: true,
-          },
+            [
+              {
+                text: formatearNombreTrabajador(trabajador),
+                style: 'nombreEmpresa',
+                alignment: 'left',
+                margin: [0, 0, 0, 0],
+              },
+              {
+                text: [
+                  { text: 'CEL: ', style: 'fecha', bold: false },
+                  {
+                    text: trabajador.telefono
+                      ? `${trabajador.telefono}`
+                      : 'No disponible',
+                    style: 'fecha',
+                    bold: true,
+                  },
+                ],
+                margin: [0, 3, 0, 0],
+              },
             ],
-            margin: [0, 3, 0, 0],
-          },
-        ],
           ],
         },
         layout: 'noBorders',
@@ -348,47 +362,59 @@ export const recetaInforme = (
       },
 
       // Tratamiento
-      receta.tratamiento && receta.tratamiento.length > 0 ? {
-        text: [
-          { text: `Tratamiento:`, bold: true },
-          ...receta.tratamiento.flatMap((item, index) => ([
-            { text: `\n     ${index + 1}. `, preserveLeadingSpaces: true }, // Espacios antes del número
-            { text: item, bold: true }
-          ])) // 🔹 Se usa `flatMap` para evitar la anidación de arrays
-        ],
-        margin: [0, 12, 0, 18] as [number, number, number, number],
-        style: 'sectionContent'
-      } : undefined,  // 🔹 Se usa `undefined` en lugar de `null`
+      receta.tratamiento && receta.tratamiento.length > 0
+        ? {
+            text: [
+              { text: `Tratamiento:`, bold: true },
+              ...receta.tratamiento.flatMap((item, index) => [
+                { text: `\n     ${index + 1}. `, preserveLeadingSpaces: true }, // Espacios antes del número
+                { text: item, bold: true },
+              ]), // 🔹 Se usa `flatMap` para evitar la anidación de arrays
+            ],
+            margin: [0, 12, 0, 18] as [number, number, number, number],
+            style: 'sectionContent',
+          }
+        : undefined, // 🔹 Se usa `undefined` en lugar de `null`
 
       // Recomendaciones
-      Array.isArray(receta.recomendaciones) && receta.recomendaciones.length > 0 ? {
-        text: [
-          { text: `Recomendaciones:`, bold: true }, // Solo la etiqueta en negrita
-          ...receta.recomendaciones.flatMap((item, index) => ([
-            { text: `\n     ${String.fromCharCode(97 + index)}. `, preserveLeadingSpaces: true }, // Letra en lugar de número
-            { text: item } // Texto normal, sin negrita
-          ])) // 🔹 `flatMap` evita arrays anidados
-        ],
-        margin: [0, 0, 0, 18] as [number, number, number, number], // Mantiene formato correcto
-        style: 'sectionContent'
-      } : typeof receta.recomendaciones === 'string' && receta.recomendaciones.trim().length > 0 ? {
-        text: [
-          { text: `Recomendaciones:`, bold: true },
-          { text: ` ${receta.recomendaciones}` }
-        ],
-        margin: [0, 0, 0, 18] as [number, number, number, number],
-        style: 'sectionContent'
-      } : undefined, // 🔹 Se usa `undefined` en lugar de `null`
+      Array.isArray(receta.recomendaciones) && receta.recomendaciones.length > 0
+        ? {
+            text: [
+              { text: `Recomendaciones:`, bold: true }, // Solo la etiqueta en negrita
+              ...receta.recomendaciones.flatMap((item, index) => [
+                {
+                  text: `\n     ${String.fromCharCode(97 + index)}. `,
+                  preserveLeadingSpaces: true,
+                }, // Letra en lugar de número
+                { text: item }, // Texto normal, sin negrita
+              ]), // 🔹 `flatMap` evita arrays anidados
+            ],
+            margin: [0, 0, 0, 18] as [number, number, number, number], // Mantiene formato correcto
+            style: 'sectionContent',
+          }
+        : typeof receta.recomendaciones === 'string' &&
+            receta.recomendaciones.trim().length > 0
+          ? {
+              text: [
+                { text: `Recomendaciones:`, bold: true },
+                { text: ` ${receta.recomendaciones}` },
+              ],
+              margin: [0, 0, 0, 18] as [number, number, number, number],
+              style: 'sectionContent',
+            }
+          : undefined, // 🔹 Se usa `undefined` en lugar de `null`
 
       // Observaciones
-      receta.indicaciones ? {
-        text: [
-          { text: `Indicaciones:`, bold: true },
-          { text: ` ${receta.indicaciones} `},
-        ],
-        margin: [0, 0, 0, 22] as [number, number, number, number],
-        style: 'sectionContent'
-      } : undefined,
+      receta.indicaciones
+        ? {
+            text: [
+              { text: `Indicaciones:`, bold: true },
+              { text: ` ${receta.indicaciones} ` },
+            ],
+            margin: [0, 0, 0, 22] as [number, number, number, number],
+            style: 'sectionContent',
+          }
+        : undefined,
 
       ...(firmanteActivo
         ? [
@@ -428,8 +454,8 @@ export const recetaInforme = (
                       proveedorSalud.pais === 'MX'
                         ? `Cédula profesional No. ${firmanteActivo.numeroCedulaProfesional}.`
                         : proveedorSalud.pais === 'GT'
-                        ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}.`
-                        : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}.`,
+                          ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}.`
+                          : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}.`,
                     fontSize: 10,
                     alignment: 'center' as const,
                     margin: [0, 0, 0, 0] as [number, number, number, number],
@@ -479,13 +505,17 @@ export const recetaInforme = (
         {
           text: [
             {
-              text: [
-                proveedorSalud.direccion,
-                proveedorSalud.municipio,
-                proveedorSalud.estado,
-              ]
-                .filter(item => item)
-                .join(', ') + (proveedorSalud.telefono ? `. Tel. ${formatearTelefono(proveedorSalud.telefono)}` : ''),
+              text:
+                [
+                  proveedorSalud.direccion,
+                  proveedorSalud.municipio,
+                  proveedorSalud.estado,
+                ]
+                  .filter((item) => item)
+                  .join(', ') +
+                (proveedorSalud.telefono
+                  ? `. Tel. ${formatearTelefono(proveedorSalud.telefono)}`
+                  : ''),
               italics: true,
             },
             proveedorSalud.sitioWeb
@@ -496,7 +526,7 @@ export const recetaInforme = (
                   color: 'blue',
                 }
               : null,
-          ].filter(item => item !== null),
+          ].filter((item) => item !== null),
           alignment: 'center' as const,
           fontSize: 8,
           margin: [0, 0, 0, 0] as [number, number, number, number],

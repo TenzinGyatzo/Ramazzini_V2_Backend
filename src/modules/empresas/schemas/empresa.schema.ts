@@ -6,7 +6,7 @@ import { ProveedoresSalud } from 'src/modules/proveedores-salud/entities/proveed
 interface Logotipo {
   data: string;
   contentType: string;
-  }
+}
 
 @Schema()
 export class Empresa extends Document {
@@ -23,12 +23,12 @@ export class Empresa extends Document {
   giroDeEmpresa: string;
 
   @Prop({
-  type: {
-    data: {type: String},
-    contentType: {type: String}
-  } 
+    type: {
+      data: { type: String },
+      contentType: { type: String },
+    },
   })
-  logotipoEmpresa: Logotipo
+  logotipoEmpresa: Logotipo;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   createdBy: User;
@@ -36,11 +36,18 @@ export class Empresa extends Document {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   updatedBy: User;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProveedoresSalud', required: true })
-  idProveedorSalud: ProveedoresSalud
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'ProveedoresSalud',
+    required: true,
+  })
+  idProveedorSalud: ProveedoresSalud;
 }
 
-export const EmpresaSchema = SchemaFactory.createForClass(Empresa).set('timestamps', true);
+export const EmpresaSchema = SchemaFactory.createForClass(Empresa).set(
+  'timestamps',
+  true,
+);
 // Índices para acelerar búsqueda y filtros
 EmpresaSchema.index({ nombreComercial: 1 });
 EmpresaSchema.index({ razonSocial: 1 });

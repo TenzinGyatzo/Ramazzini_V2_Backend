@@ -1,5 +1,15 @@
 import crypto from 'crypto';
-import { Body, Controller, Get, Param, Post, Put, Query, Headers, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Headers,
+  Delete,
+} from '@nestjs/common';
 import { PagosService } from './pagos.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
@@ -14,8 +24,14 @@ export class PagosController {
   }
 
   @Put('actualizar-suscripcion/:id')
-  async actualizarSuscripcion(@Param('id') id: string, @Body() updateSubscriptionDto: UpdateSubscriptionDto) {
-    return await this.pagosService.actualizarSuscripcion(id, updateSubscriptionDto);
+  async actualizarSuscripcion(
+    @Param('id') id: string,
+    @Body() updateSubscriptionDto: UpdateSubscriptionDto,
+  ) {
+    return await this.pagosService.actualizarSuscripcion(
+      id,
+      updateSubscriptionDto,
+    );
   }
 
   @Get('obtener-suscripcion-api/:id')
@@ -57,73 +73,76 @@ export class PagosController {
 
     return { message: 'Webhook recibido correctamente.' };
   } */
- 
 
-    @Post('webhook-mercadopago')
-    async recibirInformacionPago(
-      @Body() body: any,
-      @Headers('x-signature') xSignature: string,
-      @Headers('x-request-id') xRequestId: string,
-      @Query('data.id') dataId: string
-    ) {
-      console.log('Webhook de Mercado Pago:', body);
-    
-      // Validar el origen de la notificación
-      const isValid = await this.validarNotificacion(xSignature, xRequestId, dataId);
-      if (!isValid) {
-        console.error('Validación de notificación fallida');
-        throw new Error('Notificación no válida');
-      }
-    
-      const eventType = body.type; // subscription_preapproval or authorized_payment
-      const eventId = body.data.id; // ID del recurso asociado al evento
-    
-      try {
-        if (eventType === 'subscription_preapproval') {
-          await this.pagosService.procesarPreapproval(eventId);
-        } else if (eventType === 'subscription_authorized_payment') {
-          await this.pagosService.procesarAuthorizedPayment(eventId);
-        } else {
-          console.log('Tipo de evento no manejado:', eventType);
-        }
-      } catch (error) {
-        console.error('Error al procesar el webhook:', error);
-      }
-    
-      return { message: 'Webhook recibido correctamente.' };
+  @Post('webhook-mercadopago')
+  async recibirInformacionPago(
+    @Body() body: any,
+    @Headers('x-signature') xSignature: string,
+    @Headers('x-request-id') xRequestId: string,
+    @Query('data.id') dataId: string,
+  ) {
+    console.log('Webhook de Mercado Pago:', body);
+
+    // Validar el origen de la notificación
+    const isValid = await this.validarNotificacion(
+      xSignature,
+      xRequestId,
+      dataId,
+    );
+    if (!isValid) {
+      console.error('Validación de notificación fallida');
+      throw new Error('Notificación no válida');
     }
-    
-    private async validarNotificacion(
-      xSignature: string,
-      xRequestId: string,
-      dataId: string
-    ): Promise<boolean> {
-      // Parsear el header x-signature
-      const parts = xSignature.split(',');
-      let ts: string;
-      let hash: string;
-    
-      parts.forEach(part => {
-        const [key, value] = part.split('=');
-        if (key.trim() === 'ts') {
-          ts = value.trim();
-        } else if (key.trim() === 'v1') {
-          hash = value.trim();
-        }
-      });
-    
-      // Obtener la clave secreta (deberías almacenarla de forma segura, por ejemplo, en variables de entorno)
-      const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
-    
-      // Generar el manifest string
-      const manifest = `id:${dataId.toLowerCase()};request-id:${xRequestId};ts:${ts};`;
-    
-      // Generar el HMAC
-      const hmac = crypto.createHmac('sha256', secret);
-      hmac.update(manifest);
-      const sha = hmac.digest('hex');
-    
-      // Comparar los hashes
-      return sha === hash;
+
+    const eventType = body.type; // subscription_preapproval or authorized_payment
+    const eventId = body.data.id; // ID del recurso asociado al evento
+
+    try {
+      if (eventType === 'subscription_preapproval') {
+        await this.pagosService.procesarPreapproval(eventId);
+      } else if (eventType === 'subscription_authorized_payment') {
+        await this.pagosService.procesarAuthorizedPayment(eventId);
+      } else {
+        console.log('Tipo de evento no manejado:', eventType);
+      }
+    } catch (error) {
+      console.error('Error al procesar el webhook:', error);
     }
+
+    return { message: 'Webhook recibido correctamente.' };
+  }
+
+  private async validarNotificacion(
+    xSignature: string,
+    xRequestId: string,
+    dataId: string,
+  ): Promise<boolean> {
+    // Parsear el header x-signature
+    const parts = xSignature.split(',');
+    let ts: string;
+    let hash: string;
+
+    parts.forEach((part) => {
+      const [key, value] = part.split('=');
+      if (key.trim() === 'ts') {
+        ts = value.trim();
+      } else if (key.trim() === 'v1') {
+        hash = value.trim();
+      }
+    });
+
+    // Obtener la clave secreta (deberías almacenarla de forma segura, por ejemplo, en variables de entorno)
+    const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+    // Generar el manifest string
+    const manifest = `id:${dataId.toLowerCase()};request-id:${xRequestId};ts:${ts};`;
+
+    // Generar el HMAC
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(manifest);
+    const sha = hmac.digest('hex');
+
+    // Comparar los hashes
+    return sha === hash;
+  }
 }

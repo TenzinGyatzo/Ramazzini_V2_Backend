@@ -77,7 +77,7 @@ export class InformesService {
         firma: null,
       };
     }
-    
+
     return {
       nombre: medicoFirmante.nombre || '',
       tituloProfesional: medicoFirmante.tituloProfesional || '',
@@ -110,9 +110,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -140,7 +140,8 @@ export class InformesService {
       ketamina: antidoping.ketamina || null,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -152,87 +153,109 @@ export class InformesService {
             numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
             nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
             numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
-            firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
+            firma:
+              (medicoFirmante.firma as { data: string; contentType: string }) ||
+              null,
           }
         : null,
     );
 
-    const enfermeraFirmante = await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
     const datosEnfermeraFirmante = enfermeraFirmante
-    ? {
-        nombre: enfermeraFirmante.nombre || "",
-        sexo: enfermeraFirmante.sexo || "",
-        tituloProfesional: enfermeraFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: enfermeraFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: enfermeraFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: enfermeraFirmante.numeroCredencialAdicional || "",
-        firma: enfermeraFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const tecnicoFirmante = await this.tecnicosFirmantesService.findOneByUserId(userId);
+    const tecnicoFirmante =
+      await this.tecnicosFirmantesService.findOneByUserId(userId);
     const datosTecnicoFirmante = tecnicoFirmante
-    ? {
-        nombre: tecnicoFirmante.nombre || "",
-        sexo: tecnicoFirmante.sexo || "",
-        tituloProfesional: tecnicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: tecnicoFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: tecnicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: tecnicoFirmante.numeroCredencialAdicional || "",
-        firma: tecnicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: tecnicoFirmante.nombre || '',
+          sexo: tecnicoFirmante.sexo || '',
+          tituloProfesional: tecnicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            tecnicoFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            tecnicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            tecnicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (tecnicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
     const usuario = await this.usersService.findById(userId);
-     const datosUsuario = {
+    const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    };
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
 
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(antidoping.fechaAntidoping)
@@ -287,9 +310,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -422,7 +445,8 @@ export class InformesService {
       ? {
           fechaAudiometria: nearestAudiometria.fechaAudiometria,
           diagnosticoAudiometria: nearestAudiometria.diagnosticoAudiometria,
-          hipoacusiaBilateralCombinada: nearestAudiometria.hipoacusiaBilateralCombinada,
+          hipoacusiaBilateralCombinada:
+            nearestAudiometria.hipoacusiaBilateralCombinada,
         }
       : null;
 
@@ -451,12 +475,14 @@ export class InformesService {
           barbituricos: nearestAntidoping.barbituricos || null,
           antidepresivosTriciclicos:
             nearestAntidoping.antidepresivosTriciclicos || null,
-          metilendioximetanfetamina: nearestAntidoping.metilendioximetanfetamina || null,
+          metilendioximetanfetamina:
+            nearestAntidoping.metilendioximetanfetamina || null,
           ketamina: nearestAntidoping.ketamina || null,
         }
       : null;
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -468,48 +494,57 @@ export class InformesService {
             numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
             nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
             numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
-            firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
+            firma:
+              (medicoFirmante.firma as { data: string; contentType: string }) ||
+              null,
           }
         : null,
     );
 
     const usuario = await this.usersService.findById(userId);
-     const datosUsuario = {
+    const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
+    };
 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-        semaforizacionActivada: proveedorSalud.semaforizacionActivada || false,
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-        semaforizacionActivada: false,
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+          semaforizacionActivada:
+            proveedorSalud.semaforizacionActivada || false,
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+          semaforizacionActivada: false,
+        };
 
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(aptitud.fechaAptitudPuesto)
@@ -563,9 +598,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -581,7 +616,8 @@ export class InformesService {
       fechaConstanciaAptitud: constanciaAptitud.fechaConstanciaAptitud,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -593,51 +629,62 @@ export class InformesService {
             numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
             nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
             numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
-            firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
+            firma:
+              (medicoFirmante.firma as { data: string; contentType: string }) ||
+              null,
           }
         : null,
     );
 
     const usuario = await this.usersService.findById(userId);
-     const datosUsuario = {
+    const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
+    };
 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-        semaforizacionActivada: proveedorSalud.semaforizacionActivada || false,
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-        semaforizacionActivada: false,
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+          semaforizacionActivada:
+            proveedorSalud.semaforizacionActivada || false,
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+          semaforizacionActivada: false,
+        };
 
     // Formatear la fecha para el nombre del archivo
-    const fecha = convertirFechaADDMMAAAA(constanciaAptitud.fechaConstanciaAptitud)
+    const fecha = convertirFechaADDMMAAAA(
+      constanciaAptitud.fechaConstanciaAptitud,
+    )
       .replace(/\//g, '-')
       .replace(/\\/g, '-');
     const nombreArchivo = `Constancia de Aptitud ${fecha}.pdf`;
@@ -684,9 +731,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -733,7 +780,8 @@ export class InformesService {
       graficaAudiometria: graficaAudiometria, // Agregar la gráfica si se proporciona
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -745,90 +793,113 @@ export class InformesService {
             numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
             nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
             numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
-            firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
+            firma:
+              (medicoFirmante.firma as { data: string; contentType: string }) ||
+              null,
           }
         : null,
     );
 
-    const enfermeraFirmante = await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
     const datosEnfermeraFirmante = enfermeraFirmante
-    ? {
-        nombre: enfermeraFirmante.nombre || "",
-        sexo: enfermeraFirmante.sexo || "",
-        tituloProfesional: enfermeraFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: enfermeraFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: enfermeraFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: enfermeraFirmante.numeroCredencialAdicional || "",
-        firma: enfermeraFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const tecnicoFirmante = await this.tecnicosFirmantesService.findOneByUserId(userId);
+    const tecnicoFirmante =
+      await this.tecnicosFirmantesService.findOneByUserId(userId);
     const datosTecnicoFirmante = tecnicoFirmante
-    ? {
-        nombre: tecnicoFirmante.nombre || "",
-        sexo: tecnicoFirmante.sexo || "",
-        tituloProfesional: tecnicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: tecnicoFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: tecnicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: tecnicoFirmante.numeroCredencialAdicional || "",
-        firma: tecnicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: tecnicoFirmante.nombre || '',
+          sexo: tecnicoFirmante.sexo || '',
+          tituloProfesional: tecnicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            tecnicoFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            tecnicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            tecnicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (tecnicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
     const usuario = await this.usersService.findById(userId);
-     const datosUsuario = {
+    const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
+    };
 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-        semaforizacionActivada: proveedorSalud.semaforizacionActivada || false,
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-        semaforizacionActivada: false,
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+          semaforizacionActivada:
+            proveedorSalud.semaforizacionActivada || false,
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+          semaforizacionActivada: false,
+        };
 
     // Formatear la fecha para el nombre del archivo
     const fecha = convertirFechaADDMMAAAA(audiometria.fechaAudiometria)
@@ -879,9 +950,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -910,56 +981,65 @@ export class InformesService {
           'fechaExploracionFisica',
         )
       : null;
-    
+
     const datosExploracionFisica = nearestExploracionFisica
-        ? {
-      fechaExploracionFisica: nearestExploracionFisica.fechaExploracionFisica,
-      peso: nearestExploracionFisica.peso,
-      altura: nearestExploracionFisica.altura,
-      indiceMasaCorporal: nearestExploracionFisica.indiceMasaCorporal,
-      categoriaIMC: nearestExploracionFisica.categoriaIMC,
-      circunferenciaCintura: nearestExploracionFisica.circunferenciaCintura,
-      categoriaCircunferenciaCintura:
-        nearestExploracionFisica.categoriaCircunferenciaCintura,
-      tensionArterialSistolica: nearestExploracionFisica.tensionArterialSistolica,
-      tensionArterialDiastolica: nearestExploracionFisica.tensionArterialDiastolica,
-      categoriaTensionArterial: nearestExploracionFisica.categoriaTensionArterial,
-      frecuenciaCardiaca: nearestExploracionFisica.frecuenciaCardiaca,
-      categoriaFrecuenciaCardiaca:
-        nearestExploracionFisica.categoriaFrecuenciaCardiaca,
-      frecuenciaRespiratoria: nearestExploracionFisica.frecuenciaRespiratoria,
-      categoriaFrecuenciaRespiratoria:
-        nearestExploracionFisica.categoriaFrecuenciaRespiratoria,
-      saturacionOxigeno: nearestExploracionFisica.saturacionOxigeno,
-      categoriaSaturacionOxigeno: nearestExploracionFisica.categoriaSaturacionOxigeno,
-      craneoCara: nearestExploracionFisica.craneoCara,
-      ojos: nearestExploracionFisica.ojos,
-      oidos: nearestExploracionFisica.oidos,
-      nariz: nearestExploracionFisica.nariz,
-      boca: nearestExploracionFisica.boca,
-      cuello: nearestExploracionFisica.cuello,
-      hombros: nearestExploracionFisica.hombros,
-      codos: nearestExploracionFisica.codos,
-      manos: nearestExploracionFisica.manos,
-      reflejosOsteoTendinososSuperiores: nearestExploracionFisica.reflejosOsteoTendinososSuperiores,
-      vascularESuperiores: nearestExploracionFisica.vascularESuperiores,
-      torax: nearestExploracionFisica.torax,
-      abdomen: nearestExploracionFisica.abdomen,
-      cadera: nearestExploracionFisica.cadera,
-      rodillas: nearestExploracionFisica.rodillas,
-      tobillosPies: nearestExploracionFisica.tobillosPies,
-      reflejosOsteoTendinososInferiores: nearestExploracionFisica.reflejosOsteoTendinososInferiores,
-      vascularEInferiores: nearestExploracionFisica.vascularEInferiores,
-      inspeccionColumna: nearestExploracionFisica.inspeccionColumna,
-      movimientosColumna: nearestExploracionFisica.movimientosColumna,
-      lesionesPiel: nearestExploracionFisica.lesionesPiel,
-      cicatrices: nearestExploracionFisica.cicatrices,
-      nevos: nearestExploracionFisica.nevos,
-      coordinacion: nearestExploracionFisica.coordinacion,
-      sensibilidad: nearestExploracionFisica.sensibilidad,
-      equilibrio: nearestExploracionFisica.equilibrio,
-      marcha: nearestExploracionFisica.marcha,
-      resumenExploracionFisica: nearestExploracionFisica.resumenExploracionFisica,
+      ? {
+          fechaExploracionFisica:
+            nearestExploracionFisica.fechaExploracionFisica,
+          peso: nearestExploracionFisica.peso,
+          altura: nearestExploracionFisica.altura,
+          indiceMasaCorporal: nearestExploracionFisica.indiceMasaCorporal,
+          categoriaIMC: nearestExploracionFisica.categoriaIMC,
+          circunferenciaCintura: nearestExploracionFisica.circunferenciaCintura,
+          categoriaCircunferenciaCintura:
+            nearestExploracionFisica.categoriaCircunferenciaCintura,
+          tensionArterialSistolica:
+            nearestExploracionFisica.tensionArterialSistolica,
+          tensionArterialDiastolica:
+            nearestExploracionFisica.tensionArterialDiastolica,
+          categoriaTensionArterial:
+            nearestExploracionFisica.categoriaTensionArterial,
+          frecuenciaCardiaca: nearestExploracionFisica.frecuenciaCardiaca,
+          categoriaFrecuenciaCardiaca:
+            nearestExploracionFisica.categoriaFrecuenciaCardiaca,
+          frecuenciaRespiratoria:
+            nearestExploracionFisica.frecuenciaRespiratoria,
+          categoriaFrecuenciaRespiratoria:
+            nearestExploracionFisica.categoriaFrecuenciaRespiratoria,
+          saturacionOxigeno: nearestExploracionFisica.saturacionOxigeno,
+          categoriaSaturacionOxigeno:
+            nearestExploracionFisica.categoriaSaturacionOxigeno,
+          craneoCara: nearestExploracionFisica.craneoCara,
+          ojos: nearestExploracionFisica.ojos,
+          oidos: nearestExploracionFisica.oidos,
+          nariz: nearestExploracionFisica.nariz,
+          boca: nearestExploracionFisica.boca,
+          cuello: nearestExploracionFisica.cuello,
+          hombros: nearestExploracionFisica.hombros,
+          codos: nearestExploracionFisica.codos,
+          manos: nearestExploracionFisica.manos,
+          reflejosOsteoTendinososSuperiores:
+            nearestExploracionFisica.reflejosOsteoTendinososSuperiores,
+          vascularESuperiores: nearestExploracionFisica.vascularESuperiores,
+          torax: nearestExploracionFisica.torax,
+          abdomen: nearestExploracionFisica.abdomen,
+          cadera: nearestExploracionFisica.cadera,
+          rodillas: nearestExploracionFisica.rodillas,
+          tobillosPies: nearestExploracionFisica.tobillosPies,
+          reflejosOsteoTendinososInferiores:
+            nearestExploracionFisica.reflejosOsteoTendinososInferiores,
+          vascularEInferiores: nearestExploracionFisica.vascularEInferiores,
+          inspeccionColumna: nearestExploracionFisica.inspeccionColumna,
+          movimientosColumna: nearestExploracionFisica.movimientosColumna,
+          lesionesPiel: nearestExploracionFisica.lesionesPiel,
+          cicatrices: nearestExploracionFisica.cicatrices,
+          nevos: nearestExploracionFisica.nevos,
+          coordinacion: nearestExploracionFisica.coordinacion,
+          sensibilidad: nearestExploracionFisica.sensibilidad,
+          equilibrio: nearestExploracionFisica.equilibrio,
+          marcha: nearestExploracionFisica.marcha,
+          resumenExploracionFisica:
+            nearestExploracionFisica.resumenExploracionFisica,
         }
       : null;
 
@@ -980,7 +1060,8 @@ export class InformesService {
           fechaExamenVista: nearestExamenVista.fechaExamenVista,
           ojoIzquierdoLejanaSinCorreccion:
             nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
-          ojoDerechoLejanaSinCorreccion: nearestExamenVista.ojoDerechoLejanaSinCorreccion,
+          ojoDerechoLejanaSinCorreccion:
+            nearestExamenVista.ojoDerechoLejanaSinCorreccion,
           sinCorreccionLejanaInterpretacion:
             nearestExamenVista.sinCorreccionLejanaInterpretacion,
           requiereLentesUsoGeneral: nearestExamenVista.requiereLentesUsoGeneral,
@@ -990,10 +1071,12 @@ export class InformesService {
             nearestExamenVista.ojoDerechoCercanaSinCorreccion,
           sinCorreccionCercanaInterpretacion:
             nearestExamenVista.sinCorreccionCercanaInterpretacion,
-          requiereLentesParaLectura: nearestExamenVista.requiereLentesParaLectura,
+          requiereLentesParaLectura:
+            nearestExamenVista.requiereLentesParaLectura,
           ojoIzquierdoLejanaConCorreccion:
             nearestExamenVista.ojoIzquierdoLejanaConCorreccion,
-          ojoDerechoLejanaConCorreccion: nearestExamenVista.ojoDerechoLejanaConCorreccion,
+          ojoDerechoLejanaConCorreccion:
+            nearestExamenVista.ojoDerechoLejanaConCorreccion,
           conCorreccionLejanaInterpretacion:
             nearestExamenVista.conCorreccionLejanaInterpretacion,
           ojoIzquierdoCercanaConCorreccion:
@@ -1008,7 +1091,8 @@ export class InformesService {
         }
       : null;
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -1020,44 +1104,52 @@ export class InformesService {
             numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
             nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
             numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
-            firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
+            firma:
+              (medicoFirmante.firma as { data: string; contentType: string }) ||
+              null,
           }
         : null,
     );
 
     const usuario = await this.usersService.findById(userId);
-     const datosUsuario = {
+    const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
+    };
 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+        };
 
     const fecha = convertirFechaADDMMAAAA(certificado.fechaCertificado)
       .replace(/\//g, '-')
@@ -1075,7 +1167,7 @@ export class InformesService {
       nombreEmpresa,
       datosTrabajador,
       datosCertificado,
-      datosExploracionFisica, 
+      datosExploracionFisica,
       datosExamenVista,
       datosMedicoFirmante,
       datosProveedorSalud,
@@ -1104,9 +1196,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -1136,7 +1228,8 @@ export class InformesService {
       observaciones: certificado.observaciones,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -1148,44 +1241,52 @@ export class InformesService {
             numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
             nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
             numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
-            firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
+            firma:
+              (medicoFirmante.firma as { data: string; contentType: string }) ||
+              null,
           }
         : null,
     );
 
     const usuario = await this.usersService.findById(userId);
-     const datosUsuario = {
+    const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
+    };
 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+        };
 
     const fecha = convertirFechaADDMMAAAA(certificado.fechaCertificadoExpedito)
       .replace(/\//g, '-')
@@ -1232,9 +1333,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -1288,7 +1389,8 @@ export class InformesService {
       diagnosticoRecomendaciones: examenVista.diagnosticoRecomendaciones,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -1300,87 +1402,109 @@ export class InformesService {
             numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista,
             nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional,
             numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional,
-            firma: (medicoFirmante.firma as { data: string; contentType: string }) || null,
+            firma:
+              (medicoFirmante.firma as { data: string; contentType: string }) ||
+              null,
           }
         : null,
     );
-    
-    const enfermeraFirmante = await this.enfermerasFirmantesService.findOneByUserId(userId);
-    const datosEnfermeraFirmante = enfermeraFirmante
-    ? {
-        nombre: enfermeraFirmante.nombre || "",
-        sexo: enfermeraFirmante.sexo || "",
-        tituloProfesional: enfermeraFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: enfermeraFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: enfermeraFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: enfermeraFirmante.numeroCredencialAdicional || "",
-        firma: enfermeraFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
 
-    const tecnicoFirmante = await this.tecnicosFirmantesService.findOneByUserId(userId);
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const datosEnfermeraFirmante = enfermeraFirmante
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
+
+    const tecnicoFirmante =
+      await this.tecnicosFirmantesService.findOneByUserId(userId);
     const datosTecnicoFirmante = tecnicoFirmante
-    ? {
-        nombre: tecnicoFirmante.nombre || "",
-        sexo: tecnicoFirmante.sexo || "",
-        tituloProfesional: tecnicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: tecnicoFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: tecnicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: tecnicoFirmante.numeroCredencialAdicional || "",
-        firma: tecnicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: tecnicoFirmante.nombre || '',
+          sexo: tecnicoFirmante.sexo || '',
+          tituloProfesional: tecnicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            tecnicoFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            tecnicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            tecnicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (tecnicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
     const usuario = await this.usersService.findById(userId);
-     const datosUsuario = {
+    const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    };
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
 
     const fecha = convertirFechaADDMMAAAA(examenVista.fechaExamenVista)
       .replace(/\//g, '-')
@@ -1429,9 +1553,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -1473,14 +1597,16 @@ export class InformesService {
       hombros: exploracionFisica.hombros,
       codos: exploracionFisica.codos,
       manos: exploracionFisica.manos,
-      reflejosOsteoTendinososSuperiores: exploracionFisica.reflejosOsteoTendinososSuperiores,
+      reflejosOsteoTendinososSuperiores:
+        exploracionFisica.reflejosOsteoTendinososSuperiores,
       vascularESuperiores: exploracionFisica.vascularESuperiores,
       torax: exploracionFisica.torax,
       abdomen: exploracionFisica.abdomen,
       cadera: exploracionFisica.cadera,
       rodillas: exploracionFisica.rodillas,
       tobillosPies: exploracionFisica.tobillosPies,
-      reflejosOsteoTendinososInferiores: exploracionFisica.reflejosOsteoTendinososInferiores,
+      reflejosOsteoTendinososInferiores:
+        exploracionFisica.reflejosOsteoTendinososInferiores,
       vascularEInferiores: exploracionFisica.vascularEInferiores,
       inspeccionColumna: exploracionFisica.inspeccionColumna,
       movimientosColumna: exploracionFisica.movimientosColumna,
@@ -1494,106 +1620,133 @@ export class InformesService {
       resumenExploracionFisica: exploracionFisica.resumenExploracionFisica,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = medicoFirmante
-    ? {
-        nombre: medicoFirmante.nombre || "",
-        tituloProfesional: medicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
-        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
-        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
-        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
-        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        especialistaSaludTrabajo: "",
-        numeroCedulaEspecialista: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: medicoFirmante.nombre || '',
+          tituloProfesional: medicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            medicoFirmante.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            medicoFirmante.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            medicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            medicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (medicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          especialistaSaludTrabajo: '',
+          numeroCedulaEspecialista: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const enfermeraFirmante = await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
     const datosEnfermeraFirmante = enfermeraFirmante
-    ? {
-        nombre: enfermeraFirmante.nombre || "",
-        sexo: enfermeraFirmante.sexo || "",
-        tituloProfesional: enfermeraFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: enfermeraFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: enfermeraFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: enfermeraFirmante.numeroCredencialAdicional || "",
-        firma: enfermeraFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const tecnicoFirmante = await this.tecnicosFirmantesService.findOneByUserId(userId);
+    const tecnicoFirmante =
+      await this.tecnicosFirmantesService.findOneByUserId(userId);
     const datosTecnicoFirmante = tecnicoFirmante
-    ? {
-        nombre: tecnicoFirmante.nombre || "",
-        sexo: tecnicoFirmante.sexo || "",
-        tituloProfesional: tecnicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: tecnicoFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: tecnicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: tecnicoFirmante.numeroCredencialAdicional || "",
-        firma: tecnicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: tecnicoFirmante.nombre || '',
+          sexo: tecnicoFirmante.sexo || '',
+          tituloProfesional: tecnicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            tecnicoFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            tecnicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            tecnicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (tecnicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
     const usuario = await this.usersService.findById(userId);
-     const datosUsuario = {
+    const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
+    };
 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
 
     const fecha = convertirFechaADDMMAAAA(
       exploracionFisica.fechaExploracionFisica,
@@ -1645,9 +1798,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -1757,105 +1910,132 @@ export class InformesService {
       resumenHistoriaClinica: historiaClinica.resumenHistoriaClinica,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = medicoFirmante
-    ? {
-        nombre: medicoFirmante.nombre || "",
-        tituloProfesional: medicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
-        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
-        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
-        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
-        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        especialistaSaludTrabajo: "",
-        numeroCedulaEspecialista: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: medicoFirmante.nombre || '',
+          tituloProfesional: medicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            medicoFirmante.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            medicoFirmante.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            medicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            medicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (medicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          especialistaSaludTrabajo: '',
+          numeroCedulaEspecialista: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const enfermeraFirmante = await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
     const datosEnfermeraFirmante = enfermeraFirmante
-    ? {
-        nombre: enfermeraFirmante.nombre || "",
-        sexo: enfermeraFirmante.sexo || "",
-        tituloProfesional: enfermeraFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: enfermeraFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: enfermeraFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: enfermeraFirmante.numeroCredencialAdicional || "",
-        firma: enfermeraFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const tecnicoFirmante = await this.tecnicosFirmantesService.findOneByUserId(userId);
+    const tecnicoFirmante =
+      await this.tecnicosFirmantesService.findOneByUserId(userId);
     const datosTecnicoFirmante = tecnicoFirmante
-    ? {
-        nombre: tecnicoFirmante.nombre || "",
-        sexo: tecnicoFirmante.sexo || "",
-        tituloProfesional: tecnicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: tecnicoFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: tecnicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: tecnicoFirmante.numeroCredencialAdicional || "",
-        firma: tecnicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: tecnicoFirmante.nombre || '',
+          sexo: tecnicoFirmante.sexo || '',
+          tituloProfesional: tecnicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            tecnicoFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            tecnicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            tecnicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (tecnicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
     const usuario = await this.usersService.findById(userId);
-     const datosUsuario = {
+    const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    };
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
 
     const fecha = convertirFechaADDMMAAAA(historiaClinica.fechaHistoriaClinica)
       .replace(/\//g, '-')
@@ -1884,7 +2064,12 @@ export class InformesService {
     return rutaCompleta;
   }
 
-  async getInformeNotaMedica(empresaId: string, trabajadorId: string, notaMedicaId: string, userId: string): Promise<string> {
+  async getInformeNotaMedica(
+    empresaId: string,
+    trabajadorId: string,
+    notaMedicaId: string,
+    userId: string,
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
@@ -1897,16 +2082,19 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
       curp: trabajador.curp,
     };
-    const notaMedica = await this.expedientesService.findDocument('notaMedica', notaMedicaId);
+    const notaMedica = await this.expedientesService.findDocument(
+      'notaMedica',
+      notaMedicaId,
+    );
     const datosNotaMedica = {
       tipoNota: notaMedica.tipoNota,
       fechaNotaMedica: notaMedica.fechaNotaMedica,
@@ -1925,84 +2113,105 @@ export class InformesService {
       observaciones: notaMedica.observaciones,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = medicoFirmante
-    ? {
-        nombre: medicoFirmante.nombre || "",
-        tituloProfesional: medicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
-        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
-        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
-        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
-        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        especialistaSaludTrabajo: "",
-        numeroCedulaEspecialista: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: medicoFirmante.nombre || '',
+          tituloProfesional: medicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            medicoFirmante.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            medicoFirmante.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            medicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            medicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (medicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          especialistaSaludTrabajo: '',
+          numeroCedulaEspecialista: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const enfermeraFirmante = await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
     const datosEnfermeraFirmante = enfermeraFirmante
-    ? {
-        nombre: enfermeraFirmante.nombre || "",
-        sexo: enfermeraFirmante.sexo || "",
-        tituloProfesional: enfermeraFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: enfermeraFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: enfermeraFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: enfermeraFirmante.numeroCredencialAdicional || "",
-        firma: enfermeraFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
     const usuario = await this.usersService.findById(userId);
     const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    };
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
 
     const fecha = convertirFechaADDMMAAAA(notaMedica.fechaNotaMedica)
       .replace(/\//g, '-')
@@ -2027,7 +2236,12 @@ export class InformesService {
     return rutaCompleta;
   }
 
-  async getInformeControlPrenatal(empresaId: string, trabajadorId: string, controlPrenatalId: string, userId: string): Promise<string> {
+  async getInformeControlPrenatal(
+    empresaId: string,
+    trabajadorId: string,
+    controlPrenatalId: string,
+    userId: string,
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
@@ -2040,16 +2254,19 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
       curp: trabajador.curp,
     };
-    const controlPrenatal = await this.expedientesService.findDocument('controlPrenatal', controlPrenatalId);
+    const controlPrenatal = await this.expedientesService.findDocument(
+      'controlPrenatal',
+      controlPrenatalId,
+    );
     const datosControlPrenatal = {
       fechaInicioControlPrenatal: controlPrenatal.fechaInicioControlPrenatal,
       altura: controlPrenatal.altura,
@@ -2152,110 +2369,139 @@ export class InformesService {
       observacionesTia: controlPrenatal.observacionesTia,
       observacionesFcf: controlPrenatal.observacionesFcf,
       observacionesSdg: controlPrenatal.observacionesSdg,
-      observacionesFondoUterino: controlPrenatal.observacionesFondoUterino,      
+      observacionesFondoUterino: controlPrenatal.observacionesFondoUterino,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = medicoFirmante
-    ? {
-        nombre: medicoFirmante.nombre || "",
-        tituloProfesional: medicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
-        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
-        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
-        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
-        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        especialistaSaludTrabajo: "",
-        numeroCedulaEspecialista: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: medicoFirmante.nombre || '',
+          tituloProfesional: medicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            medicoFirmante.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            medicoFirmante.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            medicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            medicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (medicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          especialistaSaludTrabajo: '',
+          numeroCedulaEspecialista: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const enfermeraFirmante = await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
     const datosEnfermeraFirmante = enfermeraFirmante
-    ? {
-        nombre: enfermeraFirmante.nombre || "",
-        sexo: enfermeraFirmante.sexo || "",
-        tituloProfesional: enfermeraFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: enfermeraFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: enfermeraFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: enfermeraFirmante.numeroCredencialAdicional || "",
-        firma: enfermeraFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const tecnicoFirmante = await this.tecnicosFirmantesService.findOneByUserId(userId);
+    const tecnicoFirmante =
+      await this.tecnicosFirmantesService.findOneByUserId(userId);
     const datosTecnicoFirmante = tecnicoFirmante
-    ? {
-        nombre: tecnicoFirmante.nombre || "",
-        sexo: tecnicoFirmante.sexo || "",
-        tituloProfesional: tecnicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: tecnicoFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: tecnicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: tecnicoFirmante.numeroCredencialAdicional || "",
-        firma: tecnicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: tecnicoFirmante.nombre || '',
+          sexo: tecnicoFirmante.sexo || '',
+          tituloProfesional: tecnicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            tecnicoFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            tecnicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            tecnicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (tecnicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
     const usuario = await this.usersService.findById(userId);
     const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    };
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
 
-    const fecha = convertirFechaADDMMAAAA(controlPrenatal.fechaInicioControlPrenatal)
+    const fecha = convertirFechaADDMMAAAA(
+      controlPrenatal.fechaInicioControlPrenatal,
+    )
       .replace(/\//g, '-')
       .replace(/\\/g, '-');
     const nombreArchivo = `Control Prenatal ${fecha}.pdf`;
@@ -2279,7 +2525,12 @@ export class InformesService {
     return rutaCompleta;
   }
 
-  async getInformeHistoriaOtologica(empresaId: string, trabajadorId: string, historiaOtologicaId: string, userId: string): Promise<string> {
+  async getInformeHistoriaOtologica(
+    empresaId: string,
+    trabajadorId: string,
+    historiaOtologicaId: string,
+    userId: string,
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
@@ -2292,16 +2543,19 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
       curp: trabajador.curp,
     };
-    const historiaOtologica = await this.expedientesService.findDocument('historiaOtologica', historiaOtologicaId);
+    const historiaOtologica = await this.expedientesService.findDocument(
+      'historiaOtologica',
+      historiaOtologicaId,
+    );
     const datosHistoriaOtologica = {
       fechaHistoriaOtologica: historiaOtologica.fechaHistoriaOtologica,
       dolorOido: historiaOtologica.dolorOido,
@@ -2312,10 +2566,12 @@ export class InformesService {
       oidoTapadoPlenitud: historiaOtologica.oidoTapadoPlenitud,
       otitisFrecuentesInfancia: historiaOtologica.otitisFrecuentesInfancia,
       cirugiasOido: historiaOtologica.cirugiasOido,
-      traumatismoCranealBarotrauma: historiaOtologica.traumatismoCranealBarotrauma,
+      traumatismoCranealBarotrauma:
+        historiaOtologica.traumatismoCranealBarotrauma,
       usoAudifonos: historiaOtologica.usoAudifonos,
       historiaFamiliarHipoacusia: historiaOtologica.historiaFamiliarHipoacusia,
-      meningitisInfeccionGraveInfancia: historiaOtologica.meningitisInfeccionGraveInfancia,
+      meningitisInfeccionGraveInfancia:
+        historiaOtologica.meningitisInfeccionGraveInfancia,
       diabetes: historiaOtologica.diabetes,
       enfermedadRenal: historiaOtologica.enfermedadRenal,
       medicamentosOtotoxicos: historiaOtologica.medicamentosOtotoxicos,
@@ -2323,117 +2579,148 @@ export class InformesService {
       tiempoExposicionLaboral: historiaOtologica.tiempoExposicionLaboral,
       usoProteccionAuditiva: historiaOtologica.usoProteccionAuditiva,
       musicaFuerteAudifonos: historiaOtologica.musicaFuerteAudifonos,
-      armasFuegoPasatiemposRuidosos: historiaOtologica.armasFuegoPasatiemposRuidosos,
+      armasFuegoPasatiemposRuidosos:
+        historiaOtologica.armasFuegoPasatiemposRuidosos,
       servicioMilitar: historiaOtologica.servicioMilitar,
       alergias: historiaOtologica.alergias,
       resfriadoDiaPrueba: historiaOtologica.resfriadoDiaPrueba,
       otoscopiaOidoDerecho: historiaOtologica.otoscopiaOidoDerecho,
       otoscopiaOidoIzquierdo: historiaOtologica.otoscopiaOidoIzquierdo,
       resultadoCuestionario: historiaOtologica.resultadoCuestionario,
-      resultadoCuestionarioPersonalizado: historiaOtologica.resultadoCuestionarioPersonalizado,
+      resultadoCuestionarioPersonalizado:
+        historiaOtologica.resultadoCuestionarioPersonalizado,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = medicoFirmante
-    ? {
-        nombre: medicoFirmante.nombre || "",
-        tituloProfesional: medicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
-        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
-        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
-        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
-        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        especialistaSaludTrabajo: "",
-        numeroCedulaEspecialista: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: medicoFirmante.nombre || '',
+          tituloProfesional: medicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            medicoFirmante.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            medicoFirmante.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            medicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            medicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (medicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          especialistaSaludTrabajo: '',
+          numeroCedulaEspecialista: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const enfermeraFirmante = await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
     const datosEnfermeraFirmante = enfermeraFirmante
-    ? {
-        nombre: enfermeraFirmante.nombre || "",
-        sexo: enfermeraFirmante.sexo || "",
-        tituloProfesional: enfermeraFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: enfermeraFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: enfermeraFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: enfermeraFirmante.numeroCredencialAdicional || "",
-        firma: enfermeraFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const tecnicoFirmante = await this.tecnicosFirmantesService.findOneByUserId(userId);
+    const tecnicoFirmante =
+      await this.tecnicosFirmantesService.findOneByUserId(userId);
     const datosTecnicoFirmante = tecnicoFirmante
-    ? {
-        nombre: tecnicoFirmante.nombre || "",
-        sexo: tecnicoFirmante.sexo || "",
-        tituloProfesional: tecnicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: tecnicoFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: tecnicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: tecnicoFirmante.numeroCredencialAdicional || "",
-        firma: tecnicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: tecnicoFirmante.nombre || '',
+          sexo: tecnicoFirmante.sexo || '',
+          tituloProfesional: tecnicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            tecnicoFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            tecnicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            tecnicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (tecnicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
     const usuario = await this.usersService.findById(userId);
     const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    };
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
 
-    const fecha = convertirFechaADDMMAAAA(historiaOtologica.fechaHistoriaOtologica)
+    const fecha = convertirFechaADDMMAAAA(
+      historiaOtologica.fechaHistoriaOtologica,
+    )
       .replace(/\//g, '-')
       .replace(/\\/g, '-');
     const nombreArchivo = `Historia Otologica ${fecha}.pdf`;
@@ -2457,7 +2744,12 @@ export class InformesService {
     return rutaCompleta;
   }
 
-  async getInformePrevioEspirometria(empresaId: string, trabajadorId: string, previoEspirometriaId: string, userId: string): Promise<string> {
+  async getInformePrevioEspirometria(
+    empresaId: string,
+    trabajadorId: string,
+    previoEspirometriaId: string,
+    userId: string,
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
@@ -2470,24 +2762,29 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
       curp: trabajador.curp,
     };
-    const previoEspirometria = await this.expedientesService.findDocument('previoEspirometria', previoEspirometriaId);
+    const previoEspirometria = await this.expedientesService.findDocument(
+      'previoEspirometria',
+      previoEspirometriaId,
+    );
     const datosPrevioEspirometria = {
       fechaPrevioEspirometria: previoEspirometria.fechaPrevioEspirometria,
       tabaquismo: previoEspirometria.tabaquismo,
       cigarrosSemana: previoEspirometria.cigarrosSemana,
       exposicionHumosBiomasa: previoEspirometria.exposicionHumosBiomasa,
       exposicionLaboralPolvos: previoEspirometria.exposicionLaboralPolvos,
-      exposicionVaporesGasesIrritantes: previoEspirometria.exposicionVaporesGasesIrritantes,
-      antecedentesTuberculosisInfeccionesRespiratorias: previoEspirometria.antecedentesTuberculosisInfeccionesRespiratorias,
+      exposicionVaporesGasesIrritantes:
+        previoEspirometria.exposicionVaporesGasesIrritantes,
+      antecedentesTuberculosisInfeccionesRespiratorias:
+        previoEspirometria.antecedentesTuberculosisInfeccionesRespiratorias,
       tosCronica: previoEspirometria.tosCronica,
       expectoracionFrecuente: previoEspirometria.expectoracionFrecuente,
       disnea: previoEspirometria.disnea,
@@ -2499,122 +2796,156 @@ export class InformesService {
       fibrosisPulmonar: previoEspirometria.fibrosisPulmonar,
       apneaSueno: previoEspirometria.apneaSueno,
       medicamentosActuales: previoEspirometria.medicamentosActuales,
-      medicamentosActualesEspecificar: previoEspirometria.medicamentosActualesEspecificar,
+      medicamentosActualesEspecificar:
+        previoEspirometria.medicamentosActualesEspecificar,
       cirugiaReciente: previoEspirometria.cirugiaReciente,
-      infeccionRespiratoriaActiva: previoEspirometria.infeccionRespiratoriaActiva,
+      infeccionRespiratoriaActiva:
+        previoEspirometria.infeccionRespiratoriaActiva,
       embarazoComplicado: previoEspirometria.embarazoComplicado,
       derramePleural: previoEspirometria.derramePleural,
       neumotorax: previoEspirometria.neumotorax,
-      infartoAgudoAnginaInestable: previoEspirometria.infartoAgudoAnginaInestable,
+      infartoAgudoAnginaInestable:
+        previoEspirometria.infartoAgudoAnginaInestable,
       aneurismaAorticoConocido: previoEspirometria.aneurismaAorticoConocido,
-      inestabilidadHemodinamicaGrave: previoEspirometria.inestabilidadHemodinamicaGrave,
+      inestabilidadHemodinamicaGrave:
+        previoEspirometria.inestabilidadHemodinamicaGrave,
       hipertensionIntracraneal: previoEspirometria.hipertensionIntracraneal,
       desprendimientoAgudoRetina: previoEspirometria.desprendimientoAgudoRetina,
       resultadoCuestionario: previoEspirometria.resultadoCuestionario,
-      resultadoCuestionarioPersonalizado: previoEspirometria.resultadoCuestionarioPersonalizado,
+      resultadoCuestionarioPersonalizado:
+        previoEspirometria.resultadoCuestionarioPersonalizado,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = medicoFirmante
-    ? {
-        nombre: medicoFirmante.nombre || "",
-        tituloProfesional: medicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
-        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
-        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
-        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
-        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        especialistaSaludTrabajo: "",
-        numeroCedulaEspecialista: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: medicoFirmante.nombre || '',
+          tituloProfesional: medicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            medicoFirmante.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            medicoFirmante.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            medicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            medicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (medicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          especialistaSaludTrabajo: '',
+          numeroCedulaEspecialista: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const enfermeraFirmante = await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
     const datosEnfermeraFirmante = enfermeraFirmante
-    ? {
-        nombre: enfermeraFirmante.nombre || "",
-        sexo: enfermeraFirmante.sexo || "",
-        tituloProfesional: enfermeraFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: enfermeraFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: enfermeraFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: enfermeraFirmante.numeroCredencialAdicional || "",
-        firma: enfermeraFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const tecnicoFirmante = await this.tecnicosFirmantesService.findOneByUserId(userId);
+    const tecnicoFirmante =
+      await this.tecnicosFirmantesService.findOneByUserId(userId);
     const datosTecnicoFirmante = tecnicoFirmante
-    ? {
-        nombre: tecnicoFirmante.nombre || "",
-        sexo: tecnicoFirmante.sexo || "",
-        tituloProfesional: tecnicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: tecnicoFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: tecnicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: tecnicoFirmante.numeroCredencialAdicional || "",
-        firma: tecnicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: tecnicoFirmante.nombre || '',
+          sexo: tecnicoFirmante.sexo || '',
+          tituloProfesional: tecnicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            tecnicoFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            tecnicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            tecnicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (tecnicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
     const usuario = await this.usersService.findById(userId);
     const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    };
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
 
-    const fecha = convertirFechaADDMMAAAA(previoEspirometria.fechaPrevioEspirometria)
+    const fecha = convertirFechaADDMMAAAA(
+      previoEspirometria.fechaPrevioEspirometria,
+    )
       .replace(/\//g, '-')
       .replace(/\\/g, '-');
     const nombreArchivo = `Previo Espirometria ${fecha}.pdf`;
@@ -2638,7 +2969,12 @@ export class InformesService {
     return rutaCompleta;
   }
 
-  async getInformeReceta(empresaId: string, trabajadorId: string, recetaId: string, userId: string): Promise<string> {
+  async getInformeReceta(
+    empresaId: string,
+    trabajadorId: string,
+    recetaId: string,
+    userId: string,
+  ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
@@ -2651,16 +2987,19 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
       nss: trabajador.nss,
       curp: trabajador.curp,
     };
-    const receta = await this.expedientesService.findDocument('receta', recetaId);
+    const receta = await this.expedientesService.findDocument(
+      'receta',
+      recetaId,
+    );
     const datosReceta = {
       fechaReceta: receta.fechaReceta,
       tratamiento: receta.tratamiento,
@@ -2668,86 +3007,107 @@ export class InformesService {
       indicaciones: receta.indicaciones,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = medicoFirmante
-    ? {
-        nombre: medicoFirmante.nombre || "",
-        universidad: medicoFirmante.universidad || "",
-        tituloProfesional: medicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
-        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
-        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
-        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
-        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        universidad: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        especialistaSaludTrabajo: "",
-        numeroCedulaEspecialista: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: medicoFirmante.nombre || '',
+          universidad: medicoFirmante.universidad || '',
+          tituloProfesional: medicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            medicoFirmante.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            medicoFirmante.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            medicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            medicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (medicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          universidad: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          especialistaSaludTrabajo: '',
+          numeroCedulaEspecialista: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
-    const enfermeraFirmante = await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
     const datosEnfermeraFirmante = enfermeraFirmante
-    ? {
-        nombre: enfermeraFirmante.nombre || "",
-        sexo: enfermeraFirmante.sexo || "",
-        tituloProfesional: enfermeraFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: enfermeraFirmante.numeroCedulaProfesional || "",
-        nombreCredencialAdicional: enfermeraFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: enfermeraFirmante.numeroCredencialAdicional || "",
-        firma: enfermeraFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        sexo: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
 
     const usuario = await this.usersService.findById(userId);
     const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    };
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
 
     const fecha = convertirFechaADDMMAAAA(receta.fechaReceta)
       .replace(/\//g, '-')
@@ -2772,7 +3132,11 @@ export class InformesService {
     return rutaCompleta;
   }
 
-  async getInformeDashboard(empresaId: string, trabajadorId: string, userId: string): Promise<Buffer> {
+  async getInformeDashboard(
+    empresaId: string,
+    trabajadorId: string,
+    userId: string,
+  ): Promise<Buffer> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
     const trabajador = await this.trabajadoresService.findOne(trabajadorId);
@@ -2785,9 +3149,9 @@ export class InformesService {
       edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
       puesto: trabajador.puesto,
       sexo: trabajador.sexo,
-      antiguedad: trabajador.fechaIngreso ? calcularAntiguedad(
-        convertirFechaAAAAAMMDD(trabajador.fechaIngreso),
-      ) : '-',
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
       telefono: trabajador.telefono,
       estadoCivil: trabajador.estadoCivil,
       numeroEmpleado: trabajador.numeroEmpleado,
@@ -2795,62 +3159,75 @@ export class InformesService {
       curp: trabajador.curp,
     };
 
-    const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = medicoFirmante
-    ? {
-        nombre: medicoFirmante.nombre || "",
-        tituloProfesional: medicoFirmante.tituloProfesional || "",
-        numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || "",
-        especialistaSaludTrabajo: medicoFirmante.especialistaSaludTrabajo || "",
-        numeroCedulaEspecialista: medicoFirmante.numeroCedulaEspecialista || "",
-        nombreCredencialAdicional: medicoFirmante.nombreCredencialAdicional || "",
-        numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || "",
-        firma: medicoFirmante.firma as { data: string; contentType: string } || null,
-      }
-    : {
-        nombre: "",
-        tituloProfesional: "",
-        numeroCedulaProfesional: "",
-        especialistaSaludTrabajo: "",
-        numeroCedulaEspecialista: "",
-        nombreCredencialAdicional: "",
-        numeroCredencialAdicional: "",
-        firma: null,
-      };
+      ? {
+          nombre: medicoFirmante.nombre || '',
+          tituloProfesional: medicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            medicoFirmante.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            medicoFirmante.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            medicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            medicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (medicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          especialistaSaludTrabajo: '',
+          numeroCedulaEspecialista: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
     const usuario = await this.usersService.findById(userId);
     const datosUsuario = {
       idProveedorSalud: usuario.idProveedorSalud,
-    } 
-    const proveedorSalud = await this.proveedoresSaludService.findOne(datosUsuario.idProveedorSalud);
+    };
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
     const datosProveedorSalud = proveedorSalud
-    ? {
-        nombre: proveedorSalud.nombre || "",
-        pais: proveedorSalud.pais || "",
-        perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || "",
-        logotipoEmpresa: proveedorSalud.logotipoEmpresa as { data: string; contentType: string } || null,
-        estado: proveedorSalud.estado || "",
-        municipio: proveedorSalud.municipio || "",
-        codigoPostal: proveedorSalud.codigoPostal || "",
-        direccion: proveedorSalud.direccion || "",
-        telefono: proveedorSalud.telefono || "",
-        correoElectronico: proveedorSalud.correoElectronico || "",
-        sitioWeb: proveedorSalud.sitioWeb || "",
-        colorInforme: proveedorSalud.colorInforme || "#343A40",
-      }
-    : {
-        nombre: "",
-        pais: "",
-        perfilProveedorSalud: "",
-        logotipoEmpresa: null,
-        estado: "",
-        municipio: "",
-        codigoPostal: "",
-        direccion: "",
-        telefono: "",
-        correoElectronico: "",
-        sitioWeb: "",
-        colorInforme: "#343A40",
-      };
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
 
     const docDefinition = dashboardInforme(
       nombreEmpresa,
@@ -2858,7 +3235,7 @@ export class InformesService {
       datosMedicoFirmante,
       datosProveedorSalud,
     );
-  
+
     return this.printer.createPdfBuffer(docDefinition);
   }
 
@@ -2866,4 +3243,3 @@ export class InformesService {
     await this.filesService.deleteFile(filePath);
   }
 }
-

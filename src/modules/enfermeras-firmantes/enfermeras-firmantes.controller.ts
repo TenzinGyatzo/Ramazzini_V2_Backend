@@ -74,7 +74,7 @@ export class EnfermerasFirmantesController {
       throw new BadRequestException(
         'Error al crear al registrar datos del enfermera firmante',
       );
-    } 
+    }
   }
 
   @Get('obtener-enfermeras')
@@ -189,7 +189,8 @@ export class EnfermerasFirmantesController {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    const deletedEnfermeraFirmante = await this.enfermerasFirmantesService.remove(id);
+    const deletedEnfermeraFirmante =
+      await this.enfermerasFirmantesService.remove(id);
 
     if (!deletedEnfermeraFirmante) {
       return {

@@ -1,4 +1,11 @@
-import { IsOptional, IsString, IsEnum, IsArray, ValidateNested, IsNotEmpty } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsArray,
+  ValidateNested,
+  IsNotEmpty,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class RecomendacionItemDto {

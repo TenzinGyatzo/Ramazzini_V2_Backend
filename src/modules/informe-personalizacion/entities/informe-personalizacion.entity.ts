@@ -1,7 +1,7 @@
-import { Document } from "mongoose";
-import { User } from "src/modules/users/entities/user.entity";
-import { Empresa } from "src/modules/empresas/entities/empresa.entity";
-import { CentroTrabajo } from "src/modules/centros-trabajo/entities/centros-trabajo.entity";
+import { Document } from 'mongoose';
+import { User } from 'src/modules/users/entities/user.entity';
+import { Empresa } from 'src/modules/empresas/entities/empresa.entity';
+import { CentroTrabajo } from 'src/modules/centros-trabajo/entities/centros-trabajo.entity';
 
 export interface RecomendacionItem {
   hallazgo: string;

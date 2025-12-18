@@ -8,12 +8,15 @@ import { RiesgoTrabajo } from './schemas/riesgo-trabajo.schema';
 @Injectable()
 export class RiesgosTrabajoService {
   constructor(
-    @InjectModel(RiesgoTrabajo.name) private RiesgoTrabajoModel: Model<RiesgoTrabajo>,
+    @InjectModel(RiesgoTrabajo.name)
+    private RiesgoTrabajoModel: Model<RiesgoTrabajo>,
   ) {}
 
   async create(createRiesgosTrabajoDto: CreateRiesgosTrabajoDto) {
     try {
-      const riesgoTrabajo = new this.RiesgoTrabajoModel(createRiesgosTrabajoDto);
+      const riesgoTrabajo = new this.RiesgoTrabajoModel(
+        createRiesgosTrabajoDto,
+      );
       const savedRiesgoTrabajo = await riesgoTrabajo.save();
       return savedRiesgoTrabajo;
     } catch (error) {
@@ -50,7 +53,7 @@ export class RiesgosTrabajoService {
       if (!originalDoc) {
         throw new Error('Riesgo de trabajo no encontrado');
       }
-  
+
       // Determinar qué campos se deben eliminar (los que existían antes y ya no están en el DTO)
       const keysToUnset = {};
       for (const key in originalDoc) {
@@ -62,31 +65,33 @@ export class RiesgosTrabajoService {
         ) {
           keysToUnset[key] = '';
         }
-      }      
-  
-      const updatedRiesgoTrabajo = await this.RiesgoTrabajoModel.findByIdAndUpdate(
-        id,
-        {
-          $set: updateRiesgosTrabajoDto,
-          $unset: keysToUnset,
-        },
-        { new: true },
-      ).exec();
-  
+      }
+
+      const updatedRiesgoTrabajo =
+        await this.RiesgoTrabajoModel.findByIdAndUpdate(
+          id,
+          {
+            $set: updateRiesgosTrabajoDto,
+            $unset: keysToUnset,
+          },
+          { new: true },
+        ).exec();
+
       if (!updatedRiesgoTrabajo) {
         throw new Error('Riesgo de trabajo no encontrado');
       }
-  
+
       return updatedRiesgoTrabajo;
     } catch (error) {
       console.error('Error al actualizar el riesgo de trabajo:', error);
       throw new Error('Error al actualizar el riesgo de trabajo');
     }
-  }  
+  }
 
   async remove(id: string) {
     try {
-      const deletedRiesgoTrabajo = await this.RiesgoTrabajoModel.findByIdAndDelete(id).exec();
+      const deletedRiesgoTrabajo =
+        await this.RiesgoTrabajoModel.findByIdAndDelete(id).exec();
       if (!deletedRiesgoTrabajo) {
         throw new Error('Riesgo de trabajo no encontrado');
       }

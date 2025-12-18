@@ -8,11 +8,16 @@ import { normalizeMedicoFirmanteData } from 'src/utils/normalization';
 
 @Injectable()
 export class MedicosFirmantesService {
-  constructor(@InjectModel(MedicoFirmante.name) private medicoFirmanteModel: Model<MedicoFirmante>) {}
+  constructor(
+    @InjectModel(MedicoFirmante.name)
+    private medicoFirmanteModel: Model<MedicoFirmante>,
+  ) {}
 
   async create(createMedicoFirmanteDto: CreateMedicoFirmanteDto) {
     const normalizedDto = normalizeMedicoFirmanteData(createMedicoFirmanteDto);
-    const createdConfiguracionInforme = new this.medicoFirmanteModel(normalizedDto);
+    const createdConfiguracionInforme = new this.medicoFirmanteModel(
+      normalizedDto,
+    );
     return createdConfiguracionInforme.save();
   }
 
@@ -28,9 +33,14 @@ export class MedicosFirmantesService {
     return this.medicoFirmanteModel.findOne({ idUser }).exec();
   }
 
-  async update(id: string, updateMedicoFirmanteDto: UpdateMedicoFirmanteDto): Promise<MedicoFirmante> {
+  async update(
+    id: string,
+    updateMedicoFirmanteDto: UpdateMedicoFirmanteDto,
+  ): Promise<MedicoFirmante> {
     const normalizedDto = normalizeMedicoFirmanteData(updateMedicoFirmanteDto);
-    return this.medicoFirmanteModel.findByIdAndUpdate(id, normalizedDto, { new: true }).exec();
+    return this.medicoFirmanteModel
+      .findByIdAndUpdate(id, normalizedDto, { new: true })
+      .exec();
   }
 
   async remove(id: string): Promise<boolean> {
@@ -38,4 +48,3 @@ export class MedicosFirmantesService {
     return result !== null;
   }
 }
-

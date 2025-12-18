@@ -21,7 +21,7 @@ export class CentroTrabajo extends Document {
   municipio: string;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Empresa', required: true })
-  idEmpresa: Empresa;   
+  idEmpresa: Empresa;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   createdBy: User;
@@ -30,7 +30,9 @@ export class CentroTrabajo extends Document {
   updatedBy: User;
 }
 
-export const CentroTrabajoSchema = SchemaFactory.createForClass(CentroTrabajo).set('timestamps', true);
+export const CentroTrabajoSchema = SchemaFactory.createForClass(
+  CentroTrabajo,
+).set('timestamps', true);
 // Índices para relación y ordenación frecuente
 CentroTrabajoSchema.index({ idEmpresa: 1 });
 CentroTrabajoSchema.index({ nombreCentro: 1 });

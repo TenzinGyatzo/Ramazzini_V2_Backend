@@ -84,9 +84,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -110,27 +110,27 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
@@ -173,7 +173,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface EnfermeraFirmante {
@@ -186,7 +186,7 @@ interface EnfermeraFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface TecnicoFirmante {
@@ -199,7 +199,7 @@ interface TecnicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -230,14 +230,20 @@ export const antidopingInforme = (
   tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
-  const usarTecnico = !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
+  const usarTecnico =
+    !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
 
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : (usarTecnico ? tecnicoFirmante : null));
+  const firmanteActivo = usarMedico
+    ? medicoFirmante
+    : usarEnfermera
+      ? enfermeraFirmante
+      : usarTecnico
+        ? tecnicoFirmante
+        : null;
 
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
@@ -248,12 +254,20 @@ export const antidopingInforme = (
   };
 
   const firma: Content = firmanteActivo?.firma?.data
-  ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
-  : { text: '' };
+    ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   return {
     pageSize: 'LETTER',
@@ -347,56 +361,103 @@ export const antidopingInforme = (
               createConditionalTableCell(antidoping.cocaina),
               createTableCell('NEGATIVO', 'tableCell'),
             ],
-            ...(antidoping.anfetaminas ? [[
-              createTableCell('ANFETAMINAS (AMP)', 'sectionHeader'),
-              createConditionalTableCell(antidoping.anfetaminas),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ]] : []),
-            ...(antidoping.metanfetaminas ? [[
-              createTableCell('METANFETAMINAS (MET)', 'sectionHeader'),
-              createConditionalTableCell(antidoping.metanfetaminas),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ]] : []),
-            ...(antidoping.opiaceos ? [[
-              createTableCell('OPIACEOS (OPI)', 'sectionHeader'),
-              createConditionalTableCell(antidoping.opiaceos),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ]] : []),
-            ...(antidoping.benzodiacepinas ? [[
-              createTableCell('BENZODIACEPINAS (BZO)', 'sectionHeader'),
-              createConditionalTableCell(antidoping.benzodiacepinas),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ]] : []),
-            ...(antidoping.fenciclidina ? [[
-              createTableCell('FENCICLIDINA (PCP)', 'sectionHeader'),
-              createConditionalTableCell(antidoping.fenciclidina),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ]] : []),
-            ...(antidoping.metadona ? [[
-              createTableCell('METADONA (MTD)', 'sectionHeader'),
-              createConditionalTableCell(antidoping.metadona),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ]] : []),
-            ...(antidoping.barbituricos ? [[
-              createTableCell('BARBITURICOS (BAR)', 'sectionHeader'),
-              createConditionalTableCell(antidoping.barbituricos),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ]] : []),
-            ...(antidoping.antidepresivosTriciclicos ? [[
-              createTableCell('ANTIDEPRESIVOS T. (TCA)', 'sectionHeader'),
-              createConditionalTableCell(antidoping.antidepresivosTriciclicos),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ]] : []),
-            ...(antidoping.metilendioximetanfetamina ? [[
-              createTableCell('METILENDIOXIMETANFETAMINA (MDMA)', 'sectionHeader'),
-              createConditionalTableCell(antidoping.metilendioximetanfetamina),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ]] : []),
-            ...(antidoping.ketamina ? [[
-              createTableCell('KETAMINA (KET)', 'sectionHeader'),
-              createConditionalTableCell(antidoping.ketamina),
-              createTableCell('NEGATIVO', 'tableCell'),
-            ]] : []),
+            ...(antidoping.anfetaminas
+              ? [
+                  [
+                    createTableCell('ANFETAMINAS (AMP)', 'sectionHeader'),
+                    createConditionalTableCell(antidoping.anfetaminas),
+                    createTableCell('NEGATIVO', 'tableCell'),
+                  ],
+                ]
+              : []),
+            ...(antidoping.metanfetaminas
+              ? [
+                  [
+                    createTableCell('METANFETAMINAS (MET)', 'sectionHeader'),
+                    createConditionalTableCell(antidoping.metanfetaminas),
+                    createTableCell('NEGATIVO', 'tableCell'),
+                  ],
+                ]
+              : []),
+            ...(antidoping.opiaceos
+              ? [
+                  [
+                    createTableCell('OPIACEOS (OPI)', 'sectionHeader'),
+                    createConditionalTableCell(antidoping.opiaceos),
+                    createTableCell('NEGATIVO', 'tableCell'),
+                  ],
+                ]
+              : []),
+            ...(antidoping.benzodiacepinas
+              ? [
+                  [
+                    createTableCell('BENZODIACEPINAS (BZO)', 'sectionHeader'),
+                    createConditionalTableCell(antidoping.benzodiacepinas),
+                    createTableCell('NEGATIVO', 'tableCell'),
+                  ],
+                ]
+              : []),
+            ...(antidoping.fenciclidina
+              ? [
+                  [
+                    createTableCell('FENCICLIDINA (PCP)', 'sectionHeader'),
+                    createConditionalTableCell(antidoping.fenciclidina),
+                    createTableCell('NEGATIVO', 'tableCell'),
+                  ],
+                ]
+              : []),
+            ...(antidoping.metadona
+              ? [
+                  [
+                    createTableCell('METADONA (MTD)', 'sectionHeader'),
+                    createConditionalTableCell(antidoping.metadona),
+                    createTableCell('NEGATIVO', 'tableCell'),
+                  ],
+                ]
+              : []),
+            ...(antidoping.barbituricos
+              ? [
+                  [
+                    createTableCell('BARBITURICOS (BAR)', 'sectionHeader'),
+                    createConditionalTableCell(antidoping.barbituricos),
+                    createTableCell('NEGATIVO', 'tableCell'),
+                  ],
+                ]
+              : []),
+            ...(antidoping.antidepresivosTriciclicos
+              ? [
+                  [
+                    createTableCell('ANTIDEPRESIVOS T. (TCA)', 'sectionHeader'),
+                    createConditionalTableCell(
+                      antidoping.antidepresivosTriciclicos,
+                    ),
+                    createTableCell('NEGATIVO', 'tableCell'),
+                  ],
+                ]
+              : []),
+            ...(antidoping.metilendioximetanfetamina
+              ? [
+                  [
+                    createTableCell(
+                      'METILENDIOXIMETANFETAMINA (MDMA)',
+                      'sectionHeader',
+                    ),
+                    createConditionalTableCell(
+                      antidoping.metilendioximetanfetamina,
+                    ),
+                    createTableCell('NEGATIVO', 'tableCell'),
+                  ],
+                ]
+              : []),
+            ...(antidoping.ketamina
+              ? [
+                  [
+                    createTableCell('KETAMINA (KET)', 'sectionHeader'),
+                    createConditionalTableCell(antidoping.ketamina),
+                    createTableCell('NEGATIVO', 'tableCell'),
+                  ],
+                ]
+              : []),
           ],
         },
         layout: {
@@ -407,7 +468,7 @@ export const antidopingInforme = (
         },
         margin: [0, 0, 0, 10],
       },
-        ],
+    ],
     // Pie de pagina
     footer: {
       stack: [
@@ -439,72 +500,80 @@ export const antidopingInforme = (
             {
               text: [
                 // Nombre y título profesional
-                (firmanteActivo?.tituloProfesional && firmanteActivo?.nombre)
+                firmanteActivo?.tituloProfesional && firmanteActivo?.nombre
                   ? {
                       text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
                       bold: true,
                     }
                   : null,
-              
+
                 // Cédula profesional (para médicos y enfermeras)
                 firmanteActivo?.numeroCedulaProfesional
                   ? {
-                      text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : proveedorSalud.pais === 'GT'
-                        ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                          : proveedorSalud.pais === 'GT'
+                            ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                            : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Cédula de especialista (solo para médicos)
-                (usarMedico && medicoFirmante?.numeroCedulaEspecialista)
+                usarMedico && medicoFirmante?.numeroCedulaEspecialista
                   ? {
-                      text: proveedorSalud.pais === 'MX'
-                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Credencial adicional
-                (firmanteActivo?.nombreCredencialAdicional && firmanteActivo?.numeroCredencialAdicional)
-                ? {
-                    text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                    bold: false,
-                  }
-                : null,
-                
-                // Texto específico para enfermeras
-                (usarEnfermera && enfermeraFirmante?.sexo)
+                firmanteActivo?.nombreCredencialAdicional &&
+                firmanteActivo?.numeroCredencialAdicional
                   ? {
-                      text: enfermeraFirmante.sexo === 'Femenino' 
-                        ? 'Enfermera responsable de la prueba\n'
-                        : 'Enfermero responsable de la prueba\n',
+                      text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                      bold: false,
+                    }
+                  : null,
+
+                // Texto específico para enfermeras
+                usarEnfermera && enfermeraFirmante?.sexo
+                  ? {
+                      text:
+                        enfermeraFirmante.sexo === 'Femenino'
+                          ? 'Enfermera responsable de la prueba\n'
+                          : 'Enfermero responsable de la prueba\n',
                       bold: false,
                     }
                   : null,
 
                 // Texto específico para técnicos
-                (usarTecnico && tecnicoFirmante?.sexo)
+                usarTecnico && tecnicoFirmante?.sexo
                   ? {
-                      text: tecnicoFirmante.sexo === 'Femenino' 
-                        ? 'Responsable de la prueba\n'
-                        : 'Responsable de la prueba\n',
+                      text:
+                        tecnicoFirmante.sexo === 'Femenino'
+                          ? 'Responsable de la prueba\n'
+                          : 'Responsable de la prueba\n',
                       bold: false,
                     }
                   : null,
-                
-              ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe        
+              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(firmanteActivo?.firma?.data ? [{
-              ...firma,
-              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
-            }] : []),
+            ...(firmanteActivo?.firma?.data
+              ? [
+                  {
+                    ...firma,
+                    margin: [0, -3, 0, 0] as [number, number, number, number], // Mueve el elemento más arriba
+                  },
+                ]
+              : []),
             {
               text: [
                 proveedorSalud.nombre
@@ -514,7 +583,7 @@ export const antidopingInforme = (
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.direccion
                   ? {
                       text: `${proveedorSalud.direccion}\n`,
@@ -522,15 +591,17 @@ export const antidopingInforme = (
                       italics: true,
                     }
                   : null,
-              
-                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+
+                proveedorSalud.municipio &&
+                proveedorSalud.estado &&
+                proveedorSalud.telefono
                   ? {
                       text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.sitioWeb
                   ? {
                       text: `${proveedorSalud.sitioWeb}`,
@@ -540,7 +611,7 @@ export const antidopingInforme = (
                       color: 'blue',
                     }
                   : null,
-              ].filter(item => item !== null),  // Elimina los elementos nulos
+              ].filter((item) => item !== null), // Elimina los elementos nulos
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],

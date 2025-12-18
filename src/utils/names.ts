@@ -3,7 +3,7 @@
  */
 
 /**
- * Formatea el nombre completo de un trabajador concatenando primer apellido, 
+ * Formatea el nombre completo de un trabajador concatenando primer apellido,
  * segundo apellido y nombre, filtrando valores undefined o vacíos
  * @param primerApellido - Primer apellido del trabajador
  * @param segundoApellido - Segundo apellido del trabajador (opcional)
@@ -13,11 +13,12 @@
 export function formatearNombreCompleto(
   primerApellido: string | undefined,
   segundoApellido: string | undefined,
-  nombre: string | undefined
+  nombre: string | undefined,
 ): string {
-  const partes = [primerApellido, segundoApellido, nombre]
-    .filter(parte => parte && parte.trim() !== '');
-  
+  const partes = [primerApellido, segundoApellido, nombre].filter(
+    (parte) => parte && parte.trim() !== '',
+  );
+
   return partes.join(' ') || 'Sin nombre';
 }
 
@@ -34,7 +35,7 @@ export function formatearNombreTrabajador(trabajador: {
   return formatearNombreCompleto(
     trabajador.primerApellido,
     trabajador.segundoApellido,
-    trabajador.nombre
+    trabajador.nombre,
   );
 }
 
@@ -51,8 +52,8 @@ export function formatearNombreTrabajadorCertificado(trabajador: {
   const partes = [
     trabajador.nombre,
     trabajador.primerApellido,
-    trabajador.segundoApellido
-  ].filter(parte => parte && parte.trim() !== '');
-  
+    trabajador.segundoApellido,
+  ].filter((parte) => parte && parte.trim() !== '');
+
   return partes.join(' ') || 'Sin nombre';
 }

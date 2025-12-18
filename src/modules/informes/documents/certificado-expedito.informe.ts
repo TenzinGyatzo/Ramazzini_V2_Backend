@@ -74,7 +74,7 @@ const campoFirma: Content = {
       margin: [0, 0, 0, 0],
     },
   ],
-  absolutePosition: { x: 65, y: 610 }, 
+  absolutePosition: { x: 65, y: 610 },
 };
 
 // ==================== FUNCIONES REUSABLES ====================
@@ -106,11 +106,13 @@ function construirSignosVitales(certificado): Content {
     }
   };
 
-  agregarDato('TA', 
-    certificado.tensionArterialSistolica && certificado.tensionArterialDiastolica 
-      ? `${certificado.tensionArterialSistolica}/${certificado.tensionArterialDiastolica}` 
-      : null, 
-    ' mmHg'
+  agregarDato(
+    'TA',
+    certificado.tensionArterialSistolica &&
+      certificado.tensionArterialDiastolica
+      ? `${certificado.tensionArterialSistolica}/${certificado.tensionArterialDiastolica}`
+      : null,
+    ' mmHg',
   );
   agregarDato('FC', certificado.frecuenciaCardiaca, ' lpm');
   agregarDato('FR', certificado.frecuenciaRespiratoria, ' lpm');
@@ -120,12 +122,9 @@ function construirSignosVitales(certificado): Content {
   agregarDato('IMC', certificado.indiceMasaCorporal, '');
 
   return {
-    text: [
-      { text: 'SV: ', bold: true },
-      ...signosVitales
-    ],
+    text: [{ text: 'SV: ', bold: true }, ...signosVitales],
     margin: [0, 0, 0, 10],
-    style: 'paragraph'
+    style: 'paragraph',
   };
 }
 
@@ -141,9 +140,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -167,27 +166,27 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
@@ -234,7 +233,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -262,31 +261,39 @@ export const certificadoExpeditoInforme = (
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   const firma: Content = medicoFirmante.firma?.data
-  ? { 
-      image: `assets/signatories/${medicoFirmante.firma.data}`, 
-      width: 100, 
-      absolutePosition: { 
-        x: 260, 
-        y: (() => {
-          const observacionesExiste = certificado.observaciones !== undefined && 
-                                    certificado.observaciones !== null && 
-                                    certificado.observaciones !== '';
-          
-          if (medicoFirmante.especialistaSaludTrabajo === 'Si') {
-            return observacionesExiste ? 605 : 595; // Escenario 1 o 2
-          } else {
-            return observacionesExiste ? 595 : 585; // Escenario 3 o 4
-          }
-        })()
-      } 
-    }
-  : { text: '' };
+    ? {
+        image: `assets/signatories/${medicoFirmante.firma.data}`,
+        width: 100,
+        absolutePosition: {
+          x: 260,
+          y: (() => {
+            const observacionesExiste =
+              certificado.observaciones !== undefined &&
+              certificado.observaciones !== null &&
+              certificado.observaciones !== '';
+
+            if (medicoFirmante.especialistaSaludTrabajo === 'Si') {
+              return observacionesExiste ? 605 : 595; // Escenario 1 o 2
+            } else {
+              return observacionesExiste ? 595 : 585; // Escenario 3 o 4
+            }
+          })(),
+        },
+      }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   return {
     pageSize: 'LETTER',
@@ -312,7 +319,9 @@ export const certificadoExpeditoInforme = (
                 text: [
                   { text: 'Fecha: ', style: 'fecha', bold: false },
                   {
-                    text: formatearFechaUTC(certificado.fechaCertificadoExpedito),
+                    text: formatearFechaUTC(
+                      certificado.fechaCertificadoExpedito,
+                    ),
                     style: 'fecha',
                     bold: true,
                     // decoration: 'underline',
@@ -330,59 +339,63 @@ export const certificadoExpeditoInforme = (
       {
         text: [
           {
-            text: proveedorSalud.pais === 'MX'
-              ? medicoFirmante.tituloProfesional === 'Dra.'
-                ? 'La suscrita Médica Cirujano, con cédula profesional número '
-                : 'El suscrito Médico Cirujano, con cédula profesional número '
-              : proveedorSalud.pais === 'GT'
-              ? medicoFirmante.tituloProfesional === 'Dra.'
-                ? 'La suscrita Médica Cirujano, con colegiado activo número '
-                : 'El suscrito Médico Cirujano, con colegiado activo número '
-              : medicoFirmante.tituloProfesional === 'Dra.'
-                ? 'La suscrita Médica Cirujano, con registro profesional número '
-                : 'El suscrito Médico Cirujano, con registro profesional número ',
+            text:
+              proveedorSalud.pais === 'MX'
+                ? medicoFirmante.tituloProfesional === 'Dra.'
+                  ? 'La suscrita Médica Cirujano, con cédula profesional número '
+                  : 'El suscrito Médico Cirujano, con cédula profesional número '
+                : proveedorSalud.pais === 'GT'
+                  ? medicoFirmante.tituloProfesional === 'Dra.'
+                    ? 'La suscrita Médica Cirujano, con colegiado activo número '
+                    : 'El suscrito Médico Cirujano, con colegiado activo número '
+                  : medicoFirmante.tituloProfesional === 'Dra.'
+                    ? 'La suscrita Médica Cirujano, con registro profesional número '
+                    : 'El suscrito Médico Cirujano, con registro profesional número ',
           },
           {
             text: `${medicoFirmante.numeroCedulaProfesional}. `,
             bold: true,
           },
           medicoFirmante.especialistaSaludTrabajo === 'Si'
-          ? { text: 'Especialista en Medicina del Trabajo, ' }
-          : { text: 'Con formación en Medicina y dedicado a la práctica en el ámbito de la salud laboral, ' },        
-        
+            ? { text: 'Especialista en Medicina del Trabajo, ' }
+            : {
+                text: 'Con formación en Medicina y dedicado a la práctica en el ámbito de la salud laboral, ',
+              },
+
           {
-            text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}${medicoFirmante.especialistaSaludTrabajo === 'Si' ? '' : '.'}`,  // Sin espacio antes del punto
+            text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}${medicoFirmante.especialistaSaludTrabajo === 'Si' ? '' : '.'}`, // Sin espacio antes del punto
             bold: true,
           },
-        
+
           medicoFirmante.especialistaSaludTrabajo === 'Si'
             ? {
-                text: proveedorSalud.pais === 'MX'
-                  ? `, legalmente ${medicoFirmante.tituloProfesional === 'Dr.' ? 'autorizado' : 'autorizada'} por la Dirección General de Profesiones para ejercer la Especialidad en Medicina del Trabajo con cédula profesional número `
-                  : `, legalmente ${medicoFirmante.tituloProfesional === 'Dr.' ? 'autorizado' : 'autorizada'} para ejercer la Especialidad en Medicina del Trabajo con registro de especialidad número `,
+                text:
+                  proveedorSalud.pais === 'MX'
+                    ? `, legalmente ${medicoFirmante.tituloProfesional === 'Dr.' ? 'autorizado' : 'autorizada'} por la Dirección General de Profesiones para ejercer la Especialidad en Medicina del Trabajo con cédula profesional número `
+                    : `, legalmente ${medicoFirmante.tituloProfesional === 'Dr.' ? 'autorizado' : 'autorizada'} para ejercer la Especialidad en Medicina del Trabajo con registro de especialidad número `,
               }
             : null,
-        
+
           medicoFirmante.especialistaSaludTrabajo === 'Si'
             ? {
                 text: `${medicoFirmante.numeroCedulaEspecialista}. `,
                 bold: true,
               }
             : null,
-        
+
           medicoFirmante.nombreCredencialAdicional
             ? {
                 text: ` ${medicoFirmante.nombreCredencialAdicional} con número `,
               }
             : null,
-        
+
           medicoFirmante.nombreCredencialAdicional
             ? {
                 text: `${medicoFirmante.numeroCredencialAdicional}. `,
                 bold: true,
               }
             : null,
-        ].filter(item => item !== null),  // Filtra elementos nulos        
+        ].filter((item) => item !== null), // Filtra elementos nulos
         style: 'paragraph',
         margin: [0, 20, 0, 0],
       },
@@ -397,10 +410,18 @@ export const certificadoExpeditoInforme = (
       },
       {
         text: [
-          { text: proveedorSalud.pais === 'GT' 
-            ? `Que, habiendo practicado reconocimiento médico en esta fecha, ${trabajador.sexo === 'Femenino' ? 'a la' : 'a'} ` 
-            : `Que, habiendo practicado reconocimiento médico en esta fecha, ${trabajador.sexo === 'Femenino' ? 'a la' : 'al'} C. ` },
-          { text: formatearNombreTrabajadorCertificado(trabajador).toUpperCase(), bold: true },
+          {
+            text:
+              proveedorSalud.pais === 'GT'
+                ? `Que, habiendo practicado reconocimiento médico en esta fecha, ${trabajador.sexo === 'Femenino' ? 'a la' : 'a'} `
+                : `Que, habiendo practicado reconocimiento médico en esta fecha, ${trabajador.sexo === 'Femenino' ? 'a la' : 'al'} C. `,
+          },
+          {
+            text: formatearNombreTrabajadorCertificado(
+              trabajador,
+            ).toUpperCase(),
+            bold: true,
+          },
           { text: ' de ' },
           { text: String(trabajador.edad), bold: true },
           { text: ' años de edad. Concluyo que:' },
@@ -423,27 +444,35 @@ export const certificadoExpeditoInforme = (
 
       {
         text: [
-          { text: proveedorSalud.pais === 'GT' 
-            ? trabajador.sexo === 'Femenino'
-            ? 'Por lo anterior se establece que la ' 
-            : 'Por lo anterior se establece que el '
-            : trabajador.sexo === 'Femenino'
-            ? 'Por lo anterior se establece que la C. '
-            : 'Por lo anterior se establece que el C. ' },
-          { text: formatearNombreTrabajadorCertificado(trabajador).toUpperCase(), bold: true },
+          {
+            text:
+              proveedorSalud.pais === 'GT'
+                ? trabajador.sexo === 'Femenino'
+                  ? 'Por lo anterior se establece que la '
+                  : 'Por lo anterior se establece que el '
+                : trabajador.sexo === 'Femenino'
+                  ? 'Por lo anterior se establece que la C. '
+                  : 'Por lo anterior se establece que el C. ',
+          },
+          {
+            text: formatearNombreTrabajadorCertificado(
+              trabajador,
+            ).toUpperCase(),
+            bold: true,
+          },
           { text: ' ' },
           {
             text: certificado.impedimentosFisicos,
           },
           {
-          text: ` y se encuentra actualmente en ${
-              certificado.gradoSalud === "Bueno"
-                ? "BUEN"
-                : certificado.gradoSalud === "Malo"
-                  ? "MAL"
+            text: ` y se encuentra actualmente en ${
+              certificado.gradoSalud === 'Bueno'
+                ? 'BUEN'
+                : certificado.gradoSalud === 'Malo'
+                  ? 'MAL'
                   : String(certificado.gradoSalud).toUpperCase()
             } estado de salud. \n`,
-          }
+          },
         ],
         style: 'paragraph',
         margin: [0, 0, 0, 10],
@@ -452,10 +481,13 @@ export const certificadoExpeditoInforme = (
       // Aptitud Puesto
       {
         text: [
-          { 
-            text: certificado.descripcionSobreAptitud !== undefined && certificado.descripcionSobreAptitud !== null && certificado.descripcionSobreAptitud !== ''
-              ? `${certificado.aptitudPuesto.toUpperCase()}. ${certificado.descripcionSobreAptitud} \n`
-              : `${certificado.aptitudPuesto.toUpperCase()}.\n`
+          {
+            text:
+              certificado.descripcionSobreAptitud !== undefined &&
+              certificado.descripcionSobreAptitud !== null &&
+              certificado.descripcionSobreAptitud !== ''
+                ? `${certificado.aptitudPuesto.toUpperCase()}. ${certificado.descripcionSobreAptitud} \n`
+                : `${certificado.aptitudPuesto.toUpperCase()}.\n`,
           },
         ],
         bold: true,
@@ -466,31 +498,48 @@ export const certificadoExpeditoInforme = (
       // Observaciones
       {
         text: [
-          ...(certificado.observaciones !== undefined && certificado.observaciones !== null && certificado.observaciones !== ''
-            ? [{ text: `${certificado.observaciones.toUpperCase()}. \n`, bold: true }]
+          ...(certificado.observaciones !== undefined &&
+          certificado.observaciones !== null &&
+          certificado.observaciones !== ''
+            ? [
+                {
+                  text: `${certificado.observaciones.toUpperCase()}. \n`,
+                  bold: true,
+                },
+              ]
             : []),
         ],
         style: 'paragraph',
         bold: true,
-        margin: (certificado.observaciones !== undefined && certificado.observaciones !== null && certificado.observaciones !== ''
-          ? [0, 0, 0, 10]
-          : 0),
+        margin:
+          certificado.observaciones !== undefined &&
+          certificado.observaciones !== null &&
+          certificado.observaciones !== ''
+            ? [0, 0, 0, 10]
+            : 0,
       },
 
       {
         text: [
           {
-        text: proveedorSalud.pais === 'GT' 
-          ? `Expido el presente certificado médico a petición de ${trabajador.sexo === "Femenino" ? "la" : "el"} ` 
-          : trabajador.sexo === "Femenino"
-          ? 'Expido el presente certificado médico a petición de la C. '
-          : 'Expido el presente certificado médico a petición de el C. ',
+            text:
+              proveedorSalud.pais === 'GT'
+                ? `Expido el presente certificado médico a petición de ${trabajador.sexo === 'Femenino' ? 'la' : 'el'} `
+                : trabajador.sexo === 'Femenino'
+                  ? 'Expido el presente certificado médico a petición de la C. '
+                  : 'Expido el presente certificado médico a petición de el C. ',
           },
-          { text: formatearNombreTrabajadorCertificado(trabajador).toUpperCase(), bold: true },
           {
-        text: proveedorSalud.pais === 'GT'
-          ? ` para fines de prevención y detección oportuna de padecimientos que pudieran afectar la salud del trabajador y su rendimiento laboral, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, el ${formatearFechaUTC(certificado.fechaCertificadoExpedito)}.`
-          : ` para fines de prevención y detección oportuna de padecimientos que pudieran afectar la salud del trabajador y su rendimiento laboral, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
+            text: formatearNombreTrabajadorCertificado(
+              trabajador,
+            ).toUpperCase(),
+            bold: true,
+          },
+          {
+            text:
+              proveedorSalud.pais === 'GT'
+                ? ` para fines de prevención y detección oportuna de padecimientos que pudieran afectar la salud del trabajador y su rendimiento laboral, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, el ${formatearFechaUTC(certificado.fechaCertificadoExpedito)}.`
+                : ` para fines de prevención y detección oportuna de padecimientos que pudieran afectar la salud del trabajador y su rendimiento laboral, en el municipio de ${proveedorSalud.municipio}, ${proveedorSalud.estado}, en la fecha mencionada al inicio de este certificado.`,
           },
         ],
         style: 'paragraph',
@@ -543,13 +592,18 @@ export const certificadoExpeditoInforme = (
         {
           text: [
             {
-              text: [
-                proveedorSalud.direccion,
-                proveedorSalud.municipio,
-                proveedorSalud.estado,
-              ]
-                .filter(item => item)  // Elimina valores faltantes
-                .join(', ') + '.' + (proveedorSalud.telefono ? ` Tel. ${formatearTelefono(proveedorSalud.telefono)}` : ''),  // Aplica el formato al teléfono
+              text:
+                [
+                  proveedorSalud.direccion,
+                  proveedorSalud.municipio,
+                  proveedorSalud.estado,
+                ]
+                  .filter((item) => item) // Elimina valores faltantes
+                  .join(', ') +
+                '.' +
+                (proveedorSalud.telefono
+                  ? ` Tel. ${formatearTelefono(proveedorSalud.telefono)}`
+                  : ''), // Aplica el formato al teléfono
               bold: false,
               italics: true,
             },
@@ -562,7 +616,7 @@ export const certificadoExpeditoInforme = (
                   color: 'blue',
                 }
               : null,
-          ].filter(item => item !== null),  // Filtra elementos nulos          
+          ].filter((item) => item !== null), // Filtra elementos nulos
           alignment: 'center',
           fontSize: 8,
           margin: [0, 0, 0, 0],

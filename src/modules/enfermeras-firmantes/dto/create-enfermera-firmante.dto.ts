@@ -22,7 +22,7 @@ export class CreateEnfermeraFirmanteDto {
   @IsString({ message: 'El nombre debe ser un string' })
   @IsNotEmpty({ message: 'El nombre no puede estar vacío' })
   nombre: string;
-  
+
   @IsOptional()
   @IsEnum(sexos, { message: 'El sexo debe ser Masculino o Femenino' })
   sexo?: string;

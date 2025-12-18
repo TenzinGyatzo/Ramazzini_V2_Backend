@@ -19,5 +19,4 @@ export class FilesService {
     const fs = require('fs').promises;
     await fs.rename(oldPath, newPath);
   }
-  
 }

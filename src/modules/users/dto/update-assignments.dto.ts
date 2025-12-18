@@ -11,4 +11,3 @@ export class UpdateAssignmentsDto {
   @IsOptional()
   centrosTrabajoAsignados: string[];
 }
-

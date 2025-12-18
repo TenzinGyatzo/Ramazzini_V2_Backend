@@ -19,7 +19,10 @@ export class PrinterService {
   private printer = new PdfPrinter(fonts);
 
   // Método existente: guarda en disco
-  createPdf(docDefinition: TDocumentDefinitions, outputPath: string): Promise<void> {
+  createPdf(
+    docDefinition: TDocumentDefinitions,
+    outputPath: string,
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         const pdfDoc = this.printer.createPdfKitDocument(docDefinition);
@@ -35,11 +38,17 @@ export class PrinterService {
         });
 
         writeStream.on('error', (error) => {
-          console.error('[PrinterService] Error occurred during write stream:', error);
+          console.error(
+            '[PrinterService] Error occurred during write stream:',
+            error,
+          );
           reject(error);
         });
       } catch (error) {
-        console.error('[PrinterService] Unexpected error during PDF creation:', error);
+        console.error(
+          '[PrinterService] Unexpected error during PDF creation:',
+          error,
+        );
         reject(error);
       }
     });
@@ -62,4 +71,3 @@ export class PrinterService {
     });
   }
 }
-

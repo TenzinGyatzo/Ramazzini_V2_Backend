@@ -34,7 +34,7 @@ describe('Document State Management - Schema Defaults', () => {
 
       // Verify we have 15 schemas
       expect(documentSchemas.length).toBe(15);
-      
+
       // Verify enum values
       expect(Object.values(DocumentoEstado)).toContain('borrador');
       expect(Object.values(DocumentoEstado)).toContain('finalizado');
@@ -42,4 +42,3 @@ describe('Document State Management - Schema Defaults', () => {
     });
   });
 });
-

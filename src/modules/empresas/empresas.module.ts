@@ -3,16 +3,46 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { EmpresasService } from './empresas.service';
 import { EmpresasController } from './empresas.controller';
 import { Empresa, EmpresaSchema } from './schemas/empresa.schema';
-import { CentroTrabajo, CentroTrabajoSchema } from '../centros-trabajo/schemas/centro-trabajo.schema';
-import { Trabajador, TrabajadorSchema } from '../trabajadores/schemas/trabajador.schema';
-import { Antidoping, AntidopingSchema } from '../expedientes/schemas/antidoping.schema';
-import { AptitudPuesto, AptitudPuestoSchema } from '../expedientes/schemas/aptitud-puesto.schema';
-import { Certificado, CertificadoSchema } from '../expedientes/schemas/certificado.schema';
-import { DocumentoExterno, DocumentoExternoSchema } from '../expedientes/schemas/documento-externo.schema';
-import { ExamenVista, ExamenVistaSchema } from '../expedientes/schemas/examen-vista.schema';
-import { ExploracionFisica, ExploracionFisicaSchema } from '../expedientes/schemas/exploracion-fisica.schema';
-import { HistoriaClinica, HistoriaClinicaSchema } from '../expedientes/schemas/historia-clinica.schema';
-import { NotaMedica, NotaMedicaSchema } from '../expedientes/schemas/nota-medica.schema';
+import {
+  CentroTrabajo,
+  CentroTrabajoSchema,
+} from '../centros-trabajo/schemas/centro-trabajo.schema';
+import {
+  Trabajador,
+  TrabajadorSchema,
+} from '../trabajadores/schemas/trabajador.schema';
+import {
+  Antidoping,
+  AntidopingSchema,
+} from '../expedientes/schemas/antidoping.schema';
+import {
+  AptitudPuesto,
+  AptitudPuestoSchema,
+} from '../expedientes/schemas/aptitud-puesto.schema';
+import {
+  Certificado,
+  CertificadoSchema,
+} from '../expedientes/schemas/certificado.schema';
+import {
+  DocumentoExterno,
+  DocumentoExternoSchema,
+} from '../expedientes/schemas/documento-externo.schema';
+import {
+  ExamenVista,
+  ExamenVistaSchema,
+} from '../expedientes/schemas/examen-vista.schema';
+import {
+  ExploracionFisica,
+  ExploracionFisicaSchema,
+} from '../expedientes/schemas/exploracion-fisica.schema';
+import {
+  HistoriaClinica,
+  HistoriaClinicaSchema,
+} from '../expedientes/schemas/historia-clinica.schema';
+import {
+  NotaMedica,
+  NotaMedicaSchema,
+} from '../expedientes/schemas/nota-medica.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { FilesModule } from '../files/files.module';
 import { CentrosTrabajoModule } from '../centros-trabajo/centros-trabajo.module';

@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { EnfermeraFirmante, EnfermeraFirmanteSchema } from './schemas/enfermera-firmante.schema';
+import {
+  EnfermeraFirmante,
+  EnfermeraFirmanteSchema,
+} from './schemas/enfermera-firmante.schema';
 import { EnfermerasFirmantesController } from './enfermeras-firmantes.controller';
 import { EnfermerasFirmantesService } from './enfermeras-firmantes.service';
-
-
 
 @Module({
   imports: [

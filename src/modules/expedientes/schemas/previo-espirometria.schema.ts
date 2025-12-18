@@ -1,146 +1,157 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
+import { Trabajador } from '../../trabajadores/schemas/trabajador.schema';
 import { User } from 'src/modules/users/entities/user.entity';
 import { DocumentoEstado } from '../enums/documento-estado.enum';
 
-const siONo = ["SI", "NO"];
+const siONo = ['SI', 'NO'];
 
-const tabaquismoOpciones = ["NO FUMA", "FUMA", "EXFUMADOR"];
+const tabaquismoOpciones = ['NO FUMA', 'FUMA', 'EXFUMADOR'];
 
-const cigarrosSemanaOpciones = ["0", "<10", "10–20", ">20"];
+const cigarrosSemanaOpciones = ['0', '<10', '10–20', '>20'];
 
-const disneaOpciones = ["NINGUNA", "AL ESFUERZO", "EN REPOSO"];
+const disneaOpciones = ['NINGUNA', 'AL ESFUERZO', 'EN REPOSO'];
 
-const resultadoCuestionarioOpciones = ["PROCEDENTE", "PROCEDENTE CON PRECAUCIÓN", "NO PROCEDENTE", "OTRO"];
+const resultadoCuestionarioOpciones = [
+  'PROCEDENTE',
+  'PROCEDENTE CON PRECAUCIÓN',
+  'NO PROCEDENTE',
+  'OTRO',
+];
 
 @Schema()
 export class PrevioEspirometria extends Document {
-    @Prop({ required: true })
-    fechaPrevioEspirometria: Date
+  @Prop({ required: true })
+  fechaPrevioEspirometria: Date;
 
-    // Factores de riesgo respiratorio
-    @Prop({ enum: tabaquismoOpciones })
-    tabaquismo: string
+  // Factores de riesgo respiratorio
+  @Prop({ enum: tabaquismoOpciones })
+  tabaquismo: string;
 
-    @Prop({ enum: cigarrosSemanaOpciones })
-    cigarrosSemana: string
+  @Prop({ enum: cigarrosSemanaOpciones })
+  cigarrosSemana: string;
 
-    @Prop({ enum: siONo })
-    exposicionHumosBiomasa: string
+  @Prop({ enum: siONo })
+  exposicionHumosBiomasa: string;
 
-    @Prop({ enum: siONo })
-    exposicionLaboralPolvos: string
+  @Prop({ enum: siONo })
+  exposicionLaboralPolvos: string;
 
-    @Prop({ enum: siONo })
-    exposicionVaporesGasesIrritantes: string
+  @Prop({ enum: siONo })
+  exposicionVaporesGasesIrritantes: string;
 
-    @Prop({ enum: siONo })
-    antecedentesTuberculosisInfeccionesRespiratorias: string
+  @Prop({ enum: siONo })
+  antecedentesTuberculosisInfeccionesRespiratorias: string;
 
-    // Síntomas respiratorios
-    @Prop({ enum: siONo })
-    tosCronica: string
+  // Síntomas respiratorios
+  @Prop({ enum: siONo })
+  tosCronica: string;
 
-    @Prop({ enum: siONo })
-    expectoracionFrecuente: string
+  @Prop({ enum: siONo })
+  expectoracionFrecuente: string;
 
-    @Prop({ enum: disneaOpciones })
-    disnea: string
+  @Prop({ enum: disneaOpciones })
+  disnea: string;
 
-    @Prop({ enum: siONo })
-    sibilancias: string
+  @Prop({ enum: siONo })
+  sibilancias: string;
 
-    @Prop({ enum: siONo })
-    hemoptisis: string
+  @Prop({ enum: siONo })
+  hemoptisis: string;
 
-    @Prop()
-    otrosSintomas: string
+  @Prop()
+  otrosSintomas: string;
 
-    // Antecedentes médicos relevantes
-    @Prop({ enum: siONo })
-    asma: string
+  // Antecedentes médicos relevantes
+  @Prop({ enum: siONo })
+  asma: string;
 
-    @Prop({ enum: siONo })
-    epocBronquitisCronica: string
+  @Prop({ enum: siONo })
+  epocBronquitisCronica: string;
 
-    @Prop({ enum: siONo })
-    fibrosisPulmonar: string
+  @Prop({ enum: siONo })
+  fibrosisPulmonar: string;
 
-    @Prop({ enum: siONo })
-    apneaSueno: string
+  @Prop({ enum: siONo })
+  apneaSueno: string;
 
-    @Prop({ enum: siONo })
-    medicamentosActuales: string
+  @Prop({ enum: siONo })
+  medicamentosActuales: string;
 
-    @Prop()
-    medicamentosActualesEspecificar: string
+  @Prop()
+  medicamentosActualesEspecificar: string;
 
-    // Contraindicaciones Relativas
-    @Prop({ enum: siONo })
-    cirugiaReciente: string
+  // Contraindicaciones Relativas
+  @Prop({ enum: siONo })
+  cirugiaReciente: string;
 
-    @Prop({ enum: siONo })
-    infeccionRespiratoriaActiva: string
+  @Prop({ enum: siONo })
+  infeccionRespiratoriaActiva: string;
 
-    @Prop({ enum: siONo })
-    embarazoComplicado: string
+  @Prop({ enum: siONo })
+  embarazoComplicado: string;
 
-    @Prop({ enum: siONo })
-    derramePleural: string
+  @Prop({ enum: siONo })
+  derramePleural: string;
 
-    @Prop({ enum: siONo })
-    neumotorax: string
+  @Prop({ enum: siONo })
+  neumotorax: string;
 
-    // Contraindicaciones Absolutas
-    @Prop({ enum: siONo })
-    infartoAgudoAnginaInestable: string
+  // Contraindicaciones Absolutas
+  @Prop({ enum: siONo })
+  infartoAgudoAnginaInestable: string;
 
-    @Prop({ enum: siONo })
-    aneurismaAorticoConocido: string
+  @Prop({ enum: siONo })
+  aneurismaAorticoConocido: string;
 
-    @Prop({ enum: siONo })
-    inestabilidadHemodinamicaGrave: string
+  @Prop({ enum: siONo })
+  inestabilidadHemodinamicaGrave: string;
 
-    @Prop({ enum: siONo })
-    hipertensionIntracraneal: string
+  @Prop({ enum: siONo })
+  hipertensionIntracraneal: string;
 
-    @Prop({ enum: siONo })
-    desprendimientoAgudoRetina: string
+  @Prop({ enum: siONo })
+  desprendimientoAgudoRetina: string;
 
-    // Resultado de cuestionario
-    @Prop( { enum: resultadoCuestionarioOpciones })
-    resultadoCuestionario: string
+  // Resultado de cuestionario
+  @Prop({ enum: resultadoCuestionarioOpciones })
+  resultadoCuestionario: string;
 
-    @Prop()
-    resultadoCuestionarioPersonalizado: string
+  @Prop()
+  resultadoCuestionarioPersonalizado: string;
 
-    // Trabajador, ruta al archivo e info de creador y actualizador
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
-    idTrabajador: Trabajador;
+  // Trabajador, ruta al archivo e info de creador y actualizador
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Trabajador',
+    required: true,
+  })
+  idTrabajador: Trabajador;
 
-    @Prop({ required: true })
-    rutaPDF: string;
+  @Prop({ required: true })
+  rutaPDF: string;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    createdBy: User;
-  
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    updatedBy: User;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  createdBy: User;
 
-    // Document State Management (NOM-024)
-    @Prop({ 
-        enum: DocumentoEstado, 
-        required: true, 
-        default: DocumentoEstado.BORRADOR 
-    })
-    estado: DocumentoEstado;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  updatedBy: User;
 
-    @Prop({ required: false })
-    fechaFinalizacion?: Date;
+  // Document State Management (NOM-024)
+  @Prop({
+    enum: DocumentoEstado,
+    required: true,
+    default: DocumentoEstado.BORRADOR,
+  })
+  estado: DocumentoEstado;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
-    finalizadoPor?: User;
+  @Prop({ required: false })
+  fechaFinalizacion?: Date;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
+  finalizadoPor?: User;
 }
 
-export const PrevioEspirometriaSchema = SchemaFactory.createForClass(PrevioEspirometria).set('timestamps', true);
+export const PrevioEspirometriaSchema = SchemaFactory.createForClass(
+  PrevioEspirometria,
+).set('timestamps', true);

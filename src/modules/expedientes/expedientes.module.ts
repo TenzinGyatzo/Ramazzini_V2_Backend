@@ -3,26 +3,59 @@ import { ExpedientesService } from './expedientes.service';
 import { ExpedientesController } from './expedientes.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Antidoping, AntidopingSchema } from './schemas/antidoping.schema';
-import { AptitudPuesto, AptitudPuestoSchema } from './schemas/aptitud-puesto.schema';
+import {
+  AptitudPuesto,
+  AptitudPuestoSchema,
+} from './schemas/aptitud-puesto.schema';
 import { Audiometria, AudiometriaSchema } from './schemas/audiometria.schema';
 import { Certificado, CertificadoSchema } from './schemas/certificado.schema';
-import { CertificadoExpedito, CertificadoExpeditoSchema } from './schemas/certificado-expedito.schema';
-import { DocumentoExterno, DocumentoExternoSchema } from './schemas/documento-externo.schema';
+import {
+  CertificadoExpedito,
+  CertificadoExpeditoSchema,
+} from './schemas/certificado-expedito.schema';
+import {
+  DocumentoExterno,
+  DocumentoExternoSchema,
+} from './schemas/documento-externo.schema';
 import { ExamenVista, ExamenVistaSchema } from './schemas/examen-vista.schema';
-import { ExploracionFisica, ExploracionFisicaSchema } from './schemas/exploracion-fisica.schema';
-import { HistoriaClinica, HistoriaClinicaSchema } from './schemas/historia-clinica.schema';
+import {
+  ExploracionFisica,
+  ExploracionFisicaSchema,
+} from './schemas/exploracion-fisica.schema';
+import {
+  HistoriaClinica,
+  HistoriaClinicaSchema,
+} from './schemas/historia-clinica.schema';
 import { NotaMedica, NotaMedicaSchema } from './schemas/nota-medica.schema';
-import { ControlPrenatal, ControlPrenatalSchema } from './schemas/control-prenatal.schema';
-import { HistoriaOtologica, HistoriaOtologicaSchema } from './schemas/historia-otologica.schema';
-import { PrevioEspirometria, PrevioEspirometriaSchema } from './schemas/previo-espirometria.schema';
-import { ConstanciaAptitud, ConstanciaAptitudSchema } from './schemas/constancia-aptitud.schema';
+import {
+  ControlPrenatal,
+  ControlPrenatalSchema,
+} from './schemas/control-prenatal.schema';
+import {
+  HistoriaOtologica,
+  HistoriaOtologicaSchema,
+} from './schemas/historia-otologica.schema';
+import {
+  PrevioEspirometria,
+  PrevioEspirometriaSchema,
+} from './schemas/previo-espirometria.schema';
+import {
+  ConstanciaAptitud,
+  ConstanciaAptitudSchema,
+} from './schemas/constancia-aptitud.schema';
 import { Receta, RecetaSchema } from './schemas/receta.schema';
 import { Lesion, LesionSchema } from './schemas/lesion.schema';
-import { Trabajador, TrabajadorSchema } from '../trabajadores/schemas/trabajador.schema';
+import {
+  Trabajador,
+  TrabajadorSchema,
+} from '../trabajadores/schemas/trabajador.schema';
 import { InformesModule } from '../informes/informes.module';
 import { FilesModule } from '../files/files.module';
 import { PdfCleanerService } from './pdf-cleaner.service';
-import { CentroTrabajo, CentroTrabajoSchema } from '../centros-trabajo/schemas/centro-trabajo.schema';
+import {
+  CentroTrabajo,
+  CentroTrabajoSchema,
+} from '../centros-trabajo/schemas/centro-trabajo.schema';
 import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
 import { NOM024ComplianceModule } from '../nom024-compliance/nom024-compliance.module';
 import { CatalogsModule } from '../catalogs/catalogs.module';
@@ -57,6 +90,6 @@ import { CatalogsModule } from '../catalogs/catalogs.module';
     NOM024ComplianceModule,
     CatalogsModule,
   ],
-  exports: [ExpedientesService]
+  exports: [ExpedientesService],
 })
 export class ExpedientesModule {}

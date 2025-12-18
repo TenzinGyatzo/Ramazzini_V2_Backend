@@ -22,7 +22,10 @@ export class CreateTecnicoFirmanteDto {
   @IsString()
   sexo?: string;
 
-  @ApiProperty({ required: false, description: 'Título profesional del técnico' })
+  @ApiProperty({
+    required: false,
+    description: 'Título profesional del técnico',
+  })
   @IsOptional()
   @IsString()
   tituloProfesional?: string;
@@ -51,5 +54,3 @@ export class CreateTecnicoFirmanteDto {
   @IsNotEmpty()
   idUser: string;
 }
-
-

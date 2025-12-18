@@ -1,5 +1,7 @@
 import { config } from 'dotenv';
-config({ path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env' });
+config({
+  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+});
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';

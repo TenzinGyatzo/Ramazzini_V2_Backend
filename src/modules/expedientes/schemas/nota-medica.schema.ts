@@ -1,96 +1,103 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
+import { Trabajador } from '../../trabajadores/schemas/trabajador.schema';
 import { User } from 'src/modules/users/entities/user.entity';
 import { DocumentoEstado } from '../enums/documento-estado.enum';
 
-const tipoNota = ["Inicial", "Seguimiento", "Alta"];
+const tipoNota = ['Inicial', 'Seguimiento', 'Alta'];
 
 @Schema()
 export class NotaMedica extends Document {
-    @Prop({enum: tipoNota})
-    tipoNota: string;
+  @Prop({ enum: tipoNota })
+  tipoNota: string;
 
-    @Prop({ required: true })
-    fechaNotaMedica: Date;
+  @Prop({ required: true })
+  fechaNotaMedica: Date;
 
-    @Prop({ required: true })
-    motivoConsulta: string;
+  @Prop({ required: true })
+  motivoConsulta: string;
 
-    @Prop()
-    antecedentes: string;
+  @Prop()
+  antecedentes: string;
 
-    @Prop()
-    exploracionFisica: string;
+  @Prop()
+  exploracionFisica: string;
 
-    @Prop()
-    tensionArterialSistolica: number;
-  
-    @Prop()
-    tensionArterialDiastolica: number;
+  @Prop()
+  tensionArterialSistolica: number;
 
-    @Prop()
-    frecuenciaCardiaca: number;
+  @Prop()
+  tensionArterialDiastolica: number;
 
-    @Prop()
-    frecuenciaRespiratoria: number;
+  @Prop()
+  frecuenciaCardiaca: number;
 
-    @Prop()
-    temperatura: number;
+  @Prop()
+  frecuenciaRespiratoria: number;
 
-    @Prop()
-    saturacionOxigeno: number;
+  @Prop()
+  temperatura: number;
 
-    @Prop({ required: true })
-    diagnostico: string; // Free-text diagnosis (kept for backward compatibility)
+  @Prop()
+  saturacionOxigeno: number;
 
-    // NOM-024: CIE-10 Diagnosis Codes
-    @Prop({ 
-        required: false,
-        match: /^$|^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, // CIE-10 format: A00.0 or A00
-    })
-    codigoCIE10Principal?: string;
+  @Prop({ required: true })
+  diagnostico: string; // Free-text diagnosis (kept for backward compatibility)
 
-    @Prop({ 
-        type: [String],
-        required: false,
-    })
-    codigosCIE10Secundarios?: string[];
+  // NOM-024: CIE-10 Diagnosis Codes
+  @Prop({
+    required: false,
+    match: /^$|^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, // CIE-10 format: A00.0 or A00
+  })
+  codigoCIE10Principal?: string;
 
-    @Prop({ type: [String]})
-    tratamiento: string[];
+  @Prop({
+    type: [String],
+    required: false,
+  })
+  codigosCIE10Secundarios?: string[];
 
-    @Prop({ type: [String]})
-    recomendaciones: string;
+  @Prop({ type: [String] })
+  tratamiento: string[];
 
-    @Prop()
-    observaciones: string;
+  @Prop({ type: [String] })
+  recomendaciones: string;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
-    idTrabajador: Trabajador;
+  @Prop()
+  observaciones: string;
 
-    @Prop({ required: true })
-    rutaPDF: string;
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Trabajador',
+    required: true,
+  })
+  idTrabajador: Trabajador;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    createdBy: User;
-  
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    updatedBy: User;
+  @Prop({ required: true })
+  rutaPDF: string;
 
-    // Document State Management (NOM-024)
-    @Prop({ 
-        enum: DocumentoEstado, 
-        required: true, 
-        default: DocumentoEstado.BORRADOR 
-    })
-    estado: DocumentoEstado;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  createdBy: User;
 
-    @Prop({ required: false })
-    fechaFinalizacion?: Date;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  updatedBy: User;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
-    finalizadoPor?: User;
+  // Document State Management (NOM-024)
+  @Prop({
+    enum: DocumentoEstado,
+    required: true,
+    default: DocumentoEstado.BORRADOR,
+  })
+  estado: DocumentoEstado;
+
+  @Prop({ required: false })
+  fechaFinalizacion?: Date;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
+  finalizadoPor?: User;
 }
 
-export const NotaMedicaSchema = SchemaFactory.createForClass(NotaMedica).set('timestamps', true);
+export const NotaMedicaSchema = SchemaFactory.createForClass(NotaMedica).set(
+  'timestamps',
+  true,
+);

@@ -1,14 +1,14 @@
-import { Document } from "mongoose";
+import { Document } from 'mongoose';
 
 export class User extends Document {
-    username: string;
-    email: string;
-    phone: string;
-    country: string;
-    password: string;
-    role: string;
-    token: string;
-    idProveedorSalud: string;
+  username: string;
+  email: string;
+  phone: string;
+  country: string;
+  password: string;
+  role: string;
+  token: string;
+  idProveedorSalud: string;
   permisos?: {
     gestionarEmpresas: boolean;
     gestionarCentrosTrabajo: boolean;
@@ -21,8 +21,8 @@ export class User extends Document {
     accesoDashboardSalud: boolean;
     accesoRiesgosTrabajo: boolean;
   };
-    cuentaActiva?: boolean;
-    empresasAsignadas?: string[];
-    centrosTrabajoAsignados?: string[];
-    checkPassword: (inputPassword: string) => Promise<boolean>;
+  cuentaActiva?: boolean;
+  empresasAsignadas?: string[];
+  centrosTrabajoAsignados?: string[];
+  checkPassword: (inputPassword: string) => Promise<boolean>;
 }

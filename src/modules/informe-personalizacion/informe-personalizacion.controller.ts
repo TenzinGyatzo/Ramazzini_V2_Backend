@@ -1,6 +1,21 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Req, Res, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Req,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InformePersonalizacionService } from './informe-personalizacion.service';
-import { CreateInformePersonalizacionDto, UpdateInformePersonalizacionDto } from './dto/informe-personalizacion.dto';
+import {
+  CreateInformePersonalizacionDto,
+  UpdateInformePersonalizacionDto,
+} from './dto/informe-personalizacion.dto';
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
@@ -33,7 +48,10 @@ export class InformePersonalizacionController {
   }
 
   @Post()
-  async create(@Body() createDto: CreateInformePersonalizacionDto, @Req() req: Request) {
+  async create(
+    @Body() createDto: CreateInformePersonalizacionDto,
+    @Req() req: Request,
+  ) {
     const userId = await this.authenticateUser(req);
     createDto.createdBy = userId;
     createDto.updatedBy = userId;
@@ -41,7 +59,10 @@ export class InformePersonalizacionController {
   }
 
   @Get('empresa/:idEmpresa')
-  async findByEmpresa(@Param('idEmpresa') idEmpresa: string, @Req() req: Request) {
+  async findByEmpresa(
+    @Param('idEmpresa') idEmpresa: string,
+    @Req() req: Request,
+  ) {
     await this.authenticateUser(req);
     return this.informePersonalizacionService.findByEmpresa(idEmpresa);
   }
@@ -53,11 +74,17 @@ export class InformePersonalizacionController {
     @Req() req: Request,
   ) {
     await this.authenticateUser(req);
-    return this.informePersonalizacionService.findByEmpresaAndCentro(idEmpresa, idCentroTrabajo);
+    return this.informePersonalizacionService.findByEmpresaAndCentro(
+      idEmpresa,
+      idCentroTrabajo,
+    );
   }
 
   @Get('empresa/:idEmpresa/centro')
-  async findByEmpresaOnly(@Param('idEmpresa') idEmpresa: string, @Req() req: Request) {
+  async findByEmpresaOnly(
+    @Param('idEmpresa') idEmpresa: string,
+    @Req() req: Request,
+  ) {
     await this.authenticateUser(req);
     return this.informePersonalizacionService.findByEmpresaAndCentro(idEmpresa);
   }

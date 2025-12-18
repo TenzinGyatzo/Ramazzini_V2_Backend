@@ -81,8 +81,16 @@ const createConditionalTableCell = (text: string): Content => ({
   style: 'tableCell',
   alignment: 'center',
   margin: [3, 3, 3, 3],
-  bold: text && (text.toUpperCase() === 'SI' || text.toUpperCase() === 'FUMAR ACTUALMENTE' || text.toUpperCase() === 'EXFUMADOR'),
-  color: text && (text.toUpperCase() === 'SI' || text.toUpperCase() === 'FUMAR ACTUALMENTE') ? 'red' : 'black',
+  bold:
+    text &&
+    (text.toUpperCase() === 'SI' ||
+      text.toUpperCase() === 'FUMAR ACTUALMENTE' ||
+      text.toUpperCase() === 'EXFUMADOR'),
+  color:
+    text &&
+    (text.toUpperCase() === 'SI' || text.toUpperCase() === 'FUMAR ACTUALMENTE')
+      ? 'red'
+      : 'black',
 });
 
 const createTabaquismoTableCell = (text: string): Content => ({
@@ -90,9 +98,19 @@ const createTabaquismoTableCell = (text: string): Content => ({
   style: 'tableCell',
   alignment: 'center',
   margin: [3, 3, 3, 3],
-  bold: text && (text.toUpperCase() === 'FUMA' || text.toUpperCase() === 'FUMAR ACTUALMENTE' || text.toUpperCase() === 'EXFUMADOR'),
-  color: text && (text.toUpperCase() === 'FUMA' || text.toUpperCase() === 'FUMAR ACTUALMENTE') ? 'red' : 
-         text && text.toUpperCase() === 'EXFUMADOR' ? '#CD853F' : 'black', // Fuma -> rojo, Exfumador -> ocre, No fuma -> negro
+  bold:
+    text &&
+    (text.toUpperCase() === 'FUMA' ||
+      text.toUpperCase() === 'FUMAR ACTUALMENTE' ||
+      text.toUpperCase() === 'EXFUMADOR'),
+  color:
+    text &&
+    (text.toUpperCase() === 'FUMA' ||
+      text.toUpperCase() === 'FUMAR ACTUALMENTE')
+      ? 'red'
+      : text && text.toUpperCase() === 'EXFUMADOR'
+        ? '#CD853F'
+        : 'black', // Fuma -> rojo, Exfumador -> ocre, No fuma -> negro
 });
 
 const createPaquetesAnoTableCell = (text: string): Content => ({
@@ -110,26 +128,42 @@ const createDisneaTableCell = (text: string): Content => ({
   alignment: 'center',
   margin: [3, 3, 3, 3],
   bold: text && text.toUpperCase() !== 'NINGUNA',
-  color: text && text.toUpperCase() === 'EN REPOSO' ? 'red' : 
-         text && text.toUpperCase() === 'AL ESFUERZO' ? '#CD853F' : 'black', // En reposo -> rojo, Al esfuerzo -> ocre, Ninguna -> negro
+  color:
+    text && text.toUpperCase() === 'EN REPOSO'
+      ? 'red'
+      : text && text.toUpperCase() === 'AL ESFUERZO'
+        ? '#CD853F'
+        : 'black', // En reposo -> rojo, Al esfuerzo -> ocre, Ninguna -> negro
 });
 
-const createResultadoCuestionarioTableCell = (text: string, textoPersonalizado?: string): Content => {
+const createResultadoCuestionarioTableCell = (
+  text: string,
+  textoPersonalizado?: string,
+): Content => {
   // Si el resultado es "OTRO" y hay texto personalizado, usar el texto personalizado
-  const textoFinal = text && text.toUpperCase() === 'OTRO' && textoPersonalizado 
-    ? textoPersonalizado.toUpperCase() 
-    : text ? text.toUpperCase() : '';
-    
+  const textoFinal =
+    text && text.toUpperCase() === 'OTRO' && textoPersonalizado
+      ? textoPersonalizado.toUpperCase()
+      : text
+        ? text.toUpperCase()
+        : '';
+
   return {
     text: textoFinal,
     style: 'tableCell',
     alignment: 'center',
     margin: [3, 3, 3, 3],
     bold: true,
-    color: text && text.toUpperCase() === 'PROCEDENTE' ? 'green' : 
-           text && text.toUpperCase() === 'PROCEDENTE CON PRECAUCIÓN' ? '#CD853F' : // Color ocre
-           text && text.toUpperCase() === 'NO PROCEDENTE' ? 'red' : 
-           text && text.toUpperCase() === 'OTRO' ? '#404040' : 'black', // Color gris oscuro para OTRO
+    color:
+      text && text.toUpperCase() === 'PROCEDENTE'
+        ? 'green'
+        : text && text.toUpperCase() === 'PROCEDENTE CON PRECAUCIÓN'
+          ? '#CD853F' // Color ocre
+          : text && text.toUpperCase() === 'NO PROCEDENTE'
+            ? 'red'
+            : text && text.toUpperCase() === 'OTRO'
+              ? '#404040'
+              : 'black', // Color gris oscuro para OTRO
   };
 };
 
@@ -139,8 +173,14 @@ const createExposicionPolvosTableCell = (text: string): Content => ({
   alignment: 'center',
   margin: [3, 3, 3, 3],
   bold: text && text.toUpperCase() !== 'NO',
-  color: text && text.toUpperCase() === 'AMBOS' ? 'red' : 
-         text && (text.toUpperCase() === 'ORGÁNICOS' || text.toUpperCase() === 'INORGÁNICOS') ? '#CD853F' : 'black',
+  color:
+    text && text.toUpperCase() === 'AMBOS'
+      ? 'red'
+      : text &&
+          (text.toUpperCase() === 'ORGÁNICOS' ||
+            text.toUpperCase() === 'INORGÁNICOS')
+        ? '#CD853F'
+        : 'black',
 });
 
 const createOtrosSintomasTableCell = (text: string): Content => ({
@@ -164,9 +204,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -190,27 +230,27 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
@@ -271,7 +311,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface EnfermeraFirmante {
@@ -284,7 +324,7 @@ interface EnfermeraFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface TecnicoFirmante {
@@ -297,7 +337,7 @@ interface TecnicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -328,14 +368,20 @@ export const previoEspirometriaInforme = (
   tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
-  const usarTecnico = !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
+  const usarTecnico =
+    !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
 
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : (usarTecnico ? tecnicoFirmante : null));
+  const firmanteActivo = usarMedico
+    ? medicoFirmante
+    : usarEnfermera
+      ? enfermeraFirmante
+      : usarTecnico
+        ? tecnicoFirmante
+        : null;
 
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
@@ -346,12 +392,20 @@ export const previoEspirometriaInforme = (
   };
 
   const firma: Content = firmanteActivo?.firma?.data
-  ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
-  : { text: '' };
+    ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   return {
     pageSize: 'LETTER',
@@ -377,7 +431,9 @@ export const previoEspirometriaInforme = (
                 text: [
                   { text: 'Fecha: ', style: 'fecha', bold: false },
                   {
-                    text: formatearFechaUTC(previoEspirometria.fechaPrevioEspirometria),
+                    text: formatearFechaUTC(
+                      previoEspirometria.fechaPrevioEspirometria,
+                    ),
                     style: 'fecha',
                     bold: true,
                   },
@@ -437,35 +493,84 @@ export const previoEspirometriaInforme = (
                   widths: ['60%', '20%', '20%'],
                   body: [
                     [
-                      { text: 'TABAQUISMO', style: 'tableCellBold', alignment: 'center' },
-                      Object.assign({}, createTabaquismoTableCell(previoEspirometria.tabaquismo?.toString() || ''), { colSpan: 2 }),
+                      {
+                        text: 'TABAQUISMO',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      Object.assign(
+                        {},
+                        createTabaquismoTableCell(
+                          previoEspirometria.tabaquismo?.toString() || '',
+                        ),
+                        { colSpan: 2 },
+                      ),
                       {},
                     ],
                     [
-                      { text: 'CIGARROS-SEMANA', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                      {
+                        text: 'CIGARROS-SEMANA',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                        colSpan: 2,
+                      },
                       {},
-                      createPaquetesAnoTableCell(previoEspirometria.cigarrosSemana?.toString() || ''),
+                      createPaquetesAnoTableCell(
+                        previoEspirometria.cigarrosSemana?.toString() || '',
+                      ),
                     ],
                     [
-                      { text: 'EXPOSICIÓN A HUMOS Y BIOMASA', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                      {
+                        text: 'EXPOSICIÓN A HUMOS Y BIOMASA',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                        colSpan: 2,
+                      },
                       {},
-                      createConditionalTableCell(previoEspirometria.exposicionHumosBiomasa?.toString() || ''),
+                      createConditionalTableCell(
+                        previoEspirometria.exposicionHumosBiomasa?.toString() ||
+                          '',
+                      ),
                     ],
                     [
-                      { text: 'EXPOSICIÓN A POLVOS', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                      {
+                        text: 'EXPOSICIÓN A POLVOS',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                        colSpan: 2,
+                      },
                       {},
-                      createConditionalTableCell(previoEspirometria.exposicionLaboralPolvos?.toString() || ''),
+                      createConditionalTableCell(
+                        previoEspirometria.exposicionLaboralPolvos?.toString() ||
+                          '',
+                      ),
                     ],
                     [
-                      { text: 'EXP. VAPORES Y GASES IRRITANTES', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                      {
+                        text: 'EXP. VAPORES Y GASES IRRITANTES',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                        colSpan: 2,
+                      },
                       {},
-                      createConditionalTableCell(previoEspirometria.exposicionVaporesGasesIrritantes?.toString() || ''),
+                      createConditionalTableCell(
+                        previoEspirometria.exposicionVaporesGasesIrritantes?.toString() ||
+                          '',
+                      ),
                     ],
                     [
-                      { text: 'TUBERC./INFEC. RESPIRATORIAS', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
+                      {
+                        text: 'TUBERC./INFEC. RESPIRATORIAS',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                        colSpan: 2,
+                      },
                       {},
-                      createConditionalTableCell(previoEspirometria.antecedentesTuberculosisInfeccionesRespiratorias?.toString() || ''),
-                    ]
+                      createConditionalTableCell(
+                        previoEspirometria.antecedentesTuberculosisInfeccionesRespiratorias?.toString() ||
+                          '',
+                      ),
+                    ],
                   ],
                 },
                 layout: {
@@ -478,8 +583,8 @@ export const previoEspirometriaInforme = (
                   hLineWidth: () => 0.3,
                   vLineWidth: () => 0.3,
                 },
-              }
-            ]
+              },
+            ],
           },
           // Espacio vacío en el medio
           { width: '4%', text: '' },
@@ -496,10 +601,26 @@ export const previoEspirometriaInforme = (
               {
                 style: 'table',
                 table: {
-                  widths: ['10%', '10%', '10%', '10%', '10%', '10%', '10%', '10%', '10%', '10%'],
+                  widths: [
+                    '10%',
+                    '10%',
+                    '10%',
+                    '10%',
+                    '10%',
+                    '10%',
+                    '10%',
+                    '10%',
+                    '10%',
+                    '10%',
+                  ],
                   body: [
                     [
-                      { text: 'TOS CRÓNICA', style: 'tableCellBold', alignment: 'center', colSpan: 8 },
+                      {
+                        text: 'TOS CRÓNICA',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                        colSpan: 8,
+                      },
                       {},
                       {},
                       {},
@@ -507,35 +628,22 @@ export const previoEspirometriaInforme = (
                       {},
                       {},
                       {},
-                      Object.assign({}, createConditionalTableCell(previoEspirometria.tosCronica?.toString() || ''), { colSpan: 2 }),
-                      {},
-                    ],
-                    [
-                      { text: 'EXPECTORACIÓN FRECUENTE', style: 'tableCellBold', alignment: 'center', colSpan: 8 },
-                      {},
-                      {},
-                      {},
-                      {},
-                      {},
-                      {},
-                      {},
-                      Object.assign({}, createConditionalTableCell(previoEspirometria.expectoracionFrecuente?.toString() || ''), { colSpan: 2 }),
-                      {},
-                    ],
-                    [
-                      { text: 'DISNEA', style: 'tableCellBold', alignment: 'center', colSpan: 4 },
-                      {},
-                      {},
-                      {},
-                      Object.assign({}, createDisneaTableCell(previoEspirometria.disnea?.toString() || ''), { colSpan: 6 }),
-                      {},
-                      {},
-                      {},
-                      {},
+                      Object.assign(
+                        {},
+                        createConditionalTableCell(
+                          previoEspirometria.tosCronica?.toString() || '',
+                        ),
+                        { colSpan: 2 },
+                      ),
                       {},
                     ],
                     [
-                      { text: 'SIBILANCIAS', style: 'tableCellBold', alignment: 'center', colSpan: 8 },
+                      {
+                        text: 'EXPECTORACIÓN FRECUENTE',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                        colSpan: 8,
+                      },
                       {},
                       {},
                       {},
@@ -543,33 +651,113 @@ export const previoEspirometriaInforme = (
                       {},
                       {},
                       {},
-                      Object.assign({}, createConditionalTableCell(previoEspirometria.sibilancias?.toString() || ''), { colSpan: 2 }),
+                      Object.assign(
+                        {},
+                        createConditionalTableCell(
+                          previoEspirometria.expectoracionFrecuente?.toString() ||
+                            '',
+                        ),
+                        { colSpan: 2 },
+                      ),
                       {},
                     ],
                     [
-                      { text: 'HEMOPTISIS', style: 'tableCellBold', alignment: 'center', colSpan: 8 },
+                      {
+                        text: 'DISNEA',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                        colSpan: 4,
+                      },
+                      {},
+                      {},
+                      {},
+                      Object.assign(
+                        {},
+                        createDisneaTableCell(
+                          previoEspirometria.disnea?.toString() || '',
+                        ),
+                        { colSpan: 6 },
+                      ),
                       {},
                       {},
                       {},
                       {},
-                      {},
-                      {},
-                      {},
-                      Object.assign({}, createConditionalTableCell(previoEspirometria.hemoptisis?.toString() || ''), { colSpan: 2 }),
                       {},
                     ],
-                    ...(previoEspirometria.otrosSintomas ? [[
-                      { text: 'OTROS SÍNTOMAS', style: 'tableCellBold', alignment: 'center', colSpan: 5 },
+                    [
+                      {
+                        text: 'SIBILANCIAS',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                        colSpan: 8,
+                      },
                       {},
                       {},
                       {},
                       {},
-                      Object.assign({}, createOtrosSintomasTableCell(previoEspirometria.otrosSintomas?.toString() || ''), { colSpan: 5 }),
+                      {},
+                      {},
+                      {},
+                      Object.assign(
+                        {},
+                        createConditionalTableCell(
+                          previoEspirometria.sibilancias?.toString() || '',
+                        ),
+                        { colSpan: 2 },
+                      ),
+                      {},
+                    ],
+                    [
+                      {
+                        text: 'HEMOPTISIS',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                        colSpan: 8,
+                      },
                       {},
                       {},
                       {},
                       {},
-                    ]] : [])
+                      {},
+                      {},
+                      {},
+                      Object.assign(
+                        {},
+                        createConditionalTableCell(
+                          previoEspirometria.hemoptisis?.toString() || '',
+                        ),
+                        { colSpan: 2 },
+                      ),
+                      {},
+                    ],
+                    ...(previoEspirometria.otrosSintomas
+                      ? [
+                          [
+                            {
+                              text: 'OTROS SÍNTOMAS',
+                              style: 'tableCellBold',
+                              alignment: 'center',
+                              colSpan: 5,
+                            },
+                            {},
+                            {},
+                            {},
+                            {},
+                            Object.assign(
+                              {},
+                              createOtrosSintomasTableCell(
+                                previoEspirometria.otrosSintomas?.toString() ||
+                                  '',
+                              ),
+                              { colSpan: 5 },
+                            ),
+                            {},
+                            {},
+                            {},
+                            {},
+                          ],
+                        ]
+                      : []),
                   ],
                 },
                 layout: {
@@ -582,9 +770,9 @@ export const previoEspirometriaInforme = (
                   hLineWidth: () => 0.3,
                   vLineWidth: () => 0.3,
                 },
-              }
-            ]
-          }
+              },
+            ],
+          },
         ],
         margin: [0, 0, 0, 3],
       },
@@ -601,26 +789,46 @@ export const previoEspirometriaInforme = (
           // Tabla izquierda (primeros 4 elementos)
           {
             width: '48%',
-        style: 'table',
+            style: 'table',
             table: {
               widths: ['80%', '20%'],
               body: [
                 [
                   { text: 'ASMA', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.asma?.toString() || ''),
+                  createConditionalTableCell(
+                    previoEspirometria.asma?.toString() || '',
+                  ),
                 ],
                 [
-                  { text: 'EPOC O BRONQUITIS CRÓNICA', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.epocBronquitisCronica?.toString() || ''),
+                  {
+                    text: 'EPOC O BRONQUITIS CRÓNICA',
+                    style: 'tableCellBold',
+                    alignment: 'center',
+                  },
+                  createConditionalTableCell(
+                    previoEspirometria.epocBronquitisCronica?.toString() || '',
+                  ),
                 ],
                 [
-                  { text: 'FIBROSIS PULMONAR', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.fibrosisPulmonar?.toString() || ''),
+                  {
+                    text: 'FIBROSIS PULMONAR',
+                    style: 'tableCellBold',
+                    alignment: 'center',
+                  },
+                  createConditionalTableCell(
+                    previoEspirometria.fibrosisPulmonar?.toString() || '',
+                  ),
                 ],
                 [
-                  { text: 'APNEA DEL SUEÑO', style: 'tableCellBold', alignment: 'center' },
-                  createConditionalTableCell(previoEspirometria.apneaSueno?.toString() || ''),
-                ]
+                  {
+                    text: 'APNEA DEL SUEÑO',
+                    style: 'tableCellBold',
+                    alignment: 'center',
+                  },
+                  createConditionalTableCell(
+                    previoEspirometria.apneaSueno?.toString() || '',
+                  ),
+                ],
               ],
             },
             layout: {
@@ -644,22 +852,45 @@ export const previoEspirometriaInforme = (
               widths: ['20%', '20%', '20%', '20%', '20%'],
               body: [
                 [
-                  { text: 'MEDICAMENTOS ACTUALES', style: 'tableCellBold', alignment: 'center', colSpan: 4 },
+                  {
+                    text: 'MEDICAMENTOS ACTUALES',
+                    style: 'tableCellBold',
+                    alignment: 'center',
+                    colSpan: 4,
+                  },
                   {},
                   {},
                   {},
-                  createConditionalTableCell(previoEspirometria.medicamentosActuales?.toString() || ''),
+                  createConditionalTableCell(
+                    previoEspirometria.medicamentosActuales?.toString() || '',
+                  ),
                 ],
-                ...(previoEspirometria.medicamentosActualesEspecificar ? [[
-                  { text: 'ESPECIFICAR MEDICAMENTOS', style: 'tableCellBold', alignment: 'center', colSpan: 2 },
-                  {},
-                  { text: previoEspirometria.medicamentosActualesEspecificar?.toString().toUpperCase() || '', style: 'tableCell', colSpan: 3 },
-                  {},
-                  {},
-                ]] : [])
+                ...(previoEspirometria.medicamentosActualesEspecificar
+                  ? [
+                      [
+                        {
+                          text: 'ESPECIFICAR MEDICAMENTOS',
+                          style: 'tableCellBold',
+                          alignment: 'center',
+                          colSpan: 2,
+                        },
+                        {},
+                        {
+                          text:
+                            previoEspirometria.medicamentosActualesEspecificar
+                              ?.toString()
+                              .toUpperCase() || '',
+                          style: 'tableCell',
+                          colSpan: 3,
+                        },
+                        {},
+                        {},
+                      ],
+                    ]
+                  : []),
               ],
             },
-        layout: {
+            layout: {
               hLineColor: '#a8a29e',
               vLineColor: '#a8a29e',
               paddingTop: (i: number, node: any) => 1,
@@ -669,7 +900,7 @@ export const previoEspirometriaInforme = (
               hLineWidth: () => 0.3,
               vLineWidth: () => 0.3,
             },
-          }
+          },
         ],
         margin: [0, 0, 0, 3],
       },
@@ -693,24 +924,55 @@ export const previoEspirometriaInforme = (
                   widths: ['80%', '20%'],
                   body: [
                     [
-                      { text: 'CIRUGÍA RECIENTE', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.cirugiaReciente?.toString() || ''),
+                      {
+                        text: 'CIRUGÍA RECIENTE',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      createConditionalTableCell(
+                        previoEspirometria.cirugiaReciente?.toString() || '',
+                      ),
                     ],
                     [
-                      { text: 'INFECCIÓN RESPIRATORIA ACTIVA', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.infeccionRespiratoriaActiva?.toString() || ''),
+                      {
+                        text: 'INFECCIÓN RESPIRATORIA ACTIVA',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      createConditionalTableCell(
+                        previoEspirometria.infeccionRespiratoriaActiva?.toString() ||
+                          '',
+                      ),
                     ],
                     [
-                      { text: 'EMBARAZO COMPLICADO', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.embarazoComplicado?.toString() || ''),
+                      {
+                        text: 'EMBARAZO COMPLICADO',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      createConditionalTableCell(
+                        previoEspirometria.embarazoComplicado?.toString() || '',
+                      ),
                     ],
                     [
-                      { text: 'DERRAME PLEURAL', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.derramePleural?.toString() || ''),
+                      {
+                        text: 'DERRAME PLEURAL',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      createConditionalTableCell(
+                        previoEspirometria.derramePleural?.toString() || '',
+                      ),
                     ],
                     [
-                      { text: 'NEUMOTÓRAX', style: 'tableCellBold', alignment: 'center' },
-                      createConditionalTableCell(previoEspirometria.neumotorax?.toString() || ''),
+                      {
+                        text: 'NEUMOTÓRAX',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      createConditionalTableCell(
+                        previoEspirometria.neumotorax?.toString() || '',
+                      ),
                     ],
                   ],
                 },
@@ -725,8 +987,8 @@ export const previoEspirometriaInforme = (
                   vLineWidth: () => 0.3,
                 },
                 margin: [0, 0, 0, 3],
-              }
-            ]
+              },
+            ],
           },
           // Espacio vacío en el medio
           { width: '4%', text: '' },
@@ -740,33 +1002,68 @@ export const previoEspirometriaInforme = (
                 alignment: 'center',
                 margin: [0, 8, 0, 3],
               },
-      {
-        style: 'table',
-        table: {
-          widths: ['80%', '20%'],
-          body: [
-                  [
-                    { text: 'IAM/ANGINA INESTABLE', style: 'tableCellBold', alignment: 'center' },
-                    createConditionalTableCell(previoEspirometria.infartoAgudoAnginaInestable?.toString() || ''),
+              {
+                style: 'table',
+                table: {
+                  widths: ['80%', '20%'],
+                  body: [
+                    [
+                      {
+                        text: 'IAM/ANGINA INESTABLE',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      createConditionalTableCell(
+                        previoEspirometria.infartoAgudoAnginaInestable?.toString() ||
+                          '',
+                      ),
+                    ],
+                    [
+                      {
+                        text: 'ANEURISMA AÓRTICO',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      createConditionalTableCell(
+                        previoEspirometria.aneurismaAorticoConocido?.toString() ||
+                          '',
+                      ),
+                    ],
+                    [
+                      {
+                        text: 'INESTABILIDAD HEMODINÁMICA',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      createConditionalTableCell(
+                        previoEspirometria.inestabilidadHemodinamicaGrave?.toString() ||
+                          '',
+                      ),
+                    ],
+                    [
+                      {
+                        text: 'HIPERTENSIÓN INTRACRANEAL',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      createConditionalTableCell(
+                        previoEspirometria.hipertensionIntracraneal?.toString() ||
+                          '',
+                      ),
+                    ],
+                    [
+                      {
+                        text: 'DESPRENDIMIENTO DE RETINA',
+                        style: 'tableCellBold',
+                        alignment: 'center',
+                      },
+                      createConditionalTableCell(
+                        previoEspirometria.desprendimientoAgudoRetina?.toString() ||
+                          '',
+                      ),
+                    ],
                   ],
-                  [
-                    { text: 'ANEURISMA AÓRTICO', style: 'tableCellBold', alignment: 'center' },
-                    createConditionalTableCell(previoEspirometria.aneurismaAorticoConocido?.toString() || ''),
-                  ],
-                  [
-                    { text: 'INESTABILIDAD HEMODINÁMICA', style: 'tableCellBold', alignment: 'center' },
-                    createConditionalTableCell(previoEspirometria.inestabilidadHemodinamicaGrave?.toString() || ''),
-                  ],
-                  [
-                    { text: 'HIPERTENSIÓN INTRACRANEAL', style: 'tableCellBold', alignment: 'center' },
-                    createConditionalTableCell(previoEspirometria.hipertensionIntracraneal?.toString() || ''),
-                  ],
-                  [
-                    { text: 'DESPRENDIMIENTO DE RETINA', style: 'tableCellBold', alignment: 'center' },
-                    createConditionalTableCell(previoEspirometria.desprendimientoAgudoRetina?.toString() || ''),
-                  ]
-                ],
-              },
+                },
                 layout: {
                   hLineColor: '#a8a29e',
                   vLineColor: '#a8a29e',
@@ -778,46 +1075,50 @@ export const previoEspirometriaInforme = (
                   vLineWidth: () => 0.3,
                 },
                 margin: [0, 0, 0, 3],
-              }
-            ]
-          }
-         ]
-       },
+              },
+            ],
+          },
+        ],
+      },
 
-       // Sección RESULTADO centrada
-       {
-         text: 'RESULTADO DEL CUESTIONARIO',
-         style: 'sectionHeader',
-         alignment: 'center',
-         margin: [0, 8, 0, 3],
-       },
-       {
-         style: 'table',
-         table: {
-           widths: ['50%', '50%'],
-           body: [
-               [
-                 { text: 'ESPIROMETRÍA', style: 'tableCellBold', alignment: 'center' },
-                 createResultadoCuestionarioTableCell(
-                   previoEspirometria.resultadoCuestionario?.toString() || '',
-                   previoEspirometria.resultadoCuestionarioPersonalizado?.toString()
-                 ),
-               ]
+      // Sección RESULTADO centrada
+      {
+        text: 'RESULTADO DEL CUESTIONARIO',
+        style: 'sectionHeader',
+        alignment: 'center',
+        margin: [0, 8, 0, 3],
+      },
+      {
+        style: 'table',
+        table: {
+          widths: ['50%', '50%'],
+          body: [
+            [
+              {
+                text: 'ESPIROMETRÍA',
+                style: 'tableCellBold',
+                alignment: 'center',
+              },
+              createResultadoCuestionarioTableCell(
+                previoEspirometria.resultadoCuestionario?.toString() || '',
+                previoEspirometria.resultadoCuestionarioPersonalizado?.toString(),
+              ),
+            ],
           ],
         },
         layout: {
-           hLineColor: '#a8a29e',
-           vLineColor: '#a8a29e',
-           paddingTop: (i: number, node: any) => 1,
-           paddingBottom: (i: number, node: any) => 1,
-           paddingLeft: (i: number, node: any) => 1,
-           paddingRight: (i: number, node: any) => 1,
-           hLineWidth: () => 0.3,
-           vLineWidth: () => 0.3,
-         },
-         margin: [0, 0, 0, 3],
+          hLineColor: '#a8a29e',
+          vLineColor: '#a8a29e',
+          paddingTop: (i: number, node: any) => 1,
+          paddingBottom: (i: number, node: any) => 1,
+          paddingLeft: (i: number, node: any) => 1,
+          paddingRight: (i: number, node: any) => 1,
+          hLineWidth: () => 0.3,
+          vLineWidth: () => 0.3,
+        },
+        margin: [0, 0, 0, 3],
       },
-        ],
+    ],
     // Pie de pagina
     footer: {
       stack: [
@@ -849,72 +1150,80 @@ export const previoEspirometriaInforme = (
             {
               text: [
                 // Nombre y título profesional
-                (firmanteActivo?.tituloProfesional && firmanteActivo?.nombre)
+                firmanteActivo?.tituloProfesional && firmanteActivo?.nombre
                   ? {
                       text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
                       bold: true,
                     }
                   : null,
-              
+
                 // Cédula profesional (para médicos y enfermeras)
                 firmanteActivo?.numeroCedulaProfesional
                   ? {
-                      text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : proveedorSalud.pais === 'GT'
-                        ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                          : proveedorSalud.pais === 'GT'
+                            ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                            : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Cédula de especialista (solo para médicos)
-                (usarMedico && medicoFirmante?.numeroCedulaEspecialista)
+                usarMedico && medicoFirmante?.numeroCedulaEspecialista
                   ? {
-                      text: proveedorSalud.pais === 'MX'
-                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Credencial adicional
-                (firmanteActivo?.nombreCredencialAdicional && firmanteActivo?.numeroCredencialAdicional)
-                ? {
-                    text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                    bold: false,
-                  }
-                : null,
-                
-                // Texto específico para enfermeras
-                (usarEnfermera && enfermeraFirmante?.sexo)
+                firmanteActivo?.nombreCredencialAdicional &&
+                firmanteActivo?.numeroCredencialAdicional
                   ? {
-                      text: enfermeraFirmante.sexo === 'Femenino' 
-                        ? 'Enfermera responsable del cuestionario\n'
-                        : 'Enfermero responsable del cuestionario\n',
+                      text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                      bold: false,
+                    }
+                  : null,
+
+                // Texto específico para enfermeras
+                usarEnfermera && enfermeraFirmante?.sexo
+                  ? {
+                      text:
+                        enfermeraFirmante.sexo === 'Femenino'
+                          ? 'Enfermera responsable del cuestionario\n'
+                          : 'Enfermero responsable del cuestionario\n',
                       bold: false,
                     }
                   : null,
 
                 // Texto específico para técnicos
-                (usarTecnico && tecnicoFirmante?.sexo)
+                usarTecnico && tecnicoFirmante?.sexo
                   ? {
-                      text: tecnicoFirmante.sexo === 'Femenino' 
-                        ? 'Responsable de la evaluación\n'
-                        : 'Responsable de la evaluación\n',
+                      text:
+                        tecnicoFirmante.sexo === 'Femenino'
+                          ? 'Responsable de la evaluación\n'
+                          : 'Responsable de la evaluación\n',
                       bold: false,
                     }
                   : null,
-                
-              ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe        
+              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(firmanteActivo?.firma?.data ? [{
-              ...firma,
-              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
-            }] : []),
+            ...(firmanteActivo?.firma?.data
+              ? [
+                  {
+                    ...firma,
+                    margin: [0, -3, 0, 0] as [number, number, number, number], // Mueve el elemento más arriba
+                  },
+                ]
+              : []),
             {
               text: [
                 proveedorSalud.nombre
@@ -924,7 +1233,7 @@ export const previoEspirometriaInforme = (
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.direccion
                   ? {
                       text: `${proveedorSalud.direccion}\n`,
@@ -932,15 +1241,17 @@ export const previoEspirometriaInforme = (
                       italics: true,
                     }
                   : null,
-              
-                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+
+                proveedorSalud.municipio &&
+                proveedorSalud.estado &&
+                proveedorSalud.telefono
                   ? {
                       text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.sitioWeb
                   ? {
                       text: `${proveedorSalud.sitioWeb}`,
@@ -950,7 +1261,7 @@ export const previoEspirometriaInforme = (
                       color: 'blue',
                     }
                   : null,
-              ].filter(item => item !== null),  // Elimina los elementos nulos
+              ].filter((item) => item !== null), // Elimina los elementos nulos
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],

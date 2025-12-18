@@ -128,9 +128,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -154,27 +154,27 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
@@ -293,7 +293,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface EnfermeraFirmante {
@@ -306,7 +306,7 @@ interface EnfermeraFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface TecnicoFirmante {
@@ -319,7 +319,7 @@ interface TecnicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -350,14 +350,20 @@ export const historiaClinicaInforme = (
   tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
-  const usarTecnico = !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
+  const usarTecnico =
+    !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
 
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : (usarTecnico ? tecnicoFirmante : null));
+  const firmanteActivo = usarMedico
+    ? medicoFirmante
+    : usarEnfermera
+      ? enfermeraFirmante
+      : usarTecnico
+        ? tecnicoFirmante
+        : null;
 
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
@@ -368,12 +374,20 @@ export const historiaClinicaInforme = (
   };
 
   const firma: Content = firmanteActivo?.firma?.data
-  ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
-  : { text: '' };
+    ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   const motivoExamen = historiaClinica.motivoExamen;
   const motivoTexto = [
@@ -497,11 +511,7 @@ export const historiaClinicaInforme = (
       historiaClinica.quirurgicosEspecificar,
       'QUIRÚRGICOS',
     ),
-    createRow(
-      historiaClinica.otros,
-      historiaClinica.otrosEspecificar,
-      'OTROS',
-    ),
+    createRow(historiaClinica.otros, historiaClinica.otrosEspecificar, 'OTROS'),
   ];
 
   const rowsAntecedentesPersonalesNoPatologicos = [
@@ -548,11 +558,11 @@ export const historiaClinicaInforme = (
       body: [
         [
           {
-            text: "      " + nombreEmpresa,  // Usa 6 espacios literales
+            text: '      ' + nombreEmpresa, // Usa 6 espacios literales
             style: 'nombreEmpresa',
             alignment: 'center',
             margin: [0, 0, 0, 0],
-            preserveLeadingSpaces: true,  // IMPORTANTE: Forza a pdfMake a respetar los espacios
+            preserveLeadingSpaces: true, // IMPORTANTE: Forza a pdfMake a respetar los espacios
           },
           {
             text: motivoTexto,
@@ -577,7 +587,7 @@ export const historiaClinicaInforme = (
     },
     layout: 'noBorders',
     margin: [0, 0, 0, 0],
-  }
+  };
 
   // Datos del Trabajador
   const trabajadorSeccion: Content = {
@@ -628,7 +638,7 @@ export const historiaClinicaInforme = (
       vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 8],
-  }
+  };
 
   // Antecedentes Heredofamiliares y Personales Patológicos
   const antecedentesSeccion: Content = {
@@ -733,7 +743,7 @@ export const historiaClinicaInforme = (
       },
     ],
     margin: [0, 0, 0, 8],
-  }
+  };
 
   // Antecedentes Personales No Patológicos
   const antecedentesPersonalesNoPatologicos: Content = {
@@ -838,91 +848,94 @@ export const historiaClinicaInforme = (
       },
     ],
     margin: [0, 0, 0, 8],
-  }
+  };
 
   // Antecedentes Gineco Obstetricos
-  const antecedentesGinecoObstetricos: Content | null = trabajador.sexo === 'Femenino' ? {
-    style: 'table',
-    table: {
-      widths: ['20%', '30%', '20%', '30%'],
-      body: [
-        // Encabezado
-        [
-          {
-            text: 'ANTECEDENTES GINECO-OBSTÉTRICOS',
-            style: 'tableHeader',
-            colSpan: 4,
-            alignment: 'center',
+  const antecedentesGinecoObstetricos: Content | null =
+    trabajador.sexo === 'Femenino'
+      ? {
+          style: 'table',
+          table: {
+            widths: ['20%', '30%', '20%', '30%'],
+            body: [
+              // Encabezado
+              [
+                {
+                  text: 'ANTECEDENTES GINECO-OBSTÉTRICOS',
+                  style: 'tableHeader',
+                  colSpan: 4,
+                  alignment: 'center',
+                },
+                {},
+                {},
+                {},
+              ],
+              // Filas de datos
+              ...[
+                [
+                  'MENARCA',
+                  historiaClinica.menarca,
+                  'FECHA ÚLTIMA REGLA',
+                  historiaClinica.fechaUltimaRegla,
+                ],
+                [
+                  'DURACIÓN PROMEDIO',
+                  historiaClinica.duracionPromedio,
+                  'DOLOR MENSTRUAL',
+                  historiaClinica.dolorMenstrual,
+                ],
+                [
+                  'FRECUENCIA',
+                  historiaClinica.frecuencia,
+                  'EMBARAZO ACTUAL',
+                  historiaClinica.embarazoActual,
+                ],
+                [
+                  'GESTAS',
+                  historiaClinica.gestas,
+                  'VIDA SEXUAL ACTIVA',
+                  historiaClinica.vidaSexualActiva,
+                ],
+                [
+                  'PARTOS',
+                  historiaClinica.partos,
+                  'PLANIFICACIÓN FAMILIAR',
+                  historiaClinica.planificacionFamiliar,
+                ],
+                [
+                  'CESÁREAS',
+                  historiaClinica.cesareas,
+                  'ÚLTIMO PAPANICOLAOU',
+                  historiaClinica.fechaUltimoPapanicolaou,
+                ],
+                [
+                  'ABORTOS',
+                  historiaClinica.abortos,
+                  'ÚLTIMA MASTROGRAFÍA',
+                  historiaClinica.fechaUltimaMastografia,
+                ],
+              ].map((row) =>
+                row.map((text, i) => ({
+                  text,
+                  style: i === 0 || i === 2 ? 'tableCellBold' : 'tableCell', // Aplica estilo específico si es la primera o la tercer columna
+                  alignment: i === 0 || i === 2 ? 'left' : 'center', // Alinea a la izquierda para la primera columna y tercer
+                })),
+              ),
+            ],
           },
-          {},
-          {},
-          {},
-        ],
-        // Filas de datos
-        ...[
-          [
-            'MENARCA',
-            historiaClinica.menarca,
-            'FECHA ÚLTIMA REGLA',
-            historiaClinica.fechaUltimaRegla,
-          ],
-          [
-            'DURACIÓN PROMEDIO',
-            historiaClinica.duracionPromedio,
-            'DOLOR MENSTRUAL',
-            historiaClinica.dolorMenstrual,
-          ],
-          [
-            'FRECUENCIA',
-            historiaClinica.frecuencia,
-            'EMBARAZO ACTUAL',
-            historiaClinica.embarazoActual,
-          ],
-          [
-            'GESTAS',
-            historiaClinica.gestas,
-            'VIDA SEXUAL ACTIVA',
-            historiaClinica.vidaSexualActiva,
-          ],
-          [
-            'PARTOS',
-            historiaClinica.partos,
-            'PLANIFICACIÓN FAMILIAR',
-            historiaClinica.planificacionFamiliar,
-          ],
-          [
-            'CESÁREAS',
-            historiaClinica.cesareas,
-            'ÚLTIMO PAPANICOLAOU',
-            historiaClinica.fechaUltimoPapanicolaou,
-          ],
-          [
-            'ABORTOS',
-            historiaClinica.abortos,
-            'ÚLTIMA MASTROGRAFÍA',
-            historiaClinica.fechaUltimaMastografia,
-          ],
-        ].map((row) =>
-          row.map((text, i) => ({
-            text,
-            style: i === 0 || i === 2 ? 'tableCellBold' : 'tableCell', // Aplica estilo específico si es la primera o la tercer columna
-            alignment: i === 0 || i === 2 ? 'left' : 'center', // Alinea a la izquierda para la primera columna y tercer
-          })),
-        ),
-      ],
-    },
-    layout: {
-      hLineWidth: (i: number, node: any) => 0.5,
-      vLineWidth: (i: number, node: any) => 0.5,
-      hLineColor: () => '#e5e7eb',
-      vLineColor: () => '#e5e7eb',
-      paddingTop: (i: number, node: any) => 0,
-      paddingBottom: (i: number, node: any) => 0,
-      paddingLeft: (i: number, node: any) => 2,
-      paddingRight: (i: number, node: any) => 2,
-    },
-    margin: [0, 0, 0, 8],
-  } : null
+          layout: {
+            hLineWidth: (i: number, node: any) => 0.5,
+            vLineWidth: (i: number, node: any) => 0.5,
+            hLineColor: () => '#e5e7eb',
+            vLineColor: () => '#e5e7eb',
+            paddingTop: (i: number, node: any) => 0,
+            paddingBottom: (i: number, node: any) => 0,
+            paddingLeft: (i: number, node: any) => 2,
+            paddingRight: (i: number, node: any) => 2,
+          },
+          margin: [0, 0, 0, 8],
+        }
+      : null;
 
   // Antecedentes Laborales
   const antecedentesLaborales: Content = {
@@ -992,7 +1005,7 @@ export const historiaClinicaInforme = (
       paddingRight: (i: number, node: any) => 2,
     },
     margin: [0, 0, 0, 8],
-  }
+  };
 
   // Antecedentes Laborales 2da parte
   const antecedentesLaborales2daParte: Content = {
@@ -1074,7 +1087,7 @@ export const historiaClinicaInforme = (
       vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 8],
-  }
+  };
 
   // Resumen Historia Clínica
   const resumenHistoriaClinica: Content = {
@@ -1117,7 +1130,7 @@ export const historiaClinicaInforme = (
       vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 8],
-  }
+  };
 
   // Crear el array de contenido de manera condicional
   const content: Content[] = [
@@ -1169,72 +1182,80 @@ export const historiaClinicaInforme = (
             {
               text: [
                 // Nombre y título profesional
-                (firmanteActivo?.tituloProfesional && firmanteActivo?.nombre)
+                firmanteActivo?.tituloProfesional && firmanteActivo?.nombre
                   ? {
                       text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
                       bold: true,
                     }
                   : null,
-              
+
                 // Cédula profesional (para médicos y enfermeras)
                 firmanteActivo?.numeroCedulaProfesional
                   ? {
-                      text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : proveedorSalud.pais === 'GT'
-                        ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                          : proveedorSalud.pais === 'GT'
+                            ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                            : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Cédula de especialista (solo para médicos)
-                (usarMedico && medicoFirmante?.numeroCedulaEspecialista)
+                usarMedico && medicoFirmante?.numeroCedulaEspecialista
                   ? {
-                      text: proveedorSalud.pais === 'MX'
-                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Credencial adicional
-                (firmanteActivo?.nombreCredencialAdicional && firmanteActivo?.numeroCredencialAdicional)
-                ? {
-                    text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                    bold: false,
-                  }
-                : null,
-                
+                firmanteActivo?.nombreCredencialAdicional &&
+                firmanteActivo?.numeroCredencialAdicional
+                  ? {
+                      text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                      bold: false,
+                    }
+                  : null,
+
                 // Texto específico para enfermeras
-                (usarEnfermera && enfermeraFirmante?.sexo)
+                usarEnfermera && enfermeraFirmante?.sexo
                   ? {
-                      text: enfermeraFirmante.sexo === 'Femenino' 
-                        ? 'Enfermera responsable de la evaluación\n'
-                        : 'Enfermero responsable de la evaluación\n',
+                      text:
+                        enfermeraFirmante.sexo === 'Femenino'
+                          ? 'Enfermera responsable de la evaluación\n'
+                          : 'Enfermero responsable de la evaluación\n',
                       bold: false,
                     }
                   : null,
-                
+
                 // Texto específico para técnicos
-                (usarTecnico && tecnicoFirmante?.sexo)
+                usarTecnico && tecnicoFirmante?.sexo
                   ? {
-                      text: tecnicoFirmante.sexo === 'Femenino' 
-                        ? 'Responsable de la evaluación\n'
-                        : 'Responsable de la evaluación\n',
+                      text:
+                        tecnicoFirmante.sexo === 'Femenino'
+                          ? 'Responsable de la evaluación\n'
+                          : 'Responsable de la evaluación\n',
                       bold: false,
                     }
                   : null,
-                  
-              ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe   
+              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(firmanteActivo?.firma?.data ? [{
-              ...firma,
-              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
-            }] : []),
+            ...(firmanteActivo?.firma?.data
+              ? [
+                  {
+                    ...firma,
+                    margin: [0, -3, 0, 0] as [number, number, number, number], // Mueve el elemento más arriba
+                  },
+                ]
+              : []),
             {
               text: [
                 proveedorSalud.nombre
@@ -1244,7 +1265,7 @@ export const historiaClinicaInforme = (
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.direccion
                   ? {
                       text: `${proveedorSalud.direccion}\n`,
@@ -1252,15 +1273,17 @@ export const historiaClinicaInforme = (
                       italics: true,
                     }
                   : null,
-              
-                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+
+                proveedorSalud.municipio &&
+                proveedorSalud.estado &&
+                proveedorSalud.telefono
                   ? {
                       text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.sitioWeb
                   ? {
                       text: `${proveedorSalud.sitioWeb}`,
@@ -1270,7 +1293,7 @@ export const historiaClinicaInforme = (
                       color: 'blue',
                     }
                   : null,
-              ].filter(item => item !== null),  // Elimina los elementos nulos
+              ].filter((item) => item !== null), // Elimina los elementos nulos
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],
@@ -1280,6 +1303,6 @@ export const historiaClinicaInforme = (
       ],
     },
     // Estilos
-    styles: updatedStyles, 
+    styles: updatedStyles,
   };
 };

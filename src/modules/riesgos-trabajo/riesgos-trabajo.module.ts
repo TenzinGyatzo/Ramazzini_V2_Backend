@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RiesgosTrabajoService } from './riesgos-trabajo.service';
 import { RiesgosTrabajoController } from './riesgos-trabajo.controller';
-import { RiesgoTrabajo, RiesgoTrabajoSchema } from './schemas/riesgo-trabajo.schema';
+import {
+  RiesgoTrabajo,
+  RiesgoTrabajoSchema,
+} from './schemas/riesgo-trabajo.schema';
 
 @Module({
   imports: [

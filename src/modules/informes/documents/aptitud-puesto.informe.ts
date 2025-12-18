@@ -83,7 +83,7 @@ const styles: StyleDictionary = {
     // fillColor: '#17A2B8' // Turquesa
     // fillColor: '#138496' // Turquesa Oscuro
     // fillColor: '#E0A800' // Oro (Se ve bien con texto blanco y texto negro)
-    // fillColor: '' // 
+    // fillColor: '' //
     fillColor: '#343A40', // Gris Oscuro
     color: 'white',
     /* color: '#FFFFFF', */
@@ -107,7 +107,7 @@ const createTableCell = (
   text: string,
   style: string,
   alignment: Alignment,
-  color?: string
+  color?: string,
 ): Content => ({
   text,
   style,
@@ -115,8 +115,11 @@ const createTableCell = (
   color,
 });
 
-const getColorForAptitud = (aptitudPuesto: string, semaforizacionActivada: boolean): string | undefined => {
-  if (!semaforizacionActivada) return undefined; 
+const getColorForAptitud = (
+  aptitudPuesto: string,
+  semaforizacionActivada: boolean,
+): string | undefined => {
+  if (!semaforizacionActivada) return undefined;
 
   switch (aptitudPuesto) {
     case 'Apto Sin Restricciones':
@@ -133,13 +136,15 @@ const getColorForAptitud = (aptitudPuesto: string, semaforizacionActivada: boole
   }
 };
 
-const ajustarAptitudPorGenero = (aptitudPuesto: string, sexo: string): string => {
+const ajustarAptitudPorGenero = (
+  aptitudPuesto: string,
+  sexo: string,
+): string => {
   if (sexo === 'Femenino') {
     return aptitudPuesto.replace('Apto', 'Apta');
   }
   return aptitudPuesto;
 };
-
 
 const getAptitudDescription = (aptitudPuesto: string): string => {
   switch (aptitudPuesto) {
@@ -170,9 +175,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -196,50 +201,53 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
 
 // Función auxiliar para convertir número a texto
 const numeroEnLetras = (n: number) => {
-  return {
-    5: 'cinco',
-    6: 'seis',
-    10: 'diez',
-    12: 'doce'
-  }[n] || n.toString();
+  return (
+    {
+      5: 'cinco',
+      6: 'seis',
+      10: 'diez',
+      12: 'doce',
+    }[n] || n.toString()
+  );
 };
 
 // Función para generar resumen de audiometría
 const obtenerResumenAudiometria = (audiometria: Audiometria | null) => {
   if (!audiometria) return 'No se cuenta con audiometría';
-  
+
   const diagnostico = audiometria.diagnosticoAudiometria || 'Sin diagnóstico';
-  const hipoacusia = audiometria.hipoacusiaBilateralCombinada !== undefined 
-    ? audiometria.hipoacusiaBilateralCombinada + '%' 
-    : 'No especificado';
-  
+  const hipoacusia =
+    audiometria.hipoacusiaBilateralCombinada !== undefined
+      ? audiometria.hipoacusiaBilateralCombinada + '%'
+      : 'No especificado';
+
   return `${diagnostico} HBC ${hipoacusia}`;
 };
 
@@ -259,23 +267,23 @@ const obtenerResumenAntidoping = (a: any) => {
     { key: 'barbituricos', label: 'Barbitúricos' },
     { key: 'antidepresivosTriciclicos', label: 'Antidepresivos Tricíclicos' },
     { key: 'metilendioximetanfetamina', label: 'Metilendioximetanfetamina' },
-    { key: 'ketamina', label: 'Ketamina' }
+    { key: 'ketamina', label: 'Ketamina' },
   ];
 
-  const evaluados = campos.filter(c => {
+  const evaluados = campos.filter((c) => {
     const valor = a[c.key];
     return valor !== undefined && valor !== null && valor !== '';
   });
 
-  const todosNegativos = evaluados.every(c => a[c.key] === 'Negativo');
+  const todosNegativos = evaluados.every((c) => a[c.key] === 'Negativo');
 
   if (todosNegativos) {
     return `Negativo a ${numeroEnLetras(evaluados.length)} parámetros`;
   }
 
   const sustanciasPositivas = evaluados
-    .filter(c => a[c.key] !== 'Negativo')
-    .map(c => c.label)
+    .filter((c) => a[c.key] !== 'Negativo')
+    .map((c) => c.label)
     .join(', ');
 
   return `Positivo a: ${sustanciasPositivas}`;
@@ -382,7 +390,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -400,7 +408,7 @@ interface ProveedorSalud {
   telefono: string;
   correoElectronico: string;
   sitioWeb: string;
-  colorInforme: string;  
+  colorInforme: string;
   semaforizacionActivada: boolean;
 }
 
@@ -417,7 +425,6 @@ export const aptitudPuestoInforme = (
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
 
@@ -426,19 +433,31 @@ export const aptitudPuestoInforme = (
     fillColor: proveedorSalud.colorInforme || '#343A40',
   };
 
-  const aptitudPuestoModificado = ajustarAptitudPorGenero(aptitud.aptitudPuesto, trabajador.sexo);
+  const aptitudPuestoModificado = ajustarAptitudPorGenero(
+    aptitud.aptitudPuesto,
+    trabajador.sexo,
+  );
 
   const firma: Content = medicoFirmante.firma?.data
-  ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 65 }
-  : { text: '' };
+    ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 65 }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
-  const tituloInforme = proveedorSalud.pais === 'GT' 
-    ? '                                                                        INFORME MÉDICO OCUPACIONAL\n'
-    : '                                            EVALUACIÓN DE SALUD Y APTITUD AL PUESTO\n';
+  const tituloInforme =
+    proveedorSalud.pais === 'GT'
+      ? '                                                                        INFORME MÉDICO OCUPACIONAL\n'
+      : '                                            EVALUACIÓN DE SALUD Y APTITUD AL PUESTO\n';
 
   const headerText: Content = {
     text: tituloInforme,
@@ -464,12 +483,12 @@ export const aptitudPuestoInforme = (
     proveedorSalud.pais === 'MX'
       ? 'CURP'
       : proveedorSalud.pais === 'PA'
-      ? 'CÉDULA IDENTIDAD'
-      : proveedorSalud.pais === 'GT'
-      ? 'DPI'
-      : 'IDENTIFICACIÓN';
+        ? 'CÉDULA IDENTIDAD'
+        : proveedorSalud.pais === 'GT'
+          ? 'DPI'
+          : 'IDENTIFICACIÓN';
 
-const datosTrabajadorBody: TableCell[][] = [
+  const datosTrabajadorBody: TableCell[][] = [
     [
       { text: 'NOMBRE', style: 'label' },
       { text: formatearNombreTrabajador(trabajador), style: 'value' },
@@ -498,18 +517,18 @@ const datosTrabajadorBody: TableCell[][] = [
       { text: 'ESTADO CIVIL', style: 'label' },
       { text: trabajador.estadoCivil, style: 'value' },
       { text: 'NUM. DE EMPLEADO', style: 'label' },
-    { text: trabajador.numeroEmpleado || '-', style: 'value' },
+      { text: trabajador.numeroEmpleado || '-', style: 'value' },
     ],
   ];
 
-if (trabajador.nss || trabajador.curp) {
-  datosTrabajadorBody.push([
-    { text: 'NSS', style: 'label' },
-    { text: trabajador.nss || '-', style: 'value' },
-    { text: identificadorLabel, style: 'label' },
-    { text: trabajador.curp || '-', style: 'value' },
-  ]);
-}
+  if (trabajador.nss || trabajador.curp) {
+    datosTrabajadorBody.push([
+      { text: 'NSS', style: 'label' },
+      { text: trabajador.nss || '-', style: 'value' },
+      { text: identificadorLabel, style: 'label' },
+      { text: trabajador.curp || '-', style: 'value' },
+    ]);
+  }
 
   const resumenYAlteraciones = [
     [
@@ -635,7 +654,10 @@ if (trabajador.nss || trabajador.curp) {
   }
 
   const aptitudPuesto = aptitud.aptitudPuesto;
-  const aptitudColor = getColorForAptitud(aptitudPuesto, proveedorSalud.semaforizacionActivada);
+  const aptitudColor = getColorForAptitud(
+    aptitudPuesto,
+    proveedorSalud.semaforizacionActivada,
+  );
 
   return {
     pageSize: 'LETTER',
@@ -850,42 +872,49 @@ if (trabajador.nss || trabajador.curp) {
                       bold: true,
                     }
                   : null,
-              
+
                 medicoFirmante.numeroCedulaProfesional
                   ? {
-                      text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`
-                        : proveedorSalud.pais === 'GT'
-                        ? `Colegiado Activo No. ${medicoFirmante.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`
+                          : proveedorSalud.pais === 'GT'
+                            ? `Colegiado Activo No. ${medicoFirmante.numeroCedulaProfesional}\n`
+                            : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 medicoFirmante.numeroCedulaEspecialista
                   ? {
-                      text: proveedorSalud.pais === 'MX'
-                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,
-              
-                medicoFirmante.nombreCredencialAdicional && medicoFirmante.numeroCredencialAdicional
-                ? {
-                    text: `${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).substring(0, 60)}${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                    bold: false,
-                  }
-                : null,
-              ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe
+
+                medicoFirmante.nombreCredencialAdicional &&
+                medicoFirmante.numeroCredencialAdicional
+                  ? {
+                      text: `${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).substring(0, 60)}${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                      bold: false,
+                    }
+                  : null,
+              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(medicoFirmante.firma?.data ? [{
-              ...firma,
-              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
-            }] : []),
+            ...(medicoFirmante.firma?.data
+              ? [
+                  {
+                    ...firma,
+                    margin: [0, -3, 0, 0] as [number, number, number, number], // Mueve el elemento más arriba
+                  },
+                ]
+              : []),
             {
               text: [
                 proveedorSalud.nombre
@@ -895,7 +924,7 @@ if (trabajador.nss || trabajador.curp) {
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.direccion
                   ? {
                       text: `${proveedorSalud.direccion}\n`,
@@ -903,15 +932,17 @@ if (trabajador.nss || trabajador.curp) {
                       italics: true,
                     }
                   : null,
-              
-                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+
+                proveedorSalud.municipio &&
+                proveedorSalud.estado &&
+                proveedorSalud.telefono
                   ? {
                       text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.sitioWeb
                   ? {
                       text: `${proveedorSalud.sitioWeb}`,
@@ -921,7 +952,7 @@ if (trabajador.nss || trabajador.curp) {
                       color: 'blue',
                     }
                   : null,
-              ].filter(item => item !== null),  // Elimina los elementos nulos
+              ].filter((item) => item !== null), // Elimina los elementos nulos
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],
@@ -931,6 +962,6 @@ if (trabajador.nss || trabajador.curp) {
       ],
     },
     // Estilos
-    styles: updatedStyles, 
+    styles: updatedStyles,
   };
 };

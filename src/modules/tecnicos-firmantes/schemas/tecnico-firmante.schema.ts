@@ -39,6 +39,5 @@ export class TecnicoFirmante extends Document {
   idUser: User;
 }
 
-export const TecnicoFirmanteSchema = SchemaFactory.createForClass(TecnicoFirmante);
-
-
+export const TecnicoFirmanteSchema =
+  SchemaFactory.createForClass(TecnicoFirmante);

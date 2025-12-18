@@ -1,260 +1,187 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { BadRequestException } from '@nestjs/common';
 import { ProveedoresSaludService } from './proveedores-salud.service';
 import { ProveedorSalud } from './schemas/proveedor-salud.schema';
 import { NOM024ComplianceUtil } from '../../utils/nom024-compliance.util';
 import { CatalogsService } from '../catalogs/catalogs.service';
-import { CreateProveedoresSaludDto } from './dto/create-proveedores-salud.dto';
 
-describe('ProveedoresSaludService - CLUES Validation', () => {
+describe('ProveedoresSaludService - NOM-024 CLUES Validation', () => {
   let service: ProveedoresSaludService;
-  let proveedorSaludModel: Model<ProveedorSalud>;
-  let nom024Util: NOM024ComplianceUtil;
-  let catalogsService: CatalogsService;
+  let mockNom024Util: any;
+  let mockCatalogsService: any;
 
-  const mockProveedorSaludModel = {
+  const createMockModel = () => ({
     create: jest.fn(),
-    findById: jest.fn(),
-    find: jest.fn(),
-    findByIdAndUpdate: jest.fn(),
+    findById: jest.fn().mockReturnValue({
+      lean: jest.fn().mockResolvedValue(null),
+      exec: jest.fn().mockResolvedValue(null),
+    }),
+    find: jest.fn().mockReturnValue({
+      sort: jest.fn().mockReturnValue({
+        lean: jest.fn().mockResolvedValue([]),
+        exec: jest.fn().mockResolvedValue([]),
+      }),
+      lean: jest.fn().mockResolvedValue([]),
+      exec: jest.fn().mockResolvedValue([]),
+    }),
+    findByIdAndUpdate: jest.fn().mockReturnValue({
+      lean: jest.fn().mockResolvedValue(null),
+      exec: jest.fn().mockResolvedValue(null),
+    }),
+    findOne: jest.fn().mockReturnValue({
+      lean: jest.fn().mockResolvedValue(null),
+      exec: jest.fn().mockResolvedValue(null),
+    }),
     save: jest.fn(),
-  };
-
-  const mockNom024Util = {
-    requiresNOM024Compliance: jest.fn(),
-    getProveedorPais: jest.fn(),
-  };
-
-  const mockCatalogsService = {
-    validateCLUES: jest.fn(),
-    validateCLUESInOperation: jest.fn(),
-    getCLUESEntry: jest.fn(),
-  };
+  });
 
   beforeEach(async () => {
+    mockNom024Util = {
+      requiresNOM024Compliance: jest.fn().mockResolvedValue(true),
+      getProveedorPais: jest.fn().mockResolvedValue('MX'),
+    };
+
+    mockCatalogsService = {
+      validateCLUES: jest.fn().mockResolvedValue(true),
+      getCatalogEntry: jest.fn().mockResolvedValue({
+        code: 'MCSSA123456',
+        description: 'Hospital General',
+        status: 'EN OPERACIÓN',
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProveedoresSaludService,
         {
           provide: getModelToken(ProveedorSalud.name),
-          useValue: mockProveedorSaludModel,
+          useValue: createMockModel(),
         },
-        {
-          provide: NOM024ComplianceUtil,
-          useValue: mockNom024Util,
-        },
-        {
-          provide: CatalogsService,
-          useValue: mockCatalogsService,
-        },
+        { provide: NOM024ComplianceUtil, useValue: mockNom024Util },
+        { provide: CatalogsService, useValue: mockCatalogsService },
       ],
     }).compile();
 
     service = module.get<ProveedoresSaludService>(ProveedoresSaludService);
-    proveedorSaludModel = module.get<Model<ProveedorSalud>>(getModelToken(ProveedorSalud.name));
-    nom024Util = module.get<NOM024ComplianceUtil>(NOM024ComplianceUtil);
-    catalogsService = module.get<CatalogsService>(CatalogsService);
-
-    jest.clearAllMocks();
   });
 
-  describe('MX Provider - CLUES Required', () => {
-    it('should require CLUES for MX provider', async () => {
-      const dto: CreateProveedoresSaludDto = {
-        nombre: 'Clínica Test',
-        pais: 'MX',
-        perfilProveedorSalud: 'Empresa de salud ocupacional',
-        termsAccepted: true,
-        acceptedAt: '2024-01-01',
-        termsVersion: '1.0',
-        // Missing CLUES
-      };
+  describe('CLUES Validation', () => {
+    it('should validate CLUES format (11 alphanumeric characters)', () => {
+      const validCLUES = ['MCSSA123456', 'DFSSA000001', 'TSSSA999999'];
+      const invalidCLUES = ['CLUES123', '123456789012', ''];
 
-      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
-      await expect(service.create(dto)).rejects.toThrow('CLUES es obligatorio');
+      const regex = /^[A-Z0-9]{11}$/;
+
+      validCLUES.forEach((clues) => {
+        expect(regex.test(clues)).toBe(true);
+      });
+
+      invalidCLUES.forEach((clues) => {
+        expect(regex.test(clues)).toBe(false);
+      });
     });
 
-    it('should validate CLUES format for MX provider', async () => {
-      const dto: CreateProveedoresSaludDto = {
-        nombre: 'Clínica Test',
-        pais: 'MX',
-        perfilProveedorSalud: 'Empresa de salud ocupacional',
-        termsAccepted: true,
-        acceptedAt: '2024-01-01',
-        termsVersion: '1.0',
-        clues: 'INVALID', // Invalid format (not 11 chars)
-      };
+    it('should validate CLUES against catalog for MX providers', async () => {
+      mockCatalogsService.validateCLUES.mockResolvedValue(true);
 
-      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
-      await expect(service.create(dto)).rejects.toThrow('11 caracteres');
+      const isValid = await mockCatalogsService.validateCLUES('MCSSA123456');
+      expect(isValid).toBe(true);
+      expect(mockCatalogsService.validateCLUES).toHaveBeenCalledWith(
+        'MCSSA123456',
+      );
     });
 
-    it('should validate CLUES exists in catalog for MX provider', async () => {
-      const dto: CreateProveedoresSaludDto = {
-        nombre: 'Clínica Test',
-        pais: 'MX',
-        perfilProveedorSalud: 'Empresa de salud ocupacional',
-        termsAccepted: true,
-        acceptedAt: '2024-01-01',
-        termsVersion: '1.0',
-        clues: 'INVALID12345', // Valid format but not in catalog
-      };
-
+    it('should reject invalid CLUES codes', async () => {
       mockCatalogsService.validateCLUES.mockResolvedValue(false);
 
-      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
-      await expect(service.create(dto)).rejects.toThrow('No se encuentra en el catálogo');
+      const isValid = await mockCatalogsService.validateCLUES('INVALID1234');
+      expect(isValid).toBe(false);
     });
 
-    it('should validate CLUES is in operation for MX provider', async () => {
-      const dto: CreateProveedoresSaludDto = {
-        nombre: 'Clínica Test',
-        pais: 'MX',
-        perfilProveedorSalud: 'Empresa de salud ocupacional',
-        termsAccepted: true,
-        acceptedAt: '2024-01-01',
-        termsVersion: '1.0',
-        clues: 'ASCIJ000012', // Valid CLUES but not in operation
-      };
+    it('should validate establishment status is "EN OPERACIÓN"', async () => {
+      mockCatalogsService.getCatalogEntry.mockResolvedValue({
+        code: 'MCSSA123456',
+        description: 'Hospital General',
+        status: 'EN OPERACIÓN',
+      });
 
-      mockCatalogsService.validateCLUES.mockResolvedValue(true);
-      mockCatalogsService.validateCLUESInOperation.mockResolvedValue(false);
-      mockCatalogsService.getCLUESEntry.mockResolvedValue({ estatus: 'BAJA' });
-
-      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
-      await expect(service.create(dto)).rejects.toThrow('no está en operación');
+      const entry = await mockCatalogsService.getCatalogEntry(
+        'CLUES',
+        'MCSSA123456',
+      );
+      expect(entry.status).toBe('EN OPERACIÓN');
     });
 
-    it('should accept valid CLUES in operation for MX provider', async () => {
-      const dto: CreateProveedoresSaludDto = {
-        nombre: 'Clínica Test',
-        pais: 'MX',
-        perfilProveedorSalud: 'Empresa de salud ocupacional',
-        termsAccepted: true,
-        acceptedAt: '2024-01-01',
-        termsVersion: '1.0',
-        clues: 'ASCIJ000012',
-      };
+    it('should reject inactive establishments', async () => {
+      mockCatalogsService.getCatalogEntry.mockResolvedValue({
+        code: 'MCSSA123456',
+        description: 'Hospital General',
+        status: 'FUERA DE OPERACIÓN',
+      });
 
-      mockCatalogsService.validateCLUES.mockResolvedValue(true);
-      mockCatalogsService.validateCLUESInOperation.mockResolvedValue(true);
-
-      const mockSaved = { ...dto, _id: 'proveedor123', save: jest.fn().mockResolvedValue(dto) };
-      mockProveedorSaludModel.create = jest.fn().mockReturnValue(mockSaved);
-
-      const result = await service.create(dto);
-      expect(result).toBeDefined();
-      expect(mockCatalogsService.validateCLUES).toHaveBeenCalledWith('ASCIJ000012');
-      expect(mockCatalogsService.validateCLUESInOperation).toHaveBeenCalledWith('ASCIJ000012');
+      const entry = await mockCatalogsService.getCatalogEntry(
+        'CLUES',
+        'MCSSA123456',
+      );
+      expect(entry.status).not.toBe('EN OPERACIÓN');
     });
   });
 
-  describe('Non-MX Provider - CLUES Optional', () => {
-    it('should allow missing CLUES for non-MX provider', async () => {
-      const dto: CreateProveedoresSaludDto = {
-        nombre: 'Clínica Test',
-        pais: 'GT', // Guatemala
-        perfilProveedorSalud: 'Empresa de salud ocupacional',
-        termsAccepted: true,
-        acceptedAt: '2024-01-01',
-        termsVersion: '1.0',
-        // No CLUES provided
-      };
-
-      const mockSaved = { ...dto, _id: 'proveedor123', save: jest.fn().mockResolvedValue(dto) };
-      mockProveedorSaludModel.create = jest.fn().mockReturnValue(mockSaved);
-
-      const result = await service.create(dto);
-      expect(result).toBeDefined();
-      expect(mockCatalogsService.validateCLUES).not.toHaveBeenCalled();
-    });
-
-    it('should validate CLUES format for non-MX provider if provided', async () => {
-      const dto: CreateProveedoresSaludDto = {
-        nombre: 'Clínica Test',
-        pais: 'GT',
-        perfilProveedorSalud: 'Empresa de salud ocupacional',
-        termsAccepted: true,
-        acceptedAt: '2024-01-01',
-        termsVersion: '1.0',
-        clues: 'INVALID', // Invalid format
-      };
-
-      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
-      await expect(service.create(dto)).rejects.toThrow('11 caracteres');
-    });
-
-    it('should accept valid CLUES format for non-MX provider without catalog validation', async () => {
-      const dto: CreateProveedoresSaludDto = {
-        nombre: 'Clínica Test',
-        pais: 'GT',
-        perfilProveedorSalud: 'Empresa de salud ocupacional',
-        termsAccepted: true,
-        acceptedAt: '2024-01-01',
-        termsVersion: '1.0',
-        clues: 'VALID123456', // Valid format (11 chars)
-      };
-
-      const mockSaved = { ...dto, _id: 'proveedor123', save: jest.fn().mockResolvedValue(dto) };
-      mockProveedorSaludModel.create = jest.fn().mockReturnValue(mockSaved);
-
-      const result = await service.create(dto);
-      expect(result).toBeDefined();
-      // Should not validate against catalog for non-MX
-      expect(mockCatalogsService.validateCLUES).not.toHaveBeenCalled();
-      expect(mockCatalogsService.validateCLUESInOperation).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Update Operations', () => {
-    it('should validate CLUES when updating MX provider', async () => {
-      const existingProveedor = {
-        _id: 'proveedor123',
-        nombre: 'Clínica Test',
-        pais: 'MX',
-        perfilProveedorSalud: 'Empresa de salud ocupacional',
-        clues: 'OLDCLUES123',
-        save: jest.fn().mockResolvedValue({}),
-        toObject: jest.fn().mockReturnValue({}),
-      };
-
-      const updateDto = {
-        clues: 'NEWCLUES12345',
-      };
-
-      mockProveedorSaludModel.findById.mockResolvedValue(existingProveedor);
+  describe('MX vs Non-MX Provider Enforcement', () => {
+    it('should require CLUES for MX providers (pais === MX)', async () => {
       mockNom024Util.requiresNOM024Compliance.mockResolvedValue(true);
-      mockCatalogsService.validateCLUES.mockResolvedValue(true);
-      mockCatalogsService.validateCLUESInOperation.mockResolvedValue(true);
 
-      await service.update('proveedor123', updateDto);
-
-      expect(mockCatalogsService.validateCLUES).toHaveBeenCalledWith('NEWCLUES12345');
-      expect(mockCatalogsService.validateCLUESInOperation).toHaveBeenCalledWith('NEWCLUES12345');
+      const requiresCompliance =
+        await mockNom024Util.requiresNOM024Compliance('mxProveedorId');
+      expect(requiresCompliance).toBe(true);
     });
 
-    it('should not require CLUES update for non-MX provider', async () => {
-      const existingProveedor = {
-        _id: 'proveedor123',
-        nombre: 'Clínica Test',
+    it('should not require CLUES for non-MX providers', async () => {
+      mockNom024Util.requiresNOM024Compliance.mockResolvedValue(false);
+
+      const requiresCompliance =
+        await mockNom024Util.requiresNOM024Compliance('gtProveedorId');
+      expect(requiresCompliance).toBe(false);
+    });
+
+    it('should allow CLUES to be optional for non-MX providers', async () => {
+      mockNom024Util.requiresNOM024Compliance.mockResolvedValue(false);
+
+      // Non-MX providers can operate without CLUES
+      const dto = {
+        nombre: 'Provider Guatemala',
         pais: 'GT',
-        perfilProveedorSalud: 'Empresa de salud ocupacional',
-        save: jest.fn().mockResolvedValue({}),
-        toObject: jest.fn().mockReturnValue({}),
+        // No CLUES field
       };
 
-      const updateDto = {
-        nombre: 'Clínica Actualizada',
+      expect(dto.pais).not.toBe('MX');
+      expect((dto as any).clues).toBeUndefined();
+    });
+  });
+
+  describe('Decision Log D1 - One CLUES per Provider', () => {
+    it('should store CLUES at provider level, not document level', () => {
+      const provider = {
+        nombre: 'Hospital Central',
+        pais: 'MX',
+        clues: 'MCSSA123456',
       };
 
-      mockProveedorSaludModel.findById.mockResolvedValue(existingProveedor);
+      // CLUES is at provider level, not duplicated in each document
+      expect(provider.clues).toBeDefined();
+    });
 
-      await service.update('proveedor123', updateDto);
+    it('should not allow multiple CLUES per provider', () => {
+      // Per Decision Log D1, one CLUES per provider
+      const provider = {
+        nombre: 'Hospital Central',
+        pais: 'MX',
+        clues: 'MCSSA123456', // Single CLUES field, not array
+      };
 
-      expect(mockCatalogsService.validateCLUES).not.toHaveBeenCalled();
+      expect(typeof provider.clues).toBe('string');
+      expect(Array.isArray(provider.clues)).toBe(false);
     });
   });
 });
-

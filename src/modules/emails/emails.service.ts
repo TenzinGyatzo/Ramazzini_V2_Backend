@@ -73,14 +73,22 @@ export class EmailsService {
     console.log('Mensaje enviado', info.messageId);
   }
 
-  async sendNewSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, historiasDisponibles }) {
+  async sendNewSubscriptionDetails({
+    email,
+    nombrePlan,
+    inicioSuscripcion,
+    fechaActualizacion,
+    montoMensual,
+    fechaProximoPago,
+    historiasDisponibles,
+  }) {
     const transporter = createTransport(
       process.env.EMAIL_HOST,
       process.env.EMAIL_PORT,
       process.env.EMAIL_USER,
       process.env.EMAIL_PASS,
     );
-  
+
     // Enviar el email
     const info = await transporter.sendMail({
       from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
@@ -129,18 +137,26 @@ export class EmailsService {
           </div>
       </div>`,
     });
-  
+
     console.log('Mensaje enviado', info.messageId);
   }
 
-  async sendUpdatedSubscriptionDetails({ email, nombrePlan, inicioSuscripcion, fechaActualizacion, montoMensual, fechaProximoPago, historiasDisponibles }) {
+  async sendUpdatedSubscriptionDetails({
+    email,
+    nombrePlan,
+    inicioSuscripcion,
+    fechaActualizacion,
+    montoMensual,
+    fechaProximoPago,
+    historiasDisponibles,
+  }) {
     const transporter = createTransport(
       process.env.EMAIL_HOST,
       process.env.EMAIL_PORT,
       process.env.EMAIL_USER,
       process.env.EMAIL_PASS,
     );
-  
+
     // Enviar el email
     const info = await transporter.sendMail({
       from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
@@ -190,18 +206,26 @@ export class EmailsService {
           </div>
       </div>`,
     });
-  
+
     console.log('Mensaje enviado', info.messageId);
   }
 
-  async sendCancellationConfirmation({ email, nombrePlan, inicioSuscripcion, fechaCancelacion, montoMensual, fechaFinDeSuscripcion, historiasDisponibles }) {
+  async sendCancellationConfirmation({
+    email,
+    nombrePlan,
+    inicioSuscripcion,
+    fechaCancelacion,
+    montoMensual,
+    fechaFinDeSuscripcion,
+    historiasDisponibles,
+  }) {
     const transporter = createTransport(
       process.env.EMAIL_HOST,
       process.env.EMAIL_PORT,
       process.env.EMAIL_USER,
       process.env.EMAIL_PASS,
     );
-  
+
     // Enviar el email
     const info = await transporter.sendMail({
       from: `"Soporte Ramazzini" <${process.env.EMAIL_USER}>`,
@@ -257,13 +281,14 @@ export class EmailsService {
           </div>
       </div>`,
     });
-  
+
     console.log('Mensaje enviado', info.messageId);
   }
 
   //// Funciones para el reporte de uso del servidor ////
 
-  private readonly METRICS_FILE = process.env.METRICS_FILE || path.join(__dirname, 'server_metrics.json');
+  private readonly METRICS_FILE =
+    process.env.METRICS_FILE || path.join(__dirname, 'server_metrics.json');
 
   async saveMetric() {
     const timestamp = new Date().toISOString();
@@ -274,84 +299,94 @@ export class EmailsService {
     const pidStats = await pidusage(process.pid);
     const cpuUsage = pidStats.cpu;
     const diskStats = await this.getDiskUsage();
-  
+
     const newMetric = {
       timestamp,
       memoryUsagePercentage,
       cpuUsage,
       diskStats,
     };
-  
+
     let metrics = [];
-  
+
     if (fs.existsSync(this.METRICS_FILE)) {
       metrics = JSON.parse(fs.readFileSync(this.METRICS_FILE, 'utf8'));
     }
-  
+
     metrics.push(newMetric);
-  
+
     // Mantener solo los últimos 2 días de datos
     const twoDaysAgo = new Date();
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
     metrics = metrics.filter((m) => new Date(m.timestamp) >= twoDaysAgo);
-  
+
     fs.writeFileSync(this.METRICS_FILE, JSON.stringify(metrics, null, 2));
-  }  
+  }
 
   async getMetricsSummary(): Promise<string> {
     if (!fs.existsSync(this.METRICS_FILE)) {
-      return "⚠️ No hay datos históricos suficientes.";
+      return '⚠️ No hay datos históricos suficientes.';
     }
-  
+
     const metrics = JSON.parse(fs.readFileSync(this.METRICS_FILE, 'utf8'));
-  
+
     const cpuUsages = metrics.map((m) => m.cpuUsage);
     const memoryUsages = metrics.map((m) => m.memoryUsagePercentage);
-  
-    const avgCpu = (cpuUsages.reduce((a, b) => a + b, 0) / cpuUsages.length).toFixed(2);
+
+    const avgCpu = (
+      cpuUsages.reduce((a, b) => a + b, 0) / cpuUsages.length
+    ).toFixed(2);
     const peakCpu = Math.max(...cpuUsages).toFixed(2);
-  
-    const avgMemory = (memoryUsages.reduce((a, b) => a + b, 0) / memoryUsages.length).toFixed(2);
+
+    const avgMemory = (
+      memoryUsages.reduce((a, b) => a + b, 0) / memoryUsages.length
+    ).toFixed(2);
     const peakMemory = Math.max(...memoryUsages).toFixed(2);
-  
+
     return `
     Resumen de las Últimas 12 Horas (Horario Pico)
     🔹 CPU Promedio: ${avgCpu}% (${this.interpretValue(Number(avgCpu), { low: 50, high: 80 })})
     🔹 CPU Máximo: ${peakCpu}% (${this.interpretValue(Number(peakCpu), { low: 50, high: 80 })})
     🔹 Memoria Promedio: ${avgMemory}% (${this.interpretValue(Number(avgMemory), { low: 60, high: 90 })})
     🔹 Memoria Máxima: ${peakMemory}% (${this.interpretValue(Number(peakMemory), { low: 60, high: 90 })})
-    `;    
-  }  
+    `;
+  }
 
   async generateAlerts(): Promise<string> {
     if (!fs.existsSync(this.METRICS_FILE)) {
-      return "⚠️ No hay datos históricos para generar alertas.";
+      return '⚠️ No hay datos históricos para generar alertas.';
     }
-  
+
     const metrics = JSON.parse(fs.readFileSync(this.METRICS_FILE, 'utf8'));
-  
+
     const highCpuUsage = metrics.filter((m) => m.cpuUsage > 80);
     const highMemoryUsage = metrics.filter((m) => m.memoryUsagePercentage > 90);
-  
-    let alerts = [];
-  
+
+    const alerts = [];
+
     if (highCpuUsage.length > 6) {
-      alerts.push("⚠️ CPU ha estado sobre 80% por más de 1 hora.");
+      alerts.push('⚠️ CPU ha estado sobre 80% por más de 1 hora.');
     }
     if (highMemoryUsage.length > 3) {
-      alerts.push("⚠️ Memoria ha estado sobre 90% por más de 30 minutos.");
+      alerts.push('⚠️ Memoria ha estado sobre 90% por más de 30 minutos.');
     }
-  
-    return alerts.length > 0 ? alerts.join("\n") : "✅ No se detectaron problemas críticos.";
+
+    return alerts.length > 0
+      ? alerts.join('\n')
+      : '✅ No se detectaron problemas críticos.';
   }
 
   async getDiskUsage(): Promise<string> {
     try {
       if (os.platform() === 'win32') {
-        const output = execSync('wmic logicaldisk get deviceid, freespace, size').toString().trim();
+        const output = execSync(
+          'wmic logicaldisk get deviceid, freespace, size',
+        )
+          .toString()
+          .trim();
         const lines = output.split('\n').slice(1);
         let result = '';
-  
+
         lines.forEach((line) => {
           const values = line.trim().split(/\s+/);
           if (values.length === 3) {
@@ -362,72 +397,81 @@ export class EmailsService {
             const usedGB = (used / 1e9).toFixed(2);
             const sizeGB = (size / 1e9).toFixed(2);
             const usagePercentage = ((used / size) * 100).toFixed(2);
-  
+
             result += `    📂 ${device}: ${usedGB} GB usados de ${sizeGB} GB (${usagePercentage}% ocupado)\n`;
           }
         });
-  
+
         return result.trim();
       } else {
         // Verificar si df está disponible
         try {
-          execSync("which df");
+          execSync('which df');
         } catch {
-          return "⚠️ df no está instalado. Usa `sudo apt install coreutils`.";
+          return '⚠️ df no está instalado. Usa `sudo apt install coreutils`.';
         }
-  
-        const output = execSync("df -k --output=source,used,size,pcent | tail -n +2")
+
+        const output = execSync(
+          'df -k --output=source,used,size,pcent | tail -n +2',
+        )
           .toString()
           .trim()
           .split('\n');
-  
+
         let result = '';
-  
-        output.forEach(line => {
+
+        output.forEach((line) => {
           const parts = line.trim().split(/\s+/);
           if (parts[0].startsWith('/dev/')) {
             const device = parts[0].replace('/dev/', '');
-            const used = (parseInt(parts[1]) * 1024 / 1e9).toFixed(2); // de KB a GB
-            const size = (parseInt(parts[2]) * 1024 / 1e9).toFixed(2);
+            const used = ((parseInt(parts[1]) * 1024) / 1e9).toFixed(2); // de KB a GB
+            const size = ((parseInt(parts[2]) * 1024) / 1e9).toFixed(2);
             const percent = parts[3];
-  
+
             result += `    📂 ${device}: ${used} GB usados de ${size} GB (${percent} ocupado)\n`;
           }
         });
-  
+
         return result.trim();
       }
     } catch (error) {
       return '⚠️ No se pudo obtener información del disco.';
     }
-  }  
+  }
 
   async getCpuUsage(): Promise<string> {
     try {
       if (os.platform() === 'win32') {
-        return Promise.resolve(execSync('wmic cpu get loadpercentage').toString().trim());
+        return Promise.resolve(
+          execSync('wmic cpu get loadpercentage').toString().trim(),
+        );
       } else {
         // Verificar si mpstat está instalado antes de ejecutarlo
         try {
-          execSync("which mpstat");
+          execSync('which mpstat');
         } catch {
-          return "⚠️ mpstat no está instalado. Usa `sudo apt install sysstat`.";
+          return '⚠️ mpstat no está instalado. Usa `sudo apt install sysstat`.';
         }
-  
-        return Promise.resolve(execSync("mpstat 1 1 | awk 'NR==4 {print 100-$NF}'").toString().trim() + " %");
+
+        return Promise.resolve(
+          execSync("mpstat 1 1 | awk 'NR==4 {print 100-$NF}'")
+            .toString()
+            .trim() + ' %',
+        );
       }
     } catch (error) {
       return Promise.resolve('⚠️ No se pudo obtener información de CPU.');
     }
   }
-  
+
   async checkServiceStatus(service: string): Promise<string> {
     try {
       return os.platform() === 'win32'
         ? '⚠️ No disponible en Windows'
-        : execSync(`systemctl is-active ${service}`).toString().trim() === 'active'
-        ? `✅ ${service} está activo`
-        : `⚠️ ${service} está detenido`;
+        : execSync(`systemctl is-active ${service}`).toString().trim() ===
+            'active'
+          ? `✅ ${service} está activo`
+          : `⚠️ ${service} está detenido`;
     } catch (error) {
       return `⚠️ Error al verificar ${service}`;
     }
@@ -435,11 +479,11 @@ export class EmailsService {
 
   async checkMongoConnection(): Promise<string> {
     try {
-        const db = await mongoose.createConnection(process.env.MONGODB_URI);
-        await db.close();
-        return "✅ Conexión con MongoDB exitosa.";
+      const db = await mongoose.createConnection(process.env.MONGODB_URI);
+      await db.close();
+      return '✅ Conexión con MongoDB exitosa.';
     } catch (error) {
-        return "⚠️ No se pudo conectar a MongoDB.";
+      return '⚠️ No se pudo conectar a MongoDB.';
     }
   }
 
@@ -447,7 +491,8 @@ export class EmailsService {
     try {
       return os.platform() === 'win32'
         ? '⚠️ No disponible en Windows'
-        : execSync("netstat -an | grep ESTABLISHED | wc -l").toString().trim() + " conexiones activas";
+        : execSync('netstat -an | grep ESTABLISHED | wc -l').toString().trim() +
+            ' conexiones activas';
     } catch (error) {
       return '⚠️ No se pudo obtener conexiones activas.';
     }
@@ -456,48 +501,50 @@ export class EmailsService {
   async saveUsageHistory(cpuUsage: number, memoryUsagePercentage: number) {
     const historyPath = path.join(__dirname, 'usage_history.txt');
     const today = new Date().toISOString().split('T')[0];
-  
+
     // Formato simple de línea única
     const line = `${today} | CPU: ${cpuUsage.toFixed(2)}% | Memoria: ${memoryUsagePercentage.toFixed(2)}%`;
-  
+
     // Leer historial existente
     let history = fs.existsSync(historyPath)
       ? fs.readFileSync(historyPath, 'utf8').split('\n')
       : [];
-  
+
     // Eliminar duplicados del mismo día
-    history = history.filter(h => !h.startsWith(today));
-  
+    history = history.filter((h) => !h.startsWith(today));
+
     // Agregar nueva línea
     history.push(line);
-  
+
     // Limitar a últimos 3 días
     const maxLines = 3;
     if (history.length > maxLines) {
       history = history.slice(history.length - maxLines);
     }
-  
+
     fs.writeFileSync(historyPath, history.join('\n'), 'utf8');
-  }  
+  }
 
   async checkAndSendAlertIfCritical() {
     const metricsFile = this.METRICS_FILE;
-  
+
     if (!fs.existsSync(metricsFile)) return;
-  
+
     const metrics = JSON.parse(fs.readFileSync(metricsFile, 'utf8'));
     const lastMetric = metrics[metrics.length - 1];
-  
+
     const alerts: string[] = [];
-  
+
     if (lastMetric.cpuUsage > 80) {
       alerts.push(`⚠️ Uso de CPU alto: ${lastMetric.cpuUsage.toFixed(2)}%`);
     }
-  
+
     if (lastMetric.memoryUsagePercentage > 90) {
-      alerts.push(`⚠️ Uso de Memoria alto: ${lastMetric.memoryUsagePercentage.toFixed(2)}%`);
+      alerts.push(
+        `⚠️ Uso de Memoria alto: ${lastMetric.memoryUsagePercentage.toFixed(2)}%`,
+      );
     }
-  
+
     const diskLines = lastMetric.diskStats.split('\n');
     for (const line of diskLines) {
       const match = line.match(/(\d+)%/);
@@ -506,9 +553,9 @@ export class EmailsService {
         break;
       }
     }
-  
+
     if (alerts.length === 0) return; // No hay alertas, salir
-  
+
     // Si hay alertas, enviar correo
     const transporter = createTransport(
       process.env.EMAIL_HOST,
@@ -516,18 +563,21 @@ export class EmailsService {
       process.env.EMAIL_USER,
       process.env.EMAIL_PASS,
     );
-  
+
     const info = await transporter.sendMail({
       from: `"Alertas Ramazzini" <${process.env.EMAIL_USER}>`,
-      to: "edgarcoronel66@gmail.com",
+      to: 'edgarcoronel66@gmail.com',
       subject: '🚨 Alerta Crítica del Servidor',
       html: `<pre>${alerts.join('\n')}</pre>`,
     });
-  
-    console.log('📨 Alerta crítica enviada:', info.messageId);
-  }  
 
-  private interpretValue(value: number, thresholds: { low: number; high: number }): string {
+    console.log('📨 Alerta crítica enviada:', info.messageId);
+  }
+
+  private interpretValue(
+    value: number,
+    thresholds: { low: number; high: number },
+  ): string {
     if (value < thresholds.low) return '🟢 Bajo';
     if (value < thresholds.high) return '🟡 Medio';
     return '🔴 Alto';
@@ -549,11 +599,13 @@ export class EmailsService {
     ];
 
     const hoy = new Date();
-    const hoyFormateado = hoy.toLocaleDateString('es-MX', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).replace(/\//g, '-'); // "DD-MM-YYYY"
+    const hoyFormateado = hoy
+      .toLocaleDateString('es-MX', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+      .replace(/\//g, '-'); // "DD-MM-YYYY"
 
     let totalArchivos = 0;
     let totalMB = 0;
@@ -569,15 +621,17 @@ export class EmailsService {
         } else if (
           el.isFile() &&
           el.name.endsWith('.pdf') &&
-          tiposValidos.some(tipo => el.name.startsWith(tipo + ' '))
+          tiposValidos.some((tipo) => el.name.startsWith(tipo + ' '))
         ) {
           const stat = await fs.promises.stat(fullPath);
 
-          const createdDate = stat.mtime.toLocaleDateString('es-MX', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-          }).replace(/\//g, '-');
+          const createdDate = stat.mtime
+            .toLocaleDateString('es-MX', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            })
+            .replace(/\//g, '-');
 
           if (createdDate === hoyFormateado) {
             totalArchivos++;
@@ -618,11 +672,13 @@ export class EmailsService {
     const extensionesExternas = ['.pdf', '.jpg', '.jpeg', '.png'];
 
     const hoy = new Date();
-    const hoyFormateado = hoy.toLocaleDateString('es-MX', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).replace(/\//g, '-'); // "DD-MM-YYYY"
+    const hoyFormateado = hoy
+      .toLocaleDateString('es-MX', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+      .replace(/\//g, '-'); // "DD-MM-YYYY"
 
     let totalArchivos = 0;
     let totalMB = 0;
@@ -638,16 +694,20 @@ export class EmailsService {
         } else if (el.isFile()) {
           const ext = path.extname(el.name).toLowerCase();
           const esExtensionValida = extensionesExternas.includes(ext);
-          const esGeneradoInternamente = tiposInternos.some(tipo => el.name.startsWith(tipo + ' '));
+          const esGeneradoInternamente = tiposInternos.some((tipo) =>
+            el.name.startsWith(tipo + ' '),
+          );
 
           if (esExtensionValida && !esGeneradoInternamente) {
             const stat = await fs.promises.stat(fullPath);
 
-            const createdDate = stat.mtime.toLocaleDateString('es-MX', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-            }).replace(/\//g, '-');
+            const createdDate = stat.mtime
+              .toLocaleDateString('es-MX', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })
+              .replace(/\//g, '-');
 
             if (createdDate === hoyFormateado) {
               totalArchivos++;
@@ -671,7 +731,11 @@ export class EmailsService {
     return `📎 Externos: ${totalArchivos} archivos — ${totalMB.toFixed(2)} MB usados`;
   }
 
-  private async getArchivoPdfCreadoMasAntiguo(): Promise<{ nombre: string; fullPath: string; fecha: Date } | null> {
+  private async getArchivoPdfCreadoMasAntiguo(): Promise<{
+    nombre: string;
+    fullPath: string;
+    fecha: Date;
+  } | null> {
     const basePath = path.resolve('expedientes-medicos');
     const tiposValidos = [
       'Antidoping',
@@ -686,7 +750,8 @@ export class EmailsService {
       'Nota Medica',
     ];
 
-    let masAntiguo: { nombre: string; fullPath: string; fecha: Date } | null = null;
+    let masAntiguo: { nombre: string; fullPath: string; fecha: Date } | null =
+      null;
 
     const recorrer = async (dir: string) => {
       const elementos = await fs.promises.readdir(dir, { withFileTypes: true });
@@ -699,7 +764,9 @@ export class EmailsService {
         } else if (
           el.isFile() &&
           el.name.endsWith('.pdf') &&
-          tiposValidos.some(tipo => el.name.toLowerCase().includes(tipo.toLowerCase()))
+          tiposValidos.some((tipo) =>
+            el.name.toLowerCase().includes(tipo.toLowerCase()),
+          )
         ) {
           const stat = await fs.promises.stat(fullPath);
           const fecha = stat.mtime;
@@ -719,7 +786,11 @@ export class EmailsService {
     return masAntiguo;
   }
 
-  private async getDocumentoExternoSubidoMasAntiguo(): Promise<{ nombre: string; fullPath: string; fecha: Date } | null> {
+  private async getDocumentoExternoSubidoMasAntiguo(): Promise<{
+    nombre: string;
+    fullPath: string;
+    fecha: Date;
+  } | null> {
     const basePath = path.resolve('expedientes-medicos');
     const tiposInternos = [
       'Antidoping',
@@ -735,7 +806,8 @@ export class EmailsService {
     ];
     const extensionesValidas = ['.pdf', '.jpg', '.jpeg', '.png'];
 
-    let masAntiguo: { nombre: string; fullPath: string; fecha: Date } | null = null;
+    let masAntiguo: { nombre: string; fullPath: string; fecha: Date } | null =
+      null;
 
     const recorrer = async (dir: string) => {
       const elementos = await fs.promises.readdir(dir, { withFileTypes: true });
@@ -748,7 +820,9 @@ export class EmailsService {
         } else if (el.isFile()) {
           const ext = path.extname(el.name).toLowerCase();
           const esExtensionValida = extensionesValidas.includes(ext);
-          const esGeneradoInternamente = tiposInternos.some(tipo => el.name.toLowerCase().includes(tipo.toLowerCase()));
+          const esGeneradoInternamente = tiposInternos.some((tipo) =>
+            el.name.toLowerCase().includes(tipo.toLowerCase()),
+          );
 
           if (esExtensionValida && !esGeneradoInternamente) {
             const stat = await fs.promises.stat(fullPath);
@@ -779,7 +853,10 @@ export class EmailsService {
   }
 
   private async getDeletedPdfsLog(): Promise<string> {
-    const logPath = path.resolve('logs', `eliminados-${this.formatearFechaHoy()}.log`);
+    const logPath = path.resolve(
+      'logs',
+      `eliminados-${this.formatearFechaHoy()}.log`,
+    );
 
     if (!fs.existsSync(logPath)) {
       return '📁 No se eliminaron archivos PDF hoy.';
@@ -805,40 +882,48 @@ export class EmailsService {
     const freeMemory = os.freemem();
     const usedMemory = totalMemory - freeMemory;
     const memoryUsagePercentage = (usedMemory / totalMemory) * 100;
-  
+
     const pidStats = await pidusage(process.pid);
     const cpuUsage = pidStats.cpu;
     const memoryUsedByNode = pidStats.memory;
-    
+
     const totalCpuUsage = await this.getCpuUsage();
     const loadAvg = os.loadavg();
     const diskStats = await this.getDiskUsage();
-    const runningProcesses = execSync("ps aux | wc -l").toString().trim();
-    
+    const runningProcesses = execSync('ps aux | wc -l').toString().trim();
+
     const dbStatus = await this.checkMongoConnection();
     const nginxStatus = await this.checkServiceStatus('nginx');
     const activeConnections = await this.getActiveConnections();
-    
+
     const peakMetrics = await this.getMetricsSummary();
     const alertMessages = await this.generateAlerts();
-    
+
     const recommendations: string[] = [];
-    
+
     if (cpuUsage > 80) {
-      recommendations.push("🔴 El uso de CPU de Node.js es alto. Considera revisar qué procesos están activos.");
+      recommendations.push(
+        '🔴 El uso de CPU de Node.js es alto. Considera revisar qué procesos están activos.',
+      );
     }
     if (memoryUsagePercentage > 90) {
-      recommendations.push("🔴 El uso de memoria está por encima del 90%. Puede ser momento de considerar más RAM o revisar fugas de memoria.");
+      recommendations.push(
+        '🔴 El uso de memoria está por encima del 90%. Puede ser momento de considerar más RAM o revisar fugas de memoria.',
+      );
     }
     if (diskStats.includes(' 95%') || diskStats.includes(' 100%')) {
-      recommendations.push("🔴 Espacio en disco muy bajo. Considera liberar espacio o ampliar el almacenamiento.");
+      recommendations.push(
+        '🔴 Espacio en disco muy bajo. Considera liberar espacio o ampliar el almacenamiento.',
+      );
     }
 
     const createdPdfsSummary = await this.getCreatedPdfsSummary();
-    const archivoPdfCreadoMasAntiguo = await this.getArchivoPdfCreadoMasAntiguo();
+    const archivoPdfCreadoMasAntiguo =
+      await this.getArchivoPdfCreadoMasAntiguo();
 
     const uploadedDocsSummary = await this.getUploadedExternalDocsSummary();
-    const documentoExternoSubidoMasAntiguo = await this.getDocumentoExternoSubidoMasAntiguo();
+    const documentoExternoSubidoMasAntiguo =
+      await this.getDocumentoExternoSubidoMasAntiguo();
 
     const deletedPdfsLog = await this.getDeletedPdfsLog();
 
@@ -899,24 +984,28 @@ export class EmailsService {
 
     📄 𝗔𝗥𝗖𝗛𝗜𝗩𝗢𝗦 𝗠𝗔́𝗦 𝗔𝗡𝗧𝗜𝗚𝗨𝗢𝗦
     ─────────────────────────────
-    ${archivoPdfCreadoMasAntiguo
-      ? `📘 PDF creado más antiguo: ${archivoPdfCreadoMasAntiguo.nombre} — ${archivoPdfCreadoMasAntiguo.fecha.toLocaleDateString('es-MX')}`
-      : '📘 PDF creado más antiguo: No encontrado'}
-    ${documentoExternoSubidoMasAntiguo
-      ? `📗 Documento externo más antiguo: ${documentoExternoSubidoMasAntiguo.nombre} — ${documentoExternoSubidoMasAntiguo.fecha.toLocaleDateString('es-MX')}`
-      : '📗 Documento externo más antiguo: No encontrado'}
+    ${
+      archivoPdfCreadoMasAntiguo
+        ? `📘 PDF creado más antiguo: ${archivoPdfCreadoMasAntiguo.nombre} — ${archivoPdfCreadoMasAntiguo.fecha.toLocaleDateString('es-MX')}`
+        : '📘 PDF creado más antiguo: No encontrado'
+    }
+    ${
+      documentoExternoSubidoMasAntiguo
+        ? `📗 Documento externo más antiguo: ${documentoExternoSubidoMasAntiguo.nombre} — ${documentoExternoSubidoMasAntiguo.fecha.toLocaleDateString('es-MX')}`
+        : '📗 Documento externo más antiguo: No encontrado'
+    }
     `;
 
     if (recommendations.length > 0) {
       reportContent += `\n${recommendations.join('\n')}`;
-    }    
-  
+    }
+
     // Guardar historial del reporte sin duplicaciones
     await this.saveUsageHistory(cpuUsage, memoryUsagePercentage);
-  
+
     return reportContent;
-  } 
-  
+  }
+
   async sendServerReport() {
     const transporter = createTransport(
       process.env.EMAIL_HOST,
@@ -930,11 +1019,11 @@ export class EmailsService {
     // Generar el reporte (puede ser un archivo PDF, CSV, etc.)
     // const reportPath = path.join(__dirname, 'reporte.txt');
     // fs.writeFileSync(reportPath, reportContent, 'utf8');
-  
+
     // Enviar el email
     const info = await transporter.sendMail({
       from: `"Reportes Ramazzini" <${process.env.EMAIL_USER}>`,
-      to: "edgarcoronel66@gmail.com",
+      to: 'edgarcoronel66@gmail.com',
       bcc: process.env.EMAIL_USER, // Copia oculta al remitente
       subject: '📊 Reporte de Uso del Servidor',
       // text: 'Adjunto el reporte generado automáticamente',
@@ -942,22 +1031,25 @@ export class EmailsService {
       // attachments: [{ filename: 'Salud de Servidor Ramazzini.txt', path: reportPath }], // Adjuntar respaldo simple
       html: `<pre>${reportContent}</pre>`,
     });
-  
+
     console.log('Mensaje enviado', info.messageId);
   }
 
-   @Cron('*/10 7-19 * * *')   // De 12 AM a 2 AM UTC-7 (convertido a 12 AM - 2 AM UTC)
-   async trackMetrics() {
-     console.log(`📊 Guardando métricas de servidor a las ${new Date().toLocaleString()} (hora local)`);
-     await this.saveMetric();
-     await this.checkAndSendAlertIfCritical(); // <- agregar esta línea
-   }
- 
-   // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM
-   @Cron('0 19 * * *')
-   async handleCron() {
-     console.log(`⏳ Enviando reporte diario a las ${new Date().toLocaleString()} (hora local)`);
-     await this.sendServerReport();
-   }
+  @Cron('*/10 7-19 * * *') // De 12 AM a 2 AM UTC-7 (convertido a 12 AM - 2 AM UTC)
+  async trackMetrics() {
+    console.log(
+      `📊 Guardando métricas de servidor a las ${new Date().toLocaleString()} (hora local)`,
+    );
+    await this.saveMetric();
+    await this.checkAndSendAlertIfCritical(); // <- agregar esta línea
+  }
 
+  // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM
+  @Cron('0 19 * * *')
+  async handleCron() {
+    console.log(
+      `⏳ Enviando reporte diario a las ${new Date().toLocaleString()} (hora local)`,
+    );
+    await this.sendServerReport();
+  }
 }

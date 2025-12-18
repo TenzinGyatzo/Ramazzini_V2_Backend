@@ -1,27 +1,37 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { InformePersonalizacion, InformePersonalizacionDocument } from './schemas/informe-personalizacion.schema';
-import { CreateInformePersonalizacionDto, UpdateInformePersonalizacionDto } from './dto/informe-personalizacion.dto';
+import {
+  InformePersonalizacion,
+  InformePersonalizacionDocument,
+} from './schemas/informe-personalizacion.schema';
+import {
+  CreateInformePersonalizacionDto,
+  UpdateInformePersonalizacionDto,
+} from './dto/informe-personalizacion.dto';
 
 @Injectable()
 export class InformePersonalizacionService {
   constructor(
-    @InjectModel(InformePersonalizacion.name) 
+    @InjectModel(InformePersonalizacion.name)
     private informePersonalizacionModel: Model<InformePersonalizacionDocument>,
   ) {}
 
-  async create(createDto: CreateInformePersonalizacionDto): Promise<InformePersonalizacion> {
-    const informePersonalizacion = new this.informePersonalizacionModel(createDto);
+  async create(
+    createDto: CreateInformePersonalizacionDto,
+  ): Promise<InformePersonalizacion> {
+    const informePersonalizacion = new this.informePersonalizacionModel(
+      createDto,
+    );
     return informePersonalizacion.save();
   }
 
   async findByEmpresaAndCentro(
-    idEmpresa: string, 
-    idCentroTrabajo?: string
+    idEmpresa: string,
+    idCentroTrabajo?: string,
   ): Promise<InformePersonalizacion | null> {
     const query: any = { idEmpresa };
-    
+
     if (idCentroTrabajo) {
       query.idCentroTrabajo = idCentroTrabajo;
     }
@@ -34,8 +44,8 @@ export class InformePersonalizacionService {
   }
 
   async update(
-    id: string, 
-    updateDto: UpdateInformePersonalizacionDto
+    id: string,
+    updateDto: UpdateInformePersonalizacionDto,
   ): Promise<InformePersonalizacion> {
     const informePersonalizacion = await this.informePersonalizacionModel
       .findByIdAndUpdate(id, updateDto, { new: true })
@@ -51,10 +61,10 @@ export class InformePersonalizacionService {
   async upsertByEmpresaAndCentro(
     idEmpresa: string,
     idCentroTrabajo: string | undefined,
-    updateDto: UpdateInformePersonalizacionDto
+    updateDto: UpdateInformePersonalizacionDto,
   ): Promise<InformePersonalizacion> {
     const query: any = { idEmpresa };
-    
+
     if (idCentroTrabajo) {
       query.idCentroTrabajo = idCentroTrabajo;
     }
@@ -62,16 +72,16 @@ export class InformePersonalizacionService {
     const informePersonalizacion = await this.informePersonalizacionModel
       .findOneAndUpdate(
         query,
-        { 
+        {
           ...updateDto,
           idEmpresa,
           idCentroTrabajo: idCentroTrabajo || undefined,
           createdBy: updateDto.updatedBy,
         },
-        { 
-          upsert: true, 
-          new: true 
-        }
+        {
+          upsert: true,
+          new: true,
+        },
       )
       .exec();
 
@@ -79,8 +89,10 @@ export class InformePersonalizacionService {
   }
 
   async delete(id: string): Promise<void> {
-    const result = await this.informePersonalizacionModel.findByIdAndDelete(id).exec();
-    
+    const result = await this.informePersonalizacionModel
+      .findByIdAndDelete(id)
+      .exec();
+
     if (!result) {
       throw new NotFoundException('Personalización de informe no encontrada');
     }

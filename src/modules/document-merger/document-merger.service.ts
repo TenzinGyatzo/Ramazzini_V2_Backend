@@ -24,14 +24,15 @@ export class DocumentMergerService {
         } else if (['.jpg', '.jpeg', '.png'].includes(fileExt)) {
           // Add image as a new page
           const imageBytes = fs.readFileSync(filePath);
-          const image = fileExt === '.png'
-            ? await mergedPdf.embedPng(imageBytes)
-            : await mergedPdf.embedJpg(imageBytes);
+          const image =
+            fileExt === '.png'
+              ? await mergedPdf.embedPng(imageBytes)
+              : await mergedPdf.embedJpg(imageBytes);
 
           // Escala la imagen para ajustarla al tamaño carta
           const scale = Math.min(
             letterWidth / image.width,
-            letterHeight / image.height
+            letterHeight / image.height,
           );
           const scaledWidth = image.width * scale;
           const scaledHeight = image.height * scale;

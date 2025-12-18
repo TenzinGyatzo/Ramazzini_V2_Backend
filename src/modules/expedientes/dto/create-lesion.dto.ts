@@ -1,13 +1,13 @@
 import { Type } from 'class-transformer';
-import { 
-  IsDate, 
-  IsEnum, 
-  IsMongoId, 
-  IsNotEmpty, 
-  IsNumber, 
-  IsOptional, 
-  IsString, 
-  Matches, 
+import {
+  IsDate,
+  IsEnum,
+  IsMongoId,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
   IsArray,
   ArrayMaxSize,
   ValidateIf,
@@ -48,7 +48,9 @@ export class CreateLesionDto {
   fechaNacimiento: Date;
 
   @IsNumber({}, { message: 'Sexo debe ser un número' })
-  @IsEnum([1, 2, 3], { message: 'Sexo debe ser 1 (Hombre), 2 (Mujer) o 3 (Intersexual)' })
+  @IsEnum([1, 2, 3], {
+    message: 'Sexo debe ser 1 (Hombre), 2 (Mujer) o 3 (Intersexual)',
+  })
   @IsNotEmpty({ message: 'Sexo es requerido' })
   sexo: number;
 
@@ -72,7 +74,8 @@ export class CreateLesionDto {
 
   @IsNumber({}, { message: 'Intencionalidad debe ser un número' })
   @IsEnum([1, 2, 3, 4], {
-    message: 'Intencionalidad debe ser 1 (Accidental), 2 (Violencia Familiar), 3 (Violencia No Familiar) o 4 (Autoinfligido)',
+    message:
+      'Intencionalidad debe ser 1 (Accidental), 2 (Violencia Familiar), 3 (Violencia No Familiar) o 4 (Autoinfligido)',
   })
   @IsNotEmpty({ message: 'Intencionalidad es requerida' })
   intencionalidad: number;
@@ -99,7 +102,10 @@ export class CreateLesionDto {
   // Condicional: Obligatorio si intencionalidad = 2 o 3 (Violencia)
   @ValidateIf((o) => o.intencionalidad === 2 || o.intencionalidad === 3)
   @IsArray({ message: 'Tipo de violencia debe ser un array' })
-  @IsNumber({}, { each: true, message: 'Cada tipo de violencia debe ser un número' })
+  @IsNumber(
+    {},
+    { each: true, message: 'Cada tipo de violencia debe ser un número' },
+  )
   @IsNotEmpty({ message: 'Tipo de violencia es requerido para violencia' })
   tipoViolencia?: number[];
 
@@ -117,7 +123,10 @@ export class CreateLesionDto {
   horaAtencion?: string;
 
   @IsArray({ message: 'Tipo de atención debe ser un array' })
-  @IsNumber({}, { each: true, message: 'Cada tipo de atención debe ser un número' })
+  @IsNumber(
+    {},
+    { each: true, message: 'Cada tipo de atención debe ser un número' },
+  )
   @ArrayMaxSize(5, { message: 'Tipo de atención puede tener máximo 5 valores' })
   @IsNotEmpty({ message: 'Tipo de atención es requerido' })
   tipoAtencion: number[];
@@ -136,7 +145,8 @@ export class CreateLesionDto {
   @IsString({ message: 'Código CIE-10 afección principal debe ser un string' })
   @IsNotEmpty({ message: 'Código CIE-10 afección principal es requerido' })
   @Matches(/^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, {
-    message: 'Código CIE-10 afección principal debe tener formato válido (ej: A00.0)',
+    message:
+      'Código CIE-10 afección principal debe tener formato válido (ej: A00.0)',
   })
   codigoCIEAfeccionPrincipal: string;
 
@@ -155,7 +165,8 @@ export class CreateLesionDto {
   // Profesional Responsable
   @IsNumber({}, { message: 'Responsable de atención debe ser un número' })
   @IsEnum([1, 2, 3], {
-    message: 'Responsable de atención debe ser 1 (Médico), 2 (Psicólogo) o 3 (Trabajador Social)',
+    message:
+      'Responsable de atención debe ser 1 (Médico), 2 (Psicólogo) o 3 (Trabajador Social)',
   })
   @IsNotEmpty({ message: 'Responsable de atención es requerido' })
   responsableAtencion: number;
@@ -180,4 +191,3 @@ export class CreateLesionDto {
   @IsNotEmpty({ message: 'El ID de "updatedBy" es requerido' })
   updatedBy: string;
 }
-

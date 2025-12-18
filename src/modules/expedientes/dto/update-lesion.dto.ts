@@ -6,4 +6,3 @@ import { CreateLesionDto } from './create-lesion.dto';
  * Allows partial updates but maintains validation rules
  */
 export class UpdateLesionDto extends PartialType(CreateLesionDto) {}
-

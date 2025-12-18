@@ -64,4 +64,3 @@ export enum CatalogType {
   AREA_ANATOMICA = 'cat_area_anatomica',
   CONSECUENCIA = 'cat_consecuencia',
 }
-

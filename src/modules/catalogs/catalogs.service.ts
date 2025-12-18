@@ -2,21 +2,27 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { createReadStream, existsSync } from 'fs';
 import { join } from 'path';
 import { parse } from 'csv-parse';
-import { CatalogEntry, CatalogType, INEGIEntry, CIE10Entry, CLUESEntry } from './interfaces/catalog-entry.interface';
+import {
+  CatalogEntry,
+  CatalogType,
+  INEGIEntry,
+  CIE10Entry,
+  CLUESEntry,
+} from './interfaces/catalog-entry.interface';
 
 /**
  * Catalog Service
- * 
+ *
  * Loads and caches NOM-024 mandatory catalogs from CSV files.
  * Provides validation and search methods for catalog entries.
  */
 @Injectable()
 export class CatalogsService implements OnModuleInit {
   private readonly logger = new Logger(CatalogsService.name);
-  
+
   // In-memory caches: Map<catalogType, Map<code, entry>>
   private catalogCaches = new Map<CatalogType, Map<string, CatalogEntry>>();
-  
+
   // Indexes for hierarchical lookups (INEGI)
   private estadoCache = new Map<string, CatalogEntry>(); // estadoCode -> entry
   private municipioCache = new Map<string, Map<string, CatalogEntry>>(); // estadoCode -> Map<municipioCode, entry>
@@ -53,7 +59,7 @@ export class CatalogsService implements OnModuleInit {
    */
   private async loadAllCatalogs(): Promise<void> {
     const catalogsPath = join(process.cwd(), 'catalogs', 'normalized');
-    
+
     // GIIS-B013 catalogs that may not be available (DGIS does not publish them publicly)
     const optionalCatalogs = [
       CatalogType.SITIO_OCURRENCIA,
@@ -67,12 +73,20 @@ export class CatalogsService implements OnModuleInit {
       .map(([type, filename]) => {
         const catalogType = type as CatalogType;
         const isOptional = optionalCatalogs.includes(catalogType);
-        
-        return this.loadCatalog(catalogType, join(catalogsPath, filename)).catch((error) => {
+
+        return this.loadCatalog(
+          catalogType,
+          join(catalogsPath, filename),
+        ).catch((error) => {
           if (isOptional) {
-            this.logger.warn(`Optional catalog ${filename} not found (GIIS-B013 catalog not publicly available). Continuing without strict validation.`);
+            this.logger.warn(
+              `Optional catalog ${filename} not found (GIIS-B013 catalog not publicly available). Continuing without strict validation.`,
+            );
           } else {
-            this.logger.error(`Failed to load catalog ${filename}: ${error.message}`, error.stack);
+            this.logger.error(
+              `Failed to load catalog ${filename}: ${error.message}`,
+              error.stack,
+            );
           }
           // Continue startup even if a catalog fails to load
           return null;
@@ -86,7 +100,10 @@ export class CatalogsService implements OnModuleInit {
   /**
    * Load a single catalog from CSV file
    */
-  private async loadCatalog(catalogType: CatalogType, filePath: string): Promise<void> {
+  private async loadCatalog(
+    catalogType: CatalogType,
+    filePath: string,
+  ): Promise<void> {
     // Check if file exists before attempting to load
     if (!existsSync(filePath)) {
       throw new Error(`Catalog file not found: ${filePath}`);
@@ -97,7 +114,7 @@ export class CatalogsService implements OnModuleInit {
 
     try {
       const records: any[] = await this.parseCSV(filePath);
-      
+
       for (const record of records) {
         const entry = this.mapRecordToEntry(catalogType, record);
         if (entry && entry.code) {
@@ -118,7 +135,10 @@ export class CatalogsService implements OnModuleInit {
 
       this.logger.log(`Loaded ${cache.size} entries from ${catalogType}`);
     } catch (error) {
-      this.logger.error(`Error loading catalog ${filePath}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error loading catalog ${filePath}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -136,19 +156,21 @@ export class CatalogsService implements OnModuleInit {
 
       const records: any[] = [];
       const stream = createReadStream(filePath, { encoding: 'utf-8' });
-      
+
       // Handle stream errors immediately (before pipe)
       stream.on('error', (error) => {
         reject(error);
       });
-      
+
       stream
-        .pipe(parse({
-          columns: true,
-          skip_empty_lines: true,
-          trim: true,
-          bom: true, // Handle UTF-8 BOM
-        }))
+        .pipe(
+          parse({
+            columns: true,
+            skip_empty_lines: true,
+            trim: true,
+            bom: true, // Handle UTF-8 BOM
+          }),
+        )
         .on('data', (record) => {
           records.push(record);
         })
@@ -164,13 +186,19 @@ export class CatalogsService implements OnModuleInit {
   /**
    * Map CSV record to CatalogEntry based on catalog type
    */
-  private mapRecordToEntry(catalogType: CatalogType, record: any): CatalogEntry | null {
+  private mapRecordToEntry(
+    catalogType: CatalogType,
+    record: any,
+  ): CatalogEntry | null {
     try {
       switch (catalogType) {
         case CatalogType.ENTIDADES_FEDERATIVAS:
           return {
             code: record.CATALOG_KEY || record.codigo || record.code,
-            description: record.ENTIDAD_FEDERATIVA || record.descripcion || record.description,
+            description:
+              record.ENTIDAD_FEDERATIVA ||
+              record.descripcion ||
+              record.description,
             source: 'INEGI',
             version: record.version,
             abreviatura: record.ABREVIATURA || record.abreviatura,
@@ -179,7 +207,8 @@ export class CatalogsService implements OnModuleInit {
         case CatalogType.CIE10:
           return {
             code: record.CATALOG_KEY || record.codigo || record.code,
-            description: record.NOMBRE || record.descripcion || record.description,
+            description:
+              record.NOMBRE || record.descripcion || record.description,
             source: 'CIE-10',
             version: record.version,
             catalogKey: record.CATALOG_KEY,
@@ -192,7 +221,11 @@ export class CatalogsService implements OnModuleInit {
         case CatalogType.CLUES:
           return {
             code: record.CLUES || record.clues || record.codigo || record.code,
-            description: record['NOMBRE DE LA INSTITUCION'] || record.nombre || record.descripcion || record.description,
+            description:
+              record['NOMBRE DE LA INSTITUCION'] ||
+              record.nombre ||
+              record.descripcion ||
+              record.description,
             source: 'CLUES',
             version: record.version,
             clues: record.CLUES,
@@ -206,7 +239,8 @@ export class CatalogsService implements OnModuleInit {
         case CatalogType.MUNICIPIOS:
           return {
             code: record.CATALOG_KEY || record.codigo || record.code,
-            description: record.MUNICIPIO || record.descripcion || record.description,
+            description:
+              record.MUNICIPIO || record.descripcion || record.description,
             source: 'INEGI',
             version: record.version,
             estadoCode: record['CLAVE DE LA ENTIDAD'] || record.estadoCode,
@@ -216,18 +250,21 @@ export class CatalogsService implements OnModuleInit {
         case CatalogType.LOCALIDADES:
           return {
             code: record.CATALOG_KEY || record.codigo || record.code,
-            description: record.LOCALIDAD || record.descripcion || record.description,
+            description:
+              record.LOCALIDAD || record.descripcion || record.description,
             source: 'INEGI',
             version: record.version,
             estadoCode: record['CLAVE DE LA ENTIDAD'] || record.estadoCode,
-            municipioCode: record['CLAVE DEL MUNICIPIO'] || record.municipioCode,
+            municipioCode:
+              record['CLAVE DEL MUNICIPIO'] || record.municipioCode,
             localidadCode: record.CATALOG_KEY,
           } as INEGIEntry;
 
         case CatalogType.NACIONALIDADES:
           return {
             code: record['codigo pais'] || record.codigo || record.code,
-            description: record.pais || record.descripcion || record.description,
+            description:
+              record.pais || record.descripcion || record.description,
             source: 'RENAPO',
             version: record.version,
             claveNacionalidad: record['clave nacionalidad'],
@@ -235,9 +272,14 @@ export class CatalogsService implements OnModuleInit {
 
         default:
           // Generic mapping for other catalogs
-          const code = record.codigo || record.code || record.CATALOG_KEY || record.CODIGO;
-          const description = record.descripcion || record.description || record.DESCRIPCION || record.NOMBRE;
-          
+          const code =
+            record.codigo || record.code || record.CATALOG_KEY || record.CODIGO;
+          const description =
+            record.descripcion ||
+            record.description ||
+            record.DESCRIPCION ||
+            record.NOMBRE;
+
           if (!code || !description) {
             return null;
           }
@@ -251,7 +293,9 @@ export class CatalogsService implements OnModuleInit {
           };
       }
     } catch (error) {
-      this.logger.warn(`Error mapping record for ${catalogType}: ${error.message}`);
+      this.logger.warn(
+        `Error mapping record for ${catalogType}: ${error.message}`,
+      );
       return null;
     }
   }
@@ -268,11 +312,13 @@ export class CatalogsService implements OnModuleInit {
   /**
    * Build municipio (municipality) index with estado grouping
    */
-  private async buildMunicipioIndex(cache: Map<string, CatalogEntry>): Promise<void> {
+  private async buildMunicipioIndex(
+    cache: Map<string, CatalogEntry>,
+  ): Promise<void> {
     for (const [code, entry] of cache) {
       const inegiEntry = entry as INEGIEntry;
       const estadoCode = inegiEntry.estadoCode;
-      
+
       if (estadoCode) {
         if (!this.municipioCache.has(estadoCode)) {
           this.municipioCache.set(estadoCode, new Map());
@@ -285,12 +331,14 @@ export class CatalogsService implements OnModuleInit {
   /**
    * Build localidad (locality) index with municipio grouping
    */
-  private async buildLocalidadIndex(cache: Map<string, CatalogEntry>): Promise<void> {
+  private async buildLocalidadIndex(
+    cache: Map<string, CatalogEntry>,
+  ): Promise<void> {
     for (const [code, entry] of cache) {
       const inegiEntry = entry as INEGIEntry;
       const estadoCode = inegiEntry.estadoCode;
       const municipioCode = inegiEntry.municipioCode;
-      
+
       if (estadoCode && municipioCode) {
         const key = `${estadoCode}-${municipioCode}`;
         if (!this.localidadCache.has(key)) {
@@ -317,7 +365,11 @@ export class CatalogsService implements OnModuleInit {
   /**
    * Validate CIE-10 diagnostic code
    */
-  async validateCIE10(code: string, sex?: string, age?: number): Promise<boolean> {
+  async validateCIE10(
+    code: string,
+    sex?: string,
+    age?: number,
+  ): Promise<boolean> {
     const cache = this.catalogCaches.get(CatalogType.CIE10);
     if (!cache) {
       this.logger.warn('CIE-10 catalog not loaded');
@@ -396,7 +448,11 @@ export class CatalogsService implements OnModuleInit {
   /**
    * Validate INEGI geographic code (estado, municipio, or localidad)
    */
-  async validateINEGI(type: 'estado' | 'municipio' | 'localidad', code: string, parentCode?: string): Promise<boolean> {
+  async validateINEGI(
+    type: 'estado' | 'municipio' | 'localidad',
+    code: string,
+    parentCode?: string,
+  ): Promise<boolean> {
     switch (type) {
       case 'estado':
         return this.estadoCache.has(code);
@@ -448,7 +504,10 @@ export class CatalogsService implements OnModuleInit {
   /**
    * Get catalog entry by code
    */
-  async getCatalogEntry(catalog: CatalogType, code: string): Promise<CatalogEntry | null> {
+  async getCatalogEntry(
+    catalog: CatalogType,
+    code: string,
+  ): Promise<CatalogEntry | null> {
     const cache = this.catalogCaches.get(catalog);
     if (!cache) {
       return null;
@@ -460,7 +519,11 @@ export class CatalogsService implements OnModuleInit {
   /**
    * Search catalog entries by query string
    */
-  async searchCatalog(catalog: CatalogType, query: string, limit: number = 50): Promise<CatalogEntry[]> {
+  async searchCatalog(
+    catalog: CatalogType,
+    query: string,
+    limit: number = 50,
+  ): Promise<CatalogEntry[]> {
     const cache = this.catalogCaches.get(catalog);
     if (!cache) {
       return [];
@@ -484,4 +547,3 @@ export class CatalogsService implements OnModuleInit {
     return results;
   }
 }
-

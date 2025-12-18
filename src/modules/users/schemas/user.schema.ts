@@ -23,32 +23,48 @@ export class User {
   @Prop({ required: true, trim: true })
   password: string;
 
-  @Prop({ required: true, enum: ['Principal', 'Médico', 'Enfermero/a', 'Administrativo', 'Técnico Evaluador'] })
+  @Prop({
+    required: true,
+    enum: [
+      'Principal',
+      'Médico',
+      'Enfermero/a',
+      'Administrativo',
+      'Técnico Evaluador',
+    ],
+  })
   role: string;
 
-  @Prop({ default: () => Date.now().toString(32) + Math.random().toString(32).substring(2) })
+  @Prop({
+    default: () =>
+      Date.now().toString(32) + Math.random().toString(32).substring(2),
+  })
   token: string;
 
-  @Prop({ default: false, })
-  verified: boolean
+  @Prop({ default: false })
+  verified: boolean;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProveedoresSalud', required: true })
-  idProveedorSalud: string
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'ProveedoresSalud',
+    required: true,
+  })
+  idProveedorSalud: string;
 
-@Prop({
-  type: {
-    gestionarEmpresas: { type: Boolean, default: false },
-    gestionarCentrosTrabajo: { type: Boolean, default: false },
-    gestionarTrabajadores: { type: Boolean, default: false },
-    gestionarDocumentosDiagnostico: { type: Boolean, default: false },
-    gestionarDocumentosEvaluacion: { type: Boolean, default: false },
-    gestionarDocumentosExternos: { type: Boolean, default: false },
-    gestionarCuestionariosAdicionales: { type: Boolean, default: false },
-    accesoCompletoEmpresasCentros: { type: Boolean, default: false },
-    accesoDashboardSalud: { type: Boolean, default: false },
-    accesoRiesgosTrabajo: { type: Boolean, default: false }
-  },
-    default: function() {
+  @Prop({
+    type: {
+      gestionarEmpresas: { type: Boolean, default: false },
+      gestionarCentrosTrabajo: { type: Boolean, default: false },
+      gestionarTrabajadores: { type: Boolean, default: false },
+      gestionarDocumentosDiagnostico: { type: Boolean, default: false },
+      gestionarDocumentosEvaluacion: { type: Boolean, default: false },
+      gestionarDocumentosExternos: { type: Boolean, default: false },
+      gestionarCuestionariosAdicionales: { type: Boolean, default: false },
+      accesoCompletoEmpresasCentros: { type: Boolean, default: false },
+      accesoDashboardSalud: { type: Boolean, default: false },
+      accesoRiesgosTrabajo: { type: Boolean, default: false },
+    },
+    default: function () {
       // Permisos por defecto según rol
       if (this.role === 'Principal') {
         return {
@@ -61,7 +77,7 @@ export class User {
           gestionarCuestionariosAdicionales: true,
           accesoCompletoEmpresasCentros: true,
           accesoDashboardSalud: true,
-          accesoRiesgosTrabajo: true
+          accesoRiesgosTrabajo: true,
         };
       } else if (this.role === 'Médico') {
         return {
@@ -74,7 +90,7 @@ export class User {
           gestionarCuestionariosAdicionales: true,
           accesoCompletoEmpresasCentros: false,
           accesoDashboardSalud: true,
-          accesoRiesgosTrabajo: true
+          accesoRiesgosTrabajo: true,
         };
       } else if (this.role === 'Enfermero/a') {
         return {
@@ -87,7 +103,7 @@ export class User {
           gestionarCuestionariosAdicionales: true,
           accesoCompletoEmpresasCentros: false,
           accesoDashboardSalud: true,
-          accesoRiesgosTrabajo: true
+          accesoRiesgosTrabajo: true,
         };
       } else if (this.role === 'Administrativo') {
         return {
@@ -100,7 +116,7 @@ export class User {
           gestionarCuestionariosAdicionales: false,
           accesoCompletoEmpresasCentros: true,
           accesoDashboardSalud: true,
-          accesoRiesgosTrabajo: true
+          accesoRiesgosTrabajo: true,
         };
       } else if (this.role === 'Técnico Evaluador') {
         return {
@@ -113,11 +129,11 @@ export class User {
           gestionarCuestionariosAdicionales: true,
           accesoCompletoEmpresasCentros: false,
           accesoDashboardSalud: true,
-          accesoRiesgosTrabajo: false
+          accesoRiesgosTrabajo: false,
         };
       }
       return {};
-    }
+    },
   })
   permisos: {
     gestionarEmpresas: boolean;
@@ -138,7 +154,11 @@ export class User {
   @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'Empresa', default: [] })
   empresasAsignadas: string[];
 
-  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'CentroTrabajo', default: [] })
+  @Prop({
+    type: [MongooseSchema.Types.ObjectId],
+    ref: 'CentroTrabajo',
+    default: [],
+  })
   centrosTrabajoAsignados: string[];
 
   async checkPassword(inputPassword: string): Promise<boolean> {
@@ -158,7 +178,8 @@ UserSchema.pre<UserDocument>('save', async function (next) {
   next();
 });
 
-UserSchema.methods.checkPassword = async function (inputPassword: string): Promise<boolean> {
-    return bcrypt.compare(inputPassword, this.password);
-  };
-  
+UserSchema.methods.checkPassword = async function (
+  inputPassword: string,
+): Promise<boolean> {
+  return bcrypt.compare(inputPassword, this.password);
+};

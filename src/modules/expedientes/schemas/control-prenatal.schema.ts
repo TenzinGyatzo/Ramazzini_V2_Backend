@@ -1,13 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
+import { Trabajador } from '../../trabajadores/schemas/trabajador.schema';
 import { User } from 'src/modules/users/entities/user.entity';
 import { DocumentoEstado } from '../enums/documento-estado.enum';
 
 @Schema()
 export class ControlPrenatal extends Document {
   // Referencias
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Trabajador',
+    required: true,
+  })
   idTrabajador: Trabajador;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
@@ -277,10 +281,10 @@ export class ControlPrenatal extends Document {
   updatedAt: Date;
 
   // Document State Management (NOM-024)
-  @Prop({ 
-      enum: DocumentoEstado, 
-      required: true, 
-      default: DocumentoEstado.BORRADOR 
+  @Prop({
+    enum: DocumentoEstado,
+    required: true,
+    default: DocumentoEstado.BORRADOR,
   })
   estado: DocumentoEstado;
 
@@ -291,7 +295,12 @@ export class ControlPrenatal extends Document {
   finalizadoPor?: User;
 }
 
-export const ControlPrenatalSchema = SchemaFactory.createForClass(ControlPrenatal).set('timestamps', true);
+export const ControlPrenatalSchema = SchemaFactory.createForClass(
+  ControlPrenatal,
+).set('timestamps', true);
 
 // Crear índices para mejorar el rendimiento de las consultas
-ControlPrenatalSchema.index({ idTrabajador: 1, fechaInicioControlPreNatal: -1 });
+ControlPrenatalSchema.index({
+  idTrabajador: 1,
+  fechaInicioControlPreNatal: -1,
+});

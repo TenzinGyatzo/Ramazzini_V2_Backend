@@ -1,4 +1,14 @@
-import { BadRequestException, Body, Controller, Get, Param, Patch, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
@@ -30,7 +40,10 @@ export class TecnicosFirmantesController {
       }),
     }),
   )
-  async create(@Body() createTecnicoFirmanteDto: CreateTecnicoFirmanteDto, @UploadedFile() file: Express.Multer.File) {
+  async create(
+    @Body() createTecnicoFirmanteDto: CreateTecnicoFirmanteDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     console.log('Archivo recibido:', file);
     console.log('Datos del técnico firmante:', createTecnicoFirmanteDto);
 
@@ -42,10 +55,14 @@ export class TecnicosFirmantesController {
         };
       }
 
-      const tecnico = await this.tecnicosService.create(createTecnicoFirmanteDto);
+      const tecnico = await this.tecnicosService.create(
+        createTecnicoFirmanteDto,
+      );
       return { message: 'Creado exitosamente', data: tecnico };
     } catch (error) {
-      throw new BadRequestException('Error al registrar datos del técnico firmante');
+      throw new BadRequestException(
+        'Error al registrar datos del técnico firmante',
+      );
     }
   }
 
@@ -76,7 +93,9 @@ export class TecnicosFirmantesController {
   @Get('obtener-tecnico-por-usuario/:idUser')
   async findOneByUser(@Param('idUser') idUser: string) {
     if (!isValidObjectId(idUser)) {
-      throw new BadRequestException('El ID de usuario proporcionado no es válido');
+      throw new BadRequestException(
+        'El ID de usuario proporcionado no es válido',
+      );
     }
 
     const tecnico = await this.tecnicosService.findOneByUserId(idUser);
@@ -105,7 +124,11 @@ export class TecnicosFirmantesController {
       }),
     }),
   )
-  async update(@Param('id') id: string, @Body() updateTecnicoFirmanteDto: UpdateTecnicoFirmanteDto, @UploadedFile() file: Express.Multer.File) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateTecnicoFirmanteDto: UpdateTecnicoFirmanteDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
@@ -117,7 +140,10 @@ export class TecnicosFirmantesController {
       };
     }
 
-    const tecnico = await this.tecnicosService.update(id, updateTecnicoFirmanteDto);
+    const tecnico = await this.tecnicosService.update(
+      id,
+      updateTecnicoFirmanteDto,
+    );
     if (!tecnico) {
       return {
         message: `No se pudo actualizar el técnico firmante con id ${id}`,
@@ -130,5 +156,3 @@ export class TecnicosFirmantesController {
     };
   }
 }
-
-

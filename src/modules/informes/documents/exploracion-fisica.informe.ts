@@ -169,9 +169,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -195,27 +195,27 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
@@ -294,7 +294,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface EnfermeraFirmante {
@@ -307,7 +307,7 @@ interface EnfermeraFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface TecnicoFirmante {
@@ -320,7 +320,7 @@ interface TecnicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -351,14 +351,20 @@ export const exploracionFisicaInforme = (
   tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
-  const usarTecnico = !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
+  const usarTecnico =
+    !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
 
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : (usarTecnico ? tecnicoFirmante : null));
+  const firmanteActivo = usarMedico
+    ? medicoFirmante
+    : usarEnfermera
+      ? enfermeraFirmante
+      : usarTecnico
+        ? tecnicoFirmante
+        : null;
 
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
@@ -369,18 +375,26 @@ export const exploracionFisicaInforme = (
   };
 
   updatedStyles.tableHeaderLg = {
-    ...updatedStyles.tableHeaderLg, 
+    ...updatedStyles.tableHeaderLg,
     fillColor: proveedorSalud.colorInforme || '#343A40',
   };
   //////////////////////////////////////////////////////////
 
   const firma: Content = firmanteActivo?.firma?.data
-  ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
-  : { text: '' };
+    ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   // Nombre de Empresa y Fecha
   const nombreEmpresaSeccion: Content = {
@@ -399,7 +413,9 @@ export const exploracionFisicaInforme = (
             text: [
               { text: 'Fecha: ', style: 'fecha', bold: false },
               {
-                text: formatearFechaUTC(exploracionFisica.fechaExploracionFisica),
+                text: formatearFechaUTC(
+                  exploracionFisica.fechaExploracionFisica,
+                ),
                 style: 'fecha',
                 bold: true,
                 decoration: 'underline',
@@ -422,7 +438,7 @@ export const exploracionFisicaInforme = (
       body: [
         [
           { text: 'NOMBRE', style: 'label' },
-                        { text: formatearNombreTrabajador(trabajador), style: 'value' },
+          { text: formatearNombreTrabajador(trabajador), style: 'value' },
           { text: 'EDAD', style: 'label' },
           { text: trabajador.edad, style: 'value' },
         ],
@@ -480,8 +496,16 @@ export const exploracionFisicaInforme = (
             ...[
               ['PESO', exploracionFisica.peso, ' - '],
               ['ALTURA', exploracionFisica.altura, ' - '],
-              ['ÍNDICE DE MASA CORPORAL', exploracionFisica.indiceMasaCorporal, exploracionFisica.categoriaIMC],
-              ['CIRCUNFERENCIA DE CINTURA', exploracionFisica.circunferenciaCintura, exploracionFisica.categoriaCircunferenciaCintura],
+              [
+                'ÍNDICE DE MASA CORPORAL',
+                exploracionFisica.indiceMasaCorporal,
+                exploracionFisica.categoriaIMC,
+              ],
+              [
+                'CIRCUNFERENCIA DE CINTURA',
+                exploracionFisica.circunferenciaCintura,
+                exploracionFisica.categoriaCircunferenciaCintura,
+              ],
             ].map((row) =>
               row.map((text, i) => ({
                 text,
@@ -522,10 +546,26 @@ export const exploracionFisicaInforme = (
             ],
             // Filas de datos
             ...[
-              ['TENSIÓN ARTERIAL', `${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg`, exploracionFisica.categoriaTensionArterial],
-              ['FRECUENCIA CARDIACA', `${exploracionFisica.frecuenciaCardiaca} lpm`, exploracionFisica.categoriaFrecuenciaCardiaca],
-              ['FRECUENCIA RESPIRATORIA', `${exploracionFisica.frecuenciaRespiratoria} rpm`, exploracionFisica.categoriaFrecuenciaRespiratoria],
-              ['SATURACIÓN DE OXÍGENO', `${exploracionFisica.saturacionOxigeno} %`, exploracionFisica.categoriaSaturacionOxigeno],
+              [
+                'TENSIÓN ARTERIAL',
+                `${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg`,
+                exploracionFisica.categoriaTensionArterial,
+              ],
+              [
+                'FRECUENCIA CARDIACA',
+                `${exploracionFisica.frecuenciaCardiaca} lpm`,
+                exploracionFisica.categoriaFrecuenciaCardiaca,
+              ],
+              [
+                'FRECUENCIA RESPIRATORIA',
+                `${exploracionFisica.frecuenciaRespiratoria} rpm`,
+                exploracionFisica.categoriaFrecuenciaRespiratoria,
+              ],
+              [
+                'SATURACIÓN DE OXÍGENO',
+                `${exploracionFisica.saturacionOxigeno} %`,
+                exploracionFisica.categoriaSaturacionOxigeno,
+              ],
             ].map((row) =>
               row.map((text, i) => ({
                 text,
@@ -609,7 +649,10 @@ export const exploracionFisicaInforme = (
               ['HOMBROS', exploracionFisica.hombros],
               ['CODOS', exploracionFisica.codos],
               ['MANOS', exploracionFisica.manos],
-              ['REFLEJOS O.T.', exploracionFisica.reflejosOsteoTendinososSuperiores],
+              [
+                'REFLEJOS O.T.',
+                exploracionFisica.reflejosOsteoTendinososSuperiores,
+              ],
               ['VASCULAR', exploracionFisica.vascularESuperiores],
             ].map((row) =>
               row.map((text, i) => ({
@@ -729,7 +772,10 @@ export const exploracionFisicaInforme = (
               ['CADERA', exploracionFisica.cadera],
               ['RODILLAS', exploracionFisica.rodillas],
               ['TOBILLOS-PIES', exploracionFisica.tobillosPies],
-              ['REFLEJOS O.T.', exploracionFisica.reflejosOsteoTendinososInferiores],
+              [
+                'REFLEJOS O.T.',
+                exploracionFisica.reflejosOsteoTendinososInferiores,
+              ],
               ['VASCULAR', exploracionFisica.vascularEInferiores],
             ].map((row) =>
               row.map((text, i) => ({
@@ -946,72 +992,80 @@ export const exploracionFisicaInforme = (
             {
               text: [
                 // Nombre y título profesional
-                (firmanteActivo?.tituloProfesional && firmanteActivo?.nombre)
+                firmanteActivo?.tituloProfesional && firmanteActivo?.nombre
                   ? {
                       text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
                       bold: true,
                     }
                   : null,
-              
+
                 // Cédula profesional (para médicos y enfermeras)
                 firmanteActivo?.numeroCedulaProfesional
                   ? {
-                      text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : proveedorSalud.pais === 'GT'
-                        ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                          : proveedorSalud.pais === 'GT'
+                            ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                            : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Cédula de especialista (solo para médicos)
-                (usarMedico && medicoFirmante?.numeroCedulaEspecialista)
+                usarMedico && medicoFirmante?.numeroCedulaEspecialista
                   ? {
-                      text: proveedorSalud.pais === 'MX'
-                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Credencial adicional
-                (firmanteActivo?.nombreCredencialAdicional && firmanteActivo?.numeroCredencialAdicional)
-                ? {
-                    text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                    bold: false,
-                  }
-                : null,
-                
-                // Texto específico para enfermeras
-                (usarEnfermera && enfermeraFirmante?.sexo)
+                firmanteActivo?.nombreCredencialAdicional &&
+                firmanteActivo?.numeroCredencialAdicional
                   ? {
-                      text: enfermeraFirmante.sexo === 'Femenino' 
-                        ? 'Enfermera responsable de la evaluación\n'
-                        : 'Enfermero responsable de la evaluación\n',
+                      text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                      bold: false,
+                    }
+                  : null,
+
+                // Texto específico para enfermeras
+                usarEnfermera && enfermeraFirmante?.sexo
+                  ? {
+                      text:
+                        enfermeraFirmante.sexo === 'Femenino'
+                          ? 'Enfermera responsable de la evaluación\n'
+                          : 'Enfermero responsable de la evaluación\n',
                       bold: false,
                     }
                   : null,
 
                 // Texto específico para técnicos
-                (usarTecnico && tecnicoFirmante?.sexo)
+                usarTecnico && tecnicoFirmante?.sexo
                   ? {
-                      text: tecnicoFirmante.sexo === 'Femenino' 
-                        ? 'Responsable de la evaluación\n'
-                        : 'Responsable de la evaluación\n',
+                      text:
+                        tecnicoFirmante.sexo === 'Femenino'
+                          ? 'Responsable de la evaluación\n'
+                          : 'Responsable de la evaluación\n',
                       bold: false,
                     }
                   : null,
-                
-              ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe   
+              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(firmanteActivo?.firma?.data ? [{
-              ...firma,
-              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
-            }] : []),
+            ...(firmanteActivo?.firma?.data
+              ? [
+                  {
+                    ...firma,
+                    margin: [0, -3, 0, 0] as [number, number, number, number], // Mueve el elemento más arriba
+                  },
+                ]
+              : []),
             {
               text: [
                 proveedorSalud.nombre
@@ -1021,7 +1075,7 @@ export const exploracionFisicaInforme = (
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.direccion
                   ? {
                       text: `${proveedorSalud.direccion}\n`,
@@ -1029,15 +1083,17 @@ export const exploracionFisicaInforme = (
                       italics: true,
                     }
                   : null,
-              
-                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+
+                proveedorSalud.municipio &&
+                proveedorSalud.estado &&
+                proveedorSalud.telefono
                   ? {
                       text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.sitioWeb
                   ? {
                       text: `${proveedorSalud.sitioWeb}`,
@@ -1047,7 +1103,7 @@ export const exploracionFisicaInforme = (
                       color: 'blue',
                     }
                   : null,
-              ].filter(item => item !== null),  // Elimina los elementos nulos
+              ].filter((item) => item !== null), // Elimina los elementos nulos
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],

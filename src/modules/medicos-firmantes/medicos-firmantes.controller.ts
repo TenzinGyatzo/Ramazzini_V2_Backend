@@ -113,8 +113,7 @@ export class MedicosFirmantesController {
     }
 
     // Llamar al servicio para buscar por idUser
-    const medico =
-      await this.medicosFirmantesService.findOneByUserId(idUser);
+    const medico = await this.medicosFirmantesService.findOneByUserId(idUser);
 
     // Si no se encuentra el médico, lanzar una excepción
     if (!medico) {

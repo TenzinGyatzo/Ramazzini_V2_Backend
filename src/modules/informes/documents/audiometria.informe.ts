@@ -98,9 +98,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -124,27 +124,27 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
@@ -210,7 +210,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface EnfermeraFirmante {
@@ -223,7 +223,7 @@ interface EnfermeraFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface TecnicoFirmante {
@@ -236,7 +236,7 @@ interface TecnicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -260,143 +260,166 @@ interface ProveedorSalud {
 // ==================== FUNCIONES DE CÁLCULO DINÁMICO ====================
 
 // Función para calcular PTA AMA (500, 1000, 2000, 3000 Hz)
-const calcularPTA_AMA = (audiometria: Audiometria, oido: 'Derecho' | 'Izquierdo'): number => {
+const calcularPTA_AMA = (
+  audiometria: Audiometria,
+  oido: 'Derecho' | 'Izquierdo',
+): number => {
   const frecuencias = [500, 1000, 2000, 3000];
-  const valores = frecuencias.map(freq => {
+  const valores = frecuencias.map((freq) => {
     const campo = `oido${oido}${freq}` as keyof Audiometria;
     return (audiometria[campo] as number) || 0;
   });
-  
+
   const suma = valores.reduce((acc, val) => acc + val, 0);
   return suma / frecuencias.length;
 };
 
 // Función para calcular PTA LFT Rango A (250, 500, 1000, 2000 Hz)
-const calcularPTA_LFT_RangoA = (audiometria: Audiometria, oido: 'Derecho' | 'Izquierdo'): number => {
+const calcularPTA_LFT_RangoA = (
+  audiometria: Audiometria,
+  oido: 'Derecho' | 'Izquierdo',
+): number => {
   const frecuencias = [250, 500, 1000, 2000];
-  const valores = frecuencias.map(freq => {
+  const valores = frecuencias.map((freq) => {
     const campo = `oido${oido}${freq}` as keyof Audiometria;
     return (audiometria[campo] as number) || 0;
   });
-  
+
   const suma = valores.reduce((acc, val) => acc + val, 0);
   return suma / frecuencias.length;
 };
 
 // Función para calcular PTA LFT Rango B (2000, 3000, 4000, 6000 Hz)
-const calcularPTA_LFT_RangoB = (audiometria: Audiometria, oido: 'Derecho' | 'Izquierdo'): number => {
+const calcularPTA_LFT_RangoB = (
+  audiometria: Audiometria,
+  oido: 'Derecho' | 'Izquierdo',
+): number => {
   const frecuencias = [2000, 3000, 4000, 6000];
-  const valores = frecuencias.map(freq => {
+  const valores = frecuencias.map((freq) => {
     const campo = `oido${oido}${freq}` as keyof Audiometria;
     return (audiometria[campo] as number) || 0;
   });
-  
+
   const suma = valores.reduce((acc, val) => acc + val, 0);
   return suma / frecuencias.length;
 };
 
 // Función para calcular porcentaje por oído según método
-const calcularPorcentajePorOido = (audiometria: Audiometria, oido: 'Derecho' | 'Izquierdo'): { porcentaje: number; frecuencias: number[]; metodo: string; rango?: string } => {
+const calcularPorcentajePorOido = (
+  audiometria: Audiometria,
+  oido: 'Derecho' | 'Izquierdo',
+): {
+  porcentaje: number;
+  frecuencias: number[];
+  metodo: string;
+  rango?: string;
+} => {
   const metodo = audiometria.metodoAudiometria || 'AMA';
-  
+
   if (metodo === 'AMA') {
     // Para AMA: usar valores guardados si están disponibles, sino calcular
     let porcentaje: number;
     if (oido === 'Derecho' && audiometria.perdidaMonauralOD_AMA !== undefined) {
       porcentaje = audiometria.perdidaMonauralOD_AMA;
-    } else if (oido === 'Izquierdo' && audiometria.perdidaMonauralOI_AMA !== undefined) {
+    } else if (
+      oido === 'Izquierdo' &&
+      audiometria.perdidaMonauralOI_AMA !== undefined
+    ) {
       porcentaje = audiometria.perdidaMonauralOI_AMA;
     } else {
       // Fallback: calcular dinámicamente
       const pta = calcularPTA_AMA(audiometria, oido);
-      porcentaje = Math.max(0, (pta - 25)) * 1.5;
+      porcentaje = Math.max(0, pta - 25) * 1.5;
     }
-    
+
     return {
       porcentaje: Math.round(porcentaje * 100) / 100,
       frecuencias: [500, 1000, 2000, 3000],
-      metodo: 'AMA'
+      metodo: 'AMA',
     };
   } else if (metodo === 'LFT') {
     // LFT: Elegir entre Rango A y Rango B, el que produzca mayor porcentaje
     const ptaA = calcularPTA_LFT_RangoA(audiometria, oido);
     const ptaB = calcularPTA_LFT_RangoB(audiometria, oido);
-    
+
     const porcentajeA = ptaA * 0.8;
     const porcentajeB = ptaB * 0.8;
-    
+
     if (porcentajeA >= porcentajeB) {
       return {
         porcentaje: Math.round(porcentajeA * 100) / 100,
         frecuencias: [250, 500, 1000, 2000],
         metodo: 'LFT',
-        rango: 'A'
+        rango: 'A',
       };
     } else {
       return {
         porcentaje: Math.round(porcentajeB * 100) / 100,
         frecuencias: [2000, 3000, 4000, 6000],
         metodo: 'LFT',
-        rango: 'B'
+        rango: 'B',
       };
     }
   }
-  
+
   // Fallback al método anterior si no se reconoce el método
   const frecuencias = [500, 1000, 2000, 4000];
-  const valores = frecuencias.map(freq => {
+  const valores = frecuencias.map((freq) => {
     const campo = `oido${oido}${freq}` as keyof Audiometria;
     return (audiometria[campo] as number) || 0;
   });
-  
-  const promedio = valores.reduce((acc, val) => acc + val, 0) / frecuencias.length;
+
+  const promedio =
+    valores.reduce((acc, val) => acc + val, 0) / frecuencias.length;
   const porcentaje = promedio * 0.8;
-  
+
   return {
     porcentaje: Math.round(porcentaje * 100) / 100,
     frecuencias: frecuencias,
-    metodo: 'LEGACY'
+    metodo: 'LEGACY',
   };
 };
 
 // Función para calcular resultado binaural según método
-const calcularResultadoBinaural = (audiometria: Audiometria): { porcentaje: number; metodo: string; etiqueta: string } => {
+const calcularResultadoBinaural = (
+  audiometria: Audiometria,
+): { porcentaje: number; metodo: string; etiqueta: string } => {
   const metodo = audiometria.metodoAudiometria || 'AMA';
-  
+
   if (metodo === 'AMA') {
     // Para AMA: usar valor guardado si está disponible, sino calcular
     if (audiometria.perdidaAuditivaBilateralAMA !== undefined) {
       return {
         porcentaje: audiometria.perdidaAuditivaBilateralAMA,
         metodo: 'AMA',
-        etiqueta: 'Pérdida auditiva bilateral'
+        etiqueta: 'Pérdida auditiva bilateral',
       };
     } else {
       // Fallback: calcular dinámicamente
       const resultadoOD = calcularPorcentajePorOido(audiometria, 'Derecho');
       const resultadoOI = calcularPorcentajePorOido(audiometria, 'Izquierdo');
-      
+
       const menor = Math.min(resultadoOD.porcentaje, resultadoOI.porcentaje);
       const mayor = Math.max(resultadoOD.porcentaje, resultadoOI.porcentaje);
-      
-      const bilateral = ((5 * menor) + mayor) / 6;
+
+      const bilateral = (5 * menor + mayor) / 6;
       return {
         porcentaje: Math.round(bilateral * 100) / 100,
         metodo: 'AMA',
-        etiqueta: 'Pérdida auditiva bilateral'
+        etiqueta: 'Pérdida auditiva bilateral',
       };
     }
   } else if (metodo === 'LFT') {
     // Para LFT: calcular dinámicamente (usar valores legacy)
     const resultadoOD = calcularPorcentajePorOido(audiometria, 'Derecho');
     const resultadoOI = calcularPorcentajePorOido(audiometria, 'Izquierdo');
-    
+
     const menor = Math.min(resultadoOD.porcentaje, resultadoOI.porcentaje);
     const mayor = Math.max(resultadoOD.porcentaje, resultadoOI.porcentaje);
-    
+
     // LFT (HBC %): (7*menor + 1*mayor) / 8 y luego aplicar redondeo LFT
-    let hbc = ((7 * menor) + mayor) / 8;
-    
+    let hbc = (7 * menor + mayor) / 8;
+
     // Aplicar redondeo LFT: décimas 0.0–0.5 hacia abajo, 0.6–0.9 hacia arriba
     const decimal = hbc % 1;
     if (decimal >= 0.6) {
@@ -404,19 +427,19 @@ const calcularResultadoBinaural = (audiometria: Audiometria): { porcentaje: numb
     } else {
       hbc = Math.floor(hbc);
     }
-    
+
     return {
       porcentaje: hbc,
       metodo: 'LFT',
-      etiqueta: 'Hipoacusia bilateral combinada (HBC)'
+      etiqueta: 'Hipoacusia bilateral combinada (HBC)',
     };
   }
-  
+
   // Fallback
   return {
     porcentaje: audiometria.hipoacusiaBilateralCombinada || 0,
     metodo: 'LEGACY',
-    etiqueta: 'Hipoacusia bilateral combinada'
+    etiqueta: 'Hipoacusia bilateral combinada',
   };
 };
 
@@ -440,28 +463,44 @@ export const audiometriaInforme = (
   tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
-  const usarTecnico = !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
+  const usarTecnico =
+    !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
 
   // Calcular resultados dinámicos
   const resultadoOD = calcularPorcentajePorOido(audiometria, 'Derecho');
   const resultadoOI = calcularPorcentajePorOido(audiometria, 'Izquierdo');
   const resultadoBinaural = calcularResultadoBinaural(audiometria);
-  const textoDiagnosticoBilateral = obtenerTextoDiagnosticoBilateral(audiometria.metodoAudiometria || 'AMA');
-  
+  const textoDiagnosticoBilateral = obtenerTextoDiagnosticoBilateral(
+    audiometria.metodoAudiometria || 'AMA',
+  );
+
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : (usarTecnico ? tecnicoFirmante : null));
+  const firmanteActivo = usarMedico
+    ? medicoFirmante
+    : usarEnfermera
+      ? enfermeraFirmante
+      : usarTecnico
+        ? tecnicoFirmante
+        : null;
 
   const firma: Content = firmanteActivo?.firma?.data
-  ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
-  : { text: '' };
+    ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   // Datos del Trabajador
   const trabajadorSeccion: Content = {
@@ -512,7 +551,7 @@ export const audiometriaInforme = (
       vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 8],
-  }
+  };
 
   return {
     pageSize: 'LETTER',
@@ -560,7 +599,19 @@ export const audiometriaInforme = (
       {
         style: 'table',
         table: {
-          widths: ['20%', '8%', '8%', '8%', '8%', '8%', '8%', '8%', '8%', '8%', '8%'],
+          widths: [
+            '20%',
+            '8%',
+            '8%',
+            '8%',
+            '8%',
+            '8%',
+            '8%',
+            '8%',
+            '8%',
+            '8%',
+            '8%',
+          ],
           body: [
             [
               { text: '', style: 'tableCellBoldCenter' },
@@ -577,37 +628,121 @@ export const audiometriaInforme = (
             ],
             // Oído Derecho
             [
-              { text: 'OIDO DERECHO', style: 'tableCellBold', alignment: 'left' },
-              { text: audiometria.oidoDerecho125?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoDerecho250?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoDerecho500?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoDerecho1000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoDerecho2000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoDerecho3000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoDerecho4000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoDerecho6000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoDerecho8000?.toString() || '', style: 'tableCell' },
-              { text: resultadoOD.porcentaje?.toString() || '', style: 'tableCell' },
+              {
+                text: 'OIDO DERECHO',
+                style: 'tableCellBold',
+                alignment: 'left',
+              },
+              {
+                text: audiometria.oidoDerecho125?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoDerecho250?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoDerecho500?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoDerecho1000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoDerecho2000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoDerecho3000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoDerecho4000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoDerecho6000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoDerecho8000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: resultadoOD.porcentaje?.toString() || '',
+                style: 'tableCell',
+              },
             ],
             // Oído Izquierdo
             [
-              { text: 'OIDO IZQUIERDO', style: 'tableCellBold', alignment: 'left' },
-              { text: audiometria.oidoIzquierdo125?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoIzquierdo250?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoIzquierdo500?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoIzquierdo1000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoIzquierdo2000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoIzquierdo3000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoIzquierdo4000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoIzquierdo6000?.toString() || '', style: 'tableCell' },
-              { text: audiometria.oidoIzquierdo8000?.toString() || '', style: 'tableCell' },
-              { text: resultadoOI.porcentaje?.toString() || '', style: 'tableCell' },
+              {
+                text: 'OIDO IZQUIERDO',
+                style: 'tableCellBold',
+                alignment: 'left',
+              },
+              {
+                text: audiometria.oidoIzquierdo125?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoIzquierdo250?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoIzquierdo500?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoIzquierdo1000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoIzquierdo2000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoIzquierdo3000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoIzquierdo4000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoIzquierdo6000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: audiometria.oidoIzquierdo8000?.toString() || '',
+                style: 'tableCell',
+              },
+              {
+                text: resultadoOI.porcentaje?.toString() || '',
+                style: 'tableCell',
+              },
             ],
             // Pérdida Bilateral Combinada - Texto dinámico según método
             [
-              { text: textoDiagnosticoBilateral, style: 'tableCellBold', alignment: 'left', colSpan: 10 },
-              {}, {}, {}, {}, {}, {}, {}, {}, {},
-              { text: resultadoBinaural.porcentaje?.toString() || '', style: 'tableCellBoldCenter' },
+              {
+                text: textoDiagnosticoBilateral,
+                style: 'tableCellBold',
+                alignment: 'left',
+                colSpan: 10,
+              },
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {
+                text: resultadoBinaural.porcentaje?.toString() || '',
+                style: 'tableCellBoldCenter',
+              },
             ],
           ],
         },
@@ -626,9 +761,11 @@ export const audiometriaInforme = (
 
       // Leyenda discreta con método y frecuencias
       {
-        text: `Método: ${audiometria.metodoAudiometria || 'AMA'}${audiometria.metodoAudiometria === 'AMA' 
-          ? ' - Frecuencias fijas: 500, 1000, 2000, 3000 Hz' 
-          : ` - OD: [${resultadoOD.frecuencias.join(', ')}] Hz${resultadoOD.rango ? ` (Rango ${resultadoOD.rango})` : ''} | OI: [${resultadoOI.frecuencias.join(', ')}] Hz${resultadoOI.rango ? ` (Rango ${resultadoOI.rango})` : ''}`}`,
+        text: `Método: ${audiometria.metodoAudiometria || 'AMA'}${
+          audiometria.metodoAudiometria === 'AMA'
+            ? ' - Frecuencias fijas: 500, 1000, 2000, 3000 Hz'
+            : ` - OD: [${resultadoOD.frecuencias.join(', ')}] Hz${resultadoOD.rango ? ` (Rango ${resultadoOD.rango})` : ''} | OI: [${resultadoOI.frecuencias.join(', ')}] Hz${resultadoOI.rango ? ` (Rango ${resultadoOI.rango})` : ''}`
+        }`,
         fontSize: 8,
         alignment: 'center',
         color: '#666666',
@@ -637,56 +774,82 @@ export const audiometriaInforme = (
       },
 
       // Gráfica audiométrica - solo mostrar si existe
-      ...(audiometria.graficaAudiometria ? [{
-        image: audiometria.graficaAudiometria,
-        width: 500, // Intentar con 450 y 400
-        alignment: 'center' as const,
-        margin: [0, 0, 0, 10] as [number, number, number, number]
-      }] : []),
+      ...(audiometria.graficaAudiometria
+        ? [
+            {
+              image: audiometria.graficaAudiometria,
+              width: 500, // Intentar con 450 y 400
+              alignment: 'center' as const,
+              margin: [0, 0, 0, 10] as [number, number, number, number],
+            },
+          ]
+        : []),
 
       // Observaciones - solo mostrar si tiene contenido
-      ...(audiometria.observacionesAudiometria && audiometria.observacionesAudiometria.trim() !== '' ? [{
-        text: [
-          { text: `OBSERVACIONES:`, bold: true },
-          { text: ` ${audiometria.observacionesAudiometria} ` },
-        ],
-        margin: [0, 0, 0, 10] as [number, number, number, number],
-        style: 'paragraph'
-      }] : []),
+      ...(audiometria.observacionesAudiometria &&
+      audiometria.observacionesAudiometria.trim() !== ''
+        ? [
+            {
+              text: [
+                { text: `OBSERVACIONES:`, bold: true },
+                { text: ` ${audiometria.observacionesAudiometria} ` },
+              ],
+              margin: [0, 0, 0, 10] as [number, number, number, number],
+              style: 'paragraph',
+            },
+          ]
+        : []),
 
       // Interpretación Audiométrica - solo mostrar si tiene contenido
-      ...(audiometria.interpretacionAudiometrica && audiometria.interpretacionAudiometrica.trim() !== '' ? [{
-        text: [
-          { text: `INTERPRETACIÓN AUDIOMÉTRICA:`, bold: true },
-          { text: ` ${audiometria.interpretacionAudiometrica} ` },
-        ],
-        margin: [0, 0, 0, 10] as [number, number, number, number],
-        style: 'paragraph'
-      }] : []),
+      ...(audiometria.interpretacionAudiometrica &&
+      audiometria.interpretacionAudiometrica.trim() !== ''
+        ? [
+            {
+              text: [
+                { text: `INTERPRETACIÓN AUDIOMÉTRICA:`, bold: true },
+                { text: ` ${audiometria.interpretacionAudiometrica} ` },
+              ],
+              margin: [0, 0, 0, 10] as [number, number, number, number],
+              style: 'paragraph',
+            },
+          ]
+        : []),
 
       // Diagnóstico - Dinámico según método
       {
         text: [
           { text: `DIAGNÓSTICO:`, bold: true },
-          { text: audiometria.diagnosticoAudiometria ? ` ${audiometria.diagnosticoAudiometria.toUpperCase()} ${audiometria.metodoAudiometria === 'AMA' ? 'PA' : 'HBC'} DE ${resultadoBinaural.porcentaje}% ` : '', bold: true, fontSize: 12 },
+          {
+            text: audiometria.diagnosticoAudiometria
+              ? ` ${audiometria.diagnosticoAudiometria.toUpperCase()} ${audiometria.metodoAudiometria === 'AMA' ? 'PA' : 'HBC'} DE ${resultadoBinaural.porcentaje}% `
+              : '',
+            bold: true,
+            fontSize: 12,
+          },
         ] as any,
         margin: [0, 0, 0, 10] as [number, number, number, number],
-        style: 'paragraph'
+        style: 'paragraph',
       },
 
       // Recomendaciones - solo mostrar si tiene contenido
-      ...(audiometria.recomendacionesAudiometria && audiometria.recomendacionesAudiometria.length > 0 ? [{
-        text: [
-          { text: `RECOMENDACIONES:`, bold: true },
-          ...audiometria.recomendacionesAudiometria.flatMap((item, index) => ([
-              { text: `   ${index + 1}. `, preserveLeadingSpaces: true },
-              { text: item, bold: false }
-            ]))
-        ],
-        margin: [0, 0, 0, 10] as [number, number, number, number],
-        style: 'paragraph'
-      }] : []),
-   
+      ...(audiometria.recomendacionesAudiometria &&
+      audiometria.recomendacionesAudiometria.length > 0
+        ? [
+            {
+              text: [
+                { text: `RECOMENDACIONES:`, bold: true },
+                ...audiometria.recomendacionesAudiometria.flatMap(
+                  (item, index) => [
+                    { text: `   ${index + 1}. `, preserveLeadingSpaces: true },
+                    { text: item, bold: false },
+                  ],
+                ),
+              ],
+              margin: [0, 0, 0, 10] as [number, number, number, number],
+              style: 'paragraph',
+            },
+          ]
+        : []),
     ],
     // Pie de pagina
     footer: {
@@ -719,72 +882,80 @@ export const audiometriaInforme = (
             {
               text: [
                 // Nombre y título profesional
-                (firmanteActivo?.tituloProfesional && firmanteActivo?.nombre)
+                firmanteActivo?.tituloProfesional && firmanteActivo?.nombre
                   ? {
                       text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
                       bold: true,
                     }
                   : null,
-              
+
                 // Cédula profesional (para médicos y enfermeras)
                 firmanteActivo?.numeroCedulaProfesional
                   ? {
-                      text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : proveedorSalud.pais === 'GT'
-                        ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                          : proveedorSalud.pais === 'GT'
+                            ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                            : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Cédula de especialista (solo para médicos)
-                (usarMedico && medicoFirmante?.numeroCedulaEspecialista)
+                usarMedico && medicoFirmante?.numeroCedulaEspecialista
                   ? {
-                      text: proveedorSalud.pais === 'MX'
-                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Credencial adicional
-                (firmanteActivo?.nombreCredencialAdicional && firmanteActivo?.numeroCredencialAdicional)
-                ? {
-                    text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                    bold: false,
-                  }
-                : null,
-                
-                // Texto específico para enfermeras
-                (usarEnfermera && enfermeraFirmante?.sexo)
+                firmanteActivo?.nombreCredencialAdicional &&
+                firmanteActivo?.numeroCredencialAdicional
                   ? {
-                      text: enfermeraFirmante.sexo === 'Femenino' 
-                        ? 'Enfermera responsable del estudio\n'
-                        : 'Enfermero responsable del estudio\n',
+                      text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                      bold: false,
+                    }
+                  : null,
+
+                // Texto específico para enfermeras
+                usarEnfermera && enfermeraFirmante?.sexo
+                  ? {
+                      text:
+                        enfermeraFirmante.sexo === 'Femenino'
+                          ? 'Enfermera responsable del estudio\n'
+                          : 'Enfermero responsable del estudio\n',
                       bold: false,
                     }
                   : null,
 
                 // Texto específico para técnicos
-                (usarTecnico && tecnicoFirmante?.sexo)
+                usarTecnico && tecnicoFirmante?.sexo
                   ? {
-                      text: tecnicoFirmante.sexo === 'Femenino' 
-                        ? 'Responsable del estudio\n'
-                        : 'Responsable del estudio\n',
+                      text:
+                        tecnicoFirmante.sexo === 'Femenino'
+                          ? 'Responsable del estudio\n'
+                          : 'Responsable del estudio\n',
                       bold: false,
                     }
                   : null,
-                
-              ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe        
+              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(firmanteActivo?.firma?.data ? [{
-              ...firma,
-              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
-            }] : []),
+            ...(firmanteActivo?.firma?.data
+              ? [
+                  {
+                    ...firma,
+                    margin: [0, -3, 0, 0] as [number, number, number, number], // Mueve el elemento más arriba
+                  },
+                ]
+              : []),
             {
               text: [
                 proveedorSalud.nombre
@@ -794,7 +965,7 @@ export const audiometriaInforme = (
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.direccion
                   ? {
                       text: `${proveedorSalud.direccion}\n`,
@@ -802,15 +973,17 @@ export const audiometriaInforme = (
                       italics: true,
                     }
                   : null,
-              
-                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+
+                proveedorSalud.municipio &&
+                proveedorSalud.estado &&
+                proveedorSalud.telefono
                   ? {
                       text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.sitioWeb
                   ? {
                       text: `${proveedorSalud.sitioWeb}`,
@@ -820,7 +993,7 @@ export const audiometriaInforme = (
                       color: 'blue',
                     }
                   : null,
-              ].filter(item => item !== null),  // Elimina los elementos nulos
+              ].filter((item) => item !== null), // Elimina los elementos nulos
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],

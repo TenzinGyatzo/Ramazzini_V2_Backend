@@ -6,14 +6,17 @@ import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.m
 import { MongooseModule } from '@nestjs/mongoose';
 import { Suscripcion, SuscripcionSchema } from './schemas/suscripcion.schema';
 import { Pago, PagoSchema } from './schemas/pago.schema';
-import { ProveedorSalud, ProveedorSaludSchema } from '../proveedores-salud/schemas/proveedor-salud.schema';
+import {
+  ProveedorSalud,
+  ProveedorSaludSchema,
+} from '../proveedores-salud/schemas/proveedor-salud.schema';
 import { EmailsModule } from '../emails/emails.module';
 
 @Module({
   providers: [PagosService],
   controllers: [PagosController],
   imports: [
-    UsersModule, 
+    UsersModule,
     ProveedoresSaludModule,
     EmailsModule,
     MongooseModule.forFeature([
@@ -24,4 +27,3 @@ import { EmailsModule } from '../emails/emails.module';
   ],
 })
 export class PagosModule {}
-

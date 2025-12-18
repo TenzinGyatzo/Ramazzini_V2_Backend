@@ -85,7 +85,7 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono || telefono.length !== 10) {
-    return 'Teléfono inválido';  // Mensaje de error si el número no tiene 10 dígitos
+    return 'Teléfono inválido'; // Mensaje de error si el número no tiene 10 dígitos
   }
   return `(${telefono.slice(0, 3)}) ${telefono.slice(3, 6)} ${telefono.slice(6)}`;
 }
@@ -110,7 +110,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -138,7 +138,6 @@ export const dashboardInforme = (
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
 
@@ -148,12 +147,20 @@ export const dashboardInforme = (
   };
 
   const firma: Content = medicoFirmante.firma?.data
-  ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 65 }
-  : { text: '' };
+    ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 65 }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   return {
     pageSize: 'LETTER',
@@ -252,7 +259,7 @@ export const dashboardInforme = (
         },
         margin: [0, 0, 0, 10],
       },
-        ],
+    ],
     // Pie de pagina
     footer: {
       stack: [
@@ -289,39 +296,41 @@ export const dashboardInforme = (
                       bold: true,
                     }
                   : null,
-              
+
                 medicoFirmante.numeroCedulaProfesional
                   ? {
-                      text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`
+                          : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 medicoFirmante.numeroCedulaEspecialista
                   ? {
-                      text: proveedorSalud.pais === 'MX'
-                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,
-              
-                medicoFirmante.nombreCredencialAdicional && medicoFirmante.numeroCredencialAdicional
-                ? {
-                    text: `${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).substring(0, 60)}${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                    bold: false,
-                  }
-                : null,
-                
-              ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe        
+
+                medicoFirmante.nombreCredencialAdicional &&
+                medicoFirmante.numeroCredencialAdicional
+                  ? {
+                      text: `${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).substring(0, 60)}${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                      bold: false,
+                    }
+                  : null,
+              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             {
               ...firma,
-              margin: [0, -3, 0, 0],  // Mueve el elemento más arriba
+              margin: [0, -3, 0, 0], // Mueve el elemento más arriba
             },
             {
               text: [
@@ -332,7 +341,7 @@ export const dashboardInforme = (
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.direccion
                   ? {
                       text: `${proveedorSalud.direccion}\n`,
@@ -340,15 +349,17 @@ export const dashboardInforme = (
                       italics: true,
                     }
                   : null,
-              
-                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+
+                proveedorSalud.municipio &&
+                proveedorSalud.estado &&
+                proveedorSalud.telefono
                   ? {
                       text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.sitioWeb
                   ? {
                       text: `${proveedorSalud.sitioWeb}`,
@@ -358,7 +369,7 @@ export const dashboardInforme = (
                       color: 'blue',
                     }
                   : null,
-              ].filter(item => item !== null),  // Elimina los elementos nulos
+              ].filter((item) => item !== null), // Elimina los elementos nulos
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],

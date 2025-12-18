@@ -1,49 +1,55 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
+import { Trabajador } from '../../trabajadores/schemas/trabajador.schema';
 import { User } from 'src/modules/users/entities/user.entity';
 import { DocumentoEstado } from '../enums/documento-estado.enum';
 
 @Schema()
 export class Receta extends Document {
+  @Prop({ required: true })
+  fechaReceta: Date;
 
-    @Prop({ required: true })
-    fechaReceta: Date;
+  @Prop({ type: [String] })
+  tratamiento: string[];
 
-    @Prop({ type: [String]})
-    tratamiento: string[];
+  @Prop({ type: [String] })
+  recomendaciones: string[];
 
-    @Prop({ type: [String]})
-    recomendaciones: string[];
+  @Prop()
+  indicaciones: string;
 
-    @Prop()
-    indicaciones: string;
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Trabajador',
+    required: true,
+  })
+  idTrabajador: Trabajador;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
-    idTrabajador: Trabajador;
+  @Prop({ required: true })
+  rutaPDF: string;
 
-    @Prop({ required: true })
-    rutaPDF: string;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  createdBy: User;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    createdBy: User;
-  
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    updatedBy: User;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  updatedBy: User;
 
-    // Document State Management (NOM-024)
-    @Prop({ 
-        enum: DocumentoEstado, 
-        required: true, 
-        default: DocumentoEstado.BORRADOR 
-    })
-    estado: DocumentoEstado;
+  // Document State Management (NOM-024)
+  @Prop({
+    enum: DocumentoEstado,
+    required: true,
+    default: DocumentoEstado.BORRADOR,
+  })
+  estado: DocumentoEstado;
 
-    @Prop({ required: false })
-    fechaFinalizacion?: Date;
+  @Prop({ required: false })
+  fechaFinalizacion?: Date;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
-    finalizadoPor?: User;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
+  finalizadoPor?: User;
 }
 
-export const RecetaSchema = SchemaFactory.createForClass(Receta).set('timestamps', true);
+export const RecetaSchema = SchemaFactory.createForClass(Receta).set(
+  'timestamps',
+  true,
+);

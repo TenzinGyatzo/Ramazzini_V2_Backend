@@ -36,7 +36,9 @@ export class PdfCleanerService {
     this.logger.log(`🔎 Candidatos encontrados: ${archivosAntiguos.length}`);
     for (const archivo of archivosAntiguos) {
       const { fullPath, sizeMB, createdAt } = archivo;
-      this.logger.log(`🗂 ${fullPath} — ${sizeMB.toFixed(2)} MB — Creado: ${createdAt.toLocaleDateString()}`);
+      this.logger.log(
+        `🗂 ${fullPath} — ${sizeMB.toFixed(2)} MB — Creado: ${createdAt.toLocaleDateString()}`,
+      );
     }
     if (!this.modoPrueba && archivosAntiguos.length > 0) {
       await this.eliminarYLoggearArchivos(archivosAntiguos);
@@ -45,10 +47,11 @@ export class PdfCleanerService {
 
   private readonly modoPrueba = false; // Cambia a true para pruebas locales
 
-  private async buscarPDFsAntiguos(dir: string): Promise<
-    { fullPath: string; sizeMB: number; createdAt: Date }[]
-  > {
-    let resultados: { fullPath: string; sizeMB: number; createdAt: Date }[] = [];
+  private async buscarPDFsAntiguos(
+    dir: string,
+  ): Promise<{ fullPath: string; sizeMB: number; createdAt: Date }[]> {
+    let resultados: { fullPath: string; sizeMB: number; createdAt: Date }[] =
+      [];
 
     try {
       const elementos = await fs.readdir(dir, { withFileTypes: true });
@@ -84,7 +87,8 @@ export class PdfCleanerService {
             const edadEnDias = this.calcularDiasDesde(createdAt);
             // this.logger.log(`📅 ${el.name} => edad en días: ${edadEnDias.toFixed(1)}`);
 
-            if (edadEnDias >= 30) { // 30 días = aproximadamente 1 mes
+            if (edadEnDias >= 30) {
+              // 30 días = aproximadamente 1 mes
               resultados.push({
                 fullPath,
                 sizeMB: stat.size / (1024 * 1024),
@@ -102,11 +106,11 @@ export class PdfCleanerService {
   }
 
   private esInformeGeneradoPorRamazzini(nombre: string): boolean {
-    return this.tiposValidos.some((tipo) => nombre.startsWith(tipo + ' ')) &&
-      /^.+ \d{2}-\d{2}-\d{4}\.pdf$/.test(nombre);
+    return (
+      this.tiposValidos.some((tipo) => nombre.startsWith(tipo + ' ')) &&
+      /^.+ \d{2}-\d{2}-\d{4}\.pdf$/.test(nombre)
+    );
   }
-
-
 
   private calcularDiasDesde(fecha: Date): number {
     const ahora = new Date();
@@ -133,7 +137,9 @@ export class PdfCleanerService {
         logLines.push(lineaLog);
         // this.logger.log(`🗑️  ${lineaLog}`);
       } catch (err) {
-        this.logger.error(`❌ No se pudo eliminar ${archivo.fullPath}: ${err.message}`);
+        this.logger.error(
+          `❌ No se pudo eliminar ${archivo.fullPath}: ${err.message}`,
+        );
       }
     }
 
@@ -143,7 +149,10 @@ export class PdfCleanerService {
     this.logger.log(`🧹 ${resumen}`);
 
     // Guardar en archivo local
-    const logPath = path.resolve('logs', `eliminados-${this.formatearFechaHoy()}.log`);
+    const logPath = path.resolve(
+      'logs',
+      `eliminados-${this.formatearFechaHoy()}.log`,
+    );
     await fs.mkdir(path.dirname(logPath), { recursive: true });
     await fs.writeFile(logPath, logLines.join('\n'), { flag: 'a' });
   }
@@ -155,7 +164,4 @@ export class PdfCleanerService {
     const anio = hoy.getFullYear();
     return `${dia}-${mes}-${anio}`;
   }
-
 }
-
-

@@ -1,129 +1,136 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
+import { Trabajador } from '../../trabajadores/schemas/trabajador.schema';
 import { User } from 'src/modules/users/entities/user.entity';
 import { DocumentoEstado } from '../enums/documento-estado.enum';
 
-const metodoAudiometriaOpciones = ["AMA", "LFT"];
+const metodoAudiometriaOpciones = ['AMA', 'LFT'];
 
 @Schema()
 export class Audiometria extends Document {
-    @Prop({ required: true })
-    fechaAudiometria: Date;
+  @Prop({ required: true })
+  fechaAudiometria: Date;
 
-    @Prop({ enum: metodoAudiometriaOpciones })
-    metodoAudiometria: string;
+  @Prop({ enum: metodoAudiometriaOpciones })
+  metodoAudiometria: string;
 
-    @Prop()
-    oidoDerecho125?: number;
-  
-    @Prop()
-    oidoDerecho250?: number;
+  @Prop()
+  oidoDerecho125?: number;
 
-    @Prop()
-    oidoDerecho500?: number;
-  
-    @Prop()
-    oidoDerecho1000?: number;
+  @Prop()
+  oidoDerecho250?: number;
 
-    @Prop()
-    oidoDerecho2000?: number;
-  
-    @Prop()
-    oidoDerecho3000?: number;
+  @Prop()
+  oidoDerecho500?: number;
 
-    @Prop()
-    oidoDerecho4000?: number;
-  
-    @Prop()
-    oidoDerecho6000?: number;
+  @Prop()
+  oidoDerecho1000?: number;
 
-    @Prop()
-    oidoDerecho8000?: number;
+  @Prop()
+  oidoDerecho2000?: number;
 
-    @Prop()
-    porcentajePerdidaOD?: number;
+  @Prop()
+  oidoDerecho3000?: number;
 
-    // Campos específicos para AMA
-    @Prop()
-    perdidaAuditivaBilateralAMA?: number;
+  @Prop()
+  oidoDerecho4000?: number;
 
-    @Prop()
-    perdidaMonauralOD_AMA?: number;
+  @Prop()
+  oidoDerecho6000?: number;
 
-    @Prop()
-    perdidaMonauralOI_AMA?: number;
+  @Prop()
+  oidoDerecho8000?: number;
 
-    @Prop()
-    oidoIzquierdo125?: number;
-  
-    @Prop()
-    oidoIzquierdo250?: number;
+  @Prop()
+  porcentajePerdidaOD?: number;
 
-    @Prop()
-    oidoIzquierdo500?: number;
-  
-    @Prop()
-    oidoIzquierdo1000?: number;
+  // Campos específicos para AMA
+  @Prop()
+  perdidaAuditivaBilateralAMA?: number;
 
-    @Prop()
-    oidoIzquierdo2000?: number;
-  
-    @Prop()
-    oidoIzquierdo3000?: number;
+  @Prop()
+  perdidaMonauralOD_AMA?: number;
 
-    @Prop()
-    oidoIzquierdo4000?: number;
-  
-    @Prop()
-    oidoIzquierdo6000?: number;
+  @Prop()
+  perdidaMonauralOI_AMA?: number;
 
-    @Prop()
-    oidoIzquierdo8000?: number;
+  @Prop()
+  oidoIzquierdo125?: number;
 
-    @Prop()
-    porcentajePerdidaOI?: number;
+  @Prop()
+  oidoIzquierdo250?: number;
 
-    @Prop()
-    hipoacusiaBilateralCombinada?: number;
-  
-    @Prop()
-    observacionesAudiometria?: string;
+  @Prop()
+  oidoIzquierdo500?: number;
 
-    @Prop()
-    interpretacionAudiometrica?: string;
+  @Prop()
+  oidoIzquierdo1000?: number;
 
-    @Prop()
-    diagnosticoAudiometria?: string;
+  @Prop()
+  oidoIzquierdo2000?: number;
 
-    @Prop({ type: [String]})
-    recomendacionesAudiometria?: string[];
+  @Prop()
+  oidoIzquierdo3000?: number;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
-    idTrabajador: Trabajador;
+  @Prop()
+  oidoIzquierdo4000?: number;
 
-    @Prop({ required: true })
-    rutaPDF: string;
+  @Prop()
+  oidoIzquierdo6000?: number;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    createdBy: User;
-  
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    updatedBy: User;
+  @Prop()
+  oidoIzquierdo8000?: number;
 
-    // Document State Management (NOM-024)
-    @Prop({ 
-        enum: DocumentoEstado, 
-        required: true, 
-        default: DocumentoEstado.BORRADOR 
-    })
-    estado: DocumentoEstado;
+  @Prop()
+  porcentajePerdidaOI?: number;
 
-    @Prop({ required: false })
-    fechaFinalizacion?: Date;
+  @Prop()
+  hipoacusiaBilateralCombinada?: number;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
-    finalizadoPor?: User;
+  @Prop()
+  observacionesAudiometria?: string;
+
+  @Prop()
+  interpretacionAudiometrica?: string;
+
+  @Prop()
+  diagnosticoAudiometria?: string;
+
+  @Prop({ type: [String] })
+  recomendacionesAudiometria?: string[];
+
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Trabajador',
+    required: true,
+  })
+  idTrabajador: Trabajador;
+
+  @Prop({ required: true })
+  rutaPDF: string;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  createdBy: User;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  updatedBy: User;
+
+  // Document State Management (NOM-024)
+  @Prop({
+    enum: DocumentoEstado,
+    required: true,
+    default: DocumentoEstado.BORRADOR,
+  })
+  estado: DocumentoEstado;
+
+  @Prop({ required: false })
+  fechaFinalizacion?: Date;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
+  finalizadoPor?: User;
 }
 
-export const AudiometriaSchema = SchemaFactory.createForClass(Audiometria).set('timestamps', true);
+export const AudiometriaSchema = SchemaFactory.createForClass(Audiometria).set(
+  'timestamps',
+  true,
+);

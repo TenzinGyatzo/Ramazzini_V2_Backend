@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
+import { Trabajador } from '../../trabajadores/schemas/trabajador.schema';
 import { User } from 'src/modules/users/entities/user.entity';
 import { DocumentoEstado } from '../enums/documento-estado.enum';
 
@@ -221,10 +221,10 @@ export class ExploracionFisica extends Document {
   updatedBy: User;
 
   // Document State Management (NOM-024)
-  @Prop({ 
-      enum: DocumentoEstado, 
-      required: true, 
-      default: DocumentoEstado.BORRADOR 
+  @Prop({
+    enum: DocumentoEstado,
+    required: true,
+    default: DocumentoEstado.BORRADOR,
   })
   estado: DocumentoEstado;
 
@@ -235,4 +235,6 @@ export class ExploracionFisica extends Document {
   finalizadoPor?: User;
 }
 
-export const ExploracionFisicaSchema = SchemaFactory.createForClass(ExploracionFisica).set('timestamps', true);
+export const ExploracionFisicaSchema = SchemaFactory.createForClass(
+  ExploracionFisica,
+).set('timestamps', true);

@@ -1,100 +1,101 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Trabajador } from 'src/modules/trabajadores/entities/trabajador.entity';
+import { Trabajador } from '../../trabajadores/schemas/trabajador.schema';
 import { User } from 'src/modules/users/entities/user.entity';
 import { DocumentoEstado } from '../enums/documento-estado.enum';
 
-const gradosSalud = [
-    'Óptimo',
-    'Bueno',
-    'Regular',
-    'Malo'
-  ]
+const gradosSalud = ['Óptimo', 'Bueno', 'Regular', 'Malo'];
 
 const tipoAptitud = [
-    "Apto Sin Restricciones",
-    "Apto Con Precaución",
-    "Apto Con Restricciones",
-    "No Apto",
-    "Evaluación No Completada",
-  ];
+  'Apto Sin Restricciones',
+  'Apto Con Precaución',
+  'Apto Con Restricciones',
+  'No Apto',
+  'Evaluación No Completada',
+];
 
 @Schema()
 export class CertificadoExpedito extends Document {
-    @Prop({ required: true })
-    fechaCertificadoExpedito: Date
+  @Prop({ required: true })
+  fechaCertificadoExpedito: Date;
 
-    @Prop({ required: true })
-    cuerpoCertificado: string
-    
-    @Prop()
-    impedimentosFisicos: string
+  @Prop({ required: true })
+  cuerpoCertificado: string;
 
-    // Somatometría
-    @Prop()
-    peso: number;
+  @Prop()
+  impedimentosFisicos: string;
 
-    @Prop()
-    altura: number;
+  // Somatometría
+  @Prop()
+  peso: number;
 
-    @Prop()
-    indiceMasaCorporal: number;
+  @Prop()
+  altura: number;
 
-    // Signos Vitales
-    @Prop()
-    tensionArterialSistolica: number;
+  @Prop()
+  indiceMasaCorporal: number;
 
-    @Prop()
-    tensionArterialDiastolica: number;
+  // Signos Vitales
+  @Prop()
+  tensionArterialSistolica: number;
 
-    @Prop()
-    frecuenciaCardiaca: number;
+  @Prop()
+  tensionArterialDiastolica: number;
 
-    @Prop()
-    frecuenciaRespiratoria: number;
+  @Prop()
+  frecuenciaCardiaca: number;
 
-    @Prop()
-    temperaturaCorporal: number;
+  @Prop()
+  frecuenciaRespiratoria: number;
 
-    // Conclusión
-    @Prop({ enum: gradosSalud })
-    gradoSalud: string;
+  @Prop()
+  temperaturaCorporal: number;
 
-    @Prop({ enum: tipoAptitud })
-    aptitudPuesto: string;
+  // Conclusión
+  @Prop({ enum: gradosSalud })
+  gradoSalud: string;
 
-    @Prop()
-    descripcionSobreAptitud: string;
+  @Prop({ enum: tipoAptitud })
+  aptitudPuesto: string;
 
-    @Prop() // Aquí puede agregar la info sobre la vacunacion vs COVID
-    observaciones: string; 
+  @Prop()
+  descripcionSobreAptitud: string;
 
-    // Identificación
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
-    idTrabajador: Trabajador;
+  @Prop() // Aquí puede agregar la info sobre la vacunacion vs COVID
+  observaciones: string;
 
-    @Prop({ required: true })
-    rutaPDF: string;
+  // Identificación
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Trabajador',
+    required: true,
+  })
+  idTrabajador: Trabajador;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    createdBy: User;
-  
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    updatedBy: User;
+  @Prop({ required: true })
+  rutaPDF: string;
 
-    // Document State Management (NOM-024)
-    @Prop({ 
-        enum: DocumentoEstado, 
-        required: true, 
-        default: DocumentoEstado.BORRADOR 
-    })
-    estado: DocumentoEstado;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  createdBy: User;
 
-    @Prop({ required: false })
-    fechaFinalizacion?: Date;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  updatedBy: User;
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
-    finalizadoPor?: User;
+  // Document State Management (NOM-024)
+  @Prop({
+    enum: DocumentoEstado,
+    required: true,
+    default: DocumentoEstado.BORRADOR,
+  })
+  estado: DocumentoEstado;
+
+  @Prop({ required: false })
+  fechaFinalizacion?: Date;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
+  finalizadoPor?: User;
 }
 
-export const CertificadoExpeditoSchema = SchemaFactory.createForClass(CertificadoExpedito).set('timestamps', true);
+export const CertificadoExpeditoSchema = SchemaFactory.createForClass(
+  CertificadoExpedito,
+).set('timestamps', true);

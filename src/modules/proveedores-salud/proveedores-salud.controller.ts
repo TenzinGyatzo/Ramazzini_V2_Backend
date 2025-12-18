@@ -72,7 +72,6 @@ export class ProveedoresSaludController {
     @Body() createProveedoresSaludDto: CreateProveedoresSaludDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-
     try {
       if (file) {
         createProveedoresSaludDto.logotipoEmpresa = {
@@ -213,15 +212,17 @@ export class ProveedoresSaludController {
 
     // Verificar si la fecha actual es posterior a la fecha límite
     if (isAfter(new Date(), fechaLimite)) {
-      console.log(`El periodo de prueba de ${proveedorSalud.nombre} ha finalizado el ${fechaLimite}`);
+      console.log(
+        `El periodo de prueba de ${proveedorSalud.nombre} ha finalizado el ${fechaLimite}`,
+      );
       // Si el periodo ha finalizado y no está marcado, actualizarlo
       if (!proveedorSalud.periodoDePruebaFinalizado) {
         const updatedProveedorSalud = await this.proveedoresSaludService.update(
           id,
-          { 
+          {
             periodoDePruebaFinalizado: true,
-            fechaInicioTrial: proveedorSalud.fechaInicioTrial
-          }
+            fechaInicioTrial: proveedorSalud.fechaInicioTrial,
+          },
         );
 
         if (!updatedProveedorSalud) {
@@ -250,15 +251,15 @@ export class ProveedoresSaludController {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
-  
+
     const proveedorSalud = await this.proveedoresSaludService.findOne(id);
-  
+
     if (!proveedorSalud) {
       throw new NotFoundException('No se encontró el proveedor de salud');
     }
-  
+
     const finDeSuscripcion = proveedorSalud.finDeSuscripcion; // Quince días después de la fecha de inicio del periodo de prueba
-  
+
     // Verificar si la fecha actual es posterior a la fecha límite
     if (isAfter(new Date(), finDeSuscripcion)) {
       console.log(`La suscripción ha finalizado el ${finDeSuscripcion}`);
@@ -266,21 +267,21 @@ export class ProveedoresSaludController {
       if (proveedorSalud.finDeSuscripcion) {
         const updatedProveedorSalud = await this.proveedoresSaludService.update(
           id,
-          { 
+          {
             // maxUsuariosPermitidos: 1,
             // maxEmpresasPermitidas: 0,
             // maxTrabajadoresPermitidos: 0,
             maxHistoriasPermitidasAlMes: 0,
             addOns: [],
-          }
+          },
         );
-  
+
         if (!updatedProveedorSalud) {
           return {
             message: 'No se pudo actualizar el proveedor de salud',
           };
         }
-  
+
         return {
           message: 'El proveedor de salud ha finalizado su periodo de prueba',
           data: updatedProveedorSalud,
@@ -289,7 +290,7 @@ export class ProveedoresSaludController {
     } else {
       console.log('La suscripción sigue activa');
     }
-  
+
     return {
       message: 'La suscripción sigue activa',
       data: proveedorSalud,
@@ -298,26 +299,40 @@ export class ProveedoresSaludController {
 
   @Get('/top-empresas-por-trabajadores/:idProveedorSalud')
   async getTopEmpresas(@Param('idProveedorSalud') idProveedorSalud: string) {
-    return this.proveedoresSaludService.getTopEmpresasByWorkers(idProveedorSalud);
+    return this.proveedoresSaludService.getTopEmpresasByWorkers(
+      idProveedorSalud,
+    );
   }
 
   @Get('/historias-clinicas-del-mes/:idProveedorSalud')
-  async getHistoriasClinicasDelMes(@Param('idProveedorSalud') idProveedorSalud: string) {
-    return this.proveedoresSaludService.getHistoriasClinicasDelMes(idProveedorSalud);
+  async getHistoriasClinicasDelMes(
+    @Param('idProveedorSalud') idProveedorSalud: string,
+  ) {
+    return this.proveedoresSaludService.getHistoriasClinicasDelMes(
+      idProveedorSalud,
+    );
   }
 
   @Get('/notas-medicas-del-mes/:idProveedorSalud')
-  async getNotasMedicasDelMes(@Param('idProveedorSalud') idProveedorSalud: string) {
+  async getNotasMedicasDelMes(
+    @Param('idProveedorSalud') idProveedorSalud: string,
+  ) {
     return this.proveedoresSaludService.getNotasMedicasDelMes(idProveedorSalud);
   }
-  
+
   @Get('/cantidad-historias-clinicas/:idProveedorSalud')
-  async getTodasHistoriasClinicas(@Param('idProveedorSalud') idProveedorSalud: string) {
-    return this.proveedoresSaludService.getTodasHistoriasClinicas(idProveedorSalud);
+  async getTodasHistoriasClinicas(
+    @Param('idProveedorSalud') idProveedorSalud: string,
+  ) {
+    return this.proveedoresSaludService.getTodasHistoriasClinicas(
+      idProveedorSalud,
+    );
   }
 
   @Get('/cantidad-notas-medicas/:idProveedorSalud')
-  async getTodasNotasMedicas(@Param('idProveedorSalud') idProveedorSalud: string) {
+  async getTodasNotasMedicas(
+    @Param('idProveedorSalud') idProveedorSalud: string,
+  ) {
     return this.proveedoresSaludService.getTodasNotasMedicas(idProveedorSalud);
   }
 
@@ -336,7 +351,7 @@ export class ProveedoresSaludController {
       const logoPath = path.resolve(
         __dirname,
         `../../../../${process.env.PROVIDERS_UPLOADS_DIR}`,
-        filename
+        filename,
       );
 
       // Verificar que el archivo existe
@@ -346,7 +361,7 @@ export class ProveedoresSaludController {
 
       // Leer el archivo
       const file = fs.createReadStream(logoPath);
-      
+
       // Determinar el tipo de contenido basado en la extensión
       const ext = path.extname(filename).toLowerCase();
       let contentType = 'image/png';
@@ -373,7 +388,8 @@ export class ProveedoresSaludController {
   @Patch('/reglas-puntaje/:idProveedorSalud')
   async updateReglasPuntaje(
     @Param('idProveedorSalud') idProveedorSalud: string,
-    @Body() reglasPuntaje: {
+    @Body()
+    reglasPuntaje: {
       aptitudes: number;
       historias: number;
       exploraciones: number;
@@ -382,12 +398,14 @@ export class ProveedoresSaludController {
       antidopings: number;
       notas: number;
       externos: number;
-    }
+    },
   ) {
     if (!isValidObjectId(idProveedorSalud)) {
       throw new BadRequestException('ID de proveedor de salud inválido');
     }
-    return this.proveedoresSaludService.updateReglasPuntaje(idProveedorSalud, reglasPuntaje);
+    return this.proveedoresSaludService.updateReglasPuntaje(
+      idProveedorSalud,
+      reglasPuntaje,
+    );
   }
-
 }

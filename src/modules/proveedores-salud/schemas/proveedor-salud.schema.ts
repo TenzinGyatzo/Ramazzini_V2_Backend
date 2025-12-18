@@ -7,7 +7,7 @@ const perfiles = [
   'Empresa de salud ocupacional',
   'Equipo Médico Interno de la Empresa',
   'Otro',
-]
+];
 
 interface Logotipo {
   data: string;
@@ -18,13 +18,13 @@ interface Logotipo {
 export class ProveedorSalud extends Document {
   @Prop({ required: true })
   nombre: string;
-  @Prop({ required: true }) 
+  @Prop({ required: true })
   pais: string;
   @Prop({ required: true, enum: perfiles })
   perfilProveedorSalud: string;
   // NOM-024: CLUES (Clave Única de Establecimiento de Salud)
   // 11 alphanumeric characters, required for MX providers
-  @Prop({ 
+  @Prop({
     required: false,
     match: /^$|^[A-Z0-9]{11}$/,
   })
@@ -62,10 +62,10 @@ export class ProveedorSalud extends Document {
   termsVersion: string;
 
   // **Información de periodo de prueba y límites**
-  @Prop({ default: new Date() }) 
+  @Prop({ default: new Date() })
   fechaInicioTrial: Date; // Fecha de inicio de los 15 días de prueba
 
-  @Prop({ default: false }) 
+  @Prop({ default: false })
   periodoDePruebaFinalizado: boolean; // Indica si han pasado los 15 días de prueba
 
   @Prop({ default: 25 })
@@ -95,7 +95,7 @@ export class ProveedorSalud extends Document {
   @Prop()
   suscripcionActiva: string; // id de la suscripcion con estado 'authorized'
 
-  @Prop() 
+  @Prop()
   estadoSuscripcion: string; // 'inactive', 'authorized', 'cancelled'
 
   @Prop()
@@ -111,7 +111,7 @@ export class ProveedorSalud extends Document {
       audiometrias: { type: Number, default: 1 },
       antidopings: { type: Number, default: 1 },
       notas: { type: Number, default: 2 },
-      externos: { type: Number, default: 0 }
+      externos: { type: Number, default: 0 },
     },
     default: {
       aptitudes: 3,
@@ -121,8 +121,8 @@ export class ProveedorSalud extends Document {
       audiometrias: 1,
       antidopings: 1,
       notas: 2,
-      externos: 0
-    }
+      externos: 0,
+    },
   })
   reglasPuntaje: {
     aptitudes: number;
@@ -136,4 +136,5 @@ export class ProveedorSalud extends Document {
   };
 }
 
-export const ProveedorSaludSchema = SchemaFactory.createForClass(ProveedorSalud);
+export const ProveedorSaludSchema =
+  SchemaFactory.createForClass(ProveedorSalud);

@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { TecnicoFirmante, TecnicoFirmanteSchema } from './schemas/tecnico-firmante.schema';
+import {
+  TecnicoFirmante,
+  TecnicoFirmanteSchema,
+} from './schemas/tecnico-firmante.schema';
 import { TecnicosFirmantesController } from './tecnicos-firmantes.controller';
 import { TecnicosFirmantesService } from './tecnicos-firmantes.service';
 
@@ -15,5 +18,3 @@ import { TecnicosFirmantesService } from './tecnicos-firmantes.service';
   exports: [TecnicosFirmantesService],
 })
 export class TecnicosFirmantesModule {}
-
-

@@ -133,7 +133,9 @@ export class UsersController {
 
     // Revisar si la cuenta está activa
     if (!user.cuentaActiva) {
-      throw new UnauthorizedException('Tu cuenta ha sido suspendida. Contacta al administrador.');
+      throw new UnauthorizedException(
+        'Tu cuenta ha sido suspendida. Contacta al administrador.',
+      );
     }
 
     // Comprobar el password utilizando el método definido en el esquema
@@ -245,17 +247,20 @@ export class UsersController {
   async getAllProductivityStats(
     @Res() res: Response,
     @Query('fechaInicio') fechaInicio?: string,
-    @Query('fechaFin') fechaFin?: string
+    @Query('fechaFin') fechaFin?: string,
   ) {
     try {
       const stats = await this.usersService.getAllProductivityStats(
-        fechaInicio, 
-        fechaFin
+        fechaInicio,
+        fechaFin,
       );
       res.json(stats);
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: 'Error al obtener estadísticas de productividad de todos los usuarios' });
+      res.status(500).json({
+        message:
+          'Error al obtener estadísticas de productividad de todos los usuarios',
+      });
     }
   }
 
@@ -264,18 +269,20 @@ export class UsersController {
     @Param('idProveedorSalud') idProveedorSalud: string,
     @Res() res: Response,
     @Query('fechaInicio') fechaInicio?: string,
-    @Query('fechaFin') fechaFin?: string
+    @Query('fechaFin') fechaFin?: string,
   ) {
     try {
       const stats = await this.usersService.getProductivityStatsByProveedor(
-        idProveedorSalud, 
-        fechaInicio, 
-        fechaFin
+        idProveedorSalud,
+        fechaInicio,
+        fechaFin,
       );
       res.json(stats);
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: 'Error al obtener estadísticas de productividad' });
+      res
+        .status(500)
+        .json({ message: 'Error al obtener estadísticas de productividad' });
     }
   }
 
@@ -284,14 +291,20 @@ export class UsersController {
     @Param('userId') userId: string,
     @Res() res: Response,
     @Query('fechaInicio') fechaInicio?: string,
-    @Query('fechaFin') fechaFin?: string
+    @Query('fechaFin') fechaFin?: string,
   ) {
     try {
-      const stats = await this.usersService.getUserDetailedStats(userId, fechaInicio, fechaFin);
+      const stats = await this.usersService.getUserDetailedStats(
+        userId,
+        fechaInicio,
+        fechaFin,
+      );
       res.json(stats);
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: 'Error al obtener estadísticas del usuario' });
+      res
+        .status(500)
+        .json({ message: 'Error al obtener estadísticas del usuario' });
     }
   }
 
@@ -331,10 +344,13 @@ export class UsersController {
   async updateUserPermissions(
     @Param('userId') userId: string,
     @Body() updatePermissionsDto: UpdatePermissionsDto,
-    @Res() res: Response
+    @Res() res: Response,
   ) {
     try {
-      const user = await this.usersService.updateUserPermissions(userId, updatePermissionsDto);
+      const user = await this.usersService.updateUserPermissions(
+        userId,
+        updatePermissionsDto,
+      );
       if (!user) {
         return res.status(404).json({ msg: 'Usuario no encontrado' });
       }
@@ -349,10 +365,13 @@ export class UsersController {
   async toggleAccountStatus(
     @Param('userId') userId: string,
     @Body() body: { cuentaActiva: boolean },
-    @Res() res: Response
+    @Res() res: Response,
   ) {
     try {
-      const user = await this.usersService.toggleAccountStatus(userId, body.cuentaActiva);
+      const user = await this.usersService.toggleAccountStatus(
+        userId,
+        body.cuentaActiva,
+      );
       if (!user) {
         return res.status(404).json({ msg: 'Usuario no encontrado' });
       }
@@ -368,10 +387,13 @@ export class UsersController {
   async updateUserAssignments(
     @Param('userId') userId: string,
     @Body() updateAssignmentsDto: UpdateAssignmentsDto,
-    @Res() res: Response
+    @Res() res: Response,
   ) {
     try {
-      const user = await this.usersService.updateUserAssignments(userId, updateAssignmentsDto);
+      const user = await this.usersService.updateUserAssignments(
+        userId,
+        updateAssignmentsDto,
+      );
       if (!user) {
         return res.status(404).json({ msg: 'Usuario no encontrado' });
       }
@@ -385,10 +407,11 @@ export class UsersController {
   @Get('asignaciones/:userId/centros-trabajo')
   async getUserCentrosTrabajo(
     @Param('userId') userId: string,
-    @Res() res: Response
+    @Res() res: Response,
   ) {
     try {
-      const centrosTrabajo = await this.usersService.getUserCentrosTrabajo(userId);
+      const centrosTrabajo =
+        await this.usersService.getUserCentrosTrabajo(userId);
       res.json(centrosTrabajo || []);
     } catch (error) {
       console.error('Error al obtener centros de trabajo del usuario:', error);
@@ -399,7 +422,7 @@ export class UsersController {
   @Get('asignaciones/:userId')
   async getUserAssignments(
     @Param('userId') userId: string,
-    @Res() res: Response
+    @Res() res: Response,
   ) {
     try {
       const user = await this.usersService.getUserAssignments(userId);
@@ -408,7 +431,7 @@ export class UsersController {
       }
       res.json({
         empresasAsignadas: user.empresasAsignadas || [],
-        centrosTrabajoAsignados: user.centrosTrabajoAsignados || []
+        centrosTrabajoAsignados: user.centrosTrabajoAsignados || [],
       });
     } catch (error) {
       console.error('Error al obtener asignaciones:', error);

@@ -1,4 +1,14 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsBoolean, IsNumber, IsArray, ValidateNested, Matches } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsBoolean,
+  IsNumber,
+  IsArray,
+  ValidateNested,
+  Matches,
+} from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 const perfiles = [
@@ -35,14 +45,20 @@ export class CreateProveedoresSaludDto {
   pais: string;
 
   @IsString({ message: 'El perfil del proveedor de salud debe ser un string' })
-  @IsNotEmpty({ message: 'El perfil del proveedor de salud no puede estar vacío' })
-  @IsEnum(perfiles, { message: 'El perfil del proveedor de salud debe ser uno de los valores predefinidos' })
+  @IsNotEmpty({
+    message: 'El perfil del proveedor de salud no puede estar vacío',
+  })
+  @IsEnum(perfiles, {
+    message:
+      'El perfil del proveedor de salud debe ser uno de los valores predefinidos',
+  })
   perfilProveedorSalud: string;
 
   @IsOptional()
   @IsString({ message: 'El CLUES debe ser un string' })
   @Matches(/^$|^[A-Z0-9]{11}$/, {
-    message: 'CLUES debe tener exactamente 11 caracteres alfanuméricos (solo letras mayúsculas y números)'
+    message:
+      'CLUES debe tener exactamente 11 caracteres alfanuméricos (solo letras mayúsculas y números)',
   })
   @Transform(({ value }) => value?.toString().toUpperCase().trim() || '')
   clues?: string;
@@ -82,7 +98,7 @@ export class CreateProveedoresSaludDto {
   @IsOptional()
   @IsString({ message: 'El color del informe debe ser un string' })
   @Transform(({ value }) => value?.toString() || '#343A40')
-  colorInforme: string;
+  colorInforme?: string;
 
   @IsOptional()
   @Transform(({ value }) => {
@@ -91,17 +107,16 @@ export class CreateProveedoresSaludDto {
     }
     return Boolean(value);
   })
-  semaforizacionActivada: boolean;
+  semaforizacionActivada?: boolean;
 
   @IsBoolean({ message: 'El campo termsAccepted debe ser un booleano' })
   termsAccepted: boolean;
 
   @IsString({ message: 'El campo acceptedAt debe ser una fecha' })
-  acceptedAt: String;
+  acceptedAt: string;
 
   @IsString({ message: 'El campo termsVersion debe ser un string' })
   termsVersion: string;
-
 
   // **Campos de periodo de prueba y límites**
   @IsOptional()
@@ -109,11 +124,19 @@ export class CreateProveedoresSaludDto {
   fechaInicioTrial?: Date;
 
   @IsOptional()
-  @IsBoolean({ message: 'El campo periodoDePruebaFinalizado debe ser un booleano' })
+  @IsBoolean({
+    message: 'El campo periodoDePruebaFinalizado debe ser un booleano',
+  })
   periodoDePruebaFinalizado?: boolean;
-  
+
   @IsOptional()
-  @IsNumber({}, { message: 'El número máximo de historias permitidas al mes debe ser un número' })
+  @IsNumber(
+    {},
+    {
+      message:
+        'El número máximo de historias permitidas al mes debe ser un número',
+    },
+  )
   maxHistoriasPermitidasAlMes?: number;
 
   // @IsOptional()
@@ -134,7 +157,6 @@ export class CreateProveedoresSaludDto {
   @Type(() => AddOnDto)
   addOns?: AddOnDto[];
 
-
   // **Campos de suscripción**
   @IsOptional()
   @IsString({ message: 'La suscripcion activa debe ser un string' })
@@ -147,5 +169,4 @@ export class CreateProveedoresSaludDto {
   @IsOptional()
   @Type(() => Date)
   finDeSuscripcion?: Date;
-
 }

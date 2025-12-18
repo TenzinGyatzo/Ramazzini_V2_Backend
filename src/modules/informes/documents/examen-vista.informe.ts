@@ -90,9 +90,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -116,32 +116,31 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
 // ==================== INTERFACES ====================
-
 
 interface Trabajador {
   primerApellido: string;
@@ -196,7 +195,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface EnfermeraFirmante {
@@ -209,7 +208,7 @@ interface EnfermeraFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface TecnicoFirmante {
@@ -222,7 +221,7 @@ interface TecnicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -253,14 +252,20 @@ export const examenVistaInforme = (
   tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
-  const usarTecnico = !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
-  
+  const usarTecnico =
+    !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
+
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : (usarTecnico ? tecnicoFirmante : null));
+  const firmanteActivo = usarMedico
+    ? medicoFirmante
+    : usarEnfermera
+      ? enfermeraFirmante
+      : usarTecnico
+        ? tecnicoFirmante
+        : null;
 
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
@@ -271,12 +276,20 @@ export const examenVistaInforme = (
   };
 
   const firma: Content = firmanteActivo?.firma?.data
-  ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
-  : { text: '' };
+    ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   return {
     pageSize: 'LETTER',
@@ -374,9 +387,21 @@ export const examenVistaInforme = (
             ],
             [
               { text: '-', style: 'tableHeader', alignment: 'center' },
-              { text: 'OJO IZQUIERDO', style: 'tableHeader', alignment: 'center' },
-              { text: 'OJO DERECHO', style: 'tableHeader', alignment: 'center' },
-              { text: 'INTERPRETACIÓN', style: 'tableHeader', alignment: 'center' },
+              {
+                text: 'OJO IZQUIERDO',
+                style: 'tableHeader',
+                alignment: 'center',
+              },
+              {
+                text: 'OJO DERECHO',
+                style: 'tableHeader',
+                alignment: 'center',
+              },
+              {
+                text: 'INTERPRETACIÓN',
+                style: 'tableHeader',
+                alignment: 'center',
+              },
             ],
             // Filas de datos
             ...[
@@ -422,9 +447,10 @@ export const examenVistaInforme = (
                 text: `Requiere Lentes de Uso General: `,
               },
               {
-                text: `(${examenVista.requiereLentesUsoGeneral})`, bold: true
-              }
-            ]
+                text: `(${examenVista.requiereLentesUsoGeneral})`,
+                bold: true,
+              },
+            ],
           },
           {
             text: [
@@ -432,10 +458,11 @@ export const examenVistaInforme = (
                 text: `Requiere Lentes para Lectura: `,
               },
               {
-                text: `(${examenVista.requiereLentesParaLectura})`, bold: true
-              }
-            ]
-          }
+                text: `(${examenVista.requiereLentesParaLectura})`,
+                bold: true,
+              },
+            ],
+          },
         ],
         margin: [0, 0, 0, 12],
       },
@@ -459,9 +486,21 @@ export const examenVistaInforme = (
             ],
             [
               { text: '-', style: 'tableHeader', alignment: 'center' },
-              { text: 'OJO IZQUIERDO', style: 'tableHeader', alignment: 'center' },
-              { text: 'OJO DERECHO', style: 'tableHeader', alignment: 'center' },
-              { text: 'INTERPRETACIÓN', style: 'tableHeader', alignment: 'center' },
+              {
+                text: 'OJO IZQUIERDO',
+                style: 'tableHeader',
+                alignment: 'center',
+              },
+              {
+                text: 'OJO DERECHO',
+                style: 'tableHeader',
+                alignment: 'center',
+              },
+              {
+                text: 'INTERPRETACIÓN',
+                style: 'tableHeader',
+                alignment: 'center',
+              },
             ],
             // Filas de datos
             ...[
@@ -524,9 +563,17 @@ export const examenVistaInforme = (
               {},
             ],
             [
-              { text: 'PLACAS CORRECTAS', style: 'tableHeader', alignment: 'center' },
+              {
+                text: 'PLACAS CORRECTAS',
+                style: 'tableHeader',
+                alignment: 'center',
+              },
               { text: 'PORCENTAJE', style: 'tableHeader', alignment: 'center' },
-              { text: 'INTERPRETACIÓN', style: 'tableHeader', alignment: 'center' },
+              {
+                text: 'INTERPRETACIÓN',
+                style: 'tableHeader',
+                alignment: 'center',
+              },
             ],
             // Filas de datos
             ...[
@@ -534,7 +581,7 @@ export const examenVistaInforme = (
                 `${examenVista.placasCorrectas} de 14`,
                 `${examenVista.porcentajeIshihara} %`,
                 examenVista.interpretacionIshihara,
-              ]
+              ],
             ].map((row) =>
               row.map((text, i) => ({
                 text,
@@ -557,150 +604,172 @@ export const examenVistaInforme = (
         margin: [0, 0, 0, 10],
       },
       // Secciones adicionales solo para Guatemala
-      ...(proveedorSalud.pais === 'GT' ? [
-        // Pruebas de función ocular
-        {
-          style: 'table',
-          table: {
-            widths: ['33.33%', '33.33%', '*'],
-            body: [
-              // Encabezado
-              [
-                {
-                  text: 'PRUEBAS DE FUNCIÓN OCULAR',
-                  style: 'tableHeader',
-                  colSpan: 3,
-                  alignment: 'center',
-                },
-                {},
-                {},
-              ],
-              [
-                { text: 'TEST DE ESTEREOPSIS', style: 'tableHeader', alignment: 'center' },
-                { text: 'CAMPOS VISUALES', style: 'tableHeader', alignment: 'center' },
-                { text: 'COVER TEST', style: 'tableHeader', alignment: 'center' },
-              ],
-              // Fila de datos
-              [
-                examenVista.testEstereopsis || '',
-                examenVista.testCampoVisual || '',
-                examenVista.coverTest || '',
-              ].map((text) => ({
-                text: text || ' ', // Espacio en blanco si está vacío para mantener el recuadro visible
-                style: 'tableCell',
-                alignment: 'center',
-              })),
-            ],
-          },
-          layout: {
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: '#e5e7eb',
-            vLineColor: '#e5e7eb',
-            paddingTop: (i: number, node: any) => 0,
-            paddingBottom: (i: number, node: any) => 0,
-            paddingLeft: (i: number, node: any) => 2,
-            paddingRight: (i: number, node: any) => 2,
-          },
-        margin: [0, 0, 0, 10] as [number, number, number, number],
-      },
-      // Receta Final
-        {
-          style: 'table',
-          table: {
-            widths: ['20%', '40%', '40%'],
-            body: [
-              // Encabezado
-              [
-                {
-                  text: 'RECETA FINAL',
-                  style: 'tableHeader',
-                  colSpan: 3,
-                  alignment: 'center',
-                },
-                {},
-                {},
-              ],
-              [
-                { text: '-', style: 'tableHeader', alignment: 'center' },
-                { text: 'OJO IZQUIERDO', style: 'tableHeader', alignment: 'center' },
-                { text: 'OJO DERECHO', style: 'tableHeader', alignment: 'center' },
-              ],
-              // Filas de datos
-              ...[
-                [
-                  'ESFERA',
-                  examenVista.esferaOjoIzquierdo || '',
-                  examenVista.esferaOjoDerecho || '',
+      ...(proveedorSalud.pais === 'GT'
+        ? [
+            // Pruebas de función ocular
+            {
+              style: 'table',
+              table: {
+                widths: ['33.33%', '33.33%', '*'],
+                body: [
+                  // Encabezado
+                  [
+                    {
+                      text: 'PRUEBAS DE FUNCIÓN OCULAR',
+                      style: 'tableHeader',
+                      colSpan: 3,
+                      alignment: 'center',
+                    },
+                    {},
+                    {},
+                  ],
+                  [
+                    {
+                      text: 'TEST DE ESTEREOPSIS',
+                      style: 'tableHeader',
+                      alignment: 'center',
+                    },
+                    {
+                      text: 'CAMPOS VISUALES',
+                      style: 'tableHeader',
+                      alignment: 'center',
+                    },
+                    {
+                      text: 'COVER TEST',
+                      style: 'tableHeader',
+                      alignment: 'center',
+                    },
+                  ],
+                  // Fila de datos
+                  [
+                    examenVista.testEstereopsis || '',
+                    examenVista.testCampoVisual || '',
+                    examenVista.coverTest || '',
+                  ].map((text) => ({
+                    text: text || ' ', // Espacio en blanco si está vacío para mantener el recuadro visible
+                    style: 'tableCell',
+                    alignment: 'center',
+                  })),
                 ],
-                [
-                  'CILINDRO',
-                  examenVista.cilindroOjoIzquierdo || '',
-                  examenVista.cilindroOjoDerecho || '',
+              },
+              layout: {
+                hLineWidth: () => 0.5,
+                vLineWidth: () => 0.5,
+                hLineColor: '#e5e7eb',
+                vLineColor: '#e5e7eb',
+                paddingTop: (i: number, node: any) => 0,
+                paddingBottom: (i: number, node: any) => 0,
+                paddingLeft: (i: number, node: any) => 2,
+                paddingRight: (i: number, node: any) => 2,
+              },
+              margin: [0, 0, 0, 10] as [number, number, number, number],
+            },
+            // Receta Final
+            {
+              style: 'table',
+              table: {
+                widths: ['20%', '40%', '40%'],
+                body: [
+                  // Encabezado
+                  [
+                    {
+                      text: 'RECETA FINAL',
+                      style: 'tableHeader',
+                      colSpan: 3,
+                      alignment: 'center',
+                    },
+                    {},
+                    {},
+                  ],
+                  [
+                    { text: '-', style: 'tableHeader', alignment: 'center' },
+                    {
+                      text: 'OJO IZQUIERDO',
+                      style: 'tableHeader',
+                      alignment: 'center',
+                    },
+                    {
+                      text: 'OJO DERECHO',
+                      style: 'tableHeader',
+                      alignment: 'center',
+                    },
+                  ],
+                  // Filas de datos
+                  ...[
+                    [
+                      'ESFERA',
+                      examenVista.esferaOjoIzquierdo || '',
+                      examenVista.esferaOjoDerecho || '',
+                    ],
+                    [
+                      'CILINDRO',
+                      examenVista.cilindroOjoIzquierdo || '',
+                      examenVista.cilindroOjoDerecho || '',
+                    ],
+                    [
+                      'ADICIÓN',
+                      examenVista.adicionOjoIzquierdo || '',
+                      examenVista.adicionOjoDerecho || '',
+                    ],
+                  ].map((row) =>
+                    row.map((text, i) => ({
+                      text,
+                      style: i === 0 ? 'tableCellBold' : 'tableCell',
+                      alignment: 'center',
+                    })),
+                  ),
                 ],
-                [
-                  'ADICIÓN',
-                  examenVista.adicionOjoIzquierdo || '',
-                  examenVista.adicionOjoDerecho || '',
+              },
+              layout: {
+                hLineWidth: () => 0.5,
+                vLineWidth: () => 0.5,
+                hLineColor: '#e5e7eb',
+                vLineColor: '#e5e7eb',
+                paddingTop: (i: number, node: any) => 0,
+                paddingBottom: (i: number, node: any) => 0,
+                paddingLeft: (i: number, node: any) => 2,
+                paddingRight: (i: number, node: any) => 2,
+              },
+              margin: [0, 0, 0, 10] as [number, number, number, number],
+            },
+            // Diagnóstico y recomendaciones
+            {
+              style: 'table',
+              table: {
+                widths: ['100%'],
+                body: [
+                  // Encabezado
+                  [
+                    {
+                      text: 'DIAGNÓSTICO Y RECOMENDACIONES',
+                      style: 'tableHeader',
+                      alignment: 'center',
+                    },
+                  ],
+                  // Contenido
+                  [
+                    {
+                      text: examenVista.diagnosticoRecomendaciones || ' ', // Espacio en blanco si está vacío para mantener el recuadro visible
+                      style: 'tableCell',
+                      alignment: 'center',
+                    },
+                  ],
                 ],
-              ].map((row) =>
-                row.map((text, i) => ({
-                  text,
-                  style: i === 0 ? 'tableCellBold' : 'tableCell',
-                  alignment: 'center',
-                })),
-              ),
-            ],
-          },
-          layout: {
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: '#e5e7eb',
-            vLineColor: '#e5e7eb',
-            paddingTop: (i: number, node: any) => 0,
-            paddingBottom: (i: number, node: any) => 0,
-            paddingLeft: (i: number, node: any) => 2,
-            paddingRight: (i: number, node: any) => 2,
-          },
-          margin: [0, 0, 0, 10] as [number, number, number, number],
-        },
-        // Diagnóstico y recomendaciones
-        {
-          style: 'table',
-          table: {
-            widths: ['100%'],
-            body: [
-              // Encabezado
-              [
-                {
-                  text: 'DIAGNÓSTICO Y RECOMENDACIONES',
-                  style: 'tableHeader',
-                  alignment: 'center',
-                },
-              ],
-              // Contenido
-              [
-                {
-                  text: examenVista.diagnosticoRecomendaciones || ' ', // Espacio en blanco si está vacío para mantener el recuadro visible
-                  style: 'tableCell',
-                  alignment: 'center',
-                },
-              ],
-            ],
-          },
-          layout: {
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: '#e5e7eb',
-            vLineColor: '#e5e7eb',
-            paddingTop: (i: number, node: any) => 0,
-            paddingBottom: (i: number, node: any) => 0,
-            paddingLeft: (i: number, node: any) => 2,
-            paddingRight: (i: number, node: any) => 2,
-          },
-          margin: [0, 0, 0, 10] as [number, number, number, number],
-        },
-      ] : []),
+              },
+              layout: {
+                hLineWidth: () => 0.5,
+                vLineWidth: () => 0.5,
+                hLineColor: '#e5e7eb',
+                vLineColor: '#e5e7eb',
+                paddingTop: (i: number, node: any) => 0,
+                paddingBottom: (i: number, node: any) => 0,
+                paddingLeft: (i: number, node: any) => 2,
+                paddingRight: (i: number, node: any) => 2,
+              },
+              margin: [0, 0, 0, 10] as [number, number, number, number],
+            },
+          ]
+        : []),
     ],
     // Pie de pagina
     footer: {
@@ -733,72 +802,80 @@ export const examenVistaInforme = (
             {
               text: [
                 // Nombre y título profesional
-                (firmanteActivo?.tituloProfesional && firmanteActivo?.nombre)
+                firmanteActivo?.tituloProfesional && firmanteActivo?.nombre
                   ? {
                       text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
                       bold: true,
                     }
                   : null,
-              
+
                 // Cédula profesional (para médicos y enfermeras)
                 firmanteActivo?.numeroCedulaProfesional
                   ? {
-                      text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : proveedorSalud.pais === 'GT'
-                        ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                          : proveedorSalud.pais === 'GT'
+                            ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                            : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Cédula de especialista (solo para médicos)
-                (usarMedico && medicoFirmante?.numeroCedulaEspecialista)
+                usarMedico && medicoFirmante?.numeroCedulaEspecialista
                   ? {
-                      text: proveedorSalud.pais === 'MX'
-                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Credencial adicional
-                (firmanteActivo?.nombreCredencialAdicional && firmanteActivo?.numeroCredencialAdicional)
-                ? {
-                    text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                    bold: false,
-                  }
-                : null,
-                
-                // Texto específico para enfermeras
-                (usarEnfermera && enfermeraFirmante?.sexo)
+                firmanteActivo?.nombreCredencialAdicional &&
+                firmanteActivo?.numeroCredencialAdicional
                   ? {
-                      text: enfermeraFirmante.sexo === 'Femenino' 
-                        ? 'Enfermera responsable de la evaluación\n'
-                        : 'Enfermero responsable de la evaluación\n',
+                      text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                      bold: false,
+                    }
+                  : null,
+
+                // Texto específico para enfermeras
+                usarEnfermera && enfermeraFirmante?.sexo
+                  ? {
+                      text:
+                        enfermeraFirmante.sexo === 'Femenino'
+                          ? 'Enfermera responsable de la evaluación\n'
+                          : 'Enfermero responsable de la evaluación\n',
                       bold: false,
                     }
                   : null,
 
                 // Texto específico para técnicos
-                (usarTecnico && tecnicoFirmante?.sexo)
+                usarTecnico && tecnicoFirmante?.sexo
                   ? {
-                      text: tecnicoFirmante.sexo === 'Femenino' 
-                        ? 'Responsable de la evaluación\n'
-                        : 'Responsable de la evaluación\n',
+                      text:
+                        tecnicoFirmante.sexo === 'Femenino'
+                          ? 'Responsable de la evaluación\n'
+                          : 'Responsable de la evaluación\n',
                       bold: false,
                     }
                   : null,
-                
-              ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe   
+              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(firmanteActivo?.firma?.data ? [{
-              ...firma,
-              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
-            }] : []),
+            ...(firmanteActivo?.firma?.data
+              ? [
+                  {
+                    ...firma,
+                    margin: [0, -3, 0, 0] as [number, number, number, number], // Mueve el elemento más arriba
+                  },
+                ]
+              : []),
             {
               text: [
                 proveedorSalud.nombre
@@ -808,7 +885,7 @@ export const examenVistaInforme = (
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.direccion
                   ? {
                       text: `${proveedorSalud.direccion}\n`,
@@ -816,15 +893,17 @@ export const examenVistaInforme = (
                       italics: true,
                     }
                   : null,
-              
-                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+
+                proveedorSalud.municipio &&
+                proveedorSalud.estado &&
+                proveedorSalud.telefono
                   ? {
                       text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.sitioWeb
                   ? {
                       text: `${proveedorSalud.sitioWeb}`,
@@ -834,7 +913,7 @@ export const examenVistaInforme = (
                       color: 'blue',
                     }
                   : null,
-              ].filter(item => item !== null),  // Elimina los elementos nulos
+              ].filter((item) => item !== null), // Elimina los elementos nulos
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],

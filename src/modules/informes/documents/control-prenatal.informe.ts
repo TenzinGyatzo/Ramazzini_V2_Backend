@@ -116,9 +116,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -142,27 +142,27 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
@@ -299,7 +299,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface EnfermeraFirmante {
@@ -312,7 +312,7 @@ interface EnfermeraFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface TecnicoFirmante {
@@ -325,7 +325,7 @@ interface TecnicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -356,14 +356,20 @@ export const controlPrenatalInforme = (
   tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
-  const usarTecnico = !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
+  const usarTecnico =
+    !usarMedico && !usarEnfermera && tecnicoFirmante?.nombre ? true : false;
 
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : (usarTecnico ? tecnicoFirmante : null));
+  const firmanteActivo = usarMedico
+    ? medicoFirmante
+    : usarEnfermera
+      ? enfermeraFirmante
+      : usarTecnico
+        ? tecnicoFirmante
+        : null;
 
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
@@ -374,12 +380,20 @@ export const controlPrenatalInforme = (
   };
 
   const firma: Content = firmanteActivo?.firma?.data
-  ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
-  : { text: '' };
+    ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   // Nombre de Empresa y Fecha
   const nombreEmpresaSeccion: Content = {
@@ -389,7 +403,7 @@ export const controlPrenatalInforme = (
       body: [
         [
           {
-            text: "      " + nombreEmpresa,
+            text: '      ' + nombreEmpresa,
             style: 'nombreEmpresa',
             alignment: 'center',
             margin: [0, 0, 0, 0],
@@ -397,9 +411,15 @@ export const controlPrenatalInforme = (
           },
           {
             text: [
-              { text: 'Inicio de Control Prenatal: ', style: 'fecha', bold: false },
               {
-                text: formatearFechaUTC(controlPrenatal.fechaInicioControlPrenatal),
+                text: 'Inicio de Control Prenatal: ',
+                style: 'fecha',
+                bold: false,
+              },
+              {
+                text: formatearFechaUTC(
+                  controlPrenatal.fechaInicioControlPrenatal,
+                ),
                 style: 'fecha',
                 alignment: 'right',
                 bold: true,
@@ -413,7 +433,7 @@ export const controlPrenatalInforme = (
     },
     layout: 'noBorders',
     margin: [0, 0, 0, 0],
-  }
+  };
 
   // DATOS GENERALES DE LA TRABAJADORA
   const trabajadorSeccion: Content = {
@@ -423,7 +443,7 @@ export const controlPrenatalInforme = (
       body: [
         [
           { text: 'NOMBRE', style: 'label' },
-                        { text: formatearNombreTrabajador(trabajador), style: 'value' },
+          { text: formatearNombreTrabajador(trabajador), style: 'value' },
           { text: 'NACIMIENTO', style: 'label' },
           { text: trabajador.nacimiento, style: 'value' },
         ],
@@ -464,7 +484,7 @@ export const controlPrenatalInforme = (
       vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 8],
-  }
+  };
 
   // ANTECEDENTES GINECO-OBSTETRICOS
   const antecedentesGinecoObstetricos: Content = {
@@ -488,7 +508,8 @@ export const controlPrenatalInforme = (
         ...[
           [
             'MENARCA',
-            controlPrenatal.menarca !== undefined && controlPrenatal.menarca !== null
+            controlPrenatal.menarca !== undefined &&
+            controlPrenatal.menarca !== null
               ? controlPrenatal.menarca.toString() + ' años'
               : '-',
             'CICLOS',
@@ -540,18 +561,48 @@ export const controlPrenatalInforme = (
       paddingRight: (i: number, node: any) => 2,
     },
     margin: [0, 0, 0, 8],
-  }
+  };
 
   // Tabla de seguimiento mensual
   const tablaSeguimientoMensual: Content = {
     style: 'table',
     table: {
-      widths: ['16%', '7%', '7%', '7%', '7%', '7%', '7%', '7%', '7%', '7%', '7%', '7%', '7%'],
+      widths: [
+        '16%',
+        '7%',
+        '7%',
+        '7%',
+        '7%',
+        '7%',
+        '7%',
+        '7%',
+        '7%',
+        '7%',
+        '7%',
+        '7%',
+        '7%',
+      ],
       body: [
         // Encabezado de meses
         [
-          { text: 'MES', style: 'tableHeader', colSpan: 13, alignment: 'center' },
-          {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+          {
+            text: 'MES',
+            style: 'tableHeader',
+            colSpan: 13,
+            alignment: 'center',
+          },
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
         ],
         [
           { text: '', style: 'tableCellMonthHeader' },
@@ -571,50 +622,206 @@ export const controlPrenatalInforme = (
         // Fila de Fecha
         [
           { text: 'FECHA', style: 'tableCellBold', alignment: 'center' },
-          { text: controlPrenatal.eneroFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.eneroFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.febreroFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.febreroFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.marzoFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.marzoFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.abrilFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.abrilFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.mayoFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.mayoFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.junioFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.junioFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.julioFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.julioFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.agostoFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.agostoFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.septiembreFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.septiembreFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.octubreFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.octubreFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.noviembreFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.noviembreFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
-          { text: controlPrenatal.diciembreFecha ? convertirFechaISOaDDMMYYYY(controlPrenatal.diciembreFecha.toISOString()) : '', style: 'tableCellMonthSmall' },
+          {
+            text: controlPrenatal.eneroFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.eneroFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.febreroFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.febreroFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.marzoFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.marzoFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.abrilFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.abrilFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.mayoFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.mayoFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.junioFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.junioFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.julioFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.julioFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.agostoFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.agostoFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.septiembreFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.septiembreFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.octubreFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.octubreFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.noviembreFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.noviembreFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
+          {
+            text: controlPrenatal.diciembreFecha
+              ? convertirFechaISOaDDMMYYYY(
+                  controlPrenatal.diciembreFecha.toISOString(),
+                )
+              : '',
+            style: 'tableCellMonthSmall',
+          },
         ],
         // Fila de PESO
         [
           { text: 'PESO (kg)', style: 'tableCellBold', alignment: 'center' },
-          { text: controlPrenatal.eneroPeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.febreroPeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.marzoPeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.abrilPeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.mayoPeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.junioPeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.julioPeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.agostoPeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.septiembrePeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.octubrePeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.noviembrePeso?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.diciembrePeso?.toString() || '', style: 'tableCellMonth' },
+          {
+            text: controlPrenatal.eneroPeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.febreroPeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.marzoPeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.abrilPeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.mayoPeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.junioPeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.julioPeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.agostoPeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.septiembrePeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.octubrePeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.noviembrePeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.diciembrePeso?.toString() || '',
+            style: 'tableCellMonth',
+          },
         ],
         // Fila de IMC - Índice de Masa Corporal
         [
           { text: 'IMC', style: 'tableCellBold', alignment: 'center' },
-          { text: controlPrenatal.eneroImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.febreroImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.marzoImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.abrilImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.mayoImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.junioImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.julioImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.agostoImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.septiembreImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.octubreImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.noviembreImc?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.diciembreImc?.toString() || '', style: 'tableCellMonth' },
+          {
+            text: controlPrenatal.eneroImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.febreroImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.marzoImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.abrilImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.mayoImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.junioImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.julioImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.agostoImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.septiembreImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.octubreImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.noviembreImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.diciembreImc?.toString() || '',
+            style: 'tableCellMonth',
+          },
         ],
         // Fila de T/A - Tensión Arterial
         [
@@ -627,73 +834,196 @@ export const controlPrenatalInforme = (
           { text: controlPrenatal.junioTia || '', style: 'tableCellMonth' },
           { text: controlPrenatal.julioTia || '', style: 'tableCellMonth' },
           { text: controlPrenatal.agostoTia || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.septiembreTia || '', style: 'tableCellMonth' },
+          {
+            text: controlPrenatal.septiembreTia || '',
+            style: 'tableCellMonth',
+          },
           { text: controlPrenatal.octubreTia || '', style: 'tableCellMonth' },
           { text: controlPrenatal.noviembreTia || '', style: 'tableCellMonth' },
           { text: controlPrenatal.diciembreTia || '', style: 'tableCellMonth' },
         ],
         // Fila de FCF - Frecuencia Cardíaca Fetal
         [
-          { text: 'FCF (lat/min)', style: 'tableCellBold', alignment: 'center' },
-          { text: controlPrenatal.eneroFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.febreroFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.marzoFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.abrilFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.mayoFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.junioFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.julioFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.agostoFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.septiembreFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.octubreFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.noviembreFcf?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.diciembreFcf?.toString() || '', style: 'tableCellMonth' },
+          {
+            text: 'FCF (lat/min)',
+            style: 'tableCellBold',
+            alignment: 'center',
+          },
+          {
+            text: controlPrenatal.eneroFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.febreroFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.marzoFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.abrilFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.mayoFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.junioFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.julioFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.agostoFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.septiembreFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.octubreFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.noviembreFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.diciembreFcf?.toString() || '',
+            style: 'tableCellMonth',
+          },
         ],
         // Fila de SDG - Semanas de Gestación
         [
-          { text: 'SDG (semanas)', style: 'tableCellBold', alignment: 'center' },
-          { text: controlPrenatal.eneroSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.febreroSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.marzoSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.abrilSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.mayoSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.junioSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.julioSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.agostoSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.septiembreSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.octubreSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.noviembreSdg?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.diciembreSdg?.toString() || '', style: 'tableCellMonth' },
+          {
+            text: 'SDG (semanas)',
+            style: 'tableCellBold',
+            alignment: 'center',
+          },
+          {
+            text: controlPrenatal.eneroSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.febreroSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.marzoSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.abrilSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.mayoSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.junioSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.julioSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.agostoSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.septiembreSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.octubreSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.noviembreSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.diciembreSdg?.toString() || '',
+            style: 'tableCellMonth',
+          },
         ],
         // Fila de F. UT. - Fondo Uterino
         [
-          { text: 'F. UTERINO (cm)', style: 'tableCellBold', alignment: 'center' },
-          { text: controlPrenatal.eneroFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.febreroFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.marzoFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.abrilFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.mayoFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.junioFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.julioFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.agostoFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.septiembreFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.octubreFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.noviembreFondoUterino?.toString() || '', style: 'tableCellMonth' },
-          { text: controlPrenatal.diciembreFondoUterino?.toString() || '', style: 'tableCellMonth' },
+          {
+            text: 'F. UTERINO (cm)',
+            style: 'tableCellBold',
+            alignment: 'center',
+          },
+          {
+            text: controlPrenatal.eneroFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.febreroFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.marzoFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.abrilFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.mayoFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.junioFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.julioFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.agostoFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.septiembreFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.octubreFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.noviembreFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
+          {
+            text: controlPrenatal.diciembreFondoUterino?.toString() || '',
+            style: 'tableCellMonth',
+          },
         ],
       ],
     },
-         layout: {
-       hLineColor: '#a8a29e',
-       vLineColor: '#a8a29e',
-       paddingTop: (i: number, node: any) => 1,
-       paddingBottom: (i: number, node: any) => 1,
-       paddingLeft: (i: number, node: any) => 1,
-       paddingRight: (i: number, node: any) => 1,
-       hLineWidth: () => 0.3,
-       vLineWidth: () => 0.3,
-     },
+    layout: {
+      hLineColor: '#a8a29e',
+      vLineColor: '#a8a29e',
+      paddingTop: (i: number, node: any) => 1,
+      paddingBottom: (i: number, node: any) => 1,
+      paddingLeft: (i: number, node: any) => 1,
+      paddingRight: (i: number, node: any) => 1,
+      hLineWidth: () => 0.3,
+      vLineWidth: () => 0.3,
+    },
     margin: [0, 0, 0, 8],
-  }
+  };
 
   // Sección de Observaciones
   const observacionesSeccion: Content = {
@@ -701,19 +1031,50 @@ export const controlPrenatalInforme = (
     table: {
       widths: ['100%'],
       body: [
+        [{ text: 'OBSERVACIONES', style: 'tableHeader', alignment: 'center' }],
         [
-          { text: 'OBSERVACIONES', style: 'tableHeader', alignment: 'center' },
-        ],
-        [
-          { 
-            text: [
-              controlPrenatal.observacionesPeso ? [{ text: 'PESO: ', bold: true }, `${controlPrenatal.observacionesPeso}\n`] : '',
-              controlPrenatal.observacionesImc ? [{ text: 'IMC: ', bold: true }, `${controlPrenatal.observacionesImc}\n`] : '',
-              controlPrenatal.observacionesTia ? [{ text: 'T/A: ', bold: true }, `${controlPrenatal.observacionesTia}\n`] : '',
-              controlPrenatal.observacionesFcf ? [{ text: 'FCF: ', bold: true }, `${controlPrenatal.observacionesFcf}\n`] : '',
-              controlPrenatal.observacionesSdg ? [{ text: 'SDG: ', bold: true }, `${controlPrenatal.observacionesSdg}\n`] : '',
-              controlPrenatal.observacionesFondoUterino ? [{ text: 'FONDO UTERINO: ', bold: true }, `${controlPrenatal.observacionesFondoUterino}`] : '',
-            ].filter(text => text !== '').flat() || 'Sin observaciones',
+          {
+            text:
+              [
+                controlPrenatal.observacionesPeso
+                  ? [
+                      { text: 'PESO: ', bold: true },
+                      `${controlPrenatal.observacionesPeso}\n`,
+                    ]
+                  : '',
+                controlPrenatal.observacionesImc
+                  ? [
+                      { text: 'IMC: ', bold: true },
+                      `${controlPrenatal.observacionesImc}\n`,
+                    ]
+                  : '',
+                controlPrenatal.observacionesTia
+                  ? [
+                      { text: 'T/A: ', bold: true },
+                      `${controlPrenatal.observacionesTia}\n`,
+                    ]
+                  : '',
+                controlPrenatal.observacionesFcf
+                  ? [
+                      { text: 'FCF: ', bold: true },
+                      `${controlPrenatal.observacionesFcf}\n`,
+                    ]
+                  : '',
+                controlPrenatal.observacionesSdg
+                  ? [
+                      { text: 'SDG: ', bold: true },
+                      `${controlPrenatal.observacionesSdg}\n`,
+                    ]
+                  : '',
+                controlPrenatal.observacionesFondoUterino
+                  ? [
+                      { text: 'FONDO UTERINO: ', bold: true },
+                      `${controlPrenatal.observacionesFondoUterino}`,
+                    ]
+                  : '',
+              ]
+                .filter((text) => text !== '')
+                .flat() || 'Sin observaciones',
             style: 'tableCell',
             alignment: 'left',
             margin: [5, 5, 5, 5],
@@ -732,7 +1093,7 @@ export const controlPrenatalInforme = (
       vLineWidth: () => 0.3,
     },
     margin: [0, 0, 0, 8],
-  }
+  };
 
   // Crear el array de contenido
   const content: Content[] = [
@@ -780,72 +1141,80 @@ export const controlPrenatalInforme = (
             {
               text: [
                 // Nombre y título profesional
-                (firmanteActivo?.tituloProfesional && firmanteActivo?.nombre)
+                firmanteActivo?.tituloProfesional && firmanteActivo?.nombre
                   ? {
                       text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
                       bold: true,
                     }
                   : null,
-              
+
                 // Cédula profesional (para médicos y enfermeras)
                 firmanteActivo?.numeroCedulaProfesional
                   ? {
-                      text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : proveedorSalud.pais === 'GT'
-                        ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                          : proveedorSalud.pais === 'GT'
+                            ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                            : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Cédula de especialista (solo para médicos)
-                (usarMedico && medicoFirmante?.numeroCedulaEspecialista)
+                usarMedico && medicoFirmante?.numeroCedulaEspecialista
                   ? {
-                      text: proveedorSalud.pais === 'MX'
-                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Credencial adicional
-                (firmanteActivo?.nombreCredencialAdicional && firmanteActivo?.numeroCredencialAdicional)
-                ? {
-                    text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                    bold: false,
-                  }
-                : null,
-                
-                // Texto específico para enfermeras
-                (usarEnfermera && enfermeraFirmante?.sexo)
+                firmanteActivo?.nombreCredencialAdicional &&
+                firmanteActivo?.numeroCredencialAdicional
                   ? {
-                      text: enfermeraFirmante.sexo === 'Femenino' 
-                        ? 'Enfermera responsable de la evaluación\n'
-                        : 'Enfermero responsable de la evaluación\n',
+                      text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                      bold: false,
+                    }
+                  : null,
+
+                // Texto específico para enfermeras
+                usarEnfermera && enfermeraFirmante?.sexo
+                  ? {
+                      text:
+                        enfermeraFirmante.sexo === 'Femenino'
+                          ? 'Enfermera responsable de la evaluación\n'
+                          : 'Enfermero responsable de la evaluación\n',
                       bold: false,
                     }
                   : null,
 
                 // Texto específico para técnicos
-                (usarTecnico && tecnicoFirmante?.sexo)
+                usarTecnico && tecnicoFirmante?.sexo
                   ? {
-                      text: tecnicoFirmante.sexo === 'Femenino' 
-                        ? 'Responsable de la evaluación\n'
-                        : 'Responsable de la evaluación\n',
+                      text:
+                        tecnicoFirmante.sexo === 'Femenino'
+                          ? 'Responsable de la evaluación\n'
+                          : 'Responsable de la evaluación\n',
                       bold: false,
                     }
                   : null,
-                
-              ].filter(item => item !== null),
+              ].filter((item) => item !== null),
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(firmanteActivo?.firma?.data ? [{
-              ...firma,
-              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
-            }] : []),
+            ...(firmanteActivo?.firma?.data
+              ? [
+                  {
+                    ...firma,
+                    margin: [0, -3, 0, 0] as [number, number, number, number], // Mueve el elemento más arriba
+                  },
+                ]
+              : []),
             {
               text: [
                 proveedorSalud.nombre
@@ -855,7 +1224,7 @@ export const controlPrenatalInforme = (
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.direccion
                   ? {
                       text: `${proveedorSalud.direccion}\n`,
@@ -863,15 +1232,17 @@ export const controlPrenatalInforme = (
                       italics: true,
                     }
                   : null,
-              
-                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+
+                proveedorSalud.municipio &&
+                proveedorSalud.estado &&
+                proveedorSalud.telefono
                   ? {
                       text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.sitioWeb
                   ? {
                       text: `${proveedorSalud.sitioWeb}`,
@@ -881,7 +1252,7 @@ export const controlPrenatalInforme = (
                       color: 'blue',
                     }
                   : null,
-              ].filter(item => item !== null),
+              ].filter((item) => item !== null),
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],

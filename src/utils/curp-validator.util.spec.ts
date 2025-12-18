@@ -1,4 +1,9 @@
-import { validateCURPFormat, validateCURPChecksum, isGenericCURP, validateCURP } from './curp-validator.util';
+import {
+  validateCURPFormat,
+  validateCURPChecksum,
+  isGenericCURP,
+  validateCURP,
+} from './curp-validator.util';
 
 describe('CURP Validator', () => {
   describe('validateCURPFormat', () => {
@@ -126,7 +131,9 @@ describe('CURP Validator', () => {
       const result = validateCURP('XXXX999999HXXXXX99');
       expect(result.isValid).toBe(false);
       // Should contain generic CURP error
-      const hasGenericError = result.errors.some(err => err.includes('genérico') || err.includes('genérico'));
+      const hasGenericError = result.errors.some(
+        (err) => err.includes('genérico') || err.includes('genérico'),
+      );
       // If not generic error, at least should be invalid (could be checksum error)
       if (!hasGenericError) {
         // If generic detection doesn't work perfectly, at least ensure it's invalid
@@ -142,7 +149,7 @@ describe('CURP Validator', () => {
       // Actual CURP validation should use real RENAPO-validated CURPs
       const testCURP = 'ROAJ850102HDFLRN08';
       const result = validateCURP(testCURP);
-      
+
       // Result depends on checksum validity
       // Structure validation should pass
       if (result.isValid) {
@@ -154,4 +161,3 @@ describe('CURP Validator', () => {
     });
   });
 });
-

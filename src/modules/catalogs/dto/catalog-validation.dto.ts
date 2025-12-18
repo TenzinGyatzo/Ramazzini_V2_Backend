@@ -28,4 +28,3 @@ export class SearchCatalogDto {
   @IsNumber()
   limit?: number;
 }
-

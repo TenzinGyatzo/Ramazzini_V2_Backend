@@ -111,13 +111,13 @@ export class ExpedientesController {
         `Tipo de documento ${documentType} no soportado`,
       );
     }
-  
+
     const dtoInstance = Object.assign(new DtoClass(), createDto);
     await new ValidationPipe({ whitelist: true }).transform(dtoInstance, {
       type: 'body',
       metatype: DtoClass,
     });
-  
+
     try {
       const document = await this.expedientesService.createDocument(
         documentType,
@@ -143,13 +143,15 @@ export class ExpedientesController {
             process.env.EXPEDIENTES_DIR || '',
             req.body.rutaDocumento,
           );
-  
+
           try {
             if (!req.body.rutaDocumento) {
-              console.error('Error: rutaDocumento no está definida en req.body.');
+              console.error(
+                'Error: rutaDocumento no está definida en req.body.',
+              );
               throw new Error('La rutaDocumento no está definida en req.body.');
             }
-  
+
             if (!existsSync(dirPath)) {
               mkdirSync(dirPath, { recursive: true });
             } else {
@@ -158,7 +160,7 @@ export class ExpedientesController {
             console.error('Error al procesar la ruta destino:', error.message);
             return cb(error, dirPath);
           }
-  
+
           cb(null, dirPath);
         },
         filename: (req, file, cb) => {
@@ -167,23 +169,22 @@ export class ExpedientesController {
             req.body.fechaDocumento,
           );
           const extension = path.extname(file.originalname);
-          const uniqueFilename = `${nombreDocumento} ${fechaDocumento}${extension}`.replace(
-            /[<>:"\/\\|?*]/g,
-            '-',
-          );
-  
+          const uniqueFilename =
+            `${nombreDocumento} ${fechaDocumento}${extension}`.replace(
+              /[<>:"\/\\|?*]/g,
+              '-',
+            );
+
           cb(null, uniqueFilename);
         },
       }),
     }),
   )
-
   async uploadDocument(
     @Param('trabajadorId') trabajadorId: string,
     @Body() createDocumentoExternoDto: CreateDocumentoExternoDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    
     try {
       const document = await this.expedientesService.uploadDocument(
         createDocumentoExternoDto,
@@ -204,10 +205,11 @@ export class ExpedientesController {
   @Get('altura-disponible')
   async getAlturaDisponible(@Param('trabajadorId') trabajadorId: string) {
     try {
-      const alturaData = await this.expedientesService.getAlturaDisponible(trabajadorId);
+      const alturaData =
+        await this.expedientesService.getAlturaDisponible(trabajadorId);
       return {
         message: 'Altura consultada exitosamente',
-        data: alturaData
+        data: alturaData,
       };
     } catch (error) {
       console.error('Error al consultar altura:', error);
@@ -218,14 +220,17 @@ export class ExpedientesController {
   @Get('historiaClinica/motivo-examen-reciente')
   async getMotivoExamenReciente(@Param('trabajadorId') trabajadorId: string) {
     try {
-      const motivoExamenData = await this.expedientesService.getMotivoExamenReciente(trabajadorId);
+      const motivoExamenData =
+        await this.expedientesService.getMotivoExamenReciente(trabajadorId);
       return {
         message: 'MotivoExamen consultado exitosamente',
-        data: motivoExamenData
+        data: motivoExamenData,
       };
     } catch (error) {
       console.error('Error al consultar motivoExamen:', error);
-      throw new BadRequestException('Error al consultar el motivoExamen reciente');
+      throw new BadRequestException(
+        'Error al consultar el motivoExamen reciente',
+      );
     }
   }
 
@@ -277,24 +282,26 @@ export class ExpedientesController {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
-  
+
     const DtoClass = this.updateDtos[documentType];
     if (!DtoClass) {
       throw new BadRequestException(
         `Tipo de documento ${documentType} no soportado`,
       );
     }
-  
+
     const dtoInstance = Object.assign(
       new DtoClass(),
-      Object.fromEntries(Object.entries(updateDto).filter(([_, v]) => v !== undefined))
+      Object.fromEntries(
+        Object.entries(updateDto).filter(([_, v]) => v !== undefined),
+      ),
     );
-    
+
     await new ValidationPipe({ whitelist: true }).transform(dtoInstance, {
       type: 'body',
       metatype: DtoClass,
     });
-  
+
     try {
       let updatedDocument;
       if (documentType === 'documentoExterno') {
@@ -309,7 +316,7 @@ export class ExpedientesController {
           dtoInstance,
         );
       }
-  
+
       return { message: `${documentType} actualizado`, data: updatedDocument };
     } catch (error) {
       console.error('Error detallado:', error);
@@ -327,7 +334,10 @@ export class ExpedientesController {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    if (!this.expedientesService['models'] || !this.expedientesService['models'][documentType]) {
+    if (
+      !this.expedientesService['models'] ||
+      !this.expedientesService['models'][documentType]
+    ) {
       throw new BadRequestException(
         `Tipo de documento ${documentType} no soportado`,
       );
@@ -340,11 +350,12 @@ export class ExpedientesController {
     }
 
     try {
-      const finalizedDocument = await this.expedientesService.finalizarDocumento(
-        documentType,
-        id,
-        userId,
-      );
+      const finalizedDocument =
+        await this.expedientesService.finalizarDocumento(
+          documentType,
+          id,
+          userId,
+        );
       return { message: `${documentType} finalizado`, data: finalizedDocument };
     } catch (error) {
       throw error;
@@ -354,10 +365,14 @@ export class ExpedientesController {
   @Get('cie10/search')
   async searchCIE10(@Query('q') query: string, @Query('limit') limit?: number) {
     if (!query || query.trim() === '') {
-      throw new BadRequestException('El parámetro de búsqueda "q" es requerido');
+      throw new BadRequestException(
+        'El parámetro de búsqueda "q" es requerido',
+      );
     }
 
-    const searchLimit = limit ? Math.min(Math.max(1, parseInt(limit.toString())), 100) : 50;
+    const searchLimit = limit
+      ? Math.min(Math.max(1, parseInt(limit.toString())), 100)
+      : 50;
     const results = await this.catalogsService.searchCatalog(
       CatalogType.CIE10,
       query.trim(),
@@ -365,7 +380,7 @@ export class ExpedientesController {
     );
 
     return {
-      results: results.map(entry => ({
+      results: results.map((entry) => ({
         code: entry.code,
         description: entry.description,
       })),
@@ -375,11 +390,10 @@ export class ExpedientesController {
 
   // GIIS-B013: Lesion CRUD Endpoints
   @Post('lesion')
-  async createLesion(
-    @Body() createLesionDto: CreateLesionDto,
-  ) {
+  async createLesion(@Body() createLesionDto: CreateLesionDto) {
     try {
-      const lesion = await this.expedientesService.createLesion(createLesionDto);
+      const lesion =
+        await this.expedientesService.createLesion(createLesionDto);
       return { message: 'Lesión creada exitosamente', data: lesion };
     } catch (error) {
       throw error;
@@ -405,7 +419,8 @@ export class ExpedientesController {
     if (!isValidObjectId(trabajadorId)) {
       throw new BadRequestException('El ID del trabajador no es válido');
     }
-    const lesiones = await this.expedientesService.findLesionesByTrabajador(trabajadorId);
+    const lesiones =
+      await this.expedientesService.findLesionesByTrabajador(trabajadorId);
     return lesiones;
   }
 
@@ -420,7 +435,9 @@ export class ExpedientesController {
 
     const dtoInstance = Object.assign(
       new UpdateLesionDto(),
-      Object.fromEntries(Object.entries(updateLesionDto).filter(([_, v]) => v !== undefined))
+      Object.fromEntries(
+        Object.entries(updateLesionDto).filter(([_, v]) => v !== undefined),
+      ),
     );
 
     await new ValidationPipe({ whitelist: true }).transform(dtoInstance, {
@@ -429,8 +446,14 @@ export class ExpedientesController {
     });
 
     try {
-      const updatedLesion = await this.expedientesService.updateLesion(id, dtoInstance);
-      return { message: 'Lesión actualizada exitosamente', data: updatedLesion };
+      const updatedLesion = await this.expedientesService.updateLesion(
+        id,
+        dtoInstance,
+      );
+      return {
+        message: 'Lesión actualizada exitosamente',
+        data: updatedLesion,
+      };
     } catch (error) {
       throw error;
     }
@@ -454,10 +477,7 @@ export class ExpedientesController {
   }
 
   @Post('lesion/:id/finalizar')
-  async finalizarLesion(
-    @Param('id') id: string,
-    @Request() req: any,
-  ) {
+  async finalizarLesion(@Param('id') id: string, @Request() req: any) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
@@ -468,13 +488,19 @@ export class ExpedientesController {
     }
 
     try {
-      const finalizedLesion = await this.expedientesService.finalizarLesion(id, userId);
-      return { message: 'Lesión finalizada exitosamente', data: finalizedLesion };
+      const finalizedLesion = await this.expedientesService.finalizarLesion(
+        id,
+        userId,
+      );
+      return {
+        message: 'Lesión finalizada exitosamente',
+        data: finalizedLesion,
+      };
     } catch (error) {
       throw error;
     }
   }
-  
+
   @Delete(':documentType/eliminar/:id')
   async removeDocument(
     @Param('documentType') documentType: string,

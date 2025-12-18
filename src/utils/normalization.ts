@@ -14,10 +14,10 @@ import { UpdateEnfermeraFirmanteDto } from 'src/modules/enfermeras-firmantes/dto
 export function normalizeEmpresaData(dto: CreateEmpresaDto | UpdateEmpresaDto) {
   // Normalizar RFC: eliminar espacios y convertir a mayúsculas
   // Mantener separadores (guiones, puntos, guiones bajos) para flexibilidad
-  const normalizeRFC = dto.RFC 
-    ? dto.RFC.trim().toUpperCase().replace(/\s+/g, '') 
+  const normalizeRFC = dto.RFC
+    ? dto.RFC.trim().toUpperCase().replace(/\s+/g, '')
     : undefined;
-  
+
   return {
     ...dto,
     nombreComercial: dto.nombreComercial?.trim(),
@@ -68,7 +68,9 @@ export function normalizeTrabajadorData(
     nss: dto.nss?.trim(),
     curp: dto.curp?.trim(),
     estadoLaboral: dto.estadoLaboral?.trim(),
-    agentesRiesgoActuales: dto.agentesRiesgoActuales?.map(agent => agent.trim()),
+    agentesRiesgoActuales: dto.agentesRiesgoActuales?.map((agent) =>
+      agent.trim(),
+    ),
     idCentroTrabajo: dto.idCentroTrabajo?.trim(),
     createdBy: dto.createdBy?.trim(),
     updatedBy: dto.updatedBy?.trim(),
@@ -81,13 +83,16 @@ export function normalizeProveedorSaludData(
   const result: any = {};
 
   if ('nombre' in dto)
-    result.nombre = typeof dto.nombre === 'string' ? dto.nombre.trim() : "";
+    result.nombre = typeof dto.nombre === 'string' ? dto.nombre.trim() : '';
 
   if ('pais' in dto)
-    result.pais = typeof dto.pais === 'string' ? dto.pais.trim() : "";
+    result.pais = typeof dto.pais === 'string' ? dto.pais.trim() : '';
 
   if ('perfilProveedorSalud' in dto)
-    result.perfilProveedorSalud = typeof dto.perfilProveedorSalud === 'string' ? dto.perfilProveedorSalud.trim() : "";
+    result.perfilProveedorSalud =
+      typeof dto.perfilProveedorSalud === 'string'
+        ? dto.perfilProveedorSalud.trim()
+        : '';
 
   if ('logotipoEmpresa' in dto)
     result.logotipoEmpresa = dto.logotipoEmpresa
@@ -98,39 +103,53 @@ export function normalizeProveedorSaludData(
       : undefined;
 
   if ('estado' in dto)
-    result.estado = typeof dto.estado === 'string' ? dto.estado.trim() : "";
+    result.estado = typeof dto.estado === 'string' ? dto.estado.trim() : '';
 
   if ('municipio' in dto)
-    result.municipio = typeof dto.municipio === 'string' ? dto.municipio.trim() : "";
+    result.municipio =
+      typeof dto.municipio === 'string' ? dto.municipio.trim() : '';
 
   if ('codigoPostal' in dto)
-    result.codigoPostal = typeof dto.codigoPostal === 'string' ? dto.codigoPostal.trim() : "";
+    result.codigoPostal =
+      typeof dto.codigoPostal === 'string' ? dto.codigoPostal.trim() : '';
 
   if ('direccion' in dto)
-    result.direccion = typeof dto.direccion === 'string' ? dto.direccion.trim() : "";
+    result.direccion =
+      typeof dto.direccion === 'string' ? dto.direccion.trim() : '';
 
   if ('telefono' in dto)
-    result.telefono = typeof dto.telefono === 'string' ? dto.telefono.trim() : "";
+    result.telefono =
+      typeof dto.telefono === 'string' ? dto.telefono.trim() : '';
 
   if ('correoElectronico' in dto)
-    result.correoElectronico = typeof dto.correoElectronico === 'string' ? dto.correoElectronico.trim() : "";
+    result.correoElectronico =
+      typeof dto.correoElectronico === 'string'
+        ? dto.correoElectronico.trim()
+        : '';
 
   if ('sitioWeb' in dto)
-    result.sitioWeb = typeof dto.sitioWeb === 'string' ? dto.sitioWeb.trim() : "";
+    result.sitioWeb =
+      typeof dto.sitioWeb === 'string' ? dto.sitioWeb.trim() : '';
 
   if ('colorInforme' in dto) {
-    result.colorInforme = typeof dto.colorInforme === 'string' ? dto.colorInforme.trim() : "#343A40";
+    result.colorInforme =
+      typeof dto.colorInforme === 'string'
+        ? dto.colorInforme.trim()
+        : '#343A40';
   }
 
   if ('semaforizacionActivada' in dto) {
-    result.semaforizacionActivada = typeof dto.semaforizacionActivada === 'boolean' ? dto.semaforizacionActivada : true;
+    result.semaforizacionActivada =
+      typeof dto.semaforizacionActivada === 'boolean'
+        ? dto.semaforizacionActivada
+        : true;
   }
 
   if ('fechaInicioTrial' in dto)
     result.fechaInicioTrial = new Date(dto.fechaInicioTrial);
-  
+
   // if ('fechaInicioTrial' in dto)
-    // result.fechaInicioTrial = dto.fechaInicioTrial;
+  // result.fechaInicioTrial = dto.fechaInicioTrial;
 
   if ('periodoDePruebaFinalizado' in dto)
     result.periodoDePruebaFinalizado = dto.periodoDePruebaFinalizado;
@@ -154,30 +173,55 @@ export function normalizeMedicoFirmanteData(
 ) {
   const normalizedDto = {
     ...dto,
-    nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : "",
-    tituloProfesional: typeof dto.tituloProfesional === 'string' ? dto.tituloProfesional.trim() : "",
-    universidad: typeof dto.universidad === 'string' ? dto.universidad.trim() : "",
-    numeroCedulaProfesional: typeof dto.numeroCedulaProfesional === 'string' ? dto.numeroCedulaProfesional.trim() : "",
-    especialistaSaludTrabajo: typeof dto.especialistaSaludTrabajo === 'string' ? dto.especialistaSaludTrabajo.trim() : "",
-    numeroCedulaEspecialista: typeof dto.numeroCedulaEspecialista === 'string' ? dto.numeroCedulaEspecialista.trim() : "",
-    nombreCredencialAdicional: typeof dto.nombreCredencialAdicional === 'string' ? dto.nombreCredencialAdicional.trim() : "",
-    numeroCredencialAdicional: typeof dto.numeroCredencialAdicional === 'string' ? dto.numeroCredencialAdicional.trim() : "",
-    firma: dto.firma && typeof dto.firma.data === 'string' && typeof dto.firma.contentType === 'string'
-      ? {
-          data: dto.firma.data.trim(),
-          contentType: dto.firma.contentType.trim(),
-        }
-      : undefined,
-    firmaConAntefirma: dto.firmaConAntefirma && typeof dto.firmaConAntefirma.data === 'string' && typeof dto.firmaConAntefirma.contentType === 'string'
-      ? {
-          data: dto.firmaConAntefirma.data.trim(),
-          contentType: dto.firmaConAntefirma.contentType.trim(),
-        }
-      : undefined,
+    nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : '',
+    tituloProfesional:
+      typeof dto.tituloProfesional === 'string'
+        ? dto.tituloProfesional.trim()
+        : '',
+    universidad:
+      typeof dto.universidad === 'string' ? dto.universidad.trim() : '',
+    numeroCedulaProfesional:
+      typeof dto.numeroCedulaProfesional === 'string'
+        ? dto.numeroCedulaProfesional.trim()
+        : '',
+    especialistaSaludTrabajo:
+      typeof dto.especialistaSaludTrabajo === 'string'
+        ? dto.especialistaSaludTrabajo.trim()
+        : '',
+    numeroCedulaEspecialista:
+      typeof dto.numeroCedulaEspecialista === 'string'
+        ? dto.numeroCedulaEspecialista.trim()
+        : '',
+    nombreCredencialAdicional:
+      typeof dto.nombreCredencialAdicional === 'string'
+        ? dto.nombreCredencialAdicional.trim()
+        : '',
+    numeroCredencialAdicional:
+      typeof dto.numeroCredencialAdicional === 'string'
+        ? dto.numeroCredencialAdicional.trim()
+        : '',
+    firma:
+      dto.firma &&
+      typeof dto.firma.data === 'string' &&
+      typeof dto.firma.contentType === 'string'
+        ? {
+            data: dto.firma.data.trim(),
+            contentType: dto.firma.contentType.trim(),
+          }
+        : undefined,
+    firmaConAntefirma:
+      dto.firmaConAntefirma &&
+      typeof dto.firmaConAntefirma.data === 'string' &&
+      typeof dto.firmaConAntefirma.contentType === 'string'
+        ? {
+            data: dto.firmaConAntefirma.data.trim(),
+            contentType: dto.firmaConAntefirma.contentType.trim(),
+          }
+        : undefined,
   };
 
   // ✅ Verificar y eliminar idUser si está vacío
-  if (!dto.idUser || dto.idUser.trim() === "") {
+  if (!dto.idUser || dto.idUser.trim() === '') {
     delete normalizedDto.idUser;
   } else {
     normalizedDto.idUser = dto.idUser.trim();
@@ -191,22 +235,37 @@ export function normalizeEnfermeraFirmanteData(
 ) {
   const normalizedDto = {
     ...dto,
-    nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : "",
-    sexo: typeof dto.sexo === 'string' ? dto.sexo.trim() : "",
-    tituloProfesional: typeof dto.tituloProfesional === 'string' ? dto.tituloProfesional.trim() : "",
-    numeroCedulaProfesional: typeof dto.numeroCedulaProfesional === 'string' ? dto.numeroCedulaProfesional.trim() : "",
-    nombreCredencialAdicional: typeof dto.nombreCredencialAdicional === 'string' ? dto.nombreCredencialAdicional.trim() : "",
-    numeroCredencialAdicional: typeof dto.numeroCredencialAdicional === 'string' ? dto.numeroCredencialAdicional.trim() : "",
-    firma: dto.firma && typeof dto.firma.data === 'string' && typeof dto.firma.contentType === 'string'
-      ? {
-          data: dto.firma.data.trim(),
-          contentType: dto.firma.contentType.trim(),
-        }
-      : undefined,
+    nombre: typeof dto.nombre === 'string' ? dto.nombre.trim() : '',
+    sexo: typeof dto.sexo === 'string' ? dto.sexo.trim() : '',
+    tituloProfesional:
+      typeof dto.tituloProfesional === 'string'
+        ? dto.tituloProfesional.trim()
+        : '',
+    numeroCedulaProfesional:
+      typeof dto.numeroCedulaProfesional === 'string'
+        ? dto.numeroCedulaProfesional.trim()
+        : '',
+    nombreCredencialAdicional:
+      typeof dto.nombreCredencialAdicional === 'string'
+        ? dto.nombreCredencialAdicional.trim()
+        : '',
+    numeroCredencialAdicional:
+      typeof dto.numeroCredencialAdicional === 'string'
+        ? dto.numeroCredencialAdicional.trim()
+        : '',
+    firma:
+      dto.firma &&
+      typeof dto.firma.data === 'string' &&
+      typeof dto.firma.contentType === 'string'
+        ? {
+            data: dto.firma.data.trim(),
+            contentType: dto.firma.contentType.trim(),
+          }
+        : undefined,
   };
 
   // ✅ Verificar y eliminar idUser si está vacío
-  if (!dto.idUser || dto.idUser.trim() === "") {
+  if (!dto.idUser || dto.idUser.trim() === '') {
     delete normalizedDto.idUser;
   } else {
     normalizedDto.idUser = dto.idUser.trim();

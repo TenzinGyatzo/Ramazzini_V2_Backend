@@ -87,11 +87,12 @@ function construirSignosVitales(notaMedica): Content {
     }
   };
 
-  agregarDato('TA', 
-    notaMedica.tensionArterialSistolica && notaMedica.tensionArterialDiastolica 
-      ? `${notaMedica.tensionArterialSistolica}/${notaMedica.tensionArterialDiastolica}` 
-      : null, 
-    ' mmHg'
+  agregarDato(
+    'TA',
+    notaMedica.tensionArterialSistolica && notaMedica.tensionArterialDiastolica
+      ? `${notaMedica.tensionArterialSistolica}/${notaMedica.tensionArterialDiastolica}`
+      : null,
+    ' mmHg',
   );
   agregarDato('FC', notaMedica.frecuenciaCardiaca, ' lpm');
   agregarDato('FR', notaMedica.frecuenciaRespiratoria, ' lpm');
@@ -99,12 +100,9 @@ function construirSignosVitales(notaMedica): Content {
   agregarDato('SatO2', notaMedica.saturacionOxigeno, '%');
 
   return {
-    text: [
-      { text: 'Signos Vitales: ', bold: true },
-      ...signosVitales
-    ],
+    text: [{ text: 'Signos Vitales: ', bold: true }, ...signosVitales],
     margin: [0, 0, 0, 10],
-    style: 'paragraph'
+    style: 'paragraph',
   };
 }
 
@@ -120,9 +118,9 @@ function formatearFechaUTC(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -146,27 +144,27 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
@@ -214,7 +212,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface EnfermeraFirmante {
@@ -227,7 +225,7 @@ interface EnfermeraFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -257,21 +255,32 @@ export const notaMedicaInforme = (
   enfermeraFirmante: EnfermeraFirmante | null,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
   const usarEnfermera = !usarMedico && enfermeraFirmante?.nombre ? true : false;
-  
+
   // Seleccionar el firmante a usar
-  const firmanteActivo = usarMedico ? medicoFirmante : (usarEnfermera ? enfermeraFirmante : null);
+  const firmanteActivo = usarMedico
+    ? medicoFirmante
+    : usarEnfermera
+      ? enfermeraFirmante
+      : null;
 
   const firma: Content = firmanteActivo?.firma?.data
-  ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
-  : { text: '' };
+    ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
+    : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
-  ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
-  : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
+    ? {
+        image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`,
+        width: 55,
+        margin: [40, 20, 0, 0],
+      }
+    : {
+        image: 'assets/RamazziniBrand600x600.png',
+        width: 55,
+        margin: [40, 20, 0, 0],
+      };
 
   const tipoNota = notaMedica.tipoNota;
   const tipoNotaTexto = [
@@ -309,25 +318,25 @@ export const notaMedicaInforme = (
         table: {
           widths: ['75%', '25%'],
           body: [
-        [
-          {
-            text: tipoNotaTexto,
-            style: 'fecha',
-            alignment: 'right',
-            margin: [0, 4, 0, 0],
-          },
-          {
-            text: [
-          { text: 'Fecha: ', style: 'fecha', bold: false },
-          {
-            text: formatearFechaUTC(notaMedica.fechaNotaMedica),
-            style: 'fecha',
-            bold: true,
-          },
+            [
+              {
+                text: tipoNotaTexto,
+                style: 'fecha',
+                alignment: 'right',
+                margin: [0, 4, 0, 0],
+              },
+              {
+                text: [
+                  { text: 'Fecha: ', style: 'fecha', bold: false },
+                  {
+                    text: formatearFechaUTC(notaMedica.fechaNotaMedica),
+                    style: 'fecha',
+                    bold: true,
+                  },
+                ],
+                margin: [0, 3, 0, 0],
+              },
             ],
-            margin: [0, 3, 0, 0],
-          },
-        ],
           ],
         },
         layout: 'noBorders',
@@ -339,25 +348,27 @@ export const notaMedicaInforme = (
         table: {
           widths: ['70%', '30%'],
           body: [
-        [
-          {
-            text: formatearNombreTrabajador(trabajador),
-            style: 'nombreEmpresa',
-            alignment: 'left',
-            margin: [0, 0, 0, 0],
-          },
-          {
-            text: [
-          { text: 'CEL: ', style: 'fecha', bold: false },
-          {
-            text: trabajador.telefono ? `${trabajador.telefono}` : 'No disponible',
-            style: 'fecha',
-            bold: true,
-          },
+            [
+              {
+                text: formatearNombreTrabajador(trabajador),
+                style: 'nombreEmpresa',
+                alignment: 'left',
+                margin: [0, 0, 0, 0],
+              },
+              {
+                text: [
+                  { text: 'CEL: ', style: 'fecha', bold: false },
+                  {
+                    text: trabajador.telefono
+                      ? `${trabajador.telefono}`
+                      : 'No disponible',
+                    style: 'fecha',
+                    bold: true,
+                  },
+                ],
+                margin: [0, 3, 0, 0],
+              },
             ],
-            margin: [0, 3, 0, 0],
-          },
-        ],
           ],
         },
         layout: 'noBorders',
@@ -367,7 +378,13 @@ export const notaMedicaInforme = (
       {
         text: [
           { text: `Se trata de ` },
-          { text: trabajador.sexo === 'Masculino' ? 'un trabajador' : 'una trabajadora', bold: true },
+          {
+            text:
+              trabajador.sexo === 'Masculino'
+                ? 'un trabajador'
+                : 'una trabajadora',
+            bold: true,
+          },
           { text: ` de ` },
           { text: ` ${trabajador.edad} `, bold: true },
           { text: ` de edad, que labora en la empresa ` },
@@ -376,50 +393,57 @@ export const notaMedicaInforme = (
           { text: `${trabajador.puesto}`, bold: true },
           { text: `, con escolaridad ` },
           { text: `${trabajador.escolaridad}`, bold: true },
-          ...(trabajador.antiguedad && trabajador.antiguedad !== '-' ? [
-            { text: ` y una antigüedad de ` },
-            { text: `${trabajador.antiguedad}`, bold: true }
-          ] : []),
+          ...(trabajador.antiguedad && trabajador.antiguedad !== '-'
+            ? [
+                { text: ` y una antigüedad de ` },
+                { text: `${trabajador.antiguedad}`, bold: true },
+              ]
+            : []),
           { text: `. Estado civil: ` },
           { text: `${trabajador.estadoCivil}`, bold: true },
-          ...(trabajador.numeroEmpleado && trabajador.numeroEmpleado.trim() !== '' ? [
-            { text: `, número de empleado: ` },
-            { text: `${trabajador.numeroEmpleado}`, bold: true }
-          ] : [])
+          ...(trabajador.numeroEmpleado &&
+          trabajador.numeroEmpleado.trim() !== ''
+            ? [
+                { text: `, número de empleado: ` },
+                { text: `${trabajador.numeroEmpleado}`, bold: true },
+              ]
+            : []),
         ],
         margin: [0, 0, 0, 10],
-        style: 'paragraph'
+        style: 'paragraph',
       },
       // Motivo de consulta
       {
         text: [
           { text: `Motivo de consulta:`, bold: true },
-          { text: ` ${notaMedica.motivoConsulta} `},
+          { text: ` ${notaMedica.motivoConsulta} ` },
         ],
         margin: [0, 0, 0, 10],
-        style: 'paragraph'
+        style: 'paragraph',
       },
 
       // Antecedentes
-      notaMedica.antecedentes ? {
-        text: [
-          { text: `Antecedentes:`, bold: true },
-          { text: ` ${notaMedica.antecedentes} `},
-        ],
-        margin: [0, 0, 0, 10],
-        style: 'paragraph'
-      } : null,
+      notaMedica.antecedentes
+        ? {
+            text: [
+              { text: `Antecedentes:`, bold: true },
+              { text: ` ${notaMedica.antecedentes} ` },
+            ],
+            margin: [0, 0, 0, 10],
+            style: 'paragraph',
+          }
+        : null,
 
       // Exploracion Física
       {
         text: [
           { text: `Exploración Física:`, bold: true },
-          { text: ` ${notaMedica.exploracionFisica} `},
+          { text: ` ${notaMedica.exploracionFisica} ` },
         ],
         margin: [0, 0, 0, 10],
-        style: 'paragraph'
+        style: 'paragraph',
       },
-      
+
       // Signos Vitales
       construirSignosVitales(notaMedica),
 
@@ -430,45 +454,53 @@ export const notaMedicaInforme = (
           { text: ` ${notaMedica.diagnostico.toUpperCase()} `, bold: true },
         ],
         margin: [0, 0, 0, 10],
-        style: 'paragraph'
+        style: 'paragraph',
       },
 
       // Tratamiento
-      notaMedica.tratamiento && notaMedica.tratamiento.length > 0 ? {
-        text: [
-          { text: `TX:`, bold: true },
-          ...notaMedica.tratamiento.flatMap((item, index) => ([
-            { text: `\n     ${index + 1}. `, preserveLeadingSpaces: true }, // Espacios antes del número
-            { text: item, bold: true }
-          ])) // 🔹 Se usa `flatMap` para evitar la anidación de arrays
-        ],
-        margin: [0, 0, 0, 10], // Mantiene formato correcto
-        style: 'paragraph'
-      } : undefined,  // 🔹 Se usa `undefined` en lugar de `null`
+      notaMedica.tratamiento && notaMedica.tratamiento.length > 0
+        ? {
+            text: [
+              { text: `TX:`, bold: true },
+              ...notaMedica.tratamiento.flatMap((item, index) => [
+                { text: `\n     ${index + 1}. `, preserveLeadingSpaces: true }, // Espacios antes del número
+                { text: item, bold: true },
+              ]), // 🔹 Se usa `flatMap` para evitar la anidación de arrays
+            ],
+            margin: [0, 0, 0, 10], // Mantiene formato correcto
+            style: 'paragraph',
+          }
+        : undefined, // 🔹 Se usa `undefined` en lugar de `null`
 
       // Recomendaciones
-      notaMedica.recomendaciones && notaMedica.recomendaciones.length > 0 ? {
-        text: [
-          { text: `Recomendaciones:`, bold: true }, // Solo la etiqueta en negrita
-          ...notaMedica.recomendaciones.flatMap((item, index) => ([
-            { text: `\n     ${String.fromCharCode(97 + index)}. `, preserveLeadingSpaces: true }, // Letra en lugar de número
-            { text: item } // Texto normal, sin negrita
-          ])) // 🔹 `flatMap` evita arrays anidados
-        ],
-        margin: [0, 0, 0, 10], // Mantiene formato correcto
-        style: 'paragraph'
-      } : undefined, // 🔹 Se usa `undefined` en lugar de `null`      
+      notaMedica.recomendaciones && notaMedica.recomendaciones.length > 0
+        ? {
+            text: [
+              { text: `Recomendaciones:`, bold: true }, // Solo la etiqueta en negrita
+              ...notaMedica.recomendaciones.flatMap((item, index) => [
+                {
+                  text: `\n     ${String.fromCharCode(97 + index)}. `,
+                  preserveLeadingSpaces: true,
+                }, // Letra en lugar de número
+                { text: item }, // Texto normal, sin negrita
+              ]), // 🔹 `flatMap` evita arrays anidados
+            ],
+            margin: [0, 0, 0, 10], // Mantiene formato correcto
+            style: 'paragraph',
+          }
+        : undefined, // 🔹 Se usa `undefined` en lugar de `null`
 
       // Observaciones
-      notaMedica.observaciones ? {
-        text: [
-          { text: `Observaciones:`, bold: true },
-          { text: ` ${notaMedica.observaciones} `},
-        ],
-        margin: [0, 0, 0, 10],
-        style: 'paragraph'
-      } : null,
-      
+      notaMedica.observaciones
+        ? {
+            text: [
+              { text: `Observaciones:`, bold: true },
+              { text: ` ${notaMedica.observaciones} ` },
+            ],
+            margin: [0, 0, 0, 10],
+            style: 'paragraph',
+          }
+        : null,
     ],
     // Pie de pagina
     footer: {
@@ -501,62 +533,69 @@ export const notaMedicaInforme = (
             {
               text: [
                 // Nombre y título profesional
-                (firmanteActivo?.tituloProfesional && firmanteActivo?.nombre)
+                firmanteActivo?.tituloProfesional && firmanteActivo?.nombre
                   ? {
                       text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
                       bold: true,
                     }
                   : null,
-              
+
                 // Cédula profesional (para médicos y enfermeras)
                 firmanteActivo?.numeroCedulaProfesional
                   ? {
-                      text: proveedorSalud.pais === 'MX' 
-                        ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : proveedorSalud.pais === 'GT'
-                        ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                        : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                          : proveedorSalud.pais === 'GT'
+                            ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                            : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Cédula de especialista (solo para médicos)
-                (usarMedico && medicoFirmante?.numeroCedulaEspecialista)
+                usarMedico && medicoFirmante?.numeroCedulaEspecialista
                   ? {
-                      text: proveedorSalud.pais === 'MX'
-                        ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                        : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
                       bold: false,
                     }
                   : null,
-              
+
                 // Credencial adicional
-                (firmanteActivo?.nombreCredencialAdicional && firmanteActivo?.numeroCredencialAdicional)
-                ? {
-                    text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                    bold: false,
-                  }
-                : null,
-                
-                // Texto específico para enfermeras
-                (usarEnfermera && enfermeraFirmante?.sexo)
+                firmanteActivo?.nombreCredencialAdicional &&
+                firmanteActivo?.numeroCredencialAdicional
                   ? {
-                      text: enfermeraFirmante.sexo === 'Femenino' 
-                        ? 'Enfermera responsable de la nota\n'
-                        : 'Enfermero responsable de la nota\n',
+                      text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
                       bold: false,
                     }
                   : null,
-                
-              ].filter(item => item !== null),  // Filtrar los nulos para que no aparezcan en el informe        
+
+                // Texto específico para enfermeras
+                usarEnfermera && enfermeraFirmante?.sexo
+                  ? {
+                      text:
+                        enfermeraFirmante.sexo === 'Femenino'
+                          ? 'Enfermera responsable de la nota\n'
+                          : 'Enfermero responsable de la nota\n',
+                      bold: false,
+                    }
+                  : null,
+              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(firmanteActivo?.firma?.data ? [{
-              ...firma,
-              margin: [0, -3, 0, 0] as [number, number, number, number],  // Mueve el elemento más arriba
-            }] : []),
+            ...(firmanteActivo?.firma?.data
+              ? [
+                  {
+                    ...firma,
+                    margin: [0, -3, 0, 0] as [number, number, number, number], // Mueve el elemento más arriba
+                  },
+                ]
+              : []),
             {
               text: [
                 proveedorSalud.nombre
@@ -566,7 +605,7 @@ export const notaMedicaInforme = (
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.direccion
                   ? {
                       text: `${proveedorSalud.direccion}\n`,
@@ -574,15 +613,17 @@ export const notaMedicaInforme = (
                       italics: true,
                     }
                   : null,
-              
-                (proveedorSalud.municipio && proveedorSalud.estado && proveedorSalud.telefono)
+
+                proveedorSalud.municipio &&
+                proveedorSalud.estado &&
+                proveedorSalud.telefono
                   ? {
                       text: `${proveedorSalud.municipio}, ${proveedorSalud.estado}, Tel. ${formatearTelefono(proveedorSalud.telefono)}\n`,
                       bold: false,
                       italics: true,
                     }
                   : null,
-              
+
                 proveedorSalud.sitioWeb
                   ? {
                       text: `${proveedorSalud.sitioWeb}`,
@@ -592,7 +633,7 @@ export const notaMedicaInforme = (
                       color: 'blue',
                     }
                   : null,
-              ].filter(item => item !== null),  // Elimina los elementos nulos
+              ].filter((item) => item !== null), // Elimina los elementos nulos
               alignment: 'right',
               fontSize: 8,
               margin: [0, 0, 40, 0],

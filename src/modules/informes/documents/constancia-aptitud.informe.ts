@@ -98,8 +98,18 @@ function formatearFechaInstitucional(fecha: Date): string {
   if (!fecha || isNaN(fecha.getTime())) return '';
 
   const meses = [
-    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    'enero',
+    'febrero',
+    'marzo',
+    'abril',
+    'mayo',
+    'junio',
+    'julio',
+    'agosto',
+    'septiembre',
+    'octubre',
+    'noviembre',
+    'diciembre',
   ];
 
   const dia = fecha.getUTCDate();
@@ -111,9 +121,9 @@ function formatearFechaInstitucional(fecha: Date): string {
 
 function formatearTelefono(telefono: string): string {
   if (!telefono) {
-    return ''; 
+    return '';
   }
-  
+
   // Si el teléfono ya tiene formato internacional (+52XXXXXXXXXX)
   if (telefono.startsWith('+')) {
     // Buscar el país correspondiente para obtener el código
@@ -137,27 +147,27 @@ function formatearTelefono(telefono: string): string {
       { code: 'SV', dialCode: '+503' },
       { code: 'CU', dialCode: '+53' },
       { code: 'DO', dialCode: '+1' },
-      { code: 'PR', dialCode: '+1' }
+      { code: 'PR', dialCode: '+1' },
     ];
-    
+
     // Encontrar el país por código de marcación
-    const country = countries.find(c => telefono.startsWith(c.dialCode));
+    const country = countries.find((c) => telefono.startsWith(c.dialCode));
     if (country) {
       const numeroLocal = telefono.replace(country.dialCode, '');
       return `(${country.dialCode}) ${numeroLocal}`;
     }
   }
-  
+
   // Si es un número local de 10 dígitos (México)
   if (telefono.length === 10 && /^\d{10}$/.test(telefono)) {
     return `(+52) ${telefono}`;
   }
-  
+
   // Si es un número local de otros países (8-11 dígitos)
   if (telefono.length >= 8 && telefono.length <= 11 && /^\d+$/.test(telefono)) {
     return `(+XX) ${telefono}`;
   }
-  
+
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
@@ -195,7 +205,7 @@ interface MedicoFirmante {
   firma: {
     data: string;
     contentType: string;
-  }
+  };
 }
 
 interface ProveedorSalud {
@@ -213,7 +223,7 @@ interface ProveedorSalud {
   telefono: string;
   correoElectronico: string;
   sitioWeb: string;
-  colorInforme: string;  
+  colorInforme: string;
   semaforizacionActivada: boolean;
 }
 
@@ -225,7 +235,6 @@ export const constanciaAptitudInforme = (
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
-
   const updatedStyles: StyleDictionary = { ...styles };
 
   const firma: Content = medicoFirmante.firma?.data
@@ -237,9 +246,10 @@ export const constanciaAptitudInforme = (
     : 'assets/RamazziniBrand600x600.png';
 
   // Determinar el cargo del emisor
-  const cargoEmisor = medicoFirmante.especialistaSaludTrabajo === 'Si'
-    ? 'Médico del Trabajo'
-    : 'Médico Responsable de Evaluación';
+  const cargoEmisor =
+    medicoFirmante.especialistaSaludTrabajo === 'Si'
+      ? 'Médico del Trabajo'
+      : 'Médico Responsable de Evaluación';
 
   return {
     pageSize: 'LETTER',
@@ -311,10 +321,14 @@ export const constanciaAptitudInforme = (
               { text: '', border: [false, false, false, false] }, // Espaciador izquierdo
               {
                 stack: [
-                  ...(medicoFirmante.firma?.data ? [{
-                    ...firma,
-                    alignment: 'center' as const,
-                  }] : []),
+                  ...(medicoFirmante.firma?.data
+                    ? [
+                        {
+                          ...firma,
+                          alignment: 'center' as const,
+                        },
+                      ]
+                    : []),
                   {
                     text: `${medicoFirmante.tituloProfesional || ''} ${medicoFirmante.nombre || 'Nombre del Emisor'}`.trim(),
                     style: 'nombreEmisor',
@@ -327,24 +341,45 @@ export const constanciaAptitudInforme = (
                     alignment: 'center' as const,
                     margin: [0, 0, 0, 0] as [number, number, number, number],
                   },
-                  ...(medicoFirmante.numeroCedulaProfesional ? [{
-                    text: proveedorSalud.pais === 'MX'
-                      ? `Cédula profesional No. ${medicoFirmante.numeroCedulaProfesional}.`
-                      : proveedorSalud.pais === 'GT'
-                      ? `Colegiado Activo No. ${medicoFirmante.numeroCedulaProfesional}.`
-                      : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}.`,
-                    style: 'credencialMedico',
-                    alignment: 'center' as const,
-                    margin: [0, 0, 0, 0] as [number, number, number, number],
-                  }] : []),
-                  ...((medicoFirmante.nombreCredencialAdicional && medicoFirmante.numeroCredencialAdicional) ? [{
-                    text: proveedorSalud.pais === 'GT'
-                      ? `Registro ${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}.`
-                      : `${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}.`,
-                    style: 'credencialMedico',
-                    alignment: 'center' as const,
-                    margin: [0, 0, 0, 0] as [number, number, number, number],
-                  }] : []),
+                  ...(medicoFirmante.numeroCedulaProfesional
+                    ? [
+                        {
+                          text:
+                            proveedorSalud.pais === 'MX'
+                              ? `Cédula profesional No. ${medicoFirmante.numeroCedulaProfesional}.`
+                              : proveedorSalud.pais === 'GT'
+                                ? `Colegiado Activo No. ${medicoFirmante.numeroCedulaProfesional}.`
+                                : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}.`,
+                          style: 'credencialMedico',
+                          alignment: 'center' as const,
+                          margin: [0, 0, 0, 0] as [
+                            number,
+                            number,
+                            number,
+                            number,
+                          ],
+                        },
+                      ]
+                    : []),
+                  ...(medicoFirmante.nombreCredencialAdicional &&
+                  medicoFirmante.numeroCredencialAdicional
+                    ? [
+                        {
+                          text:
+                            proveedorSalud.pais === 'GT'
+                              ? `Registro ${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}.`
+                              : `${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}.`,
+                          style: 'credencialMedico',
+                          alignment: 'center' as const,
+                          margin: [0, 0, 0, 0] as [
+                            number,
+                            number,
+                            number,
+                            number,
+                          ],
+                        },
+                      ]
+                    : []),
                 ],
                 border: [false, false, false, false],
                 valign: 'top',
@@ -385,13 +420,18 @@ export const constanciaAptitudInforme = (
         {
           text: [
             {
-              text: [
-                proveedorSalud.direccion,
-                proveedorSalud.municipio,
-                proveedorSalud.estado,
-              ]
-                .filter(item => item)
-                .join(', ') + '.' + (proveedorSalud.telefono ? ` Tel. ${formatearTelefono(proveedorSalud.telefono)}` : ''),
+              text:
+                [
+                  proveedorSalud.direccion,
+                  proveedorSalud.municipio,
+                  proveedorSalud.estado,
+                ]
+                  .filter((item) => item)
+                  .join(', ') +
+                '.' +
+                (proveedorSalud.telefono
+                  ? ` Tel. ${formatearTelefono(proveedorSalud.telefono)}`
+                  : ''),
               bold: false,
               color: '#777777',
             },
@@ -403,7 +443,7 @@ export const constanciaAptitudInforme = (
                   color: '#777777',
                 }
               : null,
-          ].filter(item => item !== null),
+          ].filter((item) => item !== null),
           alignment: 'center',
           fontSize: 7,
           margin: [0, 0, 0, 0],

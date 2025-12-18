@@ -4,7 +4,7 @@ import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.m
 
 /**
  * NOM-024 Compliance Module
- * 
+ *
  * Provides utilities for conditional NOM-024 compliance enforcement.
  * This module is global so it can be used across the application.
  */
@@ -15,4 +15,3 @@ import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.m
   exports: [NOM024ComplianceUtil],
 })
 export class NOM024ComplianceModule {}
-

@@ -1,24 +1,31 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsNotEmpty, Matches, ValidateNested, IsOptional, IsMongoId } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  Matches,
+  ValidateNested,
+  IsOptional,
+  IsMongoId,
+} from 'class-validator';
 
 class LogotipoDto {
-    @ApiProperty({
-      description: 'Nombre del Logotipo',
-      example: 'baketopLogo.png;,'
-    })
-    @IsString({ message: 'El "data" del logotipo debe ser un string' })
-    @IsNotEmpty({ message: 'El "data" del logotipo no puede estar vacío' })
-    data: string;
-  
-    @ApiProperty({
-      description: 'Tipo de Contenido del Logotipo',
-      example: 'image/png',
-    })
-    @IsString({ message: 'El "contentType" del logotipo debe ser un string' })
-    @IsNotEmpty({ message: 'El "contentType" del logotipo no puede estar vacío' })
-    contentType: string;
-  }
+  @ApiProperty({
+    description: 'Nombre del Logotipo',
+    example: 'baketopLogo.png;,',
+  })
+  @IsString({ message: 'El "data" del logotipo debe ser un string' })
+  @IsNotEmpty({ message: 'El "data" del logotipo no puede estar vacío' })
+  data: string;
+
+  @ApiProperty({
+    description: 'Tipo de Contenido del Logotipo',
+    example: 'image/png',
+  })
+  @IsString({ message: 'El "contentType" del logotipo debe ser un string' })
+  @IsNotEmpty({ message: 'El "contentType" del logotipo no puede estar vacío' })
+  contentType: string;
+}
 
 export class CreateEmpresaDto {
   @ApiProperty({
@@ -32,21 +39,23 @@ export class CreateEmpresaDto {
   @ApiProperty({
     description: 'Razón social de la empresa',
     example: 'Bakery Topolobampo S.A. de C.V.',
-    required: false
+    required: false,
   })
   @IsString({ message: 'La razón social debe ser un string' })
   @IsOptional()
   razonSocial?: string;
 
   @ApiProperty({
-    description: 'RFC/Registro Patronal de la empresa (opcional, alfanumérico con separadores)',
+    description:
+      'RFC/Registro Patronal de la empresa (opcional, alfanumérico con separadores)',
     example: 'BTK123456Y32 o REG-123456',
-    required: false
+    required: false,
   })
   @IsString({ message: 'El RFC debe ser un string' })
   @IsOptional()
   @Matches(/^$|^[A-ZÑÁÉÍÓÚ&]{2,8}[\s\-\._]?[A-Z0-9ÑÁÉÍÓÚ\s\-\._]{4,20}$/i, {
-    message: 'El identificador de empresa debe tener entre 6 y 28 caracteres alfanuméricos con separadores',
+    message:
+      'El identificador de empresa debe tener entre 6 y 28 caracteres alfanuméricos con separadores',
   })
   RFC?: string;
 
@@ -61,7 +70,7 @@ export class CreateEmpresaDto {
   @ApiProperty({
     description: 'Logotipo de la empresa',
     type: LogotipoDto,
-    required: false
+    required: false,
   })
   @ValidateNested()
   @Type(() => LogotipoDto)

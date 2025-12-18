@@ -1,7 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { InformesService } from './informes.service';
 import { InformesController } from './informes.controller';
-import { PrinterModule } from '../printer/printer.module'
+import { PrinterModule } from '../printer/printer.module';
 import { EmpresasModule } from '../empresas/empresas.module';
 import { TrabajadoresModule } from '../trabajadores/trabajadores.module';
 import { ExpedientesModule } from '../expedientes/expedientes.module';
@@ -16,16 +16,16 @@ import { UsersModule } from '../users/users.module';
   controllers: [InformesController],
   providers: [InformesService],
   imports: [
-    PrinterModule, 
-    EmpresasModule, 
-    TrabajadoresModule, 
+    PrinterModule,
+    EmpresasModule,
+    TrabajadoresModule,
     forwardRef(() => ExpedientesModule),
     FilesModule,
     MedicosFirmantesModule,
     EnfermerasFirmantesModule,
     TecnicosFirmantesModule,
     ProveedoresSaludModule,
-    UsersModule
+    UsersModule,
   ],
   exports: [InformesService],
 })

@@ -9,27 +9,28 @@ interface Logotipo {
 
 @Schema()
 export class EnfermeraFirmante extends Document {
-    @Prop({ required: true })
-    nombre: string;
-    @Prop()
-    sexo?: string;
-    @Prop()
-    tituloProfesional?: string;
-    @Prop()
-    numeroCedulaProfesional?: string;
-    @Prop()
-    nombreCredencialAdicional?: string;
-    @Prop()
-    numeroCredencialAdicional?: string;
-    @Prop({
-        type: {
-          data: { type: String },
-          contentType: { type: String },
-        },
-    })
-    firma?: Object;
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    idUser: User;
+  @Prop({ required: true })
+  nombre: string;
+  @Prop()
+  sexo?: string;
+  @Prop()
+  tituloProfesional?: string;
+  @Prop()
+  numeroCedulaProfesional?: string;
+  @Prop()
+  nombreCredencialAdicional?: string;
+  @Prop()
+  numeroCredencialAdicional?: string;
+  @Prop({
+    type: {
+      data: { type: String },
+      contentType: { type: String },
+    },
+  })
+  firma?: object;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  idUser: User;
 }
 
-export const EnfermeraFirmanteSchema = SchemaFactory.createForClass(EnfermeraFirmante);
+export const EnfermeraFirmanteSchema =
+  SchemaFactory.createForClass(EnfermeraFirmante);

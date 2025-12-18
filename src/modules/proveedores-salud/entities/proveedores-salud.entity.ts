@@ -10,7 +10,7 @@ export class ProveedoresSalud extends Document {
   nombre: string;
   pais?: string;
   perfilProveedorSalud: string;
-  clues?: string;  
+  clues?: string;
   logotipoEmpresa?: {
     data: string;
     contentType: string;

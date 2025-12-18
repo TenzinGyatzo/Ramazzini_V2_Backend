@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { RiesgosTrabajoService } from './riesgos-trabajo.service';
 import { CreateRiesgosTrabajoDto } from './dto/create-riesgos-trabajo.dto';
 import { UpdateRiesgosTrabajoDto } from './dto/update-riesgos-trabajo.dto';
@@ -23,8 +31,14 @@ export class RiesgosTrabajoController {
   }
 
   @Patch(':riesgoTrabajoId')
-  update(@Param('riesgoTrabajoId') riesgoTrabajoId: string, @Body() updateRiesgosTrabajoDto: UpdateRiesgosTrabajoDto) {
-    return this.riesgosTrabajoService.update(riesgoTrabajoId, updateRiesgosTrabajoDto);
+  update(
+    @Param('riesgoTrabajoId') riesgoTrabajoId: string,
+    @Body() updateRiesgosTrabajoDto: UpdateRiesgosTrabajoDto,
+  ) {
+    return this.riesgosTrabajoService.update(
+      riesgoTrabajoId,
+      updateRiesgosTrabajoDto,
+    );
   }
 
   @Delete(':riesgoTrabajoId')

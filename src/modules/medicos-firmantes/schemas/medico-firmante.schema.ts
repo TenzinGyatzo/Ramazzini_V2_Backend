@@ -9,38 +9,39 @@ interface Logotipo {
 
 @Schema()
 export class MedicoFirmante extends Document {
-    @Prop({ required: true })
-    nombre: string;
-    @Prop()
-    tituloProfesional?: string;
-    @Prop()
-    universidad?: string;
-    @Prop()
-    numeroCedulaProfesional?: string;
-    @Prop()
-    especialistaSaludTrabajo?: string;
-    @Prop()
-    numeroCedulaEspecialista?: string;
-    @Prop()
-    nombreCredencialAdicional?: string;
-    @Prop()
-    numeroCredencialAdicional?: string;
-    @Prop({
-        type: {
-          data: { type: String },
-          contentType: { type: String },
-        },
-    })
-    firma?: Object;
-    @Prop({
-        type: {
-        data: { type: String },
-        contentType: { type: String },
-        },
-    })
-    firmaConAntefirma?: Object;
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-    idUser: User;
+  @Prop({ required: true })
+  nombre: string;
+  @Prop()
+  tituloProfesional?: string;
+  @Prop()
+  universidad?: string;
+  @Prop()
+  numeroCedulaProfesional?: string;
+  @Prop()
+  especialistaSaludTrabajo?: string;
+  @Prop()
+  numeroCedulaEspecialista?: string;
+  @Prop()
+  nombreCredencialAdicional?: string;
+  @Prop()
+  numeroCredencialAdicional?: string;
+  @Prop({
+    type: {
+      data: { type: String },
+      contentType: { type: String },
+    },
+  })
+  firma?: object;
+  @Prop({
+    type: {
+      data: { type: String },
+      contentType: { type: String },
+    },
+  })
+  firmaConAntefirma?: object;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  idUser: User;
 }
 
-export const MedicoFirmanteSchema = SchemaFactory.createForClass(MedicoFirmante);
+export const MedicoFirmanteSchema =
+  SchemaFactory.createForClass(MedicoFirmante);

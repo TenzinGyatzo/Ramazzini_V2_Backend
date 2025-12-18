@@ -31,7 +31,7 @@ import { CentrosTrabajoModule } from '../centros-trabajo/centros-trabajo.module'
       { name: 'NotaMedica', schema: NotaMedicaSchema },
       { name: 'DocumentoExterno', schema: DocumentoExternoSchema },
     ]),
-    EmailsModule,  // Importa el módulo que exporta el EmailsService
+    EmailsModule, // Importa el módulo que exporta el EmailsService
     forwardRef(() => CentrosTrabajoModule),
   ],
   controllers: [UsersController],
