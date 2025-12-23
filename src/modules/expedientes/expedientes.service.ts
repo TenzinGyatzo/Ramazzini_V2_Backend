@@ -2,8 +2,6 @@
 import {
   Injectable,
   BadRequestException,
-  Inject,
-  forwardRef,
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -25,7 +23,6 @@ import { ConstanciaAptitud } from './schemas/constancia-aptitud.schema';
 import { Receta } from './schemas/receta.schema';
 import { Lesion } from './schemas/lesion.schema';
 import { Deteccion } from './schemas/deteccion.schema';
-import { startOfDay, endOfDay } from 'date-fns';
 import { FilesService } from '../files/files.service';
 import { convertirFechaISOaDDMMYYYY } from 'src/utils/dates';
 import path from 'path';
@@ -247,7 +244,7 @@ export class ExpedientesService {
       }
 
       return empresa.idProveedorSalud.toString();
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -286,8 +283,36 @@ export class ExpedientesService {
       }
 
       return empresa.idProveedorSalud.toString();
-    } catch (error) {
+    } catch {
       return null;
+    }
+  }
+
+  /**
+   * Determina si el trabajador pertenece a un proveedor de salud de México
+   * @param trabajadorId ID del trabajador
+   * @returns true si el país del proveedor es 'MX'
+   */
+  private async isProveedorMX(trabajadorId: string): Promise<boolean> {
+    try {
+      const trabajador = await this.trabajadorModel
+        .findById(trabajadorId)
+        .lean();
+      if (!trabajador?.idCentroTrabajo) return false;
+
+      const centroTrabajo = await this.centroTrabajoModel
+        .findById(trabajador.idCentroTrabajo)
+        .lean();
+      if (!centroTrabajo?.idEmpresa) return false;
+
+      const empresa: any = await this.empresaModel
+        .findById(centroTrabajo.idEmpresa)
+        .populate('idProveedorSalud')
+        .lean();
+
+      return empresa?.idProveedorSalud?.pais === 'MX';
+    } catch {
+      return false;
     }
   }
 
@@ -861,14 +886,39 @@ export class ExpedientesService {
   /**
    * GIIS-B013: Delete Lesion
    */
-  async deleteLesion(id: string): Promise<boolean> {
+  async deleteLesion(
+    id: string,
+    userId?: string,
+    razonAnulacion?: string,
+  ): Promise<{ deleted: boolean; anulado?: boolean }> {
     const lesion = await this.lesionModel.findById(id).exec();
     if (!lesion) {
       throw new BadRequestException(`Lesión con ID ${id} no encontrada`);
     }
 
+    const isMX = await this.isProveedorMX(lesion.idTrabajador.toString());
+
+    if (lesion.estado === DocumentoEstado.FINALIZADO && isMX) {
+      if (!userId || !razonAnulacion) {
+        throw new BadRequestException(
+          'Se requiere userId y razonAnulacion para anular una lesión finalizada',
+        );
+      }
+      lesion.estado = DocumentoEstado.ANULADO;
+      lesion.fechaAnulacion = new Date();
+      lesion.anuladoPor = userId as any;
+      lesion.razonAnulacion = razonAnulacion;
+      await lesion.save();
+      if (lesion.idTrabajador) {
+        await this.actualizarUpdatedAtTrabajador(
+          lesion.idTrabajador.toString(),
+        );
+      }
+      return { deleted: false, anulado: true };
+    }
+
     await this.lesionModel.findByIdAndDelete(id).exec();
-    return true;
+    return { deleted: true, anulado: false };
   }
 
   /**
@@ -898,6 +948,9 @@ export class ExpedientesService {
     if (lesion.idTrabajador) {
       await this.actualizarUpdatedAtTrabajador(lesion.idTrabajador.toString());
     }
+
+    // Populate finalizadoPor before returning
+    await savedLesion.populate('finalizadoPor', 'username');
 
     return savedLesion;
   }
@@ -944,7 +997,11 @@ export class ExpedientesService {
         `Tipo de documento ${documentType} no soportado`,
       );
     }
-    return model.find({ idTrabajador: trabajadorId }).exec();
+    return model
+      .find({ idTrabajador: trabajadorId })
+      .populate('finalizadoPor', 'username')
+      .populate('anuladoPor', 'username')
+      .exec();
   }
 
   async findDocument(documentType: string, id: string): Promise<any> {
@@ -954,7 +1011,11 @@ export class ExpedientesService {
         `Tipo de documento ${documentType} no soportado`,
       );
     }
-    return model.findById(id).exec();
+    return model
+      .findById(id)
+      .populate('finalizadoPor', 'username')
+      .populate('anuladoPor', 'username')
+      .exec();
   }
 
   async upsertDocumentoExterno(
@@ -1041,7 +1102,12 @@ export class ExpedientesService {
     return result;
   }
 
-  async removeDocument(documentType: string, id: string): Promise<boolean> {
+  async removeDocument(
+    documentType: string,
+    id: string,
+    userId?: string,
+    razonAnulacion?: string,
+  ): Promise<{ deleted: boolean; anulado?: boolean }> {
     // console.log(`[DEBUG] Inicio de removeDocument - documentType: ${documentType}, id: ${id}`);
     const model = this.models[documentType];
     if (!model) {
@@ -1055,14 +1121,84 @@ export class ExpedientesService {
       throw new BadRequestException(`Documento con ID ${id} no encontrado`);
     }
 
+    // Si se proporciona razonAnulacion, significa que se está intentando anular (soft delete)
+    // Esto solo aplica para documentos finalizados
+    if (razonAnulacion && document.estado === DocumentoEstado.FINALIZADO) {
+      if (!userId) {
+        throw new BadRequestException(
+          'Se requiere userId para anular un documento finalizado',
+        );
+      }
+
+      // Aplicar soft delete (anulación) independientemente de si es MX o no
+      // para mantener consistencia cuando se usa el modal de anulación
+      document.estado = DocumentoEstado.ANULADO;
+      document.fechaAnulacion = new Date();
+      document.anuladoPor = userId;
+      document.razonAnulacion = razonAnulacion;
+
+      await document.save();
+
+      // Actualizar trabajador updatedAt
+      if (document.idTrabajador) {
+        await this.actualizarUpdatedAtTrabajador(
+          document.idTrabajador.toString(),
+        );
+      }
+
+      return { deleted: false, anulado: true };
+    }
+
+    // Si el documento ya está anulado y se intenta eliminar, hacer hard delete
+    if (document.estado === DocumentoEstado.ANULADO) {
+      // Hard delete para documentos anulados
+      try {
+        let fullPath = '';
+        if (documentType === 'documentoExterno') {
+          fullPath = document.rutaDocumento;
+          if (
+            !fullPath.includes('.pdf') &&
+            !fullPath.includes('.png') &&
+            !fullPath.includes('.jpg') &&
+            !fullPath.includes('.jpeg')
+          ) {
+            const fechaField = this.dateFields[documentType];
+            const fecha = convertirFechaISOaDDMMYYYY(
+              document[fechaField],
+            ).replace(/\//g, '-');
+            const fileName = `${document.nombreDocumento} ${fecha}${document.extension}`;
+            fullPath = path.join(document.rutaDocumento, fileName);
+          }
+        } else {
+          fullPath = document.rutaPDF;
+          if (!fullPath.includes('.pdf')) {
+            const fechaField = this.dateFields[documentType];
+            const fecha = convertirFechaISOaDDMMYYYY(
+              document[fechaField],
+            ).replace(/\//g, '-');
+            const fileName = formatDocumentName(documentType, fecha);
+            fullPath = path.join(document.rutaPDF, fileName);
+          }
+        }
+
+        await this.filesService.deleteFile(fullPath);
+      } catch {
+        // Continuar con la eliminación aunque falle el borrado del archivo
+      }
+
+      await model.findByIdAndDelete(id).exec();
+      return { deleted: true, anulado: false };
+    }
+
+    // Hard delete: borrador o documentos no finalizados sin razonAnulacion
     try {
       let fullPath = '';
       if (documentType === 'documentoExterno') {
         fullPath = document.rutaDocumento;
         if (
-          !fullPath.includes('.pdf') ||
-          !fullPath.includes('.png') ||
-          !fullPath.includes('.jpg') ||
+          !fullPath.includes('.pdf') &&
+          !fullPath.includes('.png') &&
+          !fullPath.includes('.jpg') &&
           !fullPath.includes('.jpeg')
         ) {
           const fechaField = this.dateFields[documentType];
@@ -1086,12 +1222,12 @@ export class ExpedientesService {
 
       // console.log(`[DEBUG] Intentando eliminar archivo PDF: ${fullPath}`);
       await this.filesService.deleteFile(fullPath); // Usar FilesService
-    } catch (error) {
-      // console.error(`[ERROR] Error al eliminar el archivo PDF: ${error.message}`);
+    } catch {
+      // console.error(`[ERROR] Error al eliminar el archivo PDF`);
     }
 
     const result = await model.findByIdAndDelete(id).exec();
-    return result !== null;
+    return { deleted: result !== null, anulado: false };
   }
 
   async getAlturaDisponible(
@@ -1556,29 +1692,39 @@ export class ExpedientesService {
   /**
    * GIIS-B019: Delete Detección
    */
-  async deleteDeteccion(id: string): Promise<boolean> {
+  async deleteDeteccion(
+    id: string,
+    userId?: string,
+    razonAnulacion?: string,
+  ): Promise<{ deleted: boolean; anulado?: boolean }> {
     const deteccion = await this.deteccionModel.findById(id).exec();
     if (!deteccion) {
       throw new BadRequestException(`Detección con ID ${id} no encontrada`);
     }
 
-    // Check if finalized for MX (block deletion)
-    if (deteccion.estado === DocumentoEstado.FINALIZADO) {
-      const proveedorSaludId =
-        await this.getProveedorSaludIdFromDocument(deteccion);
-      if (proveedorSaludId) {
-        const requiresCompliance =
-          await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
-        if (requiresCompliance) {
-          throw new ForbiddenException(
-            'No se puede eliminar una detección finalizada para proveedores en México.',
-          );
-        }
+    const isMX = await this.isProveedorMX(deteccion.idTrabajador.toString());
+
+    if (deteccion.estado === DocumentoEstado.FINALIZADO && isMX) {
+      if (!userId || !razonAnulacion) {
+        throw new BadRequestException(
+          'Se requiere userId y razonAnulacion para anular una detección finalizada',
+        );
       }
+      deteccion.estado = DocumentoEstado.ANULADO;
+      deteccion.fechaAnulacion = new Date();
+      deteccion.anuladoPor = userId as any;
+      deteccion.razonAnulacion = razonAnulacion;
+      await deteccion.save();
+      if (deteccion.idTrabajador) {
+        await this.actualizarUpdatedAtTrabajador(
+          deteccion.idTrabajador.toString(),
+        );
+      }
+      return { deleted: false, anulado: true };
     }
 
     await this.deteccionModel.findByIdAndDelete(id).exec();
-    return true;
+    return { deleted: true, anulado: false };
   }
 
   /**
@@ -1641,6 +1787,9 @@ export class ExpedientesService {
         deteccion.idTrabajador.toString(),
       );
     }
+
+    // Populate finalizadoPor before returning
+    await savedDeteccion.populate('finalizadoPor', 'username');
 
     return savedDeteccion;
   }

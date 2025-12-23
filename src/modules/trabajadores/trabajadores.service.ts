@@ -93,7 +93,7 @@ export class TrabajadoresService {
       }
 
       return empresa.idProveedorSalud.toString();
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -182,20 +182,22 @@ export class TrabajadoresService {
       }
     }
 
-    // 4. Validate municipioResidencia (required for MX if entidadResidencia is valid)
-    if (
-      dto.entidadResidencia &&
-      dto.entidadResidencia.trim() !== '' &&
-      dto.entidadResidencia.trim().toUpperCase() !== 'NE' &&
-      dto.entidadResidencia.trim().toUpperCase() !== '00'
-    ) {
-      if (!dto.municipioResidencia || dto.municipioResidencia.trim() === '') {
-        errors.push(
-          'Municipio de residencia es obligatorio para proveedores en México cuando se especifica entidad de residencia (NOM-024)',
-        );
-      } else {
-        const municipioRes = dto.municipioResidencia.trim();
-        const entidadRes = dto.entidadResidencia.trim().toUpperCase();
+    // 4. Validate municipioResidencia (required for MX, allows "000" as sentinel)
+    if (!dto.municipioResidencia || dto.municipioResidencia.trim() === '') {
+      errors.push(
+        'Municipio de residencia es obligatorio para proveedores en México (NOM-024). Use "000" si no está disponible.',
+      );
+    } else {
+      const municipioRes = dto.municipioResidencia.trim();
+      const entidadRes = dto.entidadResidencia?.trim().toUpperCase() || '';
+
+      // Allow sentinel value "000" for "No disponible"
+      if (
+        municipioRes !== '000' &&
+        entidadRes &&
+        entidadRes !== 'NE' &&
+        entidadRes !== '00'
+      ) {
         // Hierarchical validation: municipio must belong to estado
         const isValid = await this.catalogsService.validateINEGI(
           'municipio',
@@ -210,30 +212,36 @@ export class TrabajadoresService {
       }
     }
 
-    // 5. Validate localidadResidencia (required for MX if municipioResidencia is provided)
-    if (dto.municipioResidencia && dto.municipioResidencia.trim() !== '') {
-      if (!dto.localidadResidencia || dto.localidadResidencia.trim() === '') {
-        errors.push(
-          'Localidad de residencia es obligatoria para proveedores en México cuando se especifica municipio de residencia (NOM-024)',
-        );
-      } else {
-        const localidadRes = dto.localidadResidencia.trim();
-        const municipioRes = dto.municipioResidencia.trim();
-        const entidadRes = dto.entidadResidencia?.trim().toUpperCase() || '';
+    // 5. Validate localidadResidencia (required for MX, allows "0000" as sentinel)
+    if (!dto.localidadResidencia || dto.localidadResidencia.trim() === '') {
+      errors.push(
+        'Localidad de residencia es obligatoria para proveedores en México (NOM-024). Use "0000" si no está disponible.',
+      );
+    } else {
+      const localidadRes = dto.localidadResidencia.trim();
+      const municipioRes = dto.municipioResidencia?.trim() || '';
+      const entidadRes = dto.entidadResidencia?.trim().toUpperCase() || '';
 
+      // Allow sentinel value "0000" for "No disponible"
+      if (
+        localidadRes !== '0000' &&
+        municipioRes &&
+        municipioRes !== '000' &&
+        entidadRes &&
+        entidadRes !== 'NE' &&
+        entidadRes !== '00'
+      ) {
         // Hierarchical validation: localidad must belong to municipio (within estado)
-        if (entidadRes && entidadRes !== 'NE' && entidadRes !== '00') {
-          const parentKey = `${entidadRes}-${municipioRes}`;
-          const isValid = await this.catalogsService.validateINEGI(
-            'localidad',
-            localidadRes,
-            parentKey,
+        const parentKey = `${entidadRes}-${municipioRes}`;
+        const isValid = await this.catalogsService.validateINEGI(
+          'localidad',
+          localidadRes,
+          parentKey,
+        );
+        if (!isValid) {
+          errors.push(
+            `Localidad de residencia inválida: ${localidadRes}. No pertenece al municipio ${municipioRes} de la entidad ${entidadRes}`,
           );
-          if (!isValid) {
-            errors.push(
-              `Localidad de residencia inválida: ${localidadRes}. No pertenece al municipio ${municipioRes} de la entidad ${entidadRes}`,
-            );
-          }
         }
       }
     }
@@ -278,8 +286,6 @@ export class TrabajadoresService {
     } else {
       // Non-MX provider: CURP is optional, but if provided, it should be valid format
       if (curp && curp.trim() !== '') {
-        const normalizedCurp = curp.trim().toUpperCase();
-        const formatValidation = validateCURP(normalizedCurp);
         // For non-MX, we allow invalid format but log a warning
         // This maintains backward compatibility
       }
@@ -756,9 +762,6 @@ export class TrabajadoresService {
     // 2. Separar trabajadores activos e inactivos
     const trabajadoresActivos = trabajadores.filter(
       (t) => t.estadoLaboral === 'Activo',
-    );
-    const trabajadoresInactivos = trabajadores.filter(
-      (t) => t.estadoLaboral === 'Inactivo',
     );
 
     // 3. Obtener arrays de IDs
@@ -1341,7 +1344,7 @@ export class TrabajadoresService {
       };
       // eslint-disable-next-line no-console
       console.log('[TRANSFERENCIA-TRABAJADOR] Resumen:', resumen);
-    } catch (e) {
+    } catch {
       // Silenciar cualquier error de logging para no afectar el flujo principal
     }
 
@@ -1353,13 +1356,11 @@ export class TrabajadoresService {
     excluirCentroId?: string,
     idProveedorSalud?: string,
   ): Promise<any> {
-    const t0 = Date.now();
     // Obtener usuario
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new ForbiddenException('Usuario no encontrado');
     }
-    const tUser = Date.now();
 
     // Obtener empresas disponibles según permisos
     let empresasDisponibles = [];
@@ -1388,7 +1389,6 @@ export class TrabajadoresService {
         .sort({ nombreComercial: 1 })
         .exec();
     }
-    const tEmpresas = Date.now();
 
     // Resolver centros en una sola consulta y agrupar por empresa para evitar N+1
     const empresasIds = empresasDisponibles.map((e: any) => e._id);
@@ -1401,7 +1401,6 @@ export class TrabajadoresService {
     }
 
     let centros = await this.centroTrabajoModel.find(filtroCentros).exec();
-    const tCentrosQuery = Date.now();
     if (excluirCentroId) {
       centros = centros.filter((c) => c._id.toString() !== excluirCentroId);
     }
@@ -1435,19 +1434,8 @@ export class TrabajadoresService {
         })),
       });
     }
-    const tBuild = Date.now();
 
-    const res = { empresas: resultado };
-    try {
-      const total = Date.now() - t0;
-      const dtUser = tUser - t0;
-      const dtEmpresas = tEmpresas - tUser;
-      const dtCentros = tCentrosQuery - tEmpresas;
-      const dtBuild = tBuild - tCentrosQuery;
-      const numEmpresas = empresasDisponibles.length;
-      const numCentros = centros.length;
-    } catch {}
-    return res;
+    return { empresas: resultado };
   }
 
   async getOpcionesTransferenciaPaginado(
@@ -2520,7 +2508,7 @@ export class TrabajadoresService {
       `[IMPORTACIÓN] 🚀 Iniciando importación de ${data.length} trabajadores`,
     );
 
-    for (const [index, worker] of data.entries()) {
+    for (const worker of data) {
       try {
         // Primero validar y limpiar los datos
         const validation = this.validateAndCleanWorkerData({

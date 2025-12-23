@@ -23,11 +23,11 @@ async function bootstrap() {
   app.useGlobalFilters(new EnoentSilencerFilter());
 
   // Servir el directorio de archivos estáticos
-  app.useStaticAssets(join(__dirname, '..', 'assets', 'signatories'), {
+  app.useStaticAssets(join(process.cwd(), 'assets', 'signatories'), {
     prefix: '/assets/signatories',
   });
 
-  app.useStaticAssets(join(__dirname, '..', 'assets', 'providers-logos'), {
+  app.useStaticAssets(join(process.cwd(), 'assets', 'providers-logos'), {
     prefix: '/assets/providers-logos',
   });
 

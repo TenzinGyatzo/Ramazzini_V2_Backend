@@ -57,6 +57,11 @@ import { diskStorage } from 'multer';
 import path from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { convertirFechaISOaDDMMYYYY } from '../../utils/dates';
+import jwt from 'jsonwebtoken';
+
+interface JwtPayload {
+  id: string;
+}
 
 @Controller('api/expedientes/:trabajadorId/documentos')
 export class ExpedientesController {
@@ -101,6 +106,24 @@ export class ExpedientesController {
     receta: UpdateRecetaDto,
     constanciaAptitud: UpdateConstanciaAptitudDto,
   };
+
+  // Método privado para autenticar usuario desde el JWT
+  private async authenticateUser(req: any): Promise<string> {
+    if (
+      !req.headers.authorization ||
+      !req.headers.authorization.startsWith('Bearer ')
+    ) {
+      throw new BadRequestException('Token de autorización requerido');
+    }
+
+    try {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
+      return decoded.id;
+    } catch {
+      throw new BadRequestException('Token inválido o expirado');
+    }
+  }
 
   @Post(':documentType/crear')
   async createDocument(
@@ -185,7 +208,8 @@ export class ExpedientesController {
   async uploadDocument(
     @Param('trabajadorId') trabajadorId: string,
     @Body() createDocumentoExternoDto: CreateDocumentoExternoDto,
-    @UploadedFile() file: Express.Multer.File,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @UploadedFile() _file: Express.Multer.File,
   ) {
     try {
       const document = await this.expedientesService.uploadDocument(
@@ -295,7 +319,7 @@ export class ExpedientesController {
     const dtoInstance = Object.assign(
       new DtoClass(),
       Object.fromEntries(
-        Object.entries(updateDto).filter(([_, v]) => v !== undefined),
+        Object.entries(updateDto).filter(([, v]) => v !== undefined),
       ),
     );
 
@@ -345,8 +369,8 @@ export class ExpedientesController {
       );
     }
 
-    // Get userId from request (should be set by auth middleware)
-    const userId = req.user?.id || req.user?._id;
+    // Decodificar el JWT del header para obtener el userId
+    const userId = await this.authenticateUser(req);
     if (!userId) {
       throw new BadRequestException('Usuario no autenticado');
     }
@@ -438,7 +462,7 @@ export class ExpedientesController {
     const dtoInstance = Object.assign(
       new UpdateLesionDto(),
       Object.fromEntries(
-        Object.entries(updateLesionDto).filter(([_, v]) => v !== undefined),
+        Object.entries(updateLesionDto).filter(([, v]) => v !== undefined),
       ),
     );
 
@@ -462,19 +486,37 @@ export class ExpedientesController {
   }
 
   @Delete('lesion/:id')
-  async deleteLesion(@Param('id') id: string) {
+  async deleteLesion(
+    @Param('id') id: string,
+    @Body() body?: { razonAnulacion?: string },
+    @Request() req?: any,
+  ) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    const deleted = await this.expedientesService.deleteLesion(id);
-    if (!deleted) {
+    // Decodificar el JWT del header para obtener el userId
+    let userId: string | undefined;
+    try {
+      userId = await this.authenticateUser(req);
+    } catch {}
+
+    const result = await this.expedientesService.deleteLesion(
+      id,
+      userId,
+      body?.razonAnulacion,
+    );
+
+    if (result.anulado) {
       return {
-        message: `La lesión con id ${id} no existe o ya ha sido eliminada`,
+        message: `La lesión con id ${id} ha sido anulada exitosamente`,
+        anulado: true,
       };
     }
+
     return {
       message: `La lesión con id ${id} ha sido eliminada exitosamente`,
+      deleted: true,
     };
   }
 
@@ -484,7 +526,8 @@ export class ExpedientesController {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    const userId = req.user?.id || req.user?._id;
+    // Decodificar el JWT del header para obtener el userId
+    const userId = await this.authenticateUser(req);
     if (!userId) {
       throw new BadRequestException('Usuario no autenticado');
     }
@@ -507,23 +550,36 @@ export class ExpedientesController {
   async removeDocument(
     @Param('documentType') documentType: string,
     @Param('id') id: string,
+    @Body() body?: { razonAnulacion?: string },
+    @Request() req?: any,
   ) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    const deletedDocument = await this.expedientesService.removeDocument(
+    // Decodificar el JWT del header para obtener el userId
+    let userId: string | undefined;
+    try {
+      userId = await this.authenticateUser(req);
+    } catch {}
+
+    const result = await this.expedientesService.removeDocument(
       documentType,
       id,
+      userId,
+      body?.razonAnulacion,
     );
 
-    if (!deletedDocument) {
+    if (result.anulado) {
       return {
-        message: `El documento de tipo ${documentType} con id ${id} no existe o ya ha sido eliminado`,
+        message: `${documentType} anulado exitosamente`,
+        anulado: true,
       };
     }
+
     return {
-      message: `El documento de tipo ${documentType} con id ${id} ha sido eliminado exitosamente`,
+      message: `${documentType} eliminado exitosamente`,
+      deleted: true,
     };
   }
 
@@ -578,7 +634,7 @@ export class ExpedientesController {
     const dtoInstance = Object.assign(
       new UpdateDeteccionDto(),
       Object.fromEntries(
-        Object.entries(updateDeteccionDto).filter(([_, v]) => v !== undefined),
+        Object.entries(updateDeteccionDto).filter(([, v]) => v !== undefined),
       ),
     );
 
@@ -602,19 +658,37 @@ export class ExpedientesController {
   }
 
   @Delete('deteccion/:id')
-  async deleteDeteccion(@Param('id') id: string) {
+  async deleteDeteccion(
+    @Param('id') id: string,
+    @Body() body?: { razonAnulacion?: string },
+    @Request() req?: any,
+  ) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    const deleted = await this.expedientesService.deleteDeteccion(id);
-    if (!deleted) {
+    // Decodificar el JWT del header para obtener el userId
+    let userId: string | undefined;
+    try {
+      userId = await this.authenticateUser(req);
+    } catch {}
+
+    const result = await this.expedientesService.deleteDeteccion(
+      id,
+      userId,
+      body?.razonAnulacion,
+    );
+
+    if (result.anulado) {
       return {
-        message: `La detección con id ${id} no existe o ya ha sido eliminada`,
+        message: `La detección con id ${id} ha sido anulada exitosamente`,
+        anulado: true,
       };
     }
+
     return {
       message: `La detección con id ${id} ha sido eliminada exitosamente`,
+      deleted: true,
     };
   }
 
@@ -624,7 +698,8 @@ export class ExpedientesController {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
-    const userId = req.user?.id || req.user?._id;
+    // Decodificar el JWT del header para obtener el userId
+    const userId = await this.authenticateUser(req);
     if (!userId) {
       throw new BadRequestException('Usuario no autenticado');
     }

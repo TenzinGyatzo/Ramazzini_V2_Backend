@@ -1,14 +1,12 @@
 // emails.service.ts
 import { Injectable } from '@nestjs/common';
 import { createTransport } from './emails.config';
-import { text } from 'stream/consumers';
 import path from 'path';
 import * as fs from 'fs';
 import { Cron } from '@nestjs/schedule';
 import * as os from 'os';
 import pidusage from 'pidusage';
 import { execSync } from 'child_process';
-import { get } from 'mongoose';
 import mongoose from 'mongoose';
 
 @Injectable()
@@ -77,7 +75,6 @@ export class EmailsService {
     email,
     nombrePlan,
     inicioSuscripcion,
-    fechaActualizacion,
     montoMensual,
     fechaProximoPago,
     historiasDisponibles,
@@ -434,7 +431,7 @@ export class EmailsService {
 
         return result.trim();
       }
-    } catch (error) {
+    } catch {
       return '⚠️ No se pudo obtener información del disco.';
     }
   }
@@ -459,7 +456,7 @@ export class EmailsService {
             .trim() + ' %',
         );
       }
-    } catch (error) {
+    } catch {
       return Promise.resolve('⚠️ No se pudo obtener información de CPU.');
     }
   }
@@ -472,7 +469,7 @@ export class EmailsService {
             'active'
           ? `✅ ${service} está activo`
           : `⚠️ ${service} está detenido`;
-    } catch (error) {
+    } catch {
       return `⚠️ Error al verificar ${service}`;
     }
   }
@@ -482,7 +479,7 @@ export class EmailsService {
       const db = await mongoose.createConnection(process.env.MONGODB_URI);
       await db.close();
       return '✅ Conexión con MongoDB exitosa.';
-    } catch (error) {
+    } catch {
       return '⚠️ No se pudo conectar a MongoDB.';
     }
   }
@@ -493,7 +490,7 @@ export class EmailsService {
         ? '⚠️ No disponible en Windows'
         : execSync('netstat -an | grep ESTABLISHED | wc -l').toString().trim() +
             ' conexiones activas';
-    } catch (error) {
+    } catch {
       return '⚠️ No se pudo obtener conexiones activas.';
     }
   }
@@ -535,11 +532,13 @@ export class EmailsService {
 
     const alerts: string[] = [];
 
-    if (lastMetric.cpuUsage > 80) {
+    // 80% es el umbral para alerta
+    if (lastMetric.cpuUsage > 95) {
       alerts.push(`⚠️ Uso de CPU alto: ${lastMetric.cpuUsage.toFixed(2)}%`);
     }
 
-    if (lastMetric.memoryUsagePercentage > 90) {
+    // 90% es el umbral para alerta
+    if (lastMetric.memoryUsagePercentage > 98) {
       alerts.push(
         `⚠️ Uso de Memoria alto: ${lastMetric.memoryUsagePercentage.toFixed(2)}%`,
       );
@@ -548,13 +547,15 @@ export class EmailsService {
     const diskLines = lastMetric.diskStats.split('\n');
     for (const line of diskLines) {
       const match = line.match(/(\d+)%/);
-      if (match && parseInt(match[1]) >= 95) {
+      // 95% es el umbral para alerta
+      if (match && parseInt(match[1]) >= 98) {
         alerts.push(`⚠️ Espacio en disco crítico: ${line}`);
         break;
       }
     }
 
-    if (alerts.length === 0) return; // No hay alertas, salir
+    // No hay alertas, salir
+    if (alerts.length === 0) return;
 
     // Si hay alertas, enviar correo
     const transporter = createTransport(
@@ -643,7 +644,7 @@ export class EmailsService {
 
     try {
       await recorrer(basePath);
-    } catch (err) {
+    } catch {
       return '⚠️ No se pudo calcular la cantidad de PDFs creados.';
     }
 
@@ -720,7 +721,7 @@ export class EmailsService {
 
     try {
       await recorrer(basePath);
-    } catch (err) {
+    } catch {
       return '⚠️ No se pudo calcular los documentos externos subidos.';
     }
 

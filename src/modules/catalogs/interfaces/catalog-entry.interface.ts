@@ -45,6 +45,20 @@ export interface CLUESEntry extends CatalogEntry {
 }
 
 /**
+ * Interface for SEPOMEX postal code entries
+ */
+export interface CPEntry extends CatalogEntry {
+  cp: string;
+  asentamiento: string;
+  municipio: string;
+  estado: string;
+  tipoAsentamiento?: string;
+  cEstado?: string;
+  cMunicipio?: string;
+  cCveCiudad?: string;
+}
+
+/**
  * Catalog type identifiers
  */
 export enum CatalogType {

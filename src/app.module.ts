@@ -45,7 +45,7 @@ import { GIISExportModule } from './modules/giis-export/giis-export.module';
 
     // Nuevo: Configuración para servir archivos estáticos
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'expedientes-medicos'), // Ruta a la carpeta de PDFs
+      rootPath: join(process.cwd(), 'expedientes-medicos'), // Ruta a la carpeta de PDFs
       serveRoot: '/expedientes-medicos', // Prefijo en la URL
     }),
 

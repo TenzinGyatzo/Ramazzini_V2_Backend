@@ -8,6 +8,7 @@ import {
   INEGIEntry,
   CIE10Entry,
   CLUESEntry,
+  CPEntry,
 } from './interfaces/catalog-entry.interface';
 
 /**
@@ -281,38 +282,108 @@ export class CatalogsService implements OnModuleInit {
           } as CLUESEntry;
 
         case CatalogType.MUNICIPIOS:
-          return {
-            code: record.CATALOG_KEY || record.codigo || record.code,
+          const efeKey =
+            record.EFE_KEY ||
+            record['CLAVE DE LA ENTIDAD'] ||
+            record.estadoCode;
+          const catKey = record.CATALOG_KEY || record.codigo || record.code;
+          const munEntry = {
+            // Usar combinación estado-municipio como código único
+            code: efeKey && catKey ? `${efeKey}-${catKey}` : catKey,
             description:
               record.MUNICIPIO || record.descripcion || record.description,
             source: 'INEGI',
             version: record.version,
-            estadoCode: record['CLAVE DE LA ENTIDAD'] || record.estadoCode,
-            municipioCode: record.CATALOG_KEY,
+            estadoCode: efeKey,
+            municipioCode: catKey,
           } as INEGIEntry;
 
+          // Debug log para registros sin estadoCode
+          if (!munEntry.estadoCode) {
+            this.logger.warn(
+              `Municipio sin estadoCode: ${JSON.stringify(record)}`,
+            );
+          }
+          return munEntry;
+
         case CatalogType.LOCALIDADES:
+          const locEfeKey =
+            record.EFE_KEY ||
+            record['CLAVE DE LA ENTIDAD'] ||
+            record.estadoCode;
+          const locMunKey =
+            record.MUN_KEY ||
+            record['CLAVE DEL MUNICIPIO'] ||
+            record.municipioCode;
+          const locCatKey = record.CATALOG_KEY || record.codigo || record.code;
           return {
-            code: record.CATALOG_KEY || record.codigo || record.code,
+            // Usar combinación completa como código único
+            code:
+              locEfeKey && locMunKey && locCatKey
+                ? `${locEfeKey}-${locMunKey}-${locCatKey}`
+                : locCatKey,
             description:
               record.LOCALIDAD || record.descripcion || record.description,
             source: 'INEGI',
             version: record.version,
-            estadoCode: record['CLAVE DE LA ENTIDAD'] || record.estadoCode,
-            municipioCode:
-              record['CLAVE DEL MUNICIPIO'] || record.municipioCode,
-            localidadCode: record.CATALOG_KEY,
+            estadoCode: locEfeKey,
+            municipioCode: locMunKey,
+            localidadCode: locCatKey,
           } as INEGIEntry;
 
         case CatalogType.NACIONALIDADES:
+          // Para NOM-024, el código debe ser de 3 letras (MEX, USA, NND)
+          // Priorizar 'clave nacionalidad' que es el código RENAPO de 3 letras
+          const claveNacionalidad = record['clave nacionalidad'] || record['clave_nacionalidad'] || record.claveNacionalidad;
+          const codigoPais = record['codigo pais'] || record['codigo_pais'] || record.codigoPais || record.codigo || record.code;
+          
+          // Determinar el código RENAPO a usar (debe ser de 3 caracteres según NOM-024)
+          let renapoCode: string;
+          
+          if (claveNacionalidad) {
+            // Si existe clave nacionalidad, usarla (es el código RENAPO correcto)
+            renapoCode = String(claveNacionalidad).trim().toUpperCase();
+          } else if (codigoPais) {
+            const codigoStr = String(codigoPais).trim().toUpperCase();
+            // Si codigo pais tiene exactamente 3 caracteres, usarlo
+            if (codigoStr.length === 3) {
+              renapoCode = codigoStr;
+            } else {
+              // Si es numérico largo (como "223"), no podemos usarlo directamente
+              // Para compatibilidad, intentar mapear códigos comunes conocidos
+              // Por ahora, usar 'NND' como fallback seguro
+              this.logger.warn(
+                `Nacionalidad con código numérico largo (${codigoStr}) sin clave nacionalidad. Usando como código directamente, pero puede no cumplir NOM-024.`,
+              );
+              renapoCode = codigoStr;
+            }
+          } else {
+            // Si no hay ningún código, usar NND (No disponible) como fallback
+            renapoCode = 'NND';
+          }
+          
           return {
-            code: record['codigo pais'] || record.codigo || record.code,
+            code: renapoCode,
             description:
               record.pais || record.descripcion || record.description,
             source: 'RENAPO',
             version: record.version,
-            claveNacionalidad: record['clave nacionalidad'],
+            claveNacionalidad: claveNacionalidad,
+            codigoPais: codigoPais, // Mantener el código numérico para referencia
           };
+
+        case CatalogType.CODIGOS_POSTALES:
+          return {
+            // Usamos una combinación de CP y asentamiento para asegurar unicidad
+            code: `${record.d_codigo}-${record.id_asenta_cpcons}`,
+            description: `${record.d_codigo} - ${record.d_asenta}, ${record.D_mnpio}, ${record.d_estado}`,
+            cp: record.d_codigo,
+            asentamiento: record.d_asenta,
+            municipio: record.D_mnpio?.toUpperCase() || '',
+            estado: record.d_estado?.toUpperCase() || '',
+            source: 'SEPOMEX',
+            version: record.version,
+          } as CPEntry;
 
         default:
           // Generic mapping for other catalogs (including GIIS catalogs)
@@ -364,12 +435,24 @@ export class CatalogsService implements OnModuleInit {
       const estadoCode = inegiEntry.estadoCode;
 
       if (estadoCode) {
-        if (!this.municipioCache.has(estadoCode)) {
-          this.municipioCache.set(estadoCode, new Map());
+        // Normalizar código de estado (2 dígitos)
+        const normalizedEstadoCode = estadoCode
+          .toString()
+          .padStart(2, '0')
+          .toUpperCase();
+        if (!this.municipioCache.has(normalizedEstadoCode)) {
+          this.municipioCache.set(normalizedEstadoCode, new Map());
         }
-        this.municipioCache.get(estadoCode)!.set(code, entry);
+        this.municipioCache.get(normalizedEstadoCode)!.set(code, entry);
+      } else {
+        this.logger.warn(
+          `Municipio entry ${code} has no estadoCode: ${JSON.stringify(entry)}`,
+        );
       }
     }
+    this.logger.log(
+      `Built municipio index with ${this.municipioCache.size} estados`,
+    );
   }
 
   /**
@@ -384,7 +467,15 @@ export class CatalogsService implements OnModuleInit {
       const municipioCode = inegiEntry.municipioCode;
 
       if (estadoCode && municipioCode) {
-        const key = `${estadoCode}-${municipioCode}`;
+        // Normalizar códigos: asegurar padding para estado (2 dígitos) y municipio (3 dígitos)
+        const normalizedEstadoCode = estadoCode
+          .toString()
+          .padStart(2, '0')
+          .toUpperCase();
+        const normalizedMunicipioCode = municipioCode
+          .toString()
+          .padStart(3, '0');
+        const key = `${normalizedEstadoCode}-${normalizedMunicipioCode}`;
         if (!this.localidadCache.has(key)) {
           this.localidadCache.set(key, new Map());
         }
@@ -528,28 +619,85 @@ export class CatalogsService implements OnModuleInit {
       case 'municipio':
         if (!parentCode) {
           // Check if code exists in any estado
+          // El código puede venir como "001" o "25-001", necesitamos buscar ambos formatos
           for (const municipioMap of this.municipioCache.values()) {
+            // Buscar el código tal cual viene
             if (municipioMap.has(code)) {
               return true;
+            }
+            // Si el código no tiene guión, buscar en todas las entradas
+            if (!code.includes('-')) {
+              for (const entryCode of municipioMap.keys()) {
+                const parts = entryCode.split('-');
+                if (parts.length > 1 && parts[parts.length - 1] === code) {
+                  return true;
+                }
+              }
             }
           }
           return false;
         }
-        const municipioMap = this.municipioCache.get(parentCode);
-        return municipioMap ? municipioMap.has(code) : false;
+        // Normalizar código de estado (2 dígitos)
+        const normalizedEstadoCode = parentCode
+          .toString()
+          .padStart(2, '0')
+          .toUpperCase();
+        const municipioMap = this.municipioCache.get(normalizedEstadoCode);
+        if (!municipioMap) {
+          return false;
+        }
+        // Normalizar código de municipio (3 dígitos)
+        const normalizedMunicipioCode = code.toString().padStart(3, '0');
+        // Construir código completo: estado-municipio
+        const fullMunicipioCode = `${normalizedEstadoCode}-${normalizedMunicipioCode}`;
+        // Buscar el código completo en el cache
+        return municipioMap.has(fullMunicipioCode);
 
       case 'localidad':
         if (!parentCode) {
           // Check if code exists in any municipio
+          // El código puede venir como "0001" o "25-001-0001", necesitamos buscar ambos formatos
           for (const localidadMap of this.localidadCache.values()) {
+            // Buscar el código tal cual viene
             if (localidadMap.has(code)) {
               return true;
+            }
+            // Si el código no tiene guión, buscar en todas las entradas
+            if (!code.includes('-')) {
+              for (const entryCode of localidadMap.keys()) {
+                const parts = entryCode.split('-');
+                if (parts.length > 2 && parts[parts.length - 1] === code) {
+                  return true;
+                }
+              }
             }
           }
           return false;
         }
-        const localidadMap = this.localidadCache.get(parentCode);
-        return localidadMap ? localidadMap.has(code) : false;
+        // parentCode viene como "25-001" (estado-municipio)
+        // Normalizar la clave del parent
+        const parentParts = parentCode.split('-');
+        if (parentParts.length !== 2) {
+          return false;
+        }
+        const normalizedParentEstado = parentParts[0]
+          .toString()
+          .padStart(2, '0')
+          .toUpperCase();
+        const normalizedParentMunicipio = parentParts[1]
+          .toString()
+          .padStart(3, '0');
+        const parentKey = `${normalizedParentEstado}-${normalizedParentMunicipio}`;
+        const localidadMap = this.localidadCache.get(parentKey);
+        if (!localidadMap) {
+          return false;
+        }
+        // Normalizar código de localidad (4 dígitos)
+        const normalizedLocalidadCode = code.toString().padStart(4, '0');
+        // Construir código completo: estado-municipio-localidad
+        const fullLocalidadCode = `${normalizedParentEstado}-${normalizedParentMunicipio}-${normalizedLocalidadCode}`;
+        // Buscar el código completo en el cache
+        return localidadMap.has(fullLocalidadCode);
 
       default:
         return false;
@@ -818,6 +966,249 @@ export class CatalogsService implements OnModuleInit {
     }
 
     return results;
+  }
+
+  /**
+   * Get all entidades federativas (states)
+   */
+  getEstados(): CatalogEntry[] {
+    return Array.from(this.estadoCache.values()).sort((a, b) =>
+      a.description.localeCompare(b.description),
+    );
+  }
+
+  /**
+   * Get municipios for a given estado
+   */
+  getMunicipiosByEstado(estadoCode: string): CatalogEntry[] {
+    // Normalizar código de estado (2 dígitos)
+    const normalizedEstadoCode = estadoCode
+      .toString()
+      .padStart(2, '0')
+      .toUpperCase();
+    const municipioMap = this.municipioCache.get(normalizedEstadoCode);
+    if (!municipioMap) {
+      return [];
+    }
+    return Array.from(municipioMap.values()).sort((a, b) =>
+      a.description.localeCompare(b.description),
+    );
+  }
+
+  /**
+   * Get localidades for a given municipio
+   */
+  getLocalidadesByMunicipio(
+    estadoCode: string,
+    municipioCode: string,
+    query?: string,
+  ): CatalogEntry[] {
+    // Normalizar códigos: asegurar padding para estado (2 dígitos) y municipio (3 dígitos)
+    const normalizedEstadoCode = estadoCode
+      .toString()
+      .padStart(2, '0')
+      .toUpperCase();
+    const normalizedMunicipioCode = municipioCode.toString().padStart(3, '0');
+    const key = `${normalizedEstadoCode}-${normalizedMunicipioCode}`;
+    const localidadMap = this.localidadCache.get(key);
+    if (!localidadMap) {
+      this.logger.debug(
+        `No localidades found for key: ${key} (estado: ${estadoCode}, municipio: ${municipioCode})`,
+      );
+      this.logger.debug(
+        `Available keys in cache: ${Array.from(this.localidadCache.keys()).slice(0, 10).join(', ')}...`,
+      );
+      return [];
+    }
+
+    const entries = Array.from(localidadMap.values());
+
+    if (query && query.trim() !== '') {
+      const lowerQuery = query.toLowerCase();
+      return entries
+        .filter(
+          (e) =>
+            e.code.toLowerCase().includes(lowerQuery) ||
+            e.description.toLowerCase().includes(lowerQuery),
+        )
+        .slice(0, 50);
+    }
+
+    return entries.sort((a, b) => a.description.localeCompare(b.description));
+  }
+
+  /**
+   * Search CLUES by query string (code or name)
+   */
+  async searchCLUES(query: string, limit: number = 20): Promise<CLUESEntry[]> {
+    const cache = this.catalogCaches.get(CatalogType.CLUES);
+    if (!cache) {
+      return [];
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const results: CLUESEntry[] = [];
+
+    for (const entry of cache.values()) {
+      const cluesEntry = entry as CLUESEntry;
+      if (
+        cluesEntry.code.toLowerCase().includes(lowerQuery) ||
+        cluesEntry.description.toLowerCase().includes(lowerQuery) ||
+        (cluesEntry.nombreInstitucion &&
+          cluesEntry.nombreInstitucion.toLowerCase().includes(lowerQuery))
+      ) {
+        results.push(cluesEntry);
+        if (results.length >= limit) {
+          break;
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Search Postal Codes by query string
+   */
+  async searchCP(query: string, limit: number = 20): Promise<CatalogEntry[]> {
+    const cache = this.catalogCaches.get(CatalogType.CODIGOS_POSTALES);
+    if (!cache) {
+      return [];
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const results: CatalogEntry[] = [];
+
+    for (const entry of cache.values()) {
+      // Buscamos por el código postal o por la descripción (asentamiento, municipio, estado)
+      // Usamos String() para mayor seguridad ante nulos o números
+      const cp = String(entry.cp || '').toLowerCase();
+      const description = String(entry.description || '').toLowerCase();
+
+      if (cp.includes(lowerQuery) || description.includes(lowerQuery)) {
+        results.push(entry);
+        if (results.length >= limit) {
+          break;
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Search estados by query string (code or description)
+   */
+  searchEstados(query: string, limit: number = 50): CatalogEntry[] {
+    if (!query || query.trim() === '') {
+      return [];
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const results: CatalogEntry[] = [];
+
+    for (const entry of this.estadoCache.values()) {
+      const code = String(entry.code || '').toLowerCase();
+      const description = String(entry.description || '').toLowerCase();
+
+      if (code.includes(lowerQuery) || description.includes(lowerQuery)) {
+        results.push(entry);
+        if (results.length >= limit) {
+          break;
+        }
+      }
+    }
+
+    return results.sort((a, b) => a.description.localeCompare(b.description));
+  }
+
+  /**
+   * Get estado by code
+   */
+  getEstadoByCode(code: string): CatalogEntry | null {
+    return this.estadoCache.get(code) || null;
+  }
+
+  /**
+   * Search municipios by query string within a specific estado
+   */
+  searchMunicipios(
+    estadoCode: string,
+    query: string,
+    limit: number = 50,
+  ): CatalogEntry[] {
+    if (!query || query.trim() === '' || !estadoCode) {
+      return [];
+    }
+
+    // Normalizar código de estado (2 dígitos)
+    const normalizedEstadoCode = estadoCode
+      .toString()
+      .padStart(2, '0')
+      .toUpperCase();
+    const municipioMap = this.municipioCache.get(normalizedEstadoCode);
+    if (!municipioMap) {
+      return [];
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const results: CatalogEntry[] = [];
+
+    for (const entry of municipioMap.values()) {
+      const code = String(entry.code || '').toLowerCase();
+      const description = String(entry.description || '').toLowerCase();
+
+      if (code.includes(lowerQuery) || description.includes(lowerQuery)) {
+        results.push(entry);
+        if (results.length >= limit) {
+          break;
+        }
+      }
+    }
+
+    return results.sort((a, b) => a.description.localeCompare(b.description));
+  }
+
+  /**
+   * Search nacionalidades by query string (code or description)
+   */
+  searchNacionalidades(query: string, limit: number = 50): CatalogEntry[] {
+    const cache = this.catalogCaches.get(CatalogType.NACIONALIDADES);
+    if (!cache) {
+      return [];
+    }
+
+    if (!query || query.trim() === '') {
+      return [];
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const results: CatalogEntry[] = [];
+
+    for (const entry of cache.values()) {
+      const code = String(entry.code || '').toLowerCase();
+      const description = String(entry.description || '').toLowerCase();
+
+      if (code.includes(lowerQuery) || description.includes(lowerQuery)) {
+        results.push(entry);
+        if (results.length >= limit) {
+          break;
+        }
+      }
+    }
+
+    return results.sort((a, b) => a.description.localeCompare(b.description));
+  }
+
+  /**
+   * Get nacionalidad by code
+   */
+  getNacionalidadByCode(code: string): CatalogEntry | null {
+    const cache = this.catalogCaches.get(CatalogType.NACIONALIDADES);
+    if (!cache) {
+      return null;
+    }
+    return cache.get(code) || null;
   }
 
   // ===========================================================================

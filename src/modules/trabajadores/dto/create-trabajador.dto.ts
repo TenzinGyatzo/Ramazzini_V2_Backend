@@ -180,10 +180,11 @@ export class CreateTrabajadorDto {
   @IsOptional()
   @IsString({ message: 'El identificador CURP debe ser un string' })
   // RENAPO format: [A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d (18 chars, uppercase)
+  // Also allows generic CURP: XXXX999999XXXXXX99 (for unknown/foreign patients)
   // Allow empty for non-MX providers, but enforce strict format when provided
-  @Matches(/^$|^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/, {
+  @Matches(/^$|^([A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d|XXXX999999XXXXXX99)$/, {
     message:
-      'CURP debe tener exactamente 18 caracteres en formato RENAPO: 4 letras, 6 dígitos, H o M, 5 letras, 1 alfanumérico, 1 dígito. Ejemplo: ROAJ850102HDFLRN08',
+      'CURP debe tener exactamente 18 caracteres en formato RENAPO: 4 letras, 6 dígitos, H o M, 5 letras, 1 alfanumérico, 1 dígito. Ejemplo: ROAJ850102HDFLRN08. También se permite CURP genérica: XXXX999999XXXXXX99',
   })
   curp?: string;
 

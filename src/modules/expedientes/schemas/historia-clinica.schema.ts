@@ -354,6 +354,15 @@ export class HistoriaClinica extends Document {
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
   finalizadoPor?: User;
+
+  @Prop({ required: false })
+  fechaAnulacion?: Date;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
+  anuladoPor?: User;
+
+  @Prop({ required: false })
+  razonAnulacion?: string;
 }
 
 export const HistoriaClinicaSchema = SchemaFactory.createForClass(
