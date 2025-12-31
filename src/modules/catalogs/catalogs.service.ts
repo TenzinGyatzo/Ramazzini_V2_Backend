@@ -334,12 +334,20 @@ export class CatalogsService implements OnModuleInit {
         case CatalogType.NACIONALIDADES:
           // Para NOM-024, el código debe ser de 3 letras (MEX, USA, NND)
           // Priorizar 'clave nacionalidad' que es el código RENAPO de 3 letras
-          const claveNacionalidad = record['clave nacionalidad'] || record['clave_nacionalidad'] || record.claveNacionalidad;
-          const codigoPais = record['codigo pais'] || record['codigo_pais'] || record.codigoPais || record.codigo || record.code;
-          
+          const claveNacionalidad =
+            record['clave nacionalidad'] ||
+            record['clave_nacionalidad'] ||
+            record.claveNacionalidad;
+          const codigoPais =
+            record['codigo pais'] ||
+            record['codigo_pais'] ||
+            record.codigoPais ||
+            record.codigo ||
+            record.code;
+
           // Determinar el código RENAPO a usar (debe ser de 3 caracteres según NOM-024)
           let renapoCode: string;
-          
+
           if (claveNacionalidad) {
             // Si existe clave nacionalidad, usarla (es el código RENAPO correcto)
             renapoCode = String(claveNacionalidad).trim().toUpperCase();
@@ -361,7 +369,7 @@ export class CatalogsService implements OnModuleInit {
             // Si no hay ningún código, usar NND (No disponible) como fallback
             renapoCode = 'NND';
           }
-          
+
           return {
             code: renapoCode,
             description:

@@ -38,6 +38,8 @@ import { CreateHistoriaClinicaDto } from './dto/create-historia-clinica.dto';
 import { UpdateHistoriaClinicaDto } from './dto/update-historia-clinica.dto';
 import { CreateNotaMedicaDto } from './dto/create-nota-medica.dto';
 import { UpdateNotaMedicaDto } from './dto/update-nota-medica.dto';
+import { CreateNotaAclaratoriaDto } from './dto/create-nota-aclaratoria.dto';
+import { UpdateNotaAclaratoriaDto } from './dto/update-nota-aclaratoria.dto';
 import { CreateControlPrenatalDto } from './dto/create-control-prenatal.dto';
 import { UpdateControlPrenatalDto } from './dto/update-control-prenatal.dto';
 import { CreateHistoriaOtologicaDto } from './dto/create-historia-otologica.dto';
@@ -82,6 +84,7 @@ export class ExpedientesController {
     exploracionFisica: CreateExploracionFisicaDto,
     historiaClinica: CreateHistoriaClinicaDto,
     notaMedica: CreateNotaMedicaDto,
+    notaAclaratoria: CreateNotaAclaratoriaDto,
     controlPrenatal: CreateControlPrenatalDto,
     historiaOtologica: CreateHistoriaOtologicaDto,
     previoEspirometria: CreatePrevioEspirometriaDto,
@@ -100,6 +103,7 @@ export class ExpedientesController {
     exploracionFisica: UpdateExploracionFisicaDto,
     historiaClinica: UpdateHistoriaClinicaDto,
     notaMedica: UpdateNotaMedicaDto,
+    notaAclaratoria: UpdateNotaAclaratoriaDto,
     controlPrenatal: UpdateControlPrenatalDto,
     historiaOtologica: UpdateHistoriaOtologicaDto,
     previoEspirometria: UpdatePrevioEspirometriaDto,

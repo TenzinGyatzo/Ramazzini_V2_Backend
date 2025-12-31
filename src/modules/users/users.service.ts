@@ -61,6 +61,17 @@ export class UsersService {
     userId: string,
     permisos: any,
   ): Promise<UserDocument | null> {
+    const user = await this.userModel.findById(userId);
+    if (!user) return null;
+
+    // Si el usuario es Administrativo, forzar permisos de documentos a false
+    if (user.role === 'Administrativo') {
+      permisos.gestionarDocumentosDiagnostico = false;
+      permisos.gestionarDocumentosEvaluacion = false;
+      permisos.gestionarDocumentosExternos = false;
+      permisos.gestionarCuestionariosAdicionales = false;
+    }
+
     return this.userModel
       .findByIdAndUpdate(userId, { $set: { permisos } }, { new: true })
       .exec();

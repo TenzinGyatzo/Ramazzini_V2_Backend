@@ -49,6 +49,10 @@ import {
   NotaMedica,
   NotaMedicaSchema,
 } from '../expedientes/schemas/nota-medica.schema';
+import {
+  NotaAclaratoria,
+  NotaAclaratoriaSchema,
+} from '../expedientes/schemas/nota-aclaratoria.schema';
 import { Receta, RecetaSchema } from '../expedientes/schemas/receta.schema';
 import {
   ConstanciaAptitud,
@@ -78,6 +82,7 @@ import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
       { name: ExploracionFisica.name, schema: ExploracionFisicaSchema },
       { name: HistoriaClinica.name, schema: HistoriaClinicaSchema },
       { name: NotaMedica.name, schema: NotaMedicaSchema },
+      { name: NotaAclaratoria.name, schema: NotaAclaratoriaSchema },
       { name: Audiometria.name, schema: AudiometriaSchema },
       { name: CertificadoExpedito.name, schema: CertificadoExpeditoSchema },
       { name: ControlPrenatal.name, schema: ControlPrenatalSchema },

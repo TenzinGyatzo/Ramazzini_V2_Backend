@@ -2,11 +2,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { User } from 'src/modules/users/entities/user.entity';
 
-interface Logotipo {
-  data: string;
-  contentType: string;
-}
-
 @Schema()
 export class EnfermeraFirmante extends Document {
   @Prop({ required: true })

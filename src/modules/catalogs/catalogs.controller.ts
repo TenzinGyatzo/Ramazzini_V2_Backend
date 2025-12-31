@@ -57,7 +57,9 @@ export class CatalogsController {
       code,
     );
     if (!entry) {
-      throw new NotFoundException(`Postal code entry with code ${code} not found`);
+      throw new NotFoundException(
+        `Postal code entry with code ${code} not found`,
+      );
     }
     return entry;
   }
@@ -86,7 +88,10 @@ export class CatalogsController {
   }
 
   @Get('geo/estados/search')
-  async searchEstados(@Query('q') query: string, @Query('limit') limit?: number) {
+  async searchEstados(
+    @Query('q') query: string,
+    @Query('limit') limit?: number,
+  ) {
     if (!query || query.trim() === '') {
       throw new BadRequestException('Query parameter "q" is required');
     }
@@ -125,7 +130,10 @@ export class CatalogsController {
   }
 
   @Get('nacionalidades/search')
-  async searchNacionalidades(@Query('q') query: string, @Query('limit') limit?: number) {
+  async searchNacionalidades(
+    @Query('q') query: string,
+    @Query('limit') limit?: number,
+  ) {
     if (!query || query.trim() === '') {
       throw new BadRequestException('Query parameter "q" is required');
     }
@@ -144,4 +152,3 @@ export class CatalogsController {
     return entry;
   }
 }
-

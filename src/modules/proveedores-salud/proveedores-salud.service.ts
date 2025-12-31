@@ -95,9 +95,8 @@ export class ProveedoresSaludService {
 
       if (isMX) {
         // MX provider: Validate against catalog
-        const isValid = await this.catalogsService.validateCLUES(
-          normalizedClues,
-        );
+        const isValid =
+          await this.catalogsService.validateCLUES(normalizedClues);
         if (!isValid) {
           throw new BadRequestException(
             `CLUES inválido: ${normalizedClues}. No se encuentra en el catálogo de establecimientos de salud`,

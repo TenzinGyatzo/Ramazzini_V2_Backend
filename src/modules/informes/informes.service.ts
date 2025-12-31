@@ -10,6 +10,7 @@ import { examenVistaInforme } from './documents/examen-vista.informe';
 import { exploracionFisicaInforme } from './documents/exploracion-fisica.informe';
 import { historiaClinicaInforme } from './documents/historia-clinica.informe';
 import { notaMedicaInforme } from './documents/nota-medica.informe';
+import { notaAclaratoriaInforme } from './documents/nota-aclaratoria.informe';
 import { controlPrenatalInforme } from './documents/control-prenatal.informe';
 import { historiaOtologicaInforme } from './documents/historia-otologica.informe';
 import { previoEspirometriaInforme } from './documents/previo-espirometria.informe';
@@ -37,6 +38,38 @@ import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.
 
 @Injectable()
 export class InformesService {
+  // Mapeo de tipos de documentos técnicos a nombres legibles
+  private readonly documentoNombres: Record<string, string> = {
+    notaMedica: 'Nota Médica',
+    historiaClinica: 'Historia Clínica',
+    exploracionFisica: 'Exploración Física',
+    audiometria: 'Audiometría',
+    antidoping: 'Antidoping',
+    aptitud: 'Aptitud para el Puesto',
+    certificado: 'Certificado',
+    certificadoExpedito: 'Certificado Expedito',
+    examenVista: 'Examen de Vista',
+    controlPrenatal: 'Control Prenatal',
+    historiaOtologica: 'Historia Otológica',
+    previoEspirometria: 'Previo Espirometría',
+    constanciaAptitud: 'Constancia de Aptitud',
+    receta: 'Receta',
+    documentoExterno: 'Documento Externo',
+    // Tipos plurales (para compatibilidad con frontend)
+    notasMedicas: 'Nota Médica',
+    historiasClinicas: 'Historia Clínica',
+    exploracionesFisicas: 'Exploración Física',
+    audiometrias: 'Audiometría',
+    antidopings: 'Antidoping',
+    aptitudes: 'Aptitud para el Puesto',
+    certificados: 'Certificado',
+    certificadosExpedito: 'Certificado Expedito',
+    examenesVista: 'Examen de Vista',
+    recetas: 'Receta',
+    documentosExternos: 'Documento Externo',
+    constanciasAptitud: 'Constancia de Aptitud',
+  };
+
   constructor(
     private readonly printer: PrinterService,
     private readonly empresasService: EmpresasService,
@@ -89,6 +122,91 @@ export class InformesService {
       numeroCredencialAdicional: medicoFirmante.numeroCredencialAdicional || '',
       firma: medicoFirmante.firma || null,
     };
+  }
+
+  /**
+   * Obtiene el nombre amigable de un tipo de documento
+   */
+  private getNombreDocumento(tipo: string): string {
+    return this.documentoNombres[tipo] || tipo;
+  }
+
+  /**
+   * Mapeo de tipos plurales a singulares
+   */
+  private readonly tipoDocumentoMapeo: Record<string, string> = {
+    antidopings: 'antidoping',
+    aptitudes: 'aptitud',
+    audiometrias: 'audiometria',
+    certificados: 'certificado',
+    certificadosExpedito: 'certificadoExpedito',
+    documentosExternos: 'documentoExterno',
+    examenesVista: 'examenVista',
+    exploracionesFisicas: 'exploracionFisica',
+    historiasClinicas: 'historiaClinica',
+    notasMedicas: 'notaMedica',
+    controlPrenatal: 'controlPrenatal',
+    historiaOtologica: 'historiaOtologica',
+    previoEspirometria: 'previoEspirometria',
+    recetas: 'receta',
+    constanciasAptitud: 'constanciaAptitud',
+  };
+
+  /**
+   * Normaliza un tipo de documento (convierte plural a singular si es necesario)
+   */
+  private normalizarTipoDocumento(tipo: string): string {
+    return this.tipoDocumentoMapeo[tipo] || tipo;
+  }
+
+  /**
+   * Obtiene el nombre del campo de fecha principal para un tipo de documento
+   */
+  private getFechaPrincipalField(tipo: string): string {
+    const tipoNormalizado = this.normalizarTipoDocumento(tipo);
+    const dateFields: Record<string, string> = {
+      antidoping: 'fechaAntidoping',
+      aptitud: 'fechaAptitudPuesto',
+      audiometria: 'fechaAudiometria',
+      certificado: 'fechaCertificado',
+      certificadoExpedito: 'fechaCertificadoExpedito',
+      documentoExterno: 'fechaDocumento',
+      examenVista: 'fechaExamenVista',
+      exploracionFisica: 'fechaExploracionFisica',
+      historiaClinica: 'fechaHistoriaClinica',
+      notaMedica: 'fechaNotaMedica',
+      controlPrenatal: 'fechaInicioControlPrenatal',
+      historiaOtologica: 'fechaHistoriaOtologica',
+      previoEspirometria: 'fechaPrevioEspirometria',
+      receta: 'fechaReceta',
+      constanciaAptitud: 'fechaConstanciaAptitud',
+      notaAclaratoria: 'fechaNotaAclaratoria',
+    };
+    return dateFields[tipoNormalizado] || 'fecha';
+  }
+
+  /**
+   * Obtiene información distintiva del documento según su tipo
+   */
+  private getCampoDistintivo(documento: any, tipo: string): string {
+    if (!documento) return '';
+
+    const tipoNormalizado = this.normalizarTipoDocumento(tipo);
+
+    switch (tipoNormalizado) {
+      case 'notaMedica':
+        return documento.tipoNota ? `Tipo: ${documento.tipoNota}` : '';
+      case 'historiaClinica':
+        return documento.motivoExamen
+          ? `Motivo: ${documento.motivoExamen}`
+          : '';
+      case 'antidoping':
+        return 'Examen toxicológico';
+      case 'audiometria':
+        return documento.diagnosticoAudiometria || '';
+      default:
+        return '';
+    }
   }
 
   async getInformeAntidoping(
@@ -2227,6 +2345,262 @@ export class InformesService {
       nombreEmpresa,
       datosTrabajador,
       datosNotaMedica,
+      datosMedicoFirmante,
+      datosEnfermeraFirmante,
+      datosProveedorSalud,
+    );
+
+    await this.printer.createPdf(docDefinition, rutaCompleta);
+    return rutaCompleta;
+  }
+
+  async getInformeNotaAclaratoria(
+    empresaId: string,
+    trabajadorId: string,
+    notaAclaratoriaId: string,
+    userId: string,
+  ): Promise<string> {
+    const empresa = await this.empresasService.findOne(empresaId);
+    const nombreEmpresa = empresa.nombreComercial;
+    const trabajador = await this.trabajadoresService.findOne(trabajadorId);
+    const datosTrabajador = {
+      primerApellido: trabajador.primerApellido,
+      segundoApellido: trabajador.segundoApellido,
+      nombre: trabajador.nombre,
+      nacimiento: convertirFechaADDMMAAAA(trabajador.fechaNacimiento),
+      escolaridad: trabajador.escolaridad,
+      edad: `${calcularEdad(convertirFechaAAAAAMMDD(trabajador.fechaNacimiento))} años`,
+      puesto: trabajador.puesto,
+      sexo: trabajador.sexo,
+      antiguedad: trabajador.fechaIngreso
+        ? calcularAntiguedad(convertirFechaAAAAAMMDD(trabajador.fechaIngreso))
+        : '-',
+      telefono: trabajador.telefono,
+      estadoCivil: trabajador.estadoCivil,
+      numeroEmpleado: trabajador.numeroEmpleado,
+      nss: trabajador.nss,
+      curp: trabajador.curp,
+    };
+    const notaAclaratoria = await this.expedientesService.findDocument(
+      'notaAclaratoria',
+      notaAclaratoriaId,
+    );
+
+    // Obtener documento origen completo
+    const documentoOrigenTipo = notaAclaratoria.documentoOrigenTipo;
+    const documentoOrigenId = notaAclaratoria.documentoOrigenId;
+
+    // Normalizar tipo de documento (convertir plural a singular para buscar en BD)
+    const tipoDocumentoNormalizado =
+      this.normalizarTipoDocumento(documentoOrigenTipo);
+
+    let documentoOrigen: any = null;
+    try {
+      documentoOrigen = await this.expedientesService.findDocument(
+        tipoDocumentoNormalizado,
+        documentoOrigenId,
+      );
+    } catch (error) {
+      console.error(
+        `[getInformeNotaAclaratoria] No se pudo obtener documento origen: ${error.message}`,
+      );
+    }
+
+    // Extraer información del documento origen
+    const fechaPrincipalField =
+      this.getFechaPrincipalField(documentoOrigenTipo);
+
+    // Determinar el nombre del documento
+    let nombreDocumento = this.getNombreDocumento(documentoOrigenTipo);
+    const esDocumentoExterno =
+      documentoOrigenTipo === 'documentoExterno' ||
+      documentoOrigenTipo === 'documentosExternos';
+
+    // Para documentos externos, usar el nombre específico si está disponible
+    if (esDocumentoExterno && documentoOrigen?.nombreDocumento) {
+      nombreDocumento = documentoOrigen.nombreDocumento;
+    }
+
+    const datosDocumentoOrigen = documentoOrigen
+      ? {
+          tipoDocumento: documentoOrigenTipo,
+          nombreDocumento: nombreDocumento,
+          fechaPrincipal: documentoOrigen[fechaPrincipalField] || null,
+          fechaCreacion: documentoOrigen.createdAt || null,
+          estado: documentoOrigen.estado || '',
+          fechaFinalizacion: documentoOrigen.fechaFinalizacion || null,
+          finalizadoPor: documentoOrigen.finalizadoPor?.username || '',
+          fechaAnulacion: documentoOrigen.fechaAnulacion || null,
+          anuladoPor: documentoOrigen.anuladoPor?.username || '',
+          razonAnulacion: documentoOrigen.razonAnulacion || '',
+          campoDistintivo: this.getCampoDistintivo(
+            documentoOrigen,
+            documentoOrigenTipo,
+          ),
+        }
+      : {
+          tipoDocumento: documentoOrigenTipo,
+          nombreDocumento: nombreDocumento,
+          fechaPrincipal: null,
+          fechaCreacion: null,
+          estado: 'No encontrado',
+          fechaFinalizacion: null,
+          finalizadoPor: '',
+          fechaAnulacion: null,
+          anuladoPor: '',
+          razonAnulacion: '',
+          campoDistintivo: '',
+        };
+
+    const datosNotaAclaratoria = {
+      documentoOrigenId: notaAclaratoria.documentoOrigenId,
+      documentoOrigenTipo: notaAclaratoria.documentoOrigenTipo,
+      fechaNotaAclaratoria: notaAclaratoria.fechaNotaAclaratoria,
+      motivoAclaracion: notaAclaratoria.motivoAclaracion,
+      descripcionAclaracion: notaAclaratoria.descripcionAclaracion,
+      alcanceAclaracion: notaAclaratoria.alcanceAclaracion,
+      impactoClinico: notaAclaratoria.impactoClinico,
+    };
+
+    const medicoFirmante =
+      await this.medicosFirmantesService.findOneByUserId(userId);
+    const datosMedicoFirmante = medicoFirmante
+      ? {
+          nombre: medicoFirmante.nombre || '',
+          tituloProfesional: medicoFirmante.tituloProfesional || '',
+          numeroCedulaProfesional: medicoFirmante.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            medicoFirmante.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            medicoFirmante.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            medicoFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            medicoFirmante.numeroCredencialAdicional || '',
+          firma:
+            (medicoFirmante.firma as { data: string; contentType: string }) ||
+            null,
+        }
+      : {
+          nombre: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          especialistaSaludTrabajo: '',
+          numeroCedulaEspecialista: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
+
+    const enfermeraFirmante =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
+    const datosEnfermeraFirmante = enfermeraFirmante
+      ? {
+          nombre: enfermeraFirmante.nombre || '',
+          sexo: enfermeraFirmante.sexo || '',
+          tituloProfesional: enfermeraFirmante.tituloProfesional || '',
+          numeroCedulaProfesional:
+            enfermeraFirmante.numeroCedulaProfesional || '',
+          nombreCredencialAdicional:
+            enfermeraFirmante.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            enfermeraFirmante.numeroCredencialAdicional || '',
+          firma:
+            (enfermeraFirmante.firma as {
+              data: string;
+              contentType: string;
+            }) || null,
+        }
+      : {
+          nombre: '',
+          sexo: '',
+          tituloProfesional: '',
+          numeroCedulaProfesional: '',
+          nombreCredencialAdicional: '',
+          numeroCredencialAdicional: '',
+          firma: null,
+        };
+
+    const usuario = await this.usersService.findById(userId);
+    const datosUsuario = {
+      idProveedorSalud: usuario.idProveedorSalud,
+    };
+    const proveedorSalud = await this.proveedoresSaludService.findOne(
+      datosUsuario.idProveedorSalud,
+    );
+    const datosProveedorSalud = proveedorSalud
+      ? {
+          nombre: proveedorSalud.nombre || '',
+          pais: proveedorSalud.pais || '',
+          perfilProveedorSalud: proveedorSalud.perfilProveedorSalud || '',
+          logotipoEmpresa:
+            (proveedorSalud.logotipoEmpresa as {
+              data: string;
+              contentType: string;
+            }) || null,
+          estado: proveedorSalud.estado || '',
+          municipio: proveedorSalud.municipio || '',
+          codigoPostal: proveedorSalud.codigoPostal || '',
+          direccion: proveedorSalud.direccion || '',
+          telefono: proveedorSalud.telefono || '',
+          correoElectronico: proveedorSalud.correoElectronico || '',
+          sitioWeb: proveedorSalud.sitioWeb || '',
+          colorInforme: proveedorSalud.colorInforme || '#343A40',
+        }
+      : {
+          nombre: '',
+          pais: '',
+          perfilProveedorSalud: '',
+          logotipoEmpresa: null,
+          estado: '',
+          municipio: '',
+          codigoPostal: '',
+          direccion: '',
+          telefono: '',
+          correoElectronico: '',
+          sitioWeb: '',
+          colorInforme: '#343A40',
+        };
+
+    const fecha = convertirFechaADDMMAAAA(notaAclaratoria.fechaNotaAclaratoria)
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-');
+
+    // Construir nombre del documento que aclara
+    let documentoQueAclara = this.getNombreDocumento(documentoOrigenTipo);
+
+    // Para documentos externos, usar el nombre específico si está disponible
+    if (
+      documentoOrigenTipo === 'documentoExterno' ||
+      documentoOrigenTipo === 'documentosExternos'
+    ) {
+      if (documentoOrigen && documentoOrigen.nombreDocumento) {
+        documentoQueAclara = documentoOrigen.nombreDocumento;
+      }
+    }
+
+    // Agregar fecha del documento origen si está disponible
+    if (datosDocumentoOrigen.fechaPrincipal) {
+      const fechaOrigen = convertirFechaADDMMAAAA(
+        datosDocumentoOrigen.fechaPrincipal,
+      )
+        .replace(/\//g, '-')
+        .replace(/\\/g, '-');
+      documentoQueAclara = `${documentoQueAclara} ${fechaOrigen}`;
+    }
+
+    const nombreArchivo = `Nota Aclaratoria ${fecha} (${documentoQueAclara}).pdf`;
+    const rutaDirectorio = path.resolve(notaAclaratoria.rutaPDF);
+    if (!fs.existsSync(rutaDirectorio)) {
+      fs.mkdirSync(rutaDirectorio, { recursive: true });
+    }
+
+    const rutaCompleta = path.join(rutaDirectorio, nombreArchivo);
+    const docDefinition = notaAclaratoriaInforme(
+      nombreEmpresa,
+      datosTrabajador,
+      datosNotaAclaratoria,
+      datosDocumentoOrigen,
       datosMedicoFirmante,
       datosEnfermeraFirmante,
       datosProveedorSalud,

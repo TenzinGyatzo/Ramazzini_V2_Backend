@@ -12,7 +12,11 @@ import { normalizeTrabajadorData } from 'src/utils/normalization';
 import moment from 'moment';
 import * as xlsx from 'xlsx';
 import { format } from 'date-fns';
-import { calcularEdad, calcularAntiguedad } from 'src/utils/dates';
+import {
+  calcularEdad,
+  calcularAntiguedad,
+  convertirFechaADDMMAAAA,
+} from 'src/utils/dates';
 import { validateCURP } from 'src/utils/curp-validator.util';
 import { NOM024ComplianceUtil } from 'src/utils/nom024-compliance.util';
 import { validateTrabajadorNames } from 'src/utils/name-validator.util';
@@ -27,6 +31,7 @@ import { ExamenVista } from '../expedientes/schemas/examen-vista.schema';
 import { ExploracionFisica } from '../expedientes/schemas/exploracion-fisica.schema';
 import { HistoriaClinica } from '../expedientes/schemas/historia-clinica.schema';
 import { NotaMedica } from '../expedientes/schemas/nota-medica.schema';
+import { NotaAclaratoria } from '../expedientes/schemas/nota-aclaratoria.schema';
 import { ControlPrenatal } from '../expedientes/schemas/control-prenatal.schema';
 import { FilesService } from '../files/files.service';
 import { RiesgoTrabajo } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
@@ -54,6 +59,8 @@ export class TrabajadoresService {
     @InjectModel(HistoriaClinica.name)
     private historiaClinicaModel: Model<HistoriaClinica>,
     @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
+    @InjectModel(NotaAclaratoria.name)
+    private notaAclaratoriaModel: Model<NotaAclaratoria>,
     @InjectModel(Receta.name) private recetaModel: Model<Receta>,
     @InjectModel(ControlPrenatal.name)
     private controlPrenatalModel: Model<ControlPrenatal>,
@@ -2620,6 +2627,7 @@ export class TrabajadoresService {
       ControlPrenatal: 'fechaInicioControlPrenatal',
       DocumentoExterno: 'fechaDocumento', // Este es clave para Documento Externo
       NotaMedica: 'fechaNotaMedica',
+      NotaAclaratoria: 'fechaNotaAclaratoria',
       Receta: 'fechaReceta',
       ConstanciaAptitud: 'fechaConstanciaAptitud',
     };
@@ -2662,6 +2670,38 @@ export class TrabajadoresService {
       ConstanciaAptitud: 'Constancia de Aptitud',
     };
 
+    // Mapeo de tipos de documentos técnicos a nombres legibles (para Nota Aclaratoria)
+    const documentoNombres: Record<string, string> = {
+      notaMedica: 'Nota Médica',
+      historiaClinica: 'Historia Clínica',
+      exploracionFisica: 'Exploración Física',
+      audiometria: 'Audiometría',
+      antidoping: 'Antidoping',
+      aptitud: 'Aptitud para el Puesto',
+      certificado: 'Certificado',
+      certificadoExpedito: 'Certificado Expedito',
+      examenVista: 'Examen de Vista',
+      controlPrenatal: 'Control Prenatal',
+      historiaOtologica: 'Historia Otológica',
+      previoEspirometria: 'Previo Espirometría',
+      constanciaAptitud: 'Constancia de Aptitud',
+      receta: 'Receta',
+      documentoExterno: 'Documento Externo',
+      // Tipos plurales (para compatibilidad)
+      notasMedicas: 'Nota Médica',
+      historiasClinicas: 'Historia Clínica',
+      exploracionesFisicas: 'Exploración Física',
+      audiometrias: 'Audiometría',
+      antidopings: 'Antidoping',
+      aptitudes: 'Aptitud para el Puesto',
+      certificados: 'Certificado',
+      certificadosExpedito: 'Certificado Expedito',
+      examenesVista: 'Examen de Vista',
+      recetas: 'Receta',
+      documentosExternos: 'Documento Externo',
+      constanciasAptitud: 'Constancia de Aptitud',
+    };
+
     // Si es un Documento Externo, construir el nombre dinámicamente
     let fullPath = '';
 
@@ -2670,6 +2710,37 @@ export class TrabajadoresService {
         return '';
       }
       fullPath = `${basePath}/${doc.nombreDocumento} ${fecha}${doc.extension}`;
+    } else if (modelName === 'NotaAclaratoria') {
+      // Para Nota Aclaratoria, construir el nombre personalizado
+      const fechaNotaAclaratoria = convertirFechaADDMMAAAA(
+        doc.fechaNotaAclaratoria,
+      )
+        .replace(/\//g, '-')
+        .replace(/\\/g, '-');
+
+      // Construir nombre del documento que aclara
+      let documentoQueAclara = '';
+      const documentoOrigenTipo = doc.documentoOrigenTipo;
+      const esDocumentoExterno =
+        documentoOrigenTipo === 'documentoExterno' ||
+        documentoOrigenTipo === 'documentosExternos';
+
+      if (esDocumentoExterno && doc.documentoOrigenNombre) {
+        documentoQueAclara = doc.documentoOrigenNombre;
+      } else {
+        documentoQueAclara =
+          documentoNombres[documentoOrigenTipo] || documentoOrigenTipo;
+      }
+
+      // Agregar fecha del documento origen si está disponible
+      if (doc.documentoOrigenFecha) {
+        const fechaOrigen = convertirFechaADDMMAAAA(doc.documentoOrigenFecha)
+          .replace(/\//g, '-')
+          .replace(/\\/g, '-');
+        documentoQueAclara = `${documentoQueAclara} ${fechaOrigen}`;
+      }
+
+      fullPath = `${basePath}/Nota Aclaratoria ${fechaNotaAclaratoria} (${documentoQueAclara}).pdf`;
     } else {
       const tipoDocumento = documentTypes[modelName] || 'Documento';
       fullPath = `${basePath}/${tipoDocumento} ${fecha}.pdf`;
@@ -2800,6 +2871,10 @@ export class TrabajadoresService {
               .find({ idTrabajador: id })
               .session(session)
               .exec(),
+            this.notaAclaratoriaModel
+              .find({ idTrabajador: id })
+              .session(session)
+              .exec(),
             this.recetaModel.find({ idTrabajador: id }).session(session).exec(),
             this.constanciaAptitudModel
               .find({ idTrabajador: id })
@@ -2844,6 +2919,9 @@ export class TrabajadoresService {
               .deleteMany({ idTrabajador: id })
               .session(session),
             this.notaMedicaModel
+              .deleteMany({ idTrabajador: id })
+              .session(session),
+            this.notaAclaratoriaModel
               .deleteMany({ idTrabajador: id })
               .session(session),
             this.recetaModel.deleteMany({ idTrabajador: id }).session(session),

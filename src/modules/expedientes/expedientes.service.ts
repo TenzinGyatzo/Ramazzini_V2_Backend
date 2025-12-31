@@ -16,6 +16,7 @@ import { ExamenVista } from './schemas/examen-vista.schema';
 import { ExploracionFisica } from './schemas/exploracion-fisica.schema';
 import { HistoriaClinica } from './schemas/historia-clinica.schema';
 import { NotaMedica } from './schemas/nota-medica.schema';
+import { NotaAclaratoria } from './schemas/nota-aclaratoria.schema';
 import { ControlPrenatal } from './schemas/control-prenatal.schema';
 import { HistoriaOtologica } from './schemas/historia-otologica.schema';
 import { PrevioEspirometria } from './schemas/previo-espirometria.schema';
@@ -27,6 +28,7 @@ import { FilesService } from '../files/files.service';
 import { convertirFechaISOaDDMMYYYY } from 'src/utils/dates';
 import path from 'path';
 import { parseISO } from 'date-fns';
+import * as fs from 'fs/promises';
 import { Trabajador } from '../trabajadores/schemas/trabajador.schema';
 import { DocumentoEstado } from './enums/documento-estado.enum';
 import { NOM024ComplianceUtil } from '../../utils/nom024-compliance.util';
@@ -58,6 +60,8 @@ export class ExpedientesService {
     @InjectModel(HistoriaClinica.name)
     private historiaClinicaModel: Model<HistoriaClinica>,
     @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
+    @InjectModel(NotaAclaratoria.name)
+    private notaAclaratoriaModel: Model<NotaAclaratoria>,
     @InjectModel(ControlPrenatal.name)
     private controlPrenatalModel: Model<ControlPrenatal>,
     @InjectModel(Trabajador.name) private trabajadorModel: Model<Trabajador>,
@@ -88,6 +92,7 @@ export class ExpedientesService {
       exploracionFisica: this.exploracionFisicaModel,
       historiaClinica: this.historiaClinicaModel,
       notaMedica: this.notaMedicaModel,
+      notaAclaratoria: this.notaAclaratoriaModel,
       controlPrenatal: this.controlPrenatalModel,
       historiaOtologica: this.historiaOtologicaModel,
       previoEspirometria: this.previoEspirometriaModel,
@@ -106,6 +111,7 @@ export class ExpedientesService {
       exploracionFisica: 'fechaExploracionFisica',
       historiaClinica: 'fechaHistoriaClinica',
       notaMedica: 'fechaNotaMedica',
+      notaAclaratoria: 'fechaNotaAclaratoria',
       controlPrenatal: 'fechaInicioControlPrenatal',
       historiaOtologica: 'fechaHistoriaOtologica',
       previoEspirometria: 'fechaPrevioEspirometria',
@@ -1102,6 +1108,68 @@ export class ExpedientesService {
     return result;
   }
 
+  /**
+   * Elimina archivos PDF de notas aclaratorias buscando por patrón
+   * El nombre del archivo incluye información del documento aclarado entre paréntesis,
+   * por lo que necesitamos buscar por patrón en lugar de nombre exacto.
+   * Formato del archivo: "Nota Aclaratoria {fecha} ({documentoQueAclara}).pdf"
+   */
+  private async deleteNotaAclaratoriaPDF(
+    rutaPDF: string,
+    fecha: string,
+  ): Promise<void> {
+    try {
+      const rutaResuelta = path.resolve(rutaPDF);
+      
+      // Verificar si es un directorio o un archivo
+      let directorio: string;
+      try {
+        const stats = await fs.stat(rutaResuelta);
+        if (stats.isDirectory()) {
+          directorio = rutaResuelta;
+        } else {
+          // Si es un archivo, usar el directorio padre
+          directorio = path.dirname(rutaResuelta);
+        }
+      } catch {
+        // El directorio/archivo no existe, no hay nada que eliminar
+        return;
+      }
+
+      // Leer todos los archivos del directorio
+      const archivos = await fs.readdir(directorio);
+      
+      // Crear patrón de búsqueda: "Nota Aclaratoria {fecha}*.pdf"
+      // El nombre completo incluye el documento aclarado entre paréntesis,
+      // pero todos empiezan con "Nota Aclaratoria {fecha}"
+      const patronBase = `Nota Aclaratoria ${fecha}`;
+      
+      // Filtrar archivos que coincidan con el patrón
+      const archivosAEliminar = archivos.filter(
+        (archivo) =>
+          archivo.startsWith(patronBase) && archivo.toLowerCase().endsWith('.pdf'),
+      );
+
+      // Eliminar cada archivo que coincida
+      for (const archivo of archivosAEliminar) {
+        const rutaCompleta = path.join(directorio, archivo);
+        try {
+          await this.filesService.deleteFile(rutaCompleta);
+        } catch (error) {
+          // Continuar aunque falle la eliminación de un archivo específico
+          console.error(
+            `Error al eliminar archivo ${rutaCompleta}: ${error.message}`,
+          );
+        }
+      }
+    } catch (error) {
+      // Continuar aunque falle la búsqueda/eliminación de archivos
+      console.error(
+        `Error al eliminar PDFs de nota aclaratoria: ${error.message}`,
+      );
+    }
+  }
+
   async removeDocument(
     documentType: string,
     id: string,
@@ -1153,9 +1221,8 @@ export class ExpedientesService {
     if (document.estado === DocumentoEstado.ANULADO) {
       // Hard delete para documentos anulados
       try {
-        let fullPath = '';
         if (documentType === 'documentoExterno') {
-          fullPath = document.rutaDocumento;
+          let fullPath = document.rutaDocumento;
           if (
             !fullPath.includes('.pdf') &&
             !fullPath.includes('.png') &&
@@ -1169,8 +1236,16 @@ export class ExpedientesService {
             const fileName = `${document.nombreDocumento} ${fecha}${document.extension}`;
             fullPath = path.join(document.rutaDocumento, fileName);
           }
+          await this.filesService.deleteFile(fullPath);
+        } else if (documentType === 'notaAclaratoria') {
+          // Caso especial para notas aclaratorias
+          const fechaField = this.dateFields[documentType];
+          const fecha = convertirFechaISOaDDMMYYYY(
+            document[fechaField],
+          ).replace(/\//g, '-');
+          await this.deleteNotaAclaratoriaPDF(document.rutaPDF, fecha);
         } else {
-          fullPath = document.rutaPDF;
+          let fullPath = document.rutaPDF;
           if (!fullPath.includes('.pdf')) {
             const fechaField = this.dateFields[documentType];
             const fecha = convertirFechaISOaDDMMYYYY(
@@ -1179,9 +1254,8 @@ export class ExpedientesService {
             const fileName = formatDocumentName(documentType, fecha);
             fullPath = path.join(document.rutaPDF, fileName);
           }
+          await this.filesService.deleteFile(fullPath);
         }
-
-        await this.filesService.deleteFile(fullPath);
       } catch {
         // Continuar con la eliminación aunque falle el borrado del archivo
       }
@@ -1192,9 +1266,8 @@ export class ExpedientesService {
 
     // Hard delete: borrador o documentos no finalizados sin razonAnulacion
     try {
-      let fullPath = '';
       if (documentType === 'documentoExterno') {
-        fullPath = document.rutaDocumento;
+        let fullPath = document.rutaDocumento;
         if (
           !fullPath.includes('.pdf') &&
           !fullPath.includes('.png') &&
@@ -1208,8 +1281,16 @@ export class ExpedientesService {
           const fileName = `${document.nombreDocumento} ${fecha}${document.extension}`;
           fullPath = path.join(document.rutaDocumento, fileName);
         }
+        await this.filesService.deleteFile(fullPath);
+      } else if (documentType === 'notaAclaratoria') {
+        // Caso especial para notas aclaratorias
+        const fechaField = this.dateFields[documentType];
+        const fecha = convertirFechaISOaDDMMYYYY(
+          document[fechaField],
+        ).replace(/\//g, '-');
+        await this.deleteNotaAclaratoriaPDF(document.rutaPDF, fecha);
       } else {
-        fullPath = document.rutaPDF;
+        let fullPath = document.rutaPDF;
         if (!fullPath.includes('.pdf')) {
           const fechaField = this.dateFields[documentType];
           const fecha = convertirFechaISOaDDMMYYYY(
@@ -1218,10 +1299,8 @@ export class ExpedientesService {
           const fileName = formatDocumentName(documentType, fecha);
           fullPath = path.join(document.rutaPDF, fileName);
         }
+        await this.filesService.deleteFile(fullPath);
       }
-
-      // console.log(`[DEBUG] Intentando eliminar archivo PDF: ${fullPath}`);
-      await this.filesService.deleteFile(fullPath); // Usar FilesService
     } catch {
       // console.error(`[ERROR] Error al eliminar el archivo PDF`);
     }

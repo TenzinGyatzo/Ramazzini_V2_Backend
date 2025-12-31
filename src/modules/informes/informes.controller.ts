@@ -222,6 +222,33 @@ export class InformesController {
     }
   }
 
+  @Get('notaAclaratoria/:empresaId/:trabajadorId/:notaAclaratoriaId/:userId')
+  async getInformeNotaAclaratoria(
+    @Param('empresaId') empresaId: string,
+    @Param('trabajadorId') trabajadorId: string,
+    @Param('notaAclaratoriaId') notaAclaratoriaId: string,
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const rutaPDF = await this.informesService.getInformeNotaAclaratoria(
+        empresaId,
+        trabajadorId,
+        notaAclaratoriaId,
+        userId,
+      );
+      return res
+        .status(200)
+        .json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
+    } catch (error) {
+      console.error(
+        '[getInformeNotaAclaratoria] Error al generar el informe nota aclaratoria:',
+        error,
+      );
+      throw error;
+    }
+  }
+
   // Cuestionarios
 
   @Get(

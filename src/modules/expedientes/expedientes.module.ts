@@ -28,6 +28,10 @@ import {
 } from './schemas/historia-clinica.schema';
 import { NotaMedica, NotaMedicaSchema } from './schemas/nota-medica.schema';
 import {
+  NotaAclaratoria,
+  NotaAclaratoriaSchema,
+} from './schemas/nota-aclaratoria.schema';
+import {
   ControlPrenatal,
   ControlPrenatalSchema,
 } from './schemas/control-prenatal.schema';
@@ -76,6 +80,7 @@ import { CatalogsModule } from '../catalogs/catalogs.module';
       { name: ExploracionFisica.name, schema: ExploracionFisicaSchema },
       { name: HistoriaClinica.name, schema: HistoriaClinicaSchema },
       { name: NotaMedica.name, schema: NotaMedicaSchema },
+      { name: NotaAclaratoria.name, schema: NotaAclaratoriaSchema },
       { name: ControlPrenatal.name, schema: ControlPrenatalSchema },
       { name: HistoriaOtologica.name, schema: HistoriaOtologicaSchema },
       { name: PrevioEspirometria.name, schema: PrevioEspirometriaSchema },
