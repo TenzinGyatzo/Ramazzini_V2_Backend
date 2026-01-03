@@ -4,6 +4,8 @@ import type {
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
 import { formatearNombreTrabajador } from '../../../utils/names';
+import { FooterFirmantesData } from '../interfaces/firmante-data.interface';
+import { generarFooterFirmantes } from '../helpers/footer-firmantes.helper';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -229,6 +231,7 @@ export const antidopingInforme = (
   enfermeraFirmante: EnfermeraFirmante | null,
   tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
+  footerFirmantesData?: FooterFirmantesData,
 ): TDocumentDefinitions => {
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
@@ -498,75 +501,81 @@ export const antidopingInforme = (
         {
           columns: [
             {
-              text: [
-                // Nombre y título profesional
-                firmanteActivo?.tituloProfesional && firmanteActivo?.nombre
-                  ? {
-                      text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
-                      bold: true,
-                    }
-                  : null,
+              text: footerFirmantesData?.esDocumentoFinalizado
+                ? generarFooterFirmantes(footerFirmantesData, proveedorSalud)
+                : [
+                    // Nombre y título profesional
+                    firmanteActivo?.tituloProfesional && firmanteActivo?.nombre
+                      ? {
+                          text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}\n`,
+                          bold: true,
+                        }
+                      : null,
 
-                // Cédula profesional (para médicos y enfermeras)
-                firmanteActivo?.numeroCedulaProfesional
-                  ? {
-                      text:
-                        proveedorSalud.pais === 'MX'
-                          ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                          : proveedorSalud.pais === 'GT'
-                            ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
-                            : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
-                      bold: false,
-                    }
-                  : null,
+                    // Cédula profesional (para médicos y enfermeras)
+                    firmanteActivo?.numeroCedulaProfesional
+                      ? {
+                          text:
+                            proveedorSalud.pais === 'MX'
+                              ? `Cédula Profesional ${usarMedico ? 'Médico Cirujano' : ''} No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                              : proveedorSalud.pais === 'GT'
+                                ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}\n`
+                                : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}\n`,
+                          bold: false,
+                        }
+                      : null,
 
-                // Cédula de especialista (solo para médicos)
-                usarMedico && medicoFirmante?.numeroCedulaEspecialista
-                  ? {
-                      text:
-                        proveedorSalud.pais === 'MX'
-                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
-                      bold: false,
-                    }
-                  : null,
+                    // Cédula de especialista (solo para médicos)
+                    usarMedico && medicoFirmante?.numeroCedulaEspecialista
+                      ? {
+                          text:
+                            proveedorSalud.pais === 'MX'
+                              ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                              : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                          bold: false,
+                        }
+                      : null,
 
-                // Credencial adicional
-                firmanteActivo?.nombreCredencialAdicional &&
-                firmanteActivo?.numeroCredencialAdicional
-                  ? {
-                      text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                      bold: false,
-                    }
-                  : null,
+                    // Credencial adicional
+                    firmanteActivo?.nombreCredencialAdicional &&
+                    firmanteActivo?.numeroCredencialAdicional
+                      ? {
+                          text: `${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).substring(0, 60)}${(firmanteActivo.nombreCredencialAdicional + ' No. ' + firmanteActivo.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                          bold: false,
+                        }
+                      : null,
 
-                // Texto específico para enfermeras
-                usarEnfermera && enfermeraFirmante?.sexo
-                  ? {
-                      text:
-                        enfermeraFirmante.sexo === 'Femenino'
-                          ? 'Enfermera responsable de la prueba\n'
-                          : 'Enfermero responsable de la prueba\n',
-                      bold: false,
-                    }
-                  : null,
+                    // Texto específico para enfermeras
+                    usarEnfermera && enfermeraFirmante?.sexo
+                      ? {
+                          text:
+                            enfermeraFirmante.sexo === 'Femenino'
+                              ? 'Enfermera responsable de la prueba\n'
+                              : 'Enfermero responsable de la prueba\n',
+                          bold: false,
+                        }
+                      : null,
 
-                // Texto específico para técnicos
-                usarTecnico && tecnicoFirmante?.sexo
-                  ? {
-                      text:
-                        tecnicoFirmante.sexo === 'Femenino'
-                          ? 'Responsable de la prueba\n'
-                          : 'Responsable de la prueba\n',
-                      bold: false,
-                    }
-                  : null,
-              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
+                    // Texto específico para técnicos
+                    usarTecnico && tecnicoFirmante?.sexo
+                      ? {
+                          text:
+                            tecnicoFirmante.sexo === 'Femenino'
+                              ? 'Responsable de la prueba\n'
+                              : 'Responsable de la prueba\n',
+                          bold: false,
+                        }
+                      : null,
+                  ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(firmanteActivo?.firma?.data
+            ...((
+              footerFirmantesData?.esDocumentoFinalizado
+                ? footerFirmantesData?.finalizador?.firma?.data
+                : firmanteActivo?.firma?.data
+            )
               ? [
                   {
                     ...firma,

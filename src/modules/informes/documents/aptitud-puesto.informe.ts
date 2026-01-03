@@ -6,6 +6,8 @@ import type {
 } from 'pdfmake/interfaces';
 import { formatearNombreTrabajador } from '../../../utils/names';
 import { Interface } from 'readline';
+import { FooterFirmantesData } from '../interfaces/firmante-data.interface';
+import { generarFooterFirmantes } from '../helpers/footer-firmantes.helper';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -424,6 +426,7 @@ export const aptitudPuestoInforme = (
   antidoping: Antidoping | null,
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
+  footerFirmantesData?: FooterFirmantesData,
 ): TDocumentDefinitions => {
   // Clonamos los estilos y cambiamos fillColor antes de pasarlos a pdfMake
   const updatedStyles: StyleDictionary = { ...styles };
@@ -438,8 +441,19 @@ export const aptitudPuestoInforme = (
     trabajador.sexo,
   );
 
-  const firma: Content = medicoFirmante.firma?.data
-    ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 65 }
+  const firma: Content = (
+    footerFirmantesData?.esDocumentoFinalizado
+      ? footerFirmantesData?.finalizador?.firma?.data
+      : medicoFirmante.firma?.data
+  )
+    ? {
+        image: `assets/signatories/${
+          footerFirmantesData?.esDocumentoFinalizado
+            ? footerFirmantesData?.finalizador?.firma?.data
+            : medicoFirmante.firma?.data
+        }`,
+        width: 65,
+      }
     : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
@@ -865,49 +879,59 @@ export const aptitudPuestoInforme = (
         {
           columns: [
             {
-              text: [
-                medicoFirmante.tituloProfesional && medicoFirmante.nombre
-                  ? {
-                      text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}\n`,
-                      bold: true,
-                    }
-                  : null,
+              text: footerFirmantesData?.esDocumentoFinalizado
+                ? generarFooterFirmantes(footerFirmantesData, proveedorSalud)
+                : [
+                    // Nombre y título profesional
+                    medicoFirmante.tituloProfesional && medicoFirmante.nombre
+                      ? {
+                          text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}\n`,
+                          bold: true,
+                        }
+                      : null,
 
-                medicoFirmante.numeroCedulaProfesional
-                  ? {
-                      text:
-                        proveedorSalud.pais === 'MX'
-                          ? `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`
-                          : proveedorSalud.pais === 'GT'
-                            ? `Colegiado Activo No. ${medicoFirmante.numeroCedulaProfesional}\n`
-                            : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}\n`,
-                      bold: false,
-                    }
-                  : null,
+                    // Cédula profesional
+                    medicoFirmante.numeroCedulaProfesional
+                      ? {
+                          text:
+                            proveedorSalud.pais === 'MX'
+                              ? `Cédula Profesional Médico Cirujano No. ${medicoFirmante.numeroCedulaProfesional}\n`
+                              : proveedorSalud.pais === 'GT'
+                                ? `Colegiado Activo No. ${medicoFirmante.numeroCedulaProfesional}\n`
+                                : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}\n`,
+                          bold: false,
+                        }
+                      : null,
 
-                medicoFirmante.numeroCedulaEspecialista
-                  ? {
-                      text:
-                        proveedorSalud.pais === 'MX'
-                          ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
-                          : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
-                      bold: false,
-                    }
-                  : null,
+                    // Cédula de especialista
+                    medicoFirmante.numeroCedulaEspecialista
+                      ? {
+                          text:
+                            proveedorSalud.pais === 'MX'
+                              ? `Cédula Especialidad Med. del Trab. No. ${medicoFirmante.numeroCedulaEspecialista}\n`
+                              : `Registro de Especialidad No. ${medicoFirmante.numeroCedulaEspecialista}\n`,
+                          bold: false,
+                        }
+                      : null,
 
-                medicoFirmante.nombreCredencialAdicional &&
-                medicoFirmante.numeroCredencialAdicional
-                  ? {
-                      text: `${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).substring(0, 60)}${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
-                      bold: false,
-                    }
-                  : null,
-              ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
+                    // Credencial adicional
+                    medicoFirmante.nombreCredencialAdicional &&
+                    medicoFirmante.numeroCredencialAdicional
+                      ? {
+                          text: `${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).substring(0, 60)}${(medicoFirmante.nombreCredencialAdicional + ' No. ' + medicoFirmante.numeroCredencialAdicional).length > 60 ? '...' : ''}\n`,
+                          bold: false,
+                        }
+                      : null,
+                  ].filter((item) => item !== null), // Filtrar los nulos para que no aparezcan en el informe
               fontSize: 8,
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(medicoFirmante.firma?.data
+            ...((
+              footerFirmantesData?.esDocumentoFinalizado
+                ? footerFirmantesData?.finalizador?.firma?.data
+                : medicoFirmante.firma?.data
+            )
               ? [
                   {
                     ...firma,

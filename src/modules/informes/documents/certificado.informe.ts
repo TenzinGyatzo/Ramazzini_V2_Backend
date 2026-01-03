@@ -4,6 +4,8 @@ import type {
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
 import { formatearNombreTrabajadorCertificado } from '../../../utils/names';
+import { FooterFirmantesData } from '../interfaces/firmante-data.interface';
+import { generarFooterFirmantes } from '../helpers/footer-firmantes.helper';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -332,6 +334,7 @@ export const certificadoInforme = (
   examenVista: ExamenVista | null,
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
+  footerFirmantesData?: FooterFirmantesData,
 ): TDocumentDefinitions => {
   const identificadorLabel =
     proveedorSalud.pais === 'MX'
@@ -342,13 +345,34 @@ export const certificadoInforme = (
           ? 'Documento Personal de Identificación'
           : 'Número de Identificación Personal';
 
-  const firma: Content = medicoFirmante.firma?.data
+  // Determinar qué firmante usar (finalizador si es documento finalizado, sino el original)
+  const firmanteActivo =
+    footerFirmantesData?.esDocumentoFinalizado &&
+    footerFirmantesData.finalizador
+      ? {
+          tituloProfesional: footerFirmantesData.finalizador.tituloProfesional,
+          nombre: footerFirmantesData.finalizador.nombre,
+          numeroCedulaProfesional:
+            footerFirmantesData.finalizador.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            footerFirmantesData.finalizador.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            footerFirmantesData.finalizador.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            footerFirmantesData.finalizador.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            footerFirmantesData.finalizador.numeroCredencialAdicional || '',
+          firma: footerFirmantesData.finalizador.firma,
+        }
+      : medicoFirmante;
+
+  const firma: Content = firmanteActivo.firma?.data
     ? {
-        image: `assets/signatories/${medicoFirmante.firma.data}`,
+        image: `assets/signatories/${firmanteActivo.firma.data}`,
         width: 100,
         absolutePosition: {
           x: 260,
-          y: medicoFirmante.especialistaSaludTrabajo === 'Si' ? 570 : 560,
+          y: firmanteActivo.especialistaSaludTrabajo === 'Si' ? 570 : 560,
         },
       }
     : { text: '' };
@@ -417,68 +441,73 @@ export const certificadoInforme = (
       },
       // Información del médico
       {
-        text: [
-          {
-            text:
-              proveedorSalud.pais === 'MX'
-                ? medicoFirmante.tituloProfesional === 'Dra.'
-                  ? 'La suscrita Médica Cirujano, con cédula profesional número '
-                  : 'El suscrito Médico Cirujano, con cédula profesional número '
-                : proveedorSalud.pais === 'GT'
-                  ? medicoFirmante.tituloProfesional === 'Dra.'
-                    ? 'La suscrita Médica Cirujano, con colegiado activo número '
-                    : 'El suscrito Médico Cirujano, con colegiado activo número '
-                  : medicoFirmante.tituloProfesional === 'Dra.'
-                    ? 'La suscrita Médica Cirujano, con registro profesional número '
-                    : 'El suscrito Médico Cirujano, con registro profesional número ',
-          },
-          {
-            text: `${medicoFirmante.numeroCedulaProfesional}. `,
-            bold: true,
-          },
-          medicoFirmante.especialistaSaludTrabajo === 'Si'
-            ? { text: 'Especialista en Medicina del Trabajo, ' }
-            : {
-                text: 'Con formación en Medicina y dedicado a la práctica en el ámbito de la salud laboral, ',
-              },
+        text:
+          footerFirmantesData?.esDocumentoFinalizado &&
+          footerFirmantesData.elaborador &&
+          footerFirmantesData.finalizador
+            ? generarFooterFirmantes(footerFirmantesData, proveedorSalud)
+            : [
+                {
+                  text:
+                    proveedorSalud.pais === 'MX'
+                      ? firmanteActivo.tituloProfesional === 'Dra.'
+                        ? 'La suscrita Médica Cirujano, con cédula profesional número '
+                        : 'El suscrito Médico Cirujano, con cédula profesional número '
+                      : proveedorSalud.pais === 'GT'
+                        ? firmanteActivo.tituloProfesional === 'Dra.'
+                          ? 'La suscrita Médica Cirujano, con colegiado activo número '
+                          : 'El suscrito Médico Cirujano, con colegiado activo número '
+                        : firmanteActivo.tituloProfesional === 'Dra.'
+                          ? 'La suscrita Médica Cirujano, con registro profesional número '
+                          : 'El suscrito Médico Cirujano, con registro profesional número ',
+                },
+                {
+                  text: `${firmanteActivo.numeroCedulaProfesional}. `,
+                  bold: true,
+                },
+                firmanteActivo.especialistaSaludTrabajo === 'Si'
+                  ? { text: 'Especialista en Medicina del Trabajo, ' }
+                  : {
+                      text: 'Con formación en Medicina y dedicado a la práctica en el ámbito de la salud laboral, ',
+                    },
 
-          {
-            text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}${medicoFirmante.especialistaSaludTrabajo === 'Si' ? '' : '.'}`, // Sin espacio antes del punto
-            bold: true,
-          },
+                {
+                  text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}${firmanteActivo.especialistaSaludTrabajo === 'Si' ? '' : '.'}`, // Sin espacio antes del punto
+                  bold: true,
+                },
 
-          medicoFirmante.especialistaSaludTrabajo === 'Si'
-            ? {
-                text:
-                  proveedorSalud.pais === 'MX'
-                    ? `, legalmente ${medicoFirmante.tituloProfesional === 'Dr.' ? 'autorizado' : 'autorizada'} por la Dirección General de Profesiones para ejercer la Especialidad en Medicina del Trabajo con cédula profesional número `
-                    : `, legalmente ${medicoFirmante.tituloProfesional === 'Dr.' ? 'autorizado' : 'autorizada'} para ejercer la Especialidad en Medicina del Trabajo con registro de especialidad número `,
-              }
-            : null,
+                firmanteActivo.especialistaSaludTrabajo === 'Si'
+                  ? {
+                      text:
+                        proveedorSalud.pais === 'MX'
+                          ? `, legalmente ${firmanteActivo.tituloProfesional === 'Dr.' ? 'autorizado' : 'autorizada'} por la Dirección General de Profesiones para ejercer la Especialidad en Medicina del Trabajo con cédula profesional número `
+                          : `, legalmente ${firmanteActivo.tituloProfesional === 'Dr.' ? 'autorizado' : 'autorizada'} para ejercer la Especialidad en Medicina del Trabajo con registro de especialidad número `,
+                    }
+                  : null,
 
-          medicoFirmante.especialistaSaludTrabajo === 'Si'
-            ? {
-                text: `${medicoFirmante.numeroCedulaEspecialista}. `,
-                bold: true,
-              }
-            : null,
+                firmanteActivo.especialistaSaludTrabajo === 'Si'
+                  ? {
+                      text: `${firmanteActivo.numeroCedulaEspecialista}. `,
+                      bold: true,
+                    }
+                  : null,
 
-          medicoFirmante.nombreCredencialAdicional
-            ? {
-                text:
-                  proveedorSalud.pais === 'GT'
-                    ? ` Registro ${medicoFirmante.nombreCredencialAdicional} No. `
-                    : ` ${medicoFirmante.nombreCredencialAdicional} con número `,
-              }
-            : null,
+                firmanteActivo.nombreCredencialAdicional
+                  ? {
+                      text:
+                        proveedorSalud.pais === 'GT'
+                          ? ` Registro ${firmanteActivo.nombreCredencialAdicional} No. `
+                          : ` ${firmanteActivo.nombreCredencialAdicional} con número `,
+                    }
+                  : null,
 
-          medicoFirmante.nombreCredencialAdicional
-            ? {
-                text: `${medicoFirmante.numeroCredencialAdicional}. `,
-                bold: true,
-              }
-            : null,
-        ].filter((item) => item !== null), // Filtra elementos nulos
+                firmanteActivo.nombreCredencialAdicional
+                  ? {
+                      text: `${firmanteActivo.numeroCredencialAdicional}. `,
+                      bold: true,
+                    }
+                  : null,
+              ].filter((item) => item !== null), // Filtra elementos nulos
         style: 'paragraph',
         margin: [0, 20, 0, 0],
       },
@@ -636,7 +665,7 @@ export const certificadoInforme = (
         margin: [0, 10, 0, 0],
       },
       {
-        text: `${medicoFirmante.tituloProfesional} ${medicoFirmante.nombre}`,
+        text: `${firmanteActivo.tituloProfesional} ${firmanteActivo.nombre}`,
         fontSize: 12,
         bold: false,
         alignment: 'center',
@@ -645,25 +674,30 @@ export const certificadoInforme = (
       {
         text:
           proveedorSalud.pais === 'MX'
-            ? `Cédula profesional No. ${medicoFirmante.numeroCedulaProfesional}.`
+            ? `Cédula profesional No. ${firmanteActivo.numeroCedulaProfesional}.`
             : proveedorSalud.pais === 'GT'
-              ? `Colegiado Activo No. ${medicoFirmante.numeroCedulaProfesional}.`
-              : `Registro Profesional No. ${medicoFirmante.numeroCedulaProfesional}.`,
+              ? `Colegiado Activo No. ${firmanteActivo.numeroCedulaProfesional}.`
+              : `Registro Profesional No. ${firmanteActivo.numeroCedulaProfesional}.`,
         fontSize: 10,
         bold: false,
         alignment: 'center',
         margin: [0, 0, 0, 0],
       },
-      {
-        text:
-          proveedorSalud.pais === 'GT'
-            ? `Registro ${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}.`
-            : `${medicoFirmante.nombreCredencialAdicional} No. ${medicoFirmante.numeroCredencialAdicional}.`,
-        fontSize: 10,
-        bold: false,
-        alignment: 'center' as const,
-        margin: [0, 0, 0, 0] as [number, number, number, number],
-      },
+      ...(firmanteActivo.nombreCredencialAdicional &&
+      firmanteActivo.numeroCredencialAdicional
+        ? [
+            {
+              text:
+                proveedorSalud.pais === 'GT'
+                  ? `Registro ${firmanteActivo.nombreCredencialAdicional} No. ${firmanteActivo.numeroCredencialAdicional}.`
+                  : `${firmanteActivo.nombreCredencialAdicional} No. ${firmanteActivo.numeroCredencialAdicional}.`,
+              fontSize: 10,
+              bold: false,
+              alignment: 'center' as const,
+              margin: [0, 0, 0, 0] as [number, number, number, number],
+            },
+          ]
+        : []),
       firma,
     ],
     // Pie de pagina

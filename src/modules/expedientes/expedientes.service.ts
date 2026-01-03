@@ -39,6 +39,8 @@ import {
   validateVitalSigns,
   extractVitalSignsFromDTO,
 } from '../../utils/vital-signs-validator.util';
+import { InformesService } from '../informes/informes.service';
+import { forwardRef, Inject } from '@nestjs/common';
 
 @Injectable()
 export class ExpedientesService {
@@ -80,6 +82,8 @@ export class ExpedientesService {
     private readonly filesService: FilesService,
     private readonly nom024Util: NOM024ComplianceUtil,
     private readonly catalogsService: CatalogsService,
+    @Inject(forwardRef(() => InformesService))
+    private readonly informesService: InformesService,
   ) {
     this.models = {
       antidoping: this.antidopingModel,
@@ -533,6 +537,21 @@ export class ExpedientesService {
     document.finalizadoPor = userId;
 
     const savedDocument = await document.save();
+
+    // NUEVO: Regenerar PDF con datos de elaborador y finalizador
+    try {
+      const creadorId = document.createdBy?.toString() || userId;
+      await this.informesService.regenerarInformeAlFinalizar(
+        documentType,
+        id,
+        creadorId,
+        userId, // finalizador
+      );
+    } catch (error) {
+      console.error('Error al regenerar PDF al finalizar documento:', error);
+      // No lanzamos excepción para no bloquear la finalización del documento
+      // El documento queda finalizado aunque falle la regeneración del PDF
+    }
 
     // Update trabajador's updatedAt
     if (document.idTrabajador) {
@@ -1005,6 +1024,7 @@ export class ExpedientesService {
     }
     return model
       .find({ idTrabajador: trabajadorId })
+      .populate('createdBy', '_id username role')
       .populate('finalizadoPor', 'username')
       .populate('anuladoPor', 'username')
       .exec();
@@ -1019,6 +1039,7 @@ export class ExpedientesService {
     }
     return model
       .findById(id)
+      .populate('createdBy', '_id username role')
       .populate('finalizadoPor', 'username')
       .populate('anuladoPor', 'username')
       .exec();
@@ -1120,7 +1141,7 @@ export class ExpedientesService {
   ): Promise<void> {
     try {
       const rutaResuelta = path.resolve(rutaPDF);
-      
+
       // Verificar si es un directorio o un archivo
       let directorio: string;
       try {
@@ -1138,16 +1159,17 @@ export class ExpedientesService {
 
       // Leer todos los archivos del directorio
       const archivos = await fs.readdir(directorio);
-      
+
       // Crear patrón de búsqueda: "Nota Aclaratoria {fecha}*.pdf"
       // El nombre completo incluye el documento aclarado entre paréntesis,
       // pero todos empiezan con "Nota Aclaratoria {fecha}"
       const patronBase = `Nota Aclaratoria ${fecha}`;
-      
+
       // Filtrar archivos que coincidan con el patrón
       const archivosAEliminar = archivos.filter(
         (archivo) =>
-          archivo.startsWith(patronBase) && archivo.toLowerCase().endsWith('.pdf'),
+          archivo.startsWith(patronBase) &&
+          archivo.toLowerCase().endsWith('.pdf'),
       );
 
       // Eliminar cada archivo que coincida
@@ -1285,9 +1307,10 @@ export class ExpedientesService {
       } else if (documentType === 'notaAclaratoria') {
         // Caso especial para notas aclaratorias
         const fechaField = this.dateFields[documentType];
-        const fecha = convertirFechaISOaDDMMYYYY(
-          document[fechaField],
-        ).replace(/\//g, '-');
+        const fecha = convertirFechaISOaDDMMYYYY(document[fechaField]).replace(
+          /\//g,
+          '-',
+        );
         await this.deleteNotaAclaratoriaPDF(document.rutaPDF, fecha);
       } else {
         let fullPath = document.rutaPDF;

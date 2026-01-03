@@ -4,6 +4,8 @@ import type {
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
 import { formatearNombreTrabajador } from '../../../utils/names';
+import { FooterFirmantesData } from '../interfaces/firmante-data.interface';
+import { generarFooterFirmantes } from '../helpers/footer-firmantes.helper';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -328,6 +330,7 @@ export const historiaOtologicaInforme = (
   enfermeraFirmante: EnfermeraFirmante | null,
   tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
+  footerFirmantesData?: FooterFirmantesData,
 ): TDocumentDefinitions => {
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;

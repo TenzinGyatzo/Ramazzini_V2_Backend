@@ -4,6 +4,7 @@ import type {
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
 import { formatearNombreTrabajador } from '../../../utils/names';
+import { FooterFirmantesData } from '../interfaces/firmante-data.interface';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -69,12 +70,6 @@ const headerText: Content = {
 };
 
 // ==================== FUNCIONES REUSABLES ====================
-const createTableCell = (text: string, style: string): Content => ({
-  text,
-  style,
-  alignment: 'center',
-  margin: [4, 4, 4, 4],
-});
 
 const createConditionalTableCell = (text: string): Content => ({
   text: text ? text.toUpperCase() : '',
@@ -166,22 +161,6 @@ const createResultadoCuestionarioTableCell = (
               : 'black', // Color gris oscuro para OTRO
   };
 };
-
-const createExposicionPolvosTableCell = (text: string): Content => ({
-  text: text ? text.toUpperCase() : '',
-  style: 'tableCell',
-  alignment: 'center',
-  margin: [3, 3, 3, 3],
-  bold: text && text.toUpperCase() !== 'NO',
-  color:
-    text && text.toUpperCase() === 'AMBOS'
-      ? 'red'
-      : text &&
-          (text.toUpperCase() === 'ORGÁNICOS' ||
-            text.toUpperCase() === 'INORGÁNICOS')
-        ? '#CD853F'
-        : 'black',
-});
 
 const createOtrosSintomasTableCell = (text: string): Content => ({
   text: text ? text.toUpperCase() : '',
@@ -367,6 +346,7 @@ export const previoEspirometriaInforme = (
   enfermeraFirmante: EnfermeraFirmante | null,
   tecnicoFirmante: TecnicoFirmante | null,
   proveedorSalud: ProveedorSalud,
+  _footerFirmantesData?: FooterFirmantesData,
 ): TDocumentDefinitions => {
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
@@ -576,10 +556,10 @@ export const previoEspirometriaInforme = (
                 layout: {
                   hLineColor: '#a8a29e',
                   vLineColor: '#a8a29e',
-                  paddingTop: (i: number, node: any) => 1,
-                  paddingBottom: (i: number, node: any) => 1,
-                  paddingLeft: (i: number, node: any) => 1,
-                  paddingRight: (i: number, node: any) => 1,
+                  paddingTop: (_i: number, _node: any) => 1,
+                  paddingBottom: (_i: number, _node: any) => 1,
+                  paddingLeft: (_i: number, _node: any) => 1,
+                  paddingRight: (_i: number, _node: any) => 1,
                   hLineWidth: () => 0.3,
                   vLineWidth: () => 0.3,
                 },
@@ -763,10 +743,10 @@ export const previoEspirometriaInforme = (
                 layout: {
                   hLineColor: '#a8a29e',
                   vLineColor: '#a8a29e',
-                  paddingTop: (i: number, node: any) => 1,
-                  paddingBottom: (i: number, node: any) => 1,
-                  paddingLeft: (i: number, node: any) => 1,
-                  paddingRight: (i: number, node: any) => 1,
+                  paddingTop: (_i: number, _node: any) => 1,
+                  paddingBottom: (_i: number, _node: any) => 1,
+                  paddingLeft: (_i: number, _node: any) => 1,
+                  paddingRight: (_i: number, _node: any) => 1,
                   hLineWidth: () => 0.3,
                   vLineWidth: () => 0.3,
                 },
@@ -834,10 +814,10 @@ export const previoEspirometriaInforme = (
             layout: {
               hLineColor: '#a8a29e',
               vLineColor: '#a8a29e',
-              paddingTop: (i: number, node: any) => 1,
-              paddingBottom: (i: number, node: any) => 1,
-              paddingLeft: (i: number, node: any) => 1,
-              paddingRight: (i: number, node: any) => 1,
+              paddingTop: (_i: number, _node: any) => 1,
+              paddingBottom: (_i: number, _node: any) => 1,
+              paddingLeft: (_i: number, _node: any) => 1,
+              paddingRight: (_i: number, _node: any) => 1,
               hLineWidth: () => 0.3,
               vLineWidth: () => 0.3,
             },
@@ -893,10 +873,10 @@ export const previoEspirometriaInforme = (
             layout: {
               hLineColor: '#a8a29e',
               vLineColor: '#a8a29e',
-              paddingTop: (i: number, node: any) => 1,
-              paddingBottom: (i: number, node: any) => 1,
-              paddingLeft: (i: number, node: any) => 1,
-              paddingRight: (i: number, node: any) => 1,
+              paddingTop: (_i: number, _node: any) => 1,
+              paddingBottom: (_i: number, _node: any) => 1,
+              paddingLeft: (_i: number, _node: any) => 1,
+              paddingRight: (_i: number, _node: any) => 1,
               hLineWidth: () => 0.3,
               vLineWidth: () => 0.3,
             },
@@ -979,10 +959,10 @@ export const previoEspirometriaInforme = (
                 layout: {
                   hLineColor: '#a8a29e',
                   vLineColor: '#a8a29e',
-                  paddingTop: (i: number, node: any) => 1,
-                  paddingBottom: (i: number, node: any) => 1,
-                  paddingLeft: (i: number, node: any) => 1,
-                  paddingRight: (i: number, node: any) => 1,
+                  paddingTop: (_i: number, _node: any) => 1,
+                  paddingBottom: (_i: number, _node: any) => 1,
+                  paddingLeft: (_i: number, _node: any) => 1,
+                  paddingRight: (_i: number, _node: any) => 1,
                   hLineWidth: () => 0.3,
                   vLineWidth: () => 0.3,
                 },
@@ -1067,10 +1047,10 @@ export const previoEspirometriaInforme = (
                 layout: {
                   hLineColor: '#a8a29e',
                   vLineColor: '#a8a29e',
-                  paddingTop: (i: number, node: any) => 1,
-                  paddingBottom: (i: number, node: any) => 1,
-                  paddingLeft: (i: number, node: any) => 1,
-                  paddingRight: (i: number, node: any) => 1,
+                  paddingTop: (_i: number, _node: any) => 1,
+                  paddingBottom: (_i: number, _node: any) => 1,
+                  paddingLeft: (_i: number, _node: any) => 1,
+                  paddingRight: (_i: number, _node: any) => 1,
                   hLineWidth: () => 0.3,
                   vLineWidth: () => 0.3,
                 },
@@ -1109,10 +1089,10 @@ export const previoEspirometriaInforme = (
         layout: {
           hLineColor: '#a8a29e',
           vLineColor: '#a8a29e',
-          paddingTop: (i: number, node: any) => 1,
-          paddingBottom: (i: number, node: any) => 1,
-          paddingLeft: (i: number, node: any) => 1,
-          paddingRight: (i: number, node: any) => 1,
+          paddingTop: (_i: number, _node: any) => 1,
+          paddingBottom: (_i: number, _node: any) => 1,
+          paddingLeft: (_i: number, _node: any) => 1,
+          paddingRight: (_i: number, _node: any) => 1,
           hLineWidth: () => 0.3,
           vLineWidth: () => 0.3,
         },

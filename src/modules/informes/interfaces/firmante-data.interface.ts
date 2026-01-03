@@ -1,0 +1,18 @@
+export interface FirmanteData {
+  nombre: string;
+  tituloProfesional: string;
+  numeroCedulaProfesional?: string;
+  especialistaSaludTrabajo?: string;
+  numeroCedulaEspecialista?: string;
+  nombreCredencialAdicional?: string;
+  numeroCredencialAdicional?: string;
+  firma?: { data: string; contentType: string } | null;
+  sexo?: string;
+  tipo: 'medico' | 'enfermera' | 'tecnico';
+}
+
+export interface FooterFirmantesData {
+  elaborador: FirmanteData | null;
+  finalizador: FirmanteData | null;
+  esDocumentoFinalizado: boolean;
+}

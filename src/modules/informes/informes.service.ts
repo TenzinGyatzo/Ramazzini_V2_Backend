@@ -1,5 +1,5 @@
 // Servicios para la generación de informes en PDF
-import { Injectable } from '@nestjs/common';
+import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { PrinterService } from '../printer/printer.service';
 import { antidopingInforme } from './documents/antidoping.informe';
 import { certificadoInforme } from './documents/certificado.informe';
@@ -35,6 +35,12 @@ import { MedicosFirmantesService } from '../medicos-firmantes/medicos-firmantes.
 import { EnfermerasFirmantesService } from '../enfermeras-firmantes/enfermeras-firmantes.service';
 import { TecnicosFirmantesService } from '../tecnicos-firmantes/tecnicos-firmantes.service';
 import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.service';
+import {
+  FirmanteData,
+  FooterFirmantesData,
+} from './interfaces/firmante-data.interface';
+import { CentrosTrabajoService } from '../centros-trabajo/centros-trabajo.service';
+import { DocumentoEstado } from '../expedientes/enums/documento-estado.enum';
 
 @Injectable()
 export class InformesService {
@@ -74,6 +80,7 @@ export class InformesService {
     private readonly printer: PrinterService,
     private readonly empresasService: EmpresasService,
     private readonly trabajadoresService: TrabajadoresService,
+    @Inject(forwardRef(() => ExpedientesService))
     private readonly expedientesService: ExpedientesService,
     private readonly filesService: FilesService,
     private readonly usersService: UsersService,
@@ -81,6 +88,7 @@ export class InformesService {
     private readonly enfermerasFirmantesService: EnfermerasFirmantesService,
     private readonly proveedoresSaludService: ProveedoresSaludService,
     private readonly tecnicosFirmantesService: TecnicosFirmantesService,
+    private readonly centrosTrabajoService: CentrosTrabajoService,
   ) {}
 
   private mapMedicoFirmante(
@@ -129,6 +137,366 @@ export class InformesService {
    */
   private getNombreDocumento(tipo: string): string {
     return this.documentoNombres[tipo] || tipo;
+  }
+
+  /**
+   * Obtiene datos del firmante (médico, enfermera o técnico) por userId
+   * Busca en orden: médico -> enfermera -> técnico
+   */
+  private async obtenerDatosFirmante(
+    userId: string,
+  ): Promise<FirmanteData | null> {
+    // Intentar obtener médico firmante
+    const medico = await this.medicosFirmantesService.findOneByUserId(userId);
+    if (medico?.nombre) {
+      return {
+        nombre: medico.nombre || '',
+        tituloProfesional: medico.tituloProfesional || '',
+        numeroCedulaProfesional: medico.numeroCedulaProfesional || '',
+        especialistaSaludTrabajo: medico.especialistaSaludTrabajo || '',
+        numeroCedulaEspecialista: medico.numeroCedulaEspecialista || '',
+        nombreCredencialAdicional: medico.nombreCredencialAdicional || '',
+        numeroCredencialAdicional: medico.numeroCredencialAdicional || '',
+        firma: (medico.firma as { data: string; contentType: string }) || null,
+        tipo: 'medico',
+      };
+    }
+
+    // Intentar obtener enfermera firmante
+    const enfermera =
+      await this.enfermerasFirmantesService.findOneByUserId(userId);
+    if (enfermera?.nombre) {
+      return {
+        nombre: enfermera.nombre || '',
+        tituloProfesional: enfermera.tituloProfesional || '',
+        numeroCedulaProfesional: enfermera.numeroCedulaProfesional || '',
+        nombreCredencialAdicional: enfermera.nombreCredencialAdicional || '',
+        numeroCredencialAdicional: enfermera.numeroCredencialAdicional || '',
+        firma:
+          (enfermera.firma as { data: string; contentType: string }) || null,
+        sexo: enfermera.sexo || '',
+        tipo: 'enfermera',
+      };
+    }
+
+    // Intentar obtener técnico firmante
+    const tecnico = await this.tecnicosFirmantesService.findOneByUserId(userId);
+    if (tecnico?.nombre) {
+      return {
+        nombre: tecnico.nombre || '',
+        tituloProfesional: tecnico.tituloProfesional || '',
+        numeroCedulaProfesional: tecnico.numeroCedulaProfesional || '',
+        nombreCredencialAdicional: tecnico.nombreCredencialAdicional || '',
+        numeroCredencialAdicional: tecnico.numeroCredencialAdicional || '',
+        firma: (tecnico.firma as { data: string; contentType: string }) || null,
+        sexo: tecnico.sexo || '',
+        tipo: 'tecnico',
+      };
+    }
+
+    // No se encontró ningún firmante
+    return null;
+  }
+
+  /**
+   * Regenera el PDF de un documento cuando se finaliza
+   * Incluye información de elaborador y finalizador en el footer
+   */
+  async regenerarInformeAlFinalizar(
+    documentType: string,
+    documentId: string,
+    creadorId: string,
+    finalizadorId: string,
+  ): Promise<string> {
+    // 1. Obtener documento
+    const documento = await this.expedientesService.findDocument(
+      documentType,
+      documentId,
+    );
+
+    // 2. Navegar a empresaId
+    const trabajador = await this.trabajadoresService.findOne(
+      documento.idTrabajador.toString(),
+    );
+    const centroTrabajo = await this.centrosTrabajoService.findOne(
+      trabajador.idCentroTrabajo.toString(),
+    );
+    const empresaId = centroTrabajo.idEmpresa.toString();
+
+    // 3. Si el creador y finalizador son la misma persona, usar formato simple (como borrador)
+    const normalizedType = this.normalizarTipoDocumento(documentType);
+
+    if (creadorId === finalizadorId) {
+      // No pasar footerFirmantesData, se usará el formato tradicional
+      switch (normalizedType) {
+        case 'antidoping':
+          return await this.getInformeAntidoping(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'aptitud':
+          return await this.getInformeAptitudPuesto(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'certificado':
+          return await this.getInformeCertificado(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'certificadoExpedito':
+          return await this.getInformeCertificadoExpedito(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'examenVista':
+          return await this.getInformeExamenVista(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'exploracionFisica':
+          return await this.getInformeExploracionFisica(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'historiaClinica':
+          return await this.getInformeHistoriaClinica(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'notaMedica':
+          return await this.getInformeNotaMedica(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'notaAclaratoria':
+          return await this.getInformeNotaAclaratoria(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'controlPrenatal':
+          return await this.getInformeControlPrenatal(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'historiaOtologica':
+          return await this.getInformeHistoriaOtologica(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'previoEspirometria':
+          return await this.getInformePrevioEspirometria(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'receta':
+          return await this.getInformeReceta(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'constanciaAptitud':
+          return await this.getInformeConstanciaAptitud(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        case 'audiometria':
+          return await this.getInformeAudiometria(
+            empresaId,
+            trabajador._id,
+            documentId,
+            finalizadorId,
+            undefined,
+          );
+        default:
+          console.warn(
+            `regenerarInformeAlFinalizar: Tipo de documento ${normalizedType} no soportado`,
+          );
+          return documento.rutaPDF || '';
+      }
+    }
+
+    // 4. Obtener datos de firmantes (personas diferentes)
+    const elaborador = await this.obtenerDatosFirmante(creadorId);
+    const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+    // 5. Preparar datos de footer
+    const footerFirmantesData = {
+      elaborador,
+      finalizador,
+      esDocumentoFinalizado: true,
+    };
+
+    // 6. Llamar al método de generación correspondiente
+    switch (normalizedType) {
+      case 'antidoping':
+        return await this.getInformeAntidoping(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'aptitud':
+        return await this.getInformeAptitudPuesto(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'certificado':
+        return await this.getInformeCertificado(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'certificadoExpedito':
+        return await this.getInformeCertificadoExpedito(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'examenVista':
+        return await this.getInformeExamenVista(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'exploracionFisica':
+        return await this.getInformeExploracionFisica(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'historiaClinica':
+        return await this.getInformeHistoriaClinica(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'notaMedica':
+        return await this.getInformeNotaMedica(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'notaAclaratoria':
+        return await this.getInformeNotaAclaratoria(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'controlPrenatal':
+        return await this.getInformeControlPrenatal(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'historiaOtologica':
+        return await this.getInformeHistoriaOtologica(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'previoEspirometria':
+        return await this.getInformePrevioEspirometria(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'receta':
+        return await this.getInformeReceta(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'constanciaAptitud':
+        return await this.getInformeConstanciaAptitud(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          footerFirmantesData,
+        );
+      case 'audiometria':
+        return await this.getInformeAudiometria(
+          empresaId,
+          trabajador._id,
+          documentId,
+          finalizadorId,
+          undefined, // audiometria tiene graficaAudiometria como parámetro opcional diferente
+          footerFirmantesData,
+        );
+      default:
+        console.warn(
+          `regenerarInformeAlFinalizar: Tipo de documento ${normalizedType} no soportado`,
+        );
+        return documento.rutaPDF || '';
+    }
   }
 
   /**
@@ -214,6 +582,7 @@ export class InformesService {
     trabajadorId: string,
     antidopingId: string,
     userId: string,
+    footerFirmantesData?: any,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -258,8 +627,51 @@ export class InformesService {
       ketamina: antidoping.ketamina || null,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (antidoping.estado === DocumentoEstado.FINALIZADO ||
+        antidoping.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (antidoping.createdBy?._id || antidoping.createdBy)?.toString() ||
+        userId;
+      const finalizadorId =
+        (
+          antidoping.finalizadoPor?._id || antidoping.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      antidoping.estado === DocumentoEstado.BORRADOR
+        ? (antidoping.createdBy?._id || antidoping.createdBy)?.toString() ||
+          userId
+        : antidoping.estado === DocumentoEstado.FINALIZADO ||
+            antidoping.estado === DocumentoEstado.ANULADO
+          ? (
+              antidoping.finalizadoPor?._id || antidoping.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -308,7 +720,7 @@ export class InformesService {
         };
 
     const tecnicoFirmante =
-      await this.tecnicosFirmantesService.findOneByUserId(userId);
+      await this.tecnicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosTecnicoFirmante = tecnicoFirmante
       ? {
           nombre: tecnicoFirmante.nombre || '',
@@ -397,6 +809,7 @@ export class InformesService {
       datosEnfermeraFirmante,
       datosTecnicoFirmante,
       datosProveedorSalud,
+      footerData,
     );
     // Generar y guardar el PDF
     try {
@@ -414,6 +827,7 @@ export class InformesService {
     trabajadorId: string,
     aptitudId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -467,6 +881,45 @@ export class InformesService {
       resultados: aptitud.resultados,
       medidasPreventivas: aptitud.medidasPreventivas,
     };
+
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (aptitud.estado === DocumentoEstado.FINALIZADO ||
+        aptitud.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (aptitud.createdBy?._id || aptitud.createdBy)?.toString() || userId;
+      const finalizadorId =
+        (aptitud.finalizadoPor?._id || aptitud.finalizadoPor)?.toString() ||
+        userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      aptitud.estado === DocumentoEstado.BORRADOR
+        ? (aptitud.createdBy?._id || aptitud.createdBy)?.toString() || userId
+        : aptitud.estado === DocumentoEstado.FINALIZADO ||
+            aptitud.estado === DocumentoEstado.ANULADO
+          ? (aptitud.finalizadoPor?._id || aptitud.finalizadoPor)?.toString() ||
+            userId
+          : userId;
 
     const historiasClinicas = await this.expedientesService.findDocuments(
       'historiaClinica',
@@ -600,7 +1053,7 @@ export class InformesService {
       : null;
 
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -689,6 +1142,7 @@ export class InformesService {
       datosAntidoping,
       datosMedicoFirmante,
       datosProveedorSalud,
+      footerData,
     );
 
     // Generar y guardar el PDF
@@ -702,6 +1156,7 @@ export class InformesService {
     trabajadorId: string,
     constanciaAptitudId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -734,8 +1189,55 @@ export class InformesService {
       fechaConstanciaAptitud: constanciaAptitud.fechaConstanciaAptitud,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (constanciaAptitud.estado === DocumentoEstado.FINALIZADO ||
+        constanciaAptitud.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (
+          constanciaAptitud.createdBy?._id || constanciaAptitud.createdBy
+        )?.toString() || userId;
+      const finalizadorId =
+        (
+          constanciaAptitud.finalizadoPor?._id ||
+          constanciaAptitud.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      constanciaAptitud.estado === DocumentoEstado.BORRADOR
+        ? (
+            constanciaAptitud.createdBy?._id || constanciaAptitud.createdBy
+          )?.toString() || userId
+        : constanciaAptitud.estado === DocumentoEstado.FINALIZADO ||
+            constanciaAptitud.estado === DocumentoEstado.ANULADO
+          ? (
+              constanciaAptitud.finalizadoPor?._id ||
+              constanciaAptitud.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -821,6 +1323,7 @@ export class InformesService {
       datosConstanciaAptitud,
       datosMedicoFirmante,
       datosProveedorSalud,
+      footerData,
     );
 
     // Generar y guardar el PDF
@@ -835,6 +1338,7 @@ export class InformesService {
     audiometriaId: string,
     userId: string,
     graficaAudiometria?: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -898,8 +1402,51 @@ export class InformesService {
       graficaAudiometria: graficaAudiometria, // Agregar la gráfica si se proporciona
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (audiometria.estado === DocumentoEstado.FINALIZADO ||
+        audiometria.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (audiometria.createdBy?._id || audiometria.createdBy)?.toString() ||
+        userId;
+      const finalizadorId =
+        (
+          audiometria.finalizadoPor?._id || audiometria.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      audiometria.estado === DocumentoEstado.BORRADOR
+        ? (audiometria.createdBy?._id || audiometria.createdBy)?.toString() ||
+          userId
+        : audiometria.estado === DocumentoEstado.FINALIZADO ||
+            audiometria.estado === DocumentoEstado.ANULADO
+          ? (
+              audiometria.finalizadoPor?._id || audiometria.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -948,7 +1495,7 @@ export class InformesService {
         };
 
     const tecnicoFirmante =
-      await this.tecnicosFirmantesService.findOneByUserId(userId);
+      await this.tecnicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosTecnicoFirmante = tecnicoFirmante
       ? {
           nombre: tecnicoFirmante.nombre || '',
@@ -1041,6 +1588,7 @@ export class InformesService {
       datosEnfermeraFirmante,
       datosTecnicoFirmante,
       datosProveedorSalud,
+      footerData,
     );
 
     // Generar y guardar el PDF
@@ -1054,6 +1602,7 @@ export class InformesService {
     trabajadorId: string,
     certificadoId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -1086,6 +1635,49 @@ export class InformesService {
       fechaCertificado: certificado.fechaCertificado,
       impedimentosFisicos: certificado.impedimentosFisicos,
     };
+
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (certificado.estado === DocumentoEstado.FINALIZADO ||
+        certificado.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (certificado.createdBy?._id || certificado.createdBy)?.toString() ||
+        userId;
+      const finalizadorId =
+        (
+          certificado.finalizadoPor?._id || certificado.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      certificado.estado === DocumentoEstado.BORRADOR
+        ? (certificado.createdBy?._id || certificado.createdBy)?.toString() ||
+          userId
+        : certificado.estado === DocumentoEstado.FINALIZADO ||
+            certificado.estado === DocumentoEstado.ANULADO
+          ? (
+              certificado.finalizadoPor?._id || certificado.finalizadoPor
+            )?.toString() || userId
+          : userId;
 
     const exploracionesFisicas = await this.expedientesService.findDocuments(
       'exploracionFisica',
@@ -1210,7 +1802,7 @@ export class InformesService {
       : null;
 
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -1289,6 +1881,7 @@ export class InformesService {
       datosExamenVista,
       datosMedicoFirmante,
       datosProveedorSalud,
+      footerData,
     );
     await this.printer.createPdf(docDefinition, rutaCompleta);
 
@@ -1300,6 +1893,7 @@ export class InformesService {
     trabajadorId: string,
     certificadoExpeditoId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -1346,8 +1940,51 @@ export class InformesService {
       observaciones: certificado.observaciones,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (certificado.estado === DocumentoEstado.FINALIZADO ||
+        certificado.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (certificado.createdBy?._id || certificado.createdBy)?.toString() ||
+        userId;
+      const finalizadorId =
+        (
+          certificado.finalizadoPor?._id || certificado.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      certificado.estado === DocumentoEstado.BORRADOR
+        ? (certificado.createdBy?._id || certificado.createdBy)?.toString() ||
+          userId
+        : certificado.estado === DocumentoEstado.FINALIZADO ||
+            certificado.estado === DocumentoEstado.ANULADO
+          ? (
+              certificado.finalizadoPor?._id || certificado.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -1424,6 +2061,7 @@ export class InformesService {
       datosCertificadoExpedito,
       datosMedicoFirmante,
       datosProveedorSalud,
+      footerData,
     );
     await this.printer.createPdf(docDefinition, rutaCompleta);
 
@@ -1435,6 +2073,7 @@ export class InformesService {
     trabajadorId: string,
     examenVistaId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
 
@@ -1507,8 +2146,51 @@ export class InformesService {
       diagnosticoRecomendaciones: examenVista.diagnosticoRecomendaciones,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (examenVista.estado === DocumentoEstado.FINALIZADO ||
+        examenVista.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (examenVista.createdBy?._id || examenVista.createdBy)?.toString() ||
+        userId;
+      const finalizadorId =
+        (
+          examenVista.finalizadoPor?._id || examenVista.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      examenVista.estado === DocumentoEstado.BORRADOR
+        ? (examenVista.createdBy?._id || examenVista.createdBy)?.toString() ||
+          userId
+        : examenVista.estado === DocumentoEstado.FINALIZADO ||
+            examenVista.estado === DocumentoEstado.ANULADO
+          ? (
+              examenVista.finalizadoPor?._id || examenVista.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
         ? {
@@ -1557,7 +2239,7 @@ export class InformesService {
         };
 
     const tecnicoFirmante =
-      await this.tecnicosFirmantesService.findOneByUserId(userId);
+      await this.tecnicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosTecnicoFirmante = tecnicoFirmante
       ? {
           nombre: tecnicoFirmante.nombre || '',
@@ -1644,6 +2326,7 @@ export class InformesService {
       datosEnfermeraFirmante,
       datosTecnicoFirmante,
       datosProveedorSalud,
+      footerData,
     );
     await this.printer.createPdf(docDefinition, rutaCompleta);
 
@@ -1655,6 +2338,7 @@ export class InformesService {
     trabajadorId: string,
     exploracionFisicaId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
 
@@ -1738,8 +2422,55 @@ export class InformesService {
       resumenExploracionFisica: exploracionFisica.resumenExploracionFisica,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (exploracionFisica.estado === DocumentoEstado.FINALIZADO ||
+        exploracionFisica.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (
+          exploracionFisica.createdBy?._id || exploracionFisica.createdBy
+        )?.toString() || userId;
+      const finalizadorId =
+        (
+          exploracionFisica.finalizadoPor?._id ||
+          exploracionFisica.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      exploracionFisica.estado === DocumentoEstado.BORRADOR
+        ? (
+            exploracionFisica.createdBy?._id || exploracionFisica.createdBy
+          )?.toString() || userId
+        : exploracionFisica.estado === DocumentoEstado.FINALIZADO ||
+            exploracionFisica.estado === DocumentoEstado.ANULADO
+          ? (
+              exploracionFisica.finalizadoPor?._id ||
+              exploracionFisica.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = medicoFirmante
       ? {
           nombre: medicoFirmante.nombre || '',
@@ -1798,7 +2529,7 @@ export class InformesService {
         };
 
     const tecnicoFirmante =
-      await this.tecnicosFirmantesService.findOneByUserId(userId);
+      await this.tecnicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosTecnicoFirmante = tecnicoFirmante
       ? {
           nombre: tecnicoFirmante.nombre || '',
@@ -1888,6 +2619,7 @@ export class InformesService {
       datosEnfermeraFirmante,
       datosTecnicoFirmante,
       datosProveedorSalud,
+      footerData,
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);
@@ -1900,6 +2632,7 @@ export class InformesService {
     trabajadorId: string,
     historiaClinicaId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
 
@@ -2028,8 +2761,54 @@ export class InformesService {
       resumenHistoriaClinica: historiaClinica.resumenHistoriaClinica,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (historiaClinica.estado === DocumentoEstado.FINALIZADO ||
+        historiaClinica.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (
+          historiaClinica.createdBy?._id || historiaClinica.createdBy
+        )?.toString() || userId;
+      const finalizadorId =
+        (
+          historiaClinica.finalizadoPor?._id || historiaClinica.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      historiaClinica.estado === DocumentoEstado.BORRADOR
+        ? (
+            historiaClinica.createdBy?._id || historiaClinica.createdBy
+          )?.toString() || userId
+        : historiaClinica.estado === DocumentoEstado.FINALIZADO ||
+            historiaClinica.estado === DocumentoEstado.ANULADO
+          ? (
+              historiaClinica.finalizadoPor?._id ||
+              historiaClinica.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = medicoFirmante
       ? {
           nombre: medicoFirmante.nombre || '',
@@ -2088,7 +2867,7 @@ export class InformesService {
         };
 
     const tecnicoFirmante =
-      await this.tecnicosFirmantesService.findOneByUserId(userId);
+      await this.tecnicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosTecnicoFirmante = tecnicoFirmante
       ? {
           nombre: tecnicoFirmante.nombre || '',
@@ -2175,6 +2954,7 @@ export class InformesService {
       datosEnfermeraFirmante,
       datosTecnicoFirmante,
       datosProveedorSalud,
+      footerFirmantesData,
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);
@@ -2187,6 +2967,7 @@ export class InformesService {
     trabajadorId: string,
     notaMedicaId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -2231,8 +3012,51 @@ export class InformesService {
       observaciones: notaMedica.observaciones,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (notaMedica.estado === DocumentoEstado.FINALIZADO ||
+        notaMedica.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (notaMedica.createdBy?._id || notaMedica.createdBy)?.toString() ||
+        userId;
+      const finalizadorId =
+        (
+          notaMedica.finalizadoPor?._id || notaMedica.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      notaMedica.estado === DocumentoEstado.BORRADOR
+        ? (notaMedica.createdBy?._id || notaMedica.createdBy)?.toString() ||
+          userId
+        : notaMedica.estado === DocumentoEstado.FINALIZADO ||
+            notaMedica.estado === DocumentoEstado.ANULADO
+          ? (
+              notaMedica.finalizadoPor?._id || notaMedica.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = medicoFirmante
       ? {
           nombre: medicoFirmante.nombre || '',
@@ -2262,7 +3086,7 @@ export class InformesService {
         };
 
     const enfermeraFirmante =
-      await this.enfermerasFirmantesService.findOneByUserId(userId);
+      await this.enfermerasFirmantesService.findOneByUserId(firmanteUserId);
     const datosEnfermeraFirmante = enfermeraFirmante
       ? {
           nombre: enfermeraFirmante.nombre || '',
@@ -2348,6 +3172,7 @@ export class InformesService {
       datosMedicoFirmante,
       datosEnfermeraFirmante,
       datosProveedorSalud,
+      footerData,
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);
@@ -2359,6 +3184,7 @@ export class InformesService {
     trabajadorId: string,
     notaAclaratoriaId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -2462,8 +3288,54 @@ export class InformesService {
       impactoClinico: notaAclaratoria.impactoClinico,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (notaAclaratoria.estado === DocumentoEstado.FINALIZADO ||
+        notaAclaratoria.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (
+          notaAclaratoria.createdBy?._id || notaAclaratoria.createdBy
+        )?.toString() || userId;
+      const finalizadorId =
+        (
+          notaAclaratoria.finalizadoPor?._id || notaAclaratoria.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      notaAclaratoria.estado === DocumentoEstado.BORRADOR
+        ? (
+            notaAclaratoria.createdBy?._id || notaAclaratoria.createdBy
+          )?.toString() || userId
+        : notaAclaratoria.estado === DocumentoEstado.FINALIZADO ||
+            notaAclaratoria.estado === DocumentoEstado.ANULADO
+          ? (
+              notaAclaratoria.finalizadoPor?._id ||
+              notaAclaratoria.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = medicoFirmante
       ? {
           nombre: medicoFirmante.nombre || '',
@@ -2604,6 +3476,7 @@ export class InformesService {
       datosMedicoFirmante,
       datosEnfermeraFirmante,
       datosProveedorSalud,
+      footerData,
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);
@@ -2615,6 +3488,7 @@ export class InformesService {
     trabajadorId: string,
     controlPrenatalId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -2746,8 +3620,54 @@ export class InformesService {
       observacionesFondoUterino: controlPrenatal.observacionesFondoUterino,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (controlPrenatal.estado === DocumentoEstado.FINALIZADO ||
+        controlPrenatal.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (
+          controlPrenatal.createdBy?._id || controlPrenatal.createdBy
+        )?.toString() || userId;
+      const finalizadorId =
+        (
+          controlPrenatal.finalizadoPor?._id || controlPrenatal.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      controlPrenatal.estado === DocumentoEstado.BORRADOR
+        ? (
+            controlPrenatal.createdBy?._id || controlPrenatal.createdBy
+          )?.toString() || userId
+        : controlPrenatal.estado === DocumentoEstado.FINALIZADO ||
+            controlPrenatal.estado === DocumentoEstado.ANULADO
+          ? (
+              controlPrenatal.finalizadoPor?._id ||
+              controlPrenatal.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = medicoFirmante
       ? {
           nombre: medicoFirmante.nombre || '',
@@ -2806,7 +3726,7 @@ export class InformesService {
         };
 
     const tecnicoFirmante =
-      await this.tecnicosFirmantesService.findOneByUserId(userId);
+      await this.tecnicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosTecnicoFirmante = tecnicoFirmante
       ? {
           nombre: tecnicoFirmante.nombre || '',
@@ -2893,6 +3813,7 @@ export class InformesService {
       datosEnfermeraFirmante,
       datosTecnicoFirmante,
       datosProveedorSalud,
+      footerData,
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);
@@ -2904,6 +3825,7 @@ export class InformesService {
     trabajadorId: string,
     historiaOtologicaId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -2965,8 +3887,55 @@ export class InformesService {
         historiaOtologica.resultadoCuestionarioPersonalizado,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (historiaOtologica.estado === DocumentoEstado.FINALIZADO ||
+        historiaOtologica.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (
+          historiaOtologica.createdBy?._id || historiaOtologica.createdBy
+        )?.toString() || userId;
+      const finalizadorId =
+        (
+          historiaOtologica.finalizadoPor?._id ||
+          historiaOtologica.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      historiaOtologica.estado === DocumentoEstado.BORRADOR
+        ? (
+            historiaOtologica.createdBy?._id || historiaOtologica.createdBy
+          )?.toString() || userId
+        : historiaOtologica.estado === DocumentoEstado.FINALIZADO ||
+            historiaOtologica.estado === DocumentoEstado.ANULADO
+          ? (
+              historiaOtologica.finalizadoPor?._id ||
+              historiaOtologica.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = medicoFirmante
       ? {
           nombre: medicoFirmante.nombre || '',
@@ -3025,7 +3994,7 @@ export class InformesService {
         };
 
     const tecnicoFirmante =
-      await this.tecnicosFirmantesService.findOneByUserId(userId);
+      await this.tecnicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosTecnicoFirmante = tecnicoFirmante
       ? {
           nombre: tecnicoFirmante.nombre || '',
@@ -3112,6 +4081,7 @@ export class InformesService {
       datosEnfermeraFirmante,
       datosTecnicoFirmante,
       datosProveedorSalud,
+      footerData,
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);
@@ -3123,6 +4093,7 @@ export class InformesService {
     trabajadorId: string,
     previoEspirometriaId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -3190,8 +4161,55 @@ export class InformesService {
         previoEspirometria.resultadoCuestionarioPersonalizado,
     };
 
+    // Determinar footerFirmantesData según estado del documento
+    let footerData: FooterFirmantesData | undefined = footerFirmantesData;
+
+    if (
+      !footerData &&
+      (previoEspirometria.estado === DocumentoEstado.FINALIZADO ||
+        previoEspirometria.estado === DocumentoEstado.ANULADO)
+    ) {
+      const creadorId =
+        (
+          previoEspirometria.createdBy?._id || previoEspirometria.createdBy
+        )?.toString() || userId;
+      const finalizadorId =
+        (
+          previoEspirometria.finalizadoPor?._id ||
+          previoEspirometria.finalizadoPor
+        )?.toString() || userId;
+
+      if (creadorId !== finalizadorId) {
+        // Obtener datos de ambos firmantes
+        const elaborador = await this.obtenerDatosFirmante(creadorId);
+        const finalizador = await this.obtenerDatosFirmante(finalizadorId);
+
+        footerData = {
+          elaborador,
+          finalizador,
+          esDocumentoFinalizado: true,
+        };
+      }
+      // Si creador === finalizador, footerData queda undefined (formato simple)
+    }
+    // Si está en BORRADOR, footerData queda undefined (formato simple)
+
+    // Determinar qué userId usar para obtener firmante (solo para formato simple o cuando creador === finalizador)
+    const firmanteUserId =
+      previoEspirometria.estado === DocumentoEstado.BORRADOR
+        ? (
+            previoEspirometria.createdBy?._id || previoEspirometria.createdBy
+          )?.toString() || userId
+        : previoEspirometria.estado === DocumentoEstado.FINALIZADO ||
+            previoEspirometria.estado === DocumentoEstado.ANULADO
+          ? (
+              previoEspirometria.finalizadoPor?._id ||
+              previoEspirometria.finalizadoPor
+            )?.toString() || userId
+          : userId;
+
     const medicoFirmante =
-      await this.medicosFirmantesService.findOneByUserId(userId);
+      await this.medicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosMedicoFirmante = medicoFirmante
       ? {
           nombre: medicoFirmante.nombre || '',
@@ -3250,7 +4268,7 @@ export class InformesService {
         };
 
     const tecnicoFirmante =
-      await this.tecnicosFirmantesService.findOneByUserId(userId);
+      await this.tecnicosFirmantesService.findOneByUserId(firmanteUserId);
     const datosTecnicoFirmante = tecnicoFirmante
       ? {
           nombre: tecnicoFirmante.nombre || '',
@@ -3337,6 +4355,7 @@ export class InformesService {
       datosEnfermeraFirmante,
       datosTecnicoFirmante,
       datosProveedorSalud,
+      footerFirmantesData,
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);
@@ -3348,6 +4367,7 @@ export class InformesService {
     trabajadorId: string,
     recetaId: string,
     userId: string,
+    footerFirmantesData?: FooterFirmantesData,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -3500,6 +4520,7 @@ export class InformesService {
       datosMedicoFirmante,
       datosEnfermeraFirmante,
       datosProveedorSalud,
+      footerFirmantesData,
     );
 
     await this.printer.createPdf(docDefinition, rutaCompleta);

@@ -4,6 +4,8 @@ import type {
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
 import { formatearNombreTrabajador } from '../../../utils/names';
+import { FooterFirmantesData } from '../interfaces/firmante-data.interface';
+import { generarFooterFirmantes } from '../helpers/footer-firmantes.helper';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -234,11 +236,33 @@ export const constanciaAptitudInforme = (
   constanciaAptitud: ConstanciaAptitud,
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
+  footerFirmantesData?: FooterFirmantesData,
 ): TDocumentDefinitions => {
   const updatedStyles: StyleDictionary = { ...styles };
 
-  const firma: Content = medicoFirmante.firma?.data
-    ? { image: `assets/signatories/${medicoFirmante.firma.data}`, width: 95 }
+  // Determinar qué firmante usar (finalizador si es documento finalizado, sino el original)
+  const firmanteActivo =
+    footerFirmantesData?.esDocumentoFinalizado &&
+    footerFirmantesData.finalizador
+      ? {
+          tituloProfesional: footerFirmantesData.finalizador.tituloProfesional,
+          nombre: footerFirmantesData.finalizador.nombre,
+          numeroCedulaProfesional:
+            footerFirmantesData.finalizador.numeroCedulaProfesional || '',
+          especialistaSaludTrabajo:
+            footerFirmantesData.finalizador.especialistaSaludTrabajo || '',
+          numeroCedulaEspecialista:
+            footerFirmantesData.finalizador.numeroCedulaEspecialista || '',
+          nombreCredencialAdicional:
+            footerFirmantesData.finalizador.nombreCredencialAdicional || '',
+          numeroCredencialAdicional:
+            footerFirmantesData.finalizador.numeroCredencialAdicional || '',
+          firma: footerFirmantesData.finalizador.firma,
+        }
+      : medicoFirmante;
+
+  const firma: Content = firmanteActivo.firma?.data
+    ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 95 }
     : { text: '' };
 
   const logoImage = proveedorSalud.logotipoEmpresa?.data
@@ -247,7 +271,7 @@ export const constanciaAptitudInforme = (
 
   // Determinar el cargo del emisor
   const cargoEmisor =
-    medicoFirmante.especialistaSaludTrabajo === 'Si'
+    firmanteActivo.especialistaSaludTrabajo === 'Si'
       ? 'Médico del Trabajo'
       : 'Médico Responsable de Evaluación';
 
@@ -321,7 +345,7 @@ export const constanciaAptitudInforme = (
               { text: '', border: [false, false, false, false] }, // Espaciador izquierdo
               {
                 stack: [
-                  ...(medicoFirmante.firma?.data
+                  ...(firmanteActivo.firma?.data
                     ? [
                         {
                           ...firma,
@@ -330,7 +354,7 @@ export const constanciaAptitudInforme = (
                       ]
                     : []),
                   {
-                    text: `${medicoFirmante.tituloProfesional || ''} ${medicoFirmante.nombre || 'Nombre del Emisor'}`.trim(),
+                    text: `${firmanteActivo.tituloProfesional || ''} ${firmanteActivo.nombre || 'Nombre del Emisor'}`.trim(),
                     style: 'nombreEmisor',
                     alignment: 'center' as const,
                     margin: [0, 5, 0, 0] as [number, number, number, number],

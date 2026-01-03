@@ -4,6 +4,8 @@ import type {
   TDocumentDefinitions,
 } from 'pdfmake/interfaces';
 import { formatearNombreTrabajador } from '../../../utils/names';
+import { FooterFirmantesData } from '../interfaces/firmante-data.interface';
+import { generarFooterFirmantes } from '../helpers/footer-firmantes.helper';
 
 // ==================== ESTILOS ====================
 const styles: StyleDictionary = {
@@ -254,6 +256,7 @@ export const notaMedicaInforme = (
   medicoFirmante: MedicoFirmante | null,
   enfermeraFirmante: EnfermeraFirmante | null,
   proveedorSalud: ProveedorSalud,
+  footerFirmantesData?: FooterFirmantesData,
 ): TDocumentDefinitions => {
   // Determinar cuál firmante usar (médico tiene prioridad)
   const usarMedico = medicoFirmante?.nombre ? true : false;
@@ -266,8 +269,19 @@ export const notaMedicaInforme = (
       ? enfermeraFirmante
       : null;
 
-  const firma: Content = firmanteActivo?.firma?.data
-    ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
+  const firma: Content = (
+    footerFirmantesData?.esDocumentoFinalizado
+      ? footerFirmantesData?.finalizador?.firma?.data
+      : firmanteActivo?.firma?.data
+  )
+    ? {
+        image: `assets/signatories/${
+          footerFirmantesData?.esDocumentoFinalizado
+            ? footerFirmantesData?.finalizador?.firma?.data
+            : firmanteActivo?.firma?.data
+        }`,
+        width: 65,
+      }
     : { text: '' };
 
   const logo: Content = proveedorSalud.logotipoEmpresa?.data
@@ -588,7 +602,11 @@ export const notaMedicaInforme = (
               margin: [40, 0, 0, 0],
             },
             // Solo incluir la columna de firma si hay firma
-            ...(firmanteActivo?.firma?.data
+            ...((
+              footerFirmantesData?.esDocumentoFinalizado
+                ? footerFirmantesData?.finalizador?.firma?.data
+                : firmanteActivo?.firma?.data
+            )
               ? [
                   {
                     ...firma,

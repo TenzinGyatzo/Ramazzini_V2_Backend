@@ -1,8 +1,7 @@
-import { Module, OnModuleInit, Logger } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
-import * as multer from 'multer';
 import { ServeStaticModule } from '@nestjs/serve-static'; // Importar ServeStaticModule
 import { join } from 'path'; // Importar join para rutas
 import { EmpresasModule } from './modules/empresas/empresas.module';
