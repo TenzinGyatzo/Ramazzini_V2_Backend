@@ -20,6 +20,7 @@ import {
 import { validateCURP } from 'src/utils/curp-validator.util';
 import { NOM024ComplianceUtil } from 'src/utils/nom024-compliance.util';
 import { validateTrabajadorNames } from 'src/utils/name-validator.util';
+import { validateFechaNacimiento } from '../expedientes/validators/date-validators';
 import { CatalogsService } from '../catalogs/catalogs.service';
 import { Antidoping } from '../expedientes/schemas/antidoping.schema';
 import { AptitudPuesto } from '../expedientes/schemas/aptitud-puesto.schema';
@@ -362,6 +363,9 @@ export class TrabajadoresService {
 
   async create(createTrabajadorDto: CreateTrabajadorDto): Promise<Trabajador> {
     const normalizedDto = normalizeTrabajadorData(createTrabajadorDto);
+
+    // Validar fechaNacimiento (A2)
+    validateFechaNacimiento(normalizedDto.fechaNacimiento);
 
     // Validar unicidad del número de empleado a nivel empresa si se proporciona
     if (normalizedDto.numeroEmpleado) {
@@ -1144,6 +1148,11 @@ export class TrabajadoresService {
     const trabajadorActual = await this.trabajadorModel.findById(id).exec();
     if (!trabajadorActual) {
       throw new BadRequestException('Trabajador no encontrado');
+    }
+
+    // Validar fechaNacimiento si se está actualizando (A2)
+    if (normalizedDto.fechaNacimiento) {
+      validateFechaNacimiento(normalizedDto.fechaNacimiento);
     }
 
     // Validar unicidad del número de empleado a nivel empresa si se proporciona

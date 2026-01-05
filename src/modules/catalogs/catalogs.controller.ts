@@ -13,6 +13,52 @@ import { CatalogType } from './interfaces/catalog-entry.interface';
 export class CatalogsController {
   constructor(private readonly catalogsService: CatalogsService) {}
 
+  @Get('cie10/search')
+  async searchCIE10(
+    @Query('q') query: string,
+    @Query('limit') limit?: number,
+    @Query('sexo') sexo?: number,
+    @Query('edad') edad?: number,
+  ) {
+    if (!query || query.trim() === '') {
+      throw new BadRequestException('Query parameter "q" is required');
+    }
+    const searchLimit = limit
+      ? Math.min(Math.max(1, parseInt(limit.toString())), 100)
+      : 50;
+
+    // If sexo or edad are provided, use filtered search
+    if (sexo !== undefined || edad !== undefined) {
+      const sexoNum = sexo !== undefined ? parseInt(sexo.toString()) : undefined;
+      const edadNum = edad !== undefined ? parseInt(edad.toString()) : undefined;
+      return this.catalogsService.searchCIE10WithFilters(
+        query.trim(),
+        searchLimit,
+        sexoNum,
+        edadNum,
+      );
+    }
+
+    // Otherwise, use standard search
+    return this.catalogsService.searchCatalog(
+      CatalogType.CIE10,
+      query.trim(),
+      searchLimit,
+    );
+  }
+
+  @Get('cie10/:code')
+  async getCIE10ByCode(@Param('code') code: string) {
+    const entry = await this.catalogsService.getCatalogEntry(
+      CatalogType.CIE10,
+      code,
+    );
+    if (!entry) {
+      throw new NotFoundException(`CIE-10 entry with code ${code} not found`);
+    }
+    return entry;
+  }
+
   @Get('clues/search')
   async searchCLUES(@Query('q') query: string, @Query('limit') limit?: number) {
     if (!query || query.trim() === '') {

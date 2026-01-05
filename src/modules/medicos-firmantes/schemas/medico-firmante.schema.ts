@@ -40,6 +40,10 @@ export class MedicoFirmante extends Document {
   // NOM-024: CURP for healthcare professionals (required for MX providers)
   @Prop()
   curp?: string;
+
+  // NOM-024 GIIS-B015: Tipo de personal de salud (código numérico oficial DGIS)
+  @Prop({ required: false })
+  tipoPersonalId?: number; // Código numérico oficial DGIS (ej: 1, 15, 30)
 }
 
 export const MedicoFirmanteSchema =

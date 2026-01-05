@@ -161,6 +161,16 @@ export class User {
   })
   centrosTrabajoAsignados: string[];
 
+  // NOM-024 GIIS-B015: Discriminadores para optimizar lookup de firmante
+  @Prop({
+    enum: ['MedicoFirmante', 'EnfermeraFirmante', 'TecnicoFirmante'],
+    required: false,
+  })
+  firmanteTipo?: string;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: false })
+  firmanteId?: string;
+
   async checkPassword(inputPassword: string): Promise<boolean> {
     return bcrypt.compare(inputPassword, this.password);
   }

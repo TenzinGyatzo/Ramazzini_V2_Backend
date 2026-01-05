@@ -45,17 +45,44 @@ export class NotaMedica extends Document {
   diagnostico: string; // Free-text diagnosis (kept for backward compatibility)
 
   // NOM-024: CIE-10 Diagnosis Codes
+  // Formato: "CODE - DESCRIPTION" o solo "CODE"
   @Prop({
     required: false,
-    match: /^$|^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, // CIE-10 format: A00.0 or A00
+    // Acepta formato "A30 - LEPRA [ENFERMEDAD DE HANSEN]" o solo "A30"
   })
   codigoCIE10Principal?: string;
 
   @Prop({
     type: [String],
     required: false,
+    // Formato: ["A30 - LEPRA [ENFERMEDAD DE HANSEN]"] o ["A30"]
   })
-  codigosCIE10Secundarios?: string[];
+  codigosCIE10Complementarios?: string[];
+
+  // NOM-024 GIIS-B015: Campos adicionales para diagnóstico
+  @Prop({ required: false })
+  relacionTemporal?: number; // 0=Primera Vez, 1=Subsecuente
+
+  @Prop({ required: false })
+  primeraVezDiagnostico2?: boolean;
+
+  @Prop({
+    required: false,
+    // Formato: "A30 - LEPRA [ENFERMEDAD DE HANSEN]" o solo "A30"
+  })
+  codigoCIEDiagnostico2?: string; // Segundo diagnóstico
+
+  @Prop({ required: false })
+  confirmacionDiagnostica?: boolean; // Flag para crónicos/cáncer <18
+
+  @Prop({
+    required: false,
+    // Formato: "V01 - ACCIDENTE DE TRÁNSITO" o solo "V01"
+  })
+  codigoCIECausaExterna?: string; // Para Cap. XIX/XX
+
+  @Prop({ required: false })
+  causaExterna?: string; // Texto libre para causa externa
 
   @Prop({ type: [String] })
   tratamiento: string[];

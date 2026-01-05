@@ -266,4 +266,162 @@ describe('ExpedientesService - Document Immutability Enforcement', () => {
       expect(expectedStatusCode).toBe(403);
     });
   });
+
+  describe('Validación E1 - fechaDocumento para notaMedica', () => {
+    const mockCreateNotaMedicaDto = {
+      tipoNota: 'Inicial',
+      fechaNotaMedica: new Date('2020-01-01'),
+      motivoConsulta: 'Consulta',
+      diagnostico: 'Diagnóstico',
+      idTrabajador: 'trabajador123',
+      rutaPDF: '/path/to/pdf',
+      createdBy: 'user123',
+      updatedBy: 'user123',
+    };
+
+    it('debe rechazar crear nota médica con fechaNotaMedica futura', async () => {
+      const mockNotaMedicaModel = service['models']['notaMedica'];
+      const mockTrabajadorModel = service['trabajadorModel'];
+
+      const fechaFutura = new Date();
+      fechaFutura.setDate(fechaFutura.getDate() + 1);
+
+      const dto = {
+        ...mockCreateNotaMedicaDto,
+        fechaNotaMedica: fechaFutura,
+      };
+
+      // Mock trabajador
+      mockTrabajadorModel.findById.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({
+          fechaNacimiento: new Date('1990-01-01'),
+        }),
+      });
+
+      // Mock save
+      mockNotaMedicaModel.save = jest.fn();
+
+      // Mock constructor
+      (mockNotaMedicaModel as any).mockImplementation((data: any) => ({
+        ...data,
+        save: mockNotaMedicaModel.save,
+      }));
+
+      await expect(service.createDocument('notaMedica', dto)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.createDocument('notaMedica', dto)).rejects.toThrow(
+        'La fecha del documento no puede ser futura',
+      );
+    });
+
+    it('debe rechazar crear nota médica con fechaNotaMedica < fechaNacimiento', async () => {
+      const mockNotaMedicaModel = service['models']['notaMedica'];
+      const mockTrabajadorModel = service['trabajadorModel'];
+
+      const fechaDoc = new Date('1989-12-31');
+      const fechaNac = new Date('1990-01-01');
+
+      const dto = {
+        ...mockCreateNotaMedicaDto,
+        fechaNotaMedica: fechaDoc,
+      };
+
+      // Mock trabajador
+      mockTrabajadorModel.findById.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({
+          fechaNacimiento: fechaNac,
+        }),
+      });
+
+      // Mock save
+      mockNotaMedicaModel.save = jest.fn();
+
+      // Mock constructor
+      (mockNotaMedicaModel as any).mockImplementation((data: any) => ({
+        ...data,
+        save: mockNotaMedicaModel.save,
+      }));
+
+      await expect(service.createDocument('notaMedica', dto)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.createDocument('notaMedica', dto)).rejects.toThrow(
+        'La fecha del documento no puede ser anterior a la fecha de nacimiento del trabajador',
+      );
+    });
+
+    it('debe permitir crear nota médica con fechaNotaMedica válida', async () => {
+      const mockNotaMedicaModel = service['models']['notaMedica'];
+      const mockTrabajadorModel = service['trabajadorModel'];
+
+      const fechaDoc = new Date('2020-01-01');
+      const fechaNac = new Date('1990-01-01');
+
+      const dto = {
+        ...mockCreateNotaMedicaDto,
+        fechaNotaMedica: fechaDoc,
+      };
+
+      // Mock trabajador
+      mockTrabajadorModel.findById.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({
+          fechaNacimiento: fechaNac,
+        }),
+      });
+
+      // Mock save
+      const savedDocument = { ...dto, _id: 'nota123' };
+      mockNotaMedicaModel.save = jest.fn().mockResolvedValue(savedDocument);
+
+      // Mock constructor
+      (mockNotaMedicaModel as any).mockImplementation((data: any) => ({
+        ...data,
+        save: mockNotaMedicaModel.save,
+      }));
+
+      // Mock actualizarUpdatedAtTrabajador
+      service['actualizarUpdatedAtTrabajador'] = jest.fn().mockResolvedValue(undefined);
+
+      const result = await service.createDocument('notaMedica', dto);
+      expect(result).toBeDefined();
+      expect(result._id).toBe('nota123');
+    });
+
+    it('debe permitir crear nota médica sin fechaNacimiento (solo valida que no sea futura)', async () => {
+      const mockNotaMedicaModel = service['models']['notaMedica'];
+      const mockTrabajadorModel = service['trabajadorModel'];
+
+      const fechaDoc = new Date();
+      fechaDoc.setHours(0, 0, 0, 0);
+
+      const dto = {
+        ...mockCreateNotaMedicaDto,
+        fechaNotaMedica: fechaDoc,
+      };
+
+      // Mock trabajador sin fechaNacimiento
+      mockTrabajadorModel.findById.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({
+          fechaNacimiento: null,
+        }),
+      });
+
+      // Mock save
+      const savedDocument = { ...dto, _id: 'nota123' };
+      mockNotaMedicaModel.save = jest.fn().mockResolvedValue(savedDocument);
+
+      // Mock constructor
+      (mockNotaMedicaModel as any).mockImplementation((data: any) => ({
+        ...data,
+        save: mockNotaMedicaModel.save,
+      }));
+
+      // Mock actualizarUpdatedAtTrabajador
+      service['actualizarUpdatedAtTrabajador'] = jest.fn().mockResolvedValue(undefined);
+
+      const result = await service.createDocument('notaMedica', dto);
+      expect(result).toBeDefined();
+    });
+  });
 });

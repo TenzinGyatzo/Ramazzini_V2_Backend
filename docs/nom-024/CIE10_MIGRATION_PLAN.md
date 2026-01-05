@@ -10,7 +10,7 @@ Este documento describe el plan de migración para agregar códigos CIE-10 a los
 
 **NotaMedica y HistoriaClinica:**
 - `codigoCIE10Principal` (string, opcional): Código CIE-10 del diagnóstico principal
-- `codigosCIE10Secundarios` (string[], opcional): Array de códigos CIE-10 de diagnósticos secundarios
+- `codigosCIE10Complementarios` (string[], opcional): Array de códigos CIE-10 de diagnósticos complementarios
 
 **Nota Importante:** Los campos de texto libre existentes (`diagnostico` en NotaMedica y `resumenHistoriaClinica` en HistoriaClinica) se mantienen para compatibilidad hacia atrás.
 
@@ -89,7 +89,7 @@ const migrationMap = [
   {
     documentId: ObjectId("..."),
     codigoCIE10Principal: "A00.0", // Asignado por médico
-    codigosCIE10Secundarios: ["B00.1", "C00.2"], // Si aplica
+    codigosCIE10Complementarios: ["B00.1", "C00.2"], // Si aplica
   },
   // ... más documentos
 ];
@@ -100,7 +100,7 @@ for (const item of migrationMap) {
     {
       $set: {
         codigoCIE10Principal: item.codigoCIE10Principal,
-        codigosCIE10Secundarios: item.codigosCIE10Secundarios || [],
+        codigosCIE10Complementarios: item.codigosCIE10Complementarios || [],
       },
     }
   );

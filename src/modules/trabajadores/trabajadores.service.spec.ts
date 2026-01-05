@@ -227,4 +227,107 @@ describe('TrabajadoresService - NOM-024 Person Identification Fields', () => {
       expect(gtResult).toBe(false);
     });
   });
+
+  describe('Validación A2 - fechaNacimiento', () => {
+    const mockCreateTrabajadorDto = {
+      primerApellido: 'Apellido',
+      nombre: 'Nombre',
+      fechaNacimiento: new Date('1990-01-01'),
+      sexo: 'Masculino',
+      escolaridad: 'Licenciatura',
+      puesto: 'Puesto',
+      estadoCivil: 'Soltero/a',
+      estadoLaboral: 'Activo',
+      idCentroTrabajo: 'centro123',
+      createdBy: 'user123',
+      updatedBy: 'user123',
+    };
+
+    it('debe rechazar crear trabajador con fechaNacimiento futura', async () => {
+      const mockTrabajadorModel = service['trabajadorModel'];
+      const fechaFutura = new Date();
+      fechaFutura.setFullYear(fechaFutura.getFullYear() + 1);
+
+      const dto = {
+        ...mockCreateTrabajadorDto,
+        fechaNacimiento: fechaFutura,
+      };
+
+      // Mock para getProveedorSaludIdFromCentroTrabajo
+      const mockCentroTrabajoModel = service['centroTrabajoModel'];
+      const mockEmpresaModel = service['empresaModel'];
+      mockCentroTrabajoModel.findById.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({ idEmpresa: 'empresa123' }),
+      });
+      mockEmpresaModel.findById.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({ idProveedorSalud: 'proveedor123' }),
+      });
+
+      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(dto)).rejects.toThrow(
+        'La fecha de nacimiento no puede ser futura',
+      );
+    });
+
+    it('debe rechazar crear trabajador con edad > 120 años', async () => {
+      const fechaHace121 = new Date();
+      fechaHace121.setFullYear(fechaHace121.getFullYear() - 121);
+
+      const dto = {
+        ...mockCreateTrabajadorDto,
+        fechaNacimiento: fechaHace121,
+      };
+
+      // Mock para getProveedorSaludIdFromCentroTrabajo
+      const mockCentroTrabajoModel = service['centroTrabajoModel'];
+      const mockEmpresaModel = service['empresaModel'];
+      mockCentroTrabajoModel.findById.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({ idEmpresa: 'empresa123' }),
+      });
+      mockEmpresaModel.findById.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({ idProveedorSalud: 'proveedor123' }),
+      });
+
+      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(dto)).rejects.toThrow(
+        'está fuera del rango válido',
+      );
+    });
+
+    it('debe permitir crear trabajador con fechaNacimiento válida', async () => {
+      const mockTrabajadorModel = service['trabajadorModel'];
+      const mockCentroTrabajoModel = service['centroTrabajoModel'];
+      const mockEmpresaModel = service['empresaModel'];
+
+      const fechaValida = new Date('1990-01-01');
+      const dto = {
+        ...mockCreateTrabajadorDto,
+        fechaNacimiento: fechaValida,
+      };
+
+      // Mock para getProveedorSaludIdFromCentroTrabajo
+      mockCentroTrabajoModel.findById.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({ idEmpresa: 'empresa123' }),
+      });
+      mockEmpresaModel.findById.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({ idProveedorSalud: 'proveedor123' }),
+      });
+
+      // Mock para save
+      const savedTrabajador = { ...dto, _id: 'trabajador123' };
+      mockTrabajadorModel.save = jest.fn().mockResolvedValue(savedTrabajador);
+      mockTrabajadorModel.countDocuments.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(0),
+      });
+
+      // Mock constructor
+      (mockTrabajadorModel as any).mockImplementation((data: any) => ({
+        ...data,
+        save: mockTrabajadorModel.save,
+      }));
+
+      const result = await service.create(dto);
+      expect(result).toBeDefined();
+    });
+  });
 });

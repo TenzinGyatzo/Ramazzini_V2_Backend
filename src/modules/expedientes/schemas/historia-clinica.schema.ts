@@ -322,7 +322,7 @@ export class HistoriaClinica extends Document {
     type: [String],
     required: false,
   })
-  codigosCIE10Secundarios?: string[];
+  codigosCIE10Complementarios?: string[];
 
   // Trabajador, ruta al archivo e info de creador y actualizador
   @Prop({

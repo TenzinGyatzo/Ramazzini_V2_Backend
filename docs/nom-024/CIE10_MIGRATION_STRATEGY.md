@@ -159,7 +159,7 @@ MONGODB_URI="mongodb://user:pass@secondary-host:27017/db?readPreference=secondar
 
 | Collection | Field | CIE-10 Fields |
 |------------|-------|---------------|
-| NotaMedica | `diagnostico` | `codigoCIE10Principal`, `codigosCIE10Secundarios` |
+| NotaMedica | `diagnostico` | `codigoCIE10Principal`, `codigosCIE10Complementarios` |
 | Audiometria | `diagnosticoAudiometria` | (none - specialty specific) |
 | ExamenVista | `diagnosticoRecomendaciones` | (none - specialty specific) |
 | Lesion | `diagnosticoLesion` | Embedded CIE-10 support |
@@ -211,7 +211,7 @@ The system supports both legacy and NOM-024 compliant data:
     codigo: String,      // e.g., "J06.9"
     descripcion: String, // e.g., "INFECCIÓN RESPIRATORIA..."
   },
-  codigosCIE10Secundarios: [{
+  codigosCIE10Complementarios: [{
     codigo: String,
     descripcion: String,
   }],

@@ -105,7 +105,7 @@ const DIAGNOSIS_COLLECTIONS = [
     name: 'notamedicas',
     diagnosisField: 'diagnostico',
     cie10Field: 'codigoCIE10Principal',
-    cie10SecondaryField: 'codigosCIE10Secundarios',
+    cie10SecondaryField: 'codigosCIE10Complementarios',
     dateField: 'fechaNotaMedica',
     trabajadorField: 'idTrabajador',
   },

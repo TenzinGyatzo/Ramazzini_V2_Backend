@@ -977,6 +977,65 @@ export class CatalogsService implements OnModuleInit {
   }
 
   /**
+   * Search CIE-10 catalog entries with optional sex and age filters
+   * NOM-024 GIIS-B015: Pre-filter results based on patient data
+   */
+  async searchCIE10WithFilters(
+    query: string,
+    limit: number = 50,
+    sexo?: number,
+    edad?: number,
+  ): Promise<CIE10Entry[]> {
+    const cache = this.catalogCaches.get(CatalogType.CIE10);
+    if (!cache) {
+      return [];
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const results: CIE10Entry[] = [];
+
+    for (const entry of cache.values()) {
+      const cie10Entry = entry as CIE10Entry;
+
+      // Filter by query string
+      if (
+        !cie10Entry.code.toLowerCase().includes(lowerQuery) &&
+        !cie10Entry.description.toLowerCase().includes(lowerQuery)
+      ) {
+        continue;
+      }
+
+      // Filter by sex (LSEX) if provided
+      if (sexo !== undefined && sexo !== null && cie10Entry.lsex && cie10Entry.lsex !== 'NO') {
+        // LSEX = "SI" typically means male-only, validate accordingly
+        // For now, we do basic filtering - more complex logic can be added
+        if (cie10Entry.lsex === 'SI' && sexo === 2) {
+          // Skip entries that are male-only when patient is female
+          continue;
+        }
+        // Add more LSEX validation logic as needed based on catalog format
+      }
+
+      // Filter by age (LINF/LSUP) if provided
+      if (edad !== undefined && edad !== null) {
+        if (cie10Entry.linf !== undefined && edad < cie10Entry.linf) {
+          continue; // Patient too young
+        }
+        if (cie10Entry.lsup !== undefined && edad > cie10Entry.lsup) {
+          continue; // Patient too old
+        }
+      }
+
+      results.push(cie10Entry);
+      if (results.length >= limit) {
+        break;
+      }
+    }
+
+    return results;
+  }
+
+  /**
    * Get all entidades federativas (states)
    */
   getEstados(): CatalogEntry[] {

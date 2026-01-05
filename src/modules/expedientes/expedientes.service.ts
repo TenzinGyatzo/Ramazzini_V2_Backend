@@ -41,6 +41,10 @@ import {
 } from '../../utils/vital-signs-validator.util';
 import { InformesService } from '../informes/informes.service';
 import { forwardRef, Inject } from '@nestjs/common';
+import { mapSexoToNumeric } from '../../utils/sexo-mapper.util';
+import { calculateAge } from '../../utils/age-calculator.util';
+import { CIE10Entry, CatalogType } from '../catalogs/interfaces/catalog-entry.interface';
+import { validateFechaDocumento } from './validators/date-validators';
 
 @Injectable()
 export class ExpedientesService {
@@ -126,14 +130,15 @@ export class ExpedientesService {
 
   /**
    * Validate CIE-10 codes for documents with diagnosis fields (MX providers only)
+   * NOM-024 GIIS-B015: Extended validation with cross-checks (sex, age, special cases)
    */
   private async validateCIE10ForDocument(
     documentType: string,
     dto: any,
     trabajadorId: string,
   ): Promise<void> {
-    // Only validate for NotaMedica and HistoriaClinica
-    if (documentType !== 'notaMedica' && documentType !== 'historiaClinica') {
+    // Only validate for NotaMedica
+    if (documentType !== 'notaMedica') {
       return;
     }
 
@@ -151,45 +156,200 @@ export class ExpedientesService {
       return;
     }
 
-    // MX provider: validate CIE-10 codes
+    // MX provider: validate CIE-10 codes with cross-checks
     const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // 1. Obtener trabajador (sexo, fechaNacimiento)
+    const trabajador = await this.trabajadorModel.findById(trabajadorId).lean();
+    if (!trabajador) {
+      throw new BadRequestException('Trabajador no encontrado');
+    }
+
+    // 2. Calcular edad (fechaNotaMedica - fechaNacimiento)
+    let edad: number | null = null;
+    if (trabajador.fechaNacimiento && dto.fechaNotaMedica) {
+      try {
+        edad = calculateAge(trabajador.fechaNacimiento, dto.fechaNotaMedica);
+      } catch (error) {
+        console.warn('Error calculating age:', error);
+      }
+    }
+
+    // 3. Mapear sexo a numérico (1/2)
+    const sexoBiologico = mapSexoToNumeric(trabajador.sexo);
+
+    // Helper function to extract code from "CODE - DESCRIPTION" format
+    const extractCodeFromFullText = (value: string): string => {
+      if (!value) return '';
+      // Si ya es solo código (no tiene " - "), retornar tal cual
+      if (!value.includes(' - ')) return value.trim();
+      // Extraer código antes de " - "
+      return value.split(' - ')[0].trim();
+    };
+
+    // Helper function to validate a single CIE-10 code
+    const validateCIE10Code = async (
+      codigo: string,
+      tipo: 'principal' | 'secundario' | 'diagnostico2',
+    ): Promise<void> => {
+      if (!codigo || codigo.trim() === '') {
+        return;
+      }
+
+      // Extraer solo el código del formato "CODE - DESCRIPTION"
+      const codigoNormalizado = extractCodeFromFullText(codigo).toUpperCase();
+
+      // Validar existencia en catálogo
+      const isValid = await this.catalogsService.validateCIE10(codigoNormalizado);
+      if (!isValid) {
+        errors.push(
+          `Código CIE-10 ${tipo} inválido: ${codigoNormalizado}. No se encuentra en el catálogo CIE-10`,
+        );
+        return;
+      }
+
+      // Obtener entrada del catálogo para validaciones cruzadas
+      const entry = (await this.catalogsService.getCatalogEntry(
+        CatalogType.CIE10,
+        codigoNormalizado,
+      )) as CIE10Entry | null;
+
+      if (!entry) {
+        return;
+      }
+
+      // Validar LSEX vs sexoBiologico (con excepción para intersexual=3)
+      // LSEX en el catálogo: "NO" = ambos sexos, "SI" = restricción (típicamente masculino)
+      // Nota: El formato exacto puede variar, pero "NO" siempre significa sin restricción
+      if (sexoBiologico !== null && entry.lsex && entry.lsex !== 'NO') {
+        // Si LSEX tiene un valor diferente de "NO", hay restricción de sexo
+        // Por ahora, asumimos que "SI" indica restricción masculina
+        // Si el paciente es mujer (2) y hay restricción, error
+        if (entry.lsex === 'SI' && sexoBiologico === 2) {
+          errors.push(
+            `El código CIE-10 ${tipo} ${codigoNormalizado} no es aplicable para pacientes de sexo femenino (restricción LSEX)`,
+          );
+        }
+        // Si el paciente es hombre (1) y LSEX = "SI", podría ser válido
+        // Nota: La especificación menciona valores 0,1,2 pero el CSV usa "NO"/"SI"
+        // Esta validación es una aproximación - puede necesitar ajuste según documentación oficial
+      }
+
+      // Validar LINF/LSUP vs edad
+      if (edad !== null) {
+        if (entry.linf !== undefined && edad < entry.linf) {
+          errors.push(
+            `El código CIE-10 ${tipo} ${codigoNormalizado} no es aplicable para pacientes menores de ${entry.linf} años. Edad del paciente: ${edad} años`,
+          );
+        }
+        if (entry.lsup !== undefined && edad > entry.lsup) {
+          errors.push(
+            `El código CIE-10 ${tipo} ${codigoNormalizado} no es aplicable para pacientes mayores de ${entry.lsup} años. Edad del paciente: ${edad} años`,
+          );
+        }
+      }
+
+      // Validar RUBRICA_TYPE (excluir encabezados si aplica)
+      // RUBRICA_TYPE puede indicar si es un encabezado no seleccionable
+      // Por ahora, solo validamos si es necesario según la especificación
+
+      // Validar diagnósticos exclusivos
+      // Si código inicia con S/T (Cap. XIX) o V-Y (Cap. XX) → requerir causaExterna
+      const primeraLetra = codigoNormalizado.charAt(0);
+      if (
+        (primeraLetra === 'S' || primeraLetra === 'T' || (primeraLetra >= 'V' && primeraLetra <= 'Y')) &&
+        tipo === 'principal'
+      ) {
+        const codigoCausaFull = dto.codigoCIECausaExterna?.trim() || '';
+        if (!codigoCausaFull) {
+          errors.push(
+            `El código CIE-10 ${codigoNormalizado} (Capítulo ${primeraLetra === 'S' || primeraLetra === 'T' ? 'XIX' : 'XX'}) requiere especificar una causa externa (codigoCIECausaExterna)`,
+          );
+        }
+      }
+
+      // Si código es R69X → emitir warning (no bloqueante)
+      if (codigoNormalizado.startsWith('R69')) {
+        warnings.push(
+          `Advertencia: El código ${codigoNormalizado} (Morbilidad desconocida) se tolera máximo un 5% por carga. Se recomienda especificar más el diagnóstico si es posible.`,
+        );
+      }
+    };
 
     // Validate primary CIE-10 code
-    if (!dto.codigoCIE10Principal || dto.codigoCIE10Principal.trim() === '') {
+    const codigoPrincipalFull = dto.codigoCIE10Principal?.trim() || '';
+    if (!codigoPrincipalFull) {
       errors.push(
         'Código CIE-10 principal es obligatorio para proveedores en México (NOM-024)',
       );
     } else {
-      const codigoPrincipal = dto.codigoCIE10Principal.trim().toUpperCase();
-      const isValid = await this.catalogsService.validateCIE10(codigoPrincipal);
-      if (!isValid) {
-        errors.push(
-          `Código CIE-10 principal inválido: ${codigoPrincipal}. No se encuentra en el catálogo CIE-10`,
-        );
-      }
+      await validateCIE10Code(codigoPrincipalFull, 'principal');
     }
 
     // Validate secondary CIE-10 codes if provided
     if (
-      dto.codigosCIE10Secundarios &&
-      Array.isArray(dto.codigosCIE10Secundarios)
+      dto.codigosCIE10Complementarios &&
+      Array.isArray(dto.codigosCIE10Complementarios)
     ) {
-      for (const codigo of dto.codigosCIE10Secundarios) {
+      for (const codigo of dto.codigosCIE10Complementarios) {
         if (codigo && codigo.trim() !== '') {
-          const codigoSecundario = codigo.trim().toUpperCase();
-          const isValid =
-            await this.catalogsService.validateCIE10(codigoSecundario);
-          if (!isValid) {
-            errors.push(
-              `Código CIE-10 secundario inválido: ${codigoSecundario}. No se encuentra en el catálogo CIE-10`,
-            );
-          }
+          await validateCIE10Code(codigo, 'secundario');
         }
       }
     }
 
+    // Validate segundo diagnóstico (codigoCIEDiagnostico2)
+    if (dto.primeraVezDiagnostico2 === true) {
+      const codigoDiagnostico2Full = dto.codigoCIEDiagnostico2?.trim() || '';
+      if (!codigoDiagnostico2Full) {
+        errors.push(
+          'El código CIE-10 diagnóstico 2 es obligatorio cuando primeraVezDiagnostico2 es true',
+        );
+      } else {
+        // Validar que sea diferente al principal (comparar códigos extraídos)
+        const codigoPrincipal = extractCodeFromFullText(codigoPrincipalFull);
+        const codigoDiagnostico2 = extractCodeFromFullText(codigoDiagnostico2Full);
+        if (
+          codigoPrincipal &&
+          codigoPrincipal.toUpperCase() === codigoDiagnostico2.toUpperCase()
+        ) {
+          errors.push(
+            'El código CIE-10 diagnóstico 2 debe ser diferente al código CIE-10 principal',
+          );
+        } else {
+          await validateCIE10Code(codigoDiagnostico2Full, 'diagnostico2');
+        }
+      }
+    }
+
+    // Validar causa externa si se proporciona
+    if (dto.codigoCIECausaExterna && dto.codigoCIECausaExterna.trim() !== '') {
+      const codigoCausaFull = dto.codigoCIECausaExterna.trim();
+      const codigoCausa = extractCodeFromFullText(codigoCausaFull).toUpperCase();
+      // Validar que esté en rango V01-Y98
+      if (!/^[V-Y][0-9]{2}(\.[0-9]{1,2})?$/.test(codigoCausa)) {
+        errors.push(
+          `El código CIE-10 causa externa ${codigoCausa} debe estar en el rango V01-Y98`,
+        );
+      } else {
+        const isValid = await this.catalogsService.validateCIE10(codigoCausa);
+        if (!isValid) {
+          errors.push(
+            `Código CIE-10 causa externa inválido: ${codigoCausa}. No se encuentra en el catálogo CIE-10`,
+          );
+        }
+      }
+    }
+
+    // Lanzar errores bloqueantes
     if (errors.length > 0) {
       throw new BadRequestException(errors.join('; '));
+    }
+
+    // Log warnings (no bloqueantes)
+    if (warnings.length > 0) {
+      console.warn('Validación CIE-10 - Advertencias:', warnings.join('; '));
     }
   }
 
@@ -212,6 +372,23 @@ export class ExpedientesService {
 
       // NOM-024: Validate vital signs (MX strict, non-MX warnings)
       await this.validateVitalSignsForNOM024(createDto, createDto.idTrabajador);
+    }
+
+    // Validación E1: fechaDocumento para notaMedica
+    if (documentType === 'notaMedica' && createDto.fechaNotaMedica && createDto.idTrabajador) {
+      const trabajador = await this.trabajadorModel
+        .findById(createDto.idTrabajador)
+        .lean();
+
+      if (trabajador?.fechaNacimiento) {
+        validateFechaDocumento(
+          createDto.fechaNotaMedica,
+          trabajador.fechaNacimiento,
+        );
+      } else {
+        // Si no hay fechaNacimiento, solo validar que no sea futura
+        validateFechaDocumento(createDto.fechaNotaMedica);
+      }
     }
 
     const createdDocument = new model(createDto);
@@ -450,6 +627,22 @@ export class ExpedientesService {
 
     // NOM-024: Validate vital signs before saving (MX strict, non-MX warnings)
     await this.validateVitalSignsForNOM024(updateDto, trabajadorId);
+
+    // Validación E1: fechaDocumento para notaMedica
+    if (documentType === 'notaMedica' && updateDto.fechaNotaMedica && trabajadorId) {
+      const trabajador = await this.trabajadorModel
+        .findById(trabajadorId)
+        .lean();
+
+      if (trabajador?.fechaNacimiento) {
+        validateFechaDocumento(
+          updateDto.fechaNotaMedica,
+          trabajador.fechaNacimiento,
+        );
+      } else {
+        validateFechaDocumento(updateDto.fechaNotaMedica);
+      }
+    }
 
     let result;
     if (newFecha.toISOString() !== oldFecha.toISOString()) {

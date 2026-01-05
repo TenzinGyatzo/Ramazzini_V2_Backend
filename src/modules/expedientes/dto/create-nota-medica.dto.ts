@@ -11,6 +11,8 @@ import {
   Min,
   Matches,
   IsArray,
+  IsBoolean,
+  IsIn,
 } from 'class-validator';
 
 const tipoNota = ['Inicial', 'Seguimiento', 'Alta'];
@@ -82,25 +84,44 @@ export class CreateNotaMedicaDto {
   diagnostico: string; // Free-text diagnosis (backward compatibility)
 
   // NOM-024: CIE-10 Diagnosis Codes
+  // Acepta formato "CODE - DESCRIPTION" o solo "CODE"
   @IsOptional()
   @IsString({ message: 'El código CIE-10 principal debe ser un string' })
-  @Matches(/^$|^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, {
-    message:
-      'El código CIE-10 principal debe tener el formato A00.0 o A00 (letra seguida de 2-3 dígitos opcionalmente con punto y 1-2 dígitos)',
-  })
-  codigoCIE10Principal?: string;
+  codigoCIE10Principal?: string; // Formato: "A30 - LEPRA [ENFERMEDAD DE HANSEN]" o "A30"
 
   @IsOptional()
   @IsArray({ message: 'Los códigos CIE-10 secundarios deben ser un array' })
   @IsString({
     each: true,
-    message: 'Cada código CIE-10 secundario debe ser un string',
+    message: 'Cada código CIE-10 complementario debe ser un string',
   })
-  @Matches(/^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, {
-    each: true,
-    message: 'Cada código CIE-10 secundario debe tener el formato A00.0 o A00',
-  })
-  codigosCIE10Secundarios?: string[];
+  codigosCIE10Complementarios?: string[]; // Formato: ["A30 - LEPRA [ENFERMEDAD DE HANSEN]"] o ["A30"]
+
+  // NOM-024 GIIS-B015: Campos adicionales para diagnóstico
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 0 }, { message: 'relacionTemporal debe ser un número' })
+  @IsIn([0, 1], { message: 'relacionTemporal debe ser 0 (Primera Vez) o 1 (Subsecuente)' })
+  relacionTemporal?: number; // 0=Primera Vez, 1=Subsecuente
+
+  @IsOptional()
+  @IsBoolean({ message: 'primeraVezDiagnostico2 debe ser un booleano' })
+  primeraVezDiagnostico2?: boolean;
+
+  @IsOptional()
+  @IsString({ message: 'El código CIE-10 diagnóstico 2 debe ser un string' })
+  codigoCIEDiagnostico2?: string; // Formato: "A30 - LEPRA [ENFERMEDAD DE HANSEN]" o "A30"
+
+  @IsOptional()
+  @IsBoolean({ message: 'confirmacionDiagnostica debe ser un booleano' })
+  confirmacionDiagnostica?: boolean; // Flag para crónicos/cáncer <18
+
+  @IsOptional()
+  @IsString({ message: 'El código CIE-10 causa externa debe ser un string' })
+  codigoCIECausaExterna?: string; // Formato: "V01 - ACCIDENTE DE TRÁNSITO" o "V01"
+
+  @IsOptional()
+  @IsString({ message: 'La causa externa debe ser un string' })
+  causaExterna?: string; // Texto libre para causa externa
 
   @IsOptional()
   @IsString({ each: true, message: 'Cada tratamiento debe ser un string' })
