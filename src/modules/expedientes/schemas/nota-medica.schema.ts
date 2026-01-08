@@ -41,7 +41,7 @@ export class NotaMedica extends Document {
   @Prop()
   saturacionOxigeno: number;
 
-  @Prop({ required: true })
+  @Prop()
   diagnostico: string; // Free-text diagnosis (kept for backward compatibility)
 
   // NOM-024: CIE-10 Diagnosis Codes
@@ -71,6 +71,9 @@ export class NotaMedica extends Document {
     // Formato: "A30 - LEPRA [ENFERMEDAD DE HANSEN]" o solo "A30"
   })
   codigoCIEDiagnostico2?: string; // Segundo diagnóstico
+
+  @Prop({ required: false })
+  diagnosticoTexto?: string; // Texto libre complementario al diagnóstico 2
 
   @Prop({ required: false })
   confirmacionDiagnostica?: boolean; // Flag para crónicos/cáncer <18

@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CentroTrabajo } from './entities/centros-trabajo.entity';
 import { CreateCentrosTrabajoDto } from './dto/create-centros-trabajo.dto';
 import { UpdateCentrosTrabajoDto } from './dto/update-centros-trabajo.dto';
 import { normalizeCentroTrabajoData } from 'src/utils/normalization';
+import { GeographyValidator } from '../catalogs/validators/geography.validator';
 import { Trabajador } from '../trabajadores/schemas/trabajador.schema';
 import { Antidoping } from '../expedientes/schemas/antidoping.schema';
 import { AptitudPuesto } from '../expedientes/schemas/aptitud-puesto.schema';
@@ -36,12 +37,49 @@ export class CentrosTrabajoService {
     @InjectModel(NotaMedica.name) private notaMedicaModel: Model<NotaMedica>,
     @InjectModel('User') private userModel: Model<User>,
     private trabajadoresService: TrabajadoresService,
+    private geographyValidator: GeographyValidator,
   ) {}
+
+  /**
+   * Validate geographic hierarchy (A3) for centro de trabajo
+   */
+  private async validateGeographyHierarchy(
+    dto: CreateCentrosTrabajoDto | UpdateCentrosTrabajoDto,
+  ): Promise<void> {
+    // Only validate if any geographic field is provided
+    if (!dto.estado && !dto.municipio) {
+      return;
+    }
+
+    // Note: estado and municipio in CentroTrabajo are stored as names (strings),
+    // but we validate using INEGI codes. The frontend should send codes.
+    // If names are sent, validation will fail (as per requirements: validate by CLAVE, not name).
+    const validationResult = await this.geographyValidator.validateGeography({
+      entidad: dto.estado, // Assuming estado contains INEGI code (2 digits)
+      municipio: dto.municipio, // Assuming municipio contains INEGI code (3 digits)
+    });
+
+    if (!validationResult.valid) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        ruleId: 'A3',
+        message: 'La información geográfica es inconsistente',
+        details: validationResult.errors.map((e) => ({
+          field: e.field === 'entidad' ? 'estado' : 'municipio',
+          reason: e.reason,
+        })),
+      });
+    }
+  }
 
   async create(
     createCentrosTrabajoDto: CreateCentrosTrabajoDto,
   ): Promise<CentroTrabajo> {
     const normalizedDto = normalizeCentroTrabajoData(createCentrosTrabajoDto);
+
+    // Validate geographic hierarchy (A3) - applies to all providers
+    await this.validateGeographyHierarchy(normalizedDto);
+
     const createdCentroTrabajo = new this.centroTrabajoModel(normalizedDto);
     return await createdCentroTrabajo.save();
   }
@@ -84,6 +122,22 @@ export class CentrosTrabajoService {
     updateCentrosTrabajoDto: UpdateCentrosTrabajoDto,
   ): Promise<CentroTrabajo> {
     const normalizedDto = normalizeCentroTrabajoData(updateCentrosTrabajoDto);
+
+    // Get current centro to merge data for validation
+    const centroActual = await this.centroTrabajoModel.findById(id).exec();
+    if (!centroActual) {
+      throw new BadRequestException('Centro de trabajo no encontrado');
+    }
+
+    // Merge current data with update DTO for validation
+    const mergedDto = {
+      ...centroActual.toObject(),
+      ...normalizedDto,
+    } as CreateCentrosTrabajoDto;
+
+    // Validate geographic hierarchy (A3) - applies to all providers
+    await this.validateGeographyHierarchy(mergedDto);
+
     return await this.centroTrabajoModel
       .findByIdAndUpdate(id, normalizedDto, { new: true })
       .exec();

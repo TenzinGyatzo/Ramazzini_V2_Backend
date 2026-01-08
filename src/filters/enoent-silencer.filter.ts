@@ -36,8 +36,9 @@ export class EnoentSilencerFilter implements ExceptionFilter {
     if (exception instanceof BadRequestException) {
       const status = exception.getStatus();
       const payload = exception.getResponse(); // <-- aquí viene el array de errores del ValidationPipe
+      // Log detallado con formato legible
       this.logger.warn(
-        `[BadRequestException] ${request.method} ${request.url} -> ${JSON.stringify(payload)}`,
+        `[BadRequestException] ${request.method} ${request.url} -> ${JSON.stringify(payload, null, 2)}`,
       );
       return response.status(status).json(payload);
     }

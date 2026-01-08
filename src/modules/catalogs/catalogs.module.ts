@@ -1,6 +1,7 @@
 import { Module, Global } from '@nestjs/common';
 import { CatalogsService } from './catalogs.service';
 import { CatalogsController } from './catalogs.controller';
+import { GeographyValidator } from './validators/geography.validator';
 
 /**
  * Catalogs Module
@@ -11,7 +12,7 @@ import { CatalogsController } from './catalogs.controller';
 @Global()
 @Module({
   controllers: [CatalogsController],
-  providers: [CatalogsService],
-  exports: [CatalogsService],
+  providers: [CatalogsService, GeographyValidator],
+  exports: [CatalogsService, GeographyValidator],
 })
 export class CatalogsModule {}

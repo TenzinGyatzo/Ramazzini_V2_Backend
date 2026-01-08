@@ -27,9 +27,11 @@ export interface INEGIEntry extends CatalogEntry {
 export interface CIE10Entry extends CatalogEntry {
   catalogKey?: string;
   nombre?: string;
-  lsex?: string; // Sex restriction (LINF/LSUP age restrictions may be in other fields)
-  linf?: number; // Lower age limit
-  lsup?: number; // Upper age limit
+  lsex?: string; // Sex restriction: "NO", "MUJER", "HOMBRE", "SI"
+  linf?: number; // Lower age limit (parsed number, may be undefined if format is "010A")
+  lsup?: number; // Upper age limit (parsed number, may be undefined if format is "120A")
+  linfRaw?: string; // Raw lower age limit from catalog (e.g., "010A", "028D", "NO")
+  lsupRaw?: string; // Raw upper age limit from catalog (e.g., "120A", "NO")
 }
 
 /**

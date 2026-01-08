@@ -45,6 +45,9 @@ import { mapSexoToNumeric } from '../../utils/sexo-mapper.util';
 import { calculateAge } from '../../utils/age-calculator.util';
 import { CIE10Entry, CatalogType } from '../catalogs/interfaces/catalog-entry.interface';
 import { validateFechaDocumento } from './validators/date-validators';
+import { validateNoDuplicateCIE10PrincipalAndComplementary } from './validators/diagnosis-duplicate.validator';
+import { validateCie10SexAgeAgainstCatalog } from './validators/cie10-catalog-sex-age.validator';
+import { Cie10CatalogLookupService } from './services/cie10-catalog-lookup.service';
 
 @Injectable()
 export class ExpedientesService {
@@ -86,6 +89,7 @@ export class ExpedientesService {
     private readonly filesService: FilesService,
     private readonly nom024Util: NOM024ComplianceUtil,
     private readonly catalogsService: CatalogsService,
+    private readonly cie10CatalogLookupService: Cie10CatalogLookupService,
     @Inject(forwardRef(() => InformesService))
     private readonly informesService: InformesService,
   ) {
@@ -299,6 +303,26 @@ export class ExpedientesService {
       }
     }
 
+    // Validar Regla B4: No duplicar principal en complementarios
+    const duplicateCheck = validateNoDuplicateCIE10PrincipalAndComplementary(
+      dto.codigoCIE10Principal,
+      dto.codigosCIE10Complementarios,
+    );
+    if (!duplicateCheck.isValid) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        ruleId: 'B4',
+        message:
+          'El diagnóstico principal no puede repetirse en los diagnósticos complementarios',
+        details: [
+          {
+            field: 'codigosCIE10Complementarios',
+            duplicatedCode: duplicateCheck.duplicated,
+          },
+        ],
+      });
+    }
+
     // Validate segundo diagnóstico (codigoCIEDiagnostico2)
     if (dto.primeraVezDiagnostico2 === true) {
       const codigoDiagnostico2Full = dto.codigoCIEDiagnostico2?.trim() || '';
@@ -388,6 +412,63 @@ export class ExpedientesService {
       } else {
         // Si no hay fechaNacimiento, solo validar que no sea futura
         validateFechaDocumento(createDto.fechaNotaMedica);
+      }
+    }
+
+    // Validación C3/C4: CIE-10 por sexo y edad para notaMedica
+    if (documentType === 'notaMedica' && createDto.idTrabajador) {
+      const trabajador = await this.trabajadorModel
+        .findById(createDto.idTrabajador)
+        .lean();
+
+      if (trabajador && trabajador.sexo && trabajador.fechaNacimiento) {
+        // Recolectar todos los códigos CIE-10 del DTO
+        const cie10Fields = [
+          {
+            field: 'codigoCIE10Principal',
+            value: createDto.codigoCIE10Principal,
+          },
+          {
+            field: 'codigosCIE10Complementarios',
+            value: createDto.codigosCIE10Complementarios || [],
+          },
+          {
+            field: 'codigoCIEDiagnostico2',
+            value: createDto.codigoCIEDiagnostico2,
+          },
+        ];
+
+        // Validar restricciones de sexo y edad usando catálogo
+        const validationResult = await validateCie10SexAgeAgainstCatalog({
+          trabajadorSexo: trabajador.sexo,
+          trabajadorFechaNacimiento: trabajador.fechaNacimiento,
+          fechaNotaMedica: createDto.fechaNotaMedica,
+          cie10Fields,
+          lookup: this.cie10CatalogLookupService.findDiagnosisRule.bind(
+            this.cie10CatalogLookupService,
+          ),
+        });
+
+        // Si hay violaciones, lanzar error con formato especificado
+        if (!validationResult.ok && validationResult.issues.length > 0) {
+          throw new BadRequestException({
+            code: 'VALIDATION_ERROR',
+            ruleId: 'CIE10_SEX_AGE',
+            message:
+              'Uno o más diagnósticos CIE-10 no son válidos para el sexo o la edad del trabajador',
+            details: validationResult.issues.map((issue) => ({
+              field: issue.field,
+              cie10: issue.cie10,
+              catalogKeyUsed: issue.catalogKeyUsed,
+              lsex: issue.lsex,
+              linf: issue.linf,
+              lsup: issue.lsup,
+              sexoTrabajador: issue.sexoTrabajador,
+              edadTrabajador: issue.edadTrabajador,
+              reason: issue.reason,
+            })),
+          });
+        }
       }
     }
 
@@ -641,6 +722,111 @@ export class ExpedientesService {
         );
       } else {
         validateFechaDocumento(updateDto.fechaNotaMedica);
+      }
+    }
+
+    // Validar Regla B4: No duplicar principal en complementarios (para notaMedica)
+    if (documentType === 'notaMedica') {
+      // Usar valores del updateDto si existen, sino del documento existente
+      const codigoPrincipal =
+        updateDto.codigoCIE10Principal !== undefined
+          ? updateDto.codigoCIE10Principal
+          : existingDocument.codigoCIE10Principal;
+      const codigosComplementarios =
+        updateDto.codigosCIE10Complementarios !== undefined
+          ? updateDto.codigosCIE10Complementarios
+          : existingDocument.codigosCIE10Complementarios;
+
+      const duplicateCheck = validateNoDuplicateCIE10PrincipalAndComplementary(
+        codigoPrincipal,
+        codigosComplementarios,
+      );
+      if (!duplicateCheck.isValid) {
+        throw new BadRequestException({
+          code: 'VALIDATION_ERROR',
+          ruleId: 'B4',
+          message:
+            'El diagnóstico principal no puede repetirse en los diagnósticos complementarios',
+          details: [
+            {
+              field: 'codigosCIE10Complementarios',
+              duplicatedCode: duplicateCheck.duplicated,
+            },
+          ],
+        });
+      }
+
+      // Validación C3/C4: CIE-10 por sexo y edad para notaMedica
+      const trabajador = await this.trabajadorModel
+        .findById(trabajadorId)
+        .lean();
+
+      if (trabajador && trabajador.sexo && trabajador.fechaNacimiento) {
+        // Usar valores del updateDto si existen, sino del documento existente
+        const finalCodigoPrincipal =
+          updateDto.codigoCIE10Principal !== undefined
+            ? updateDto.codigoCIE10Principal
+            : existingDocument.codigoCIE10Principal;
+        const finalCodigosComplementarios =
+          updateDto.codigosCIE10Complementarios !== undefined
+            ? updateDto.codigosCIE10Complementarios
+            : existingDocument.codigosCIE10Complementarios;
+        const finalCodigoDiagnostico2 =
+          updateDto.codigoCIEDiagnostico2 !== undefined
+            ? updateDto.codigoCIEDiagnostico2
+            : existingDocument.codigoCIEDiagnostico2;
+        const finalFechaNotaMedica =
+          updateDto.fechaNotaMedica !== undefined
+            ? updateDto.fechaNotaMedica
+            : existingDocument.fechaNotaMedica;
+
+        // Recolectar todos los códigos CIE-10
+        const cie10Fields = [
+          {
+            field: 'codigoCIE10Principal',
+            value: finalCodigoPrincipal,
+          },
+          {
+            field: 'codigosCIE10Complementarios',
+            value: finalCodigosComplementarios || [],
+          },
+          {
+            field: 'codigoCIEDiagnostico2',
+            value: finalCodigoDiagnostico2,
+          },
+        ];
+
+        // Validar restricciones de sexo y edad usando catálogo
+        const validationResult = await validateCie10SexAgeAgainstCatalog({
+          trabajadorSexo: trabajador.sexo,
+          trabajadorFechaNacimiento: trabajador.fechaNacimiento,
+          fechaNotaMedica: finalFechaNotaMedica,
+          cie10Fields,
+          lookup: this.cie10CatalogLookupService.findDiagnosisRule.bind(
+            this.cie10CatalogLookupService,
+          ),
+        });
+
+        // Si hay violaciones, lanzar error con formato especificado
+        if (!validationResult.ok && validationResult.issues.length > 0) {
+          throw new BadRequestException({
+            code: 'VALIDATION_ERROR',
+            ruleId: 'CIE10_SEX_AGE',
+            message:
+              'Uno o más diagnósticos CIE-10 no son válidos para el sexo o la edad del trabajador',
+            details: validationResult.issues.map((issue) => ({
+              field: issue.field,
+              cie10: issue.cie10,
+              catalogKeyUsed: issue.catalogKeyUsed,
+              lsex: issue.lsex,
+              linf: issue.linf,
+              lsup: issue.lsup,
+              sexoTrabajador: issue.sexoTrabajador,
+              edadTrabajador: issue.edadTrabajador,
+              reason: issue.reason,
+            })),
+          });
+        }
       }
     }
 

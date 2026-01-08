@@ -170,6 +170,48 @@ function formatearTelefono(telefono: string): string {
   // Si no coincide con ningún formato conocido, devolver tal como está
   return telefono;
 }
+
+/**
+ * Extrae el código CIE-10 de un string que puede venir como:
+ * - "A30"
+ * - "A30 - LEPRA [ENFERMEDAD DE HANSEN]"
+ */
+function extractCIE10Code(value: string | null | undefined): string {
+  if (!value) return '';
+  // Si ya es solo código (no tiene " - "), retornar tal cual
+  if (!value.includes(' - ')) {
+    // Extraer solo la parte antes del primer espacio si existe
+    return value.trim().split(/\s+/)[0];
+  }
+  // Extraer código antes de " - "
+  return value.split(' - ')[0].trim().split(/\s+/)[0];
+}
+
+/**
+ * Extrae la descripción CIE-10 de un string que puede venir como:
+ * - "A30 - LEPRA [ENFERMEDAD DE HANSEN]" -> retorna "LEPRA [ENFERMEDAD DE HANSEN]"
+ * - "A30" -> retorna ""
+ */
+function extractCIE10Description(value: string | null | undefined): string {
+  if (!value) return '';
+  // Si no tiene " - ", retornar vacío (solo código)
+  if (!value.includes(' - ')) return '';
+  // Extraer descripción después de " - "
+  return value.split(' - ').slice(1).join(' - ').trim();
+}
+
+/**
+ * Determina si requiere confirmación diagnóstica basado en el código CIE-10 principal
+ * Requiere confirmación si es crónico (E11*, I1*) o cáncer (C*)
+ */
+function requiereConfirmacionDiagnostica(codigoCIE10Principal?: string): boolean {
+  if (!codigoCIE10Principal) return false;
+  const codigo = extractCIE10Code(codigoCIE10Principal).toUpperCase();
+  const esCronico = codigo.startsWith('E11') || codigo.startsWith('I1');
+  const esCancer = codigo.startsWith('C');
+  return esCronico || esCancer;
+}
+
 // ==================== INTERFACES ====================
 interface Trabajador {
   primerApellido: string;
@@ -197,7 +239,17 @@ interface NotaMedica {
   frecuenciaRespiratoria: number;
   temperatura: number;
   saturacionOxigeno: number;
-  diagnostico: string;
+  diagnostico?: string; // Legacy field, opcional
+  // NOM-024: CIE-10 Diagnosis Codes
+  codigoCIE10Principal?: string;
+  codigosCIE10Complementarios?: string[];
+  relacionTemporal?: number; // 0=Primera Vez, 1=Subsecuente
+  primeraVezDiagnostico2?: boolean;
+  codigoCIEDiagnostico2?: string;
+  diagnosticoTexto?: string;
+  confirmacionDiagnostica?: boolean;
+  codigoCIECausaExterna?: string;
+  causaExterna?: string;
   tratamiento: string[];
   recomendaciones: string[];
   observaciones: string;
@@ -461,15 +513,182 @@ export const notaMedicaInforme = (
       // Signos Vitales
       construirSignosVitales(notaMedica),
 
-      // Diagnóstico
-      {
-        text: [
-          { text: `IDX:`, bold: true },
-          { text: ` ${notaMedica.diagnostico.toUpperCase()} `, bold: true },
-        ],
-        margin: [0, 0, 0, 10],
-        style: 'paragraph',
-      },
+      // Diagnóstico Principal y Complementarios (NOM-024)
+      ...(notaMedica.codigoCIE10Principal ||
+      (notaMedica.codigosCIE10Complementarios &&
+        notaMedica.codigosCIE10Complementarios.length > 0) ||
+      notaMedica.relacionTemporal !== undefined ||
+      (requiereConfirmacionDiagnostica(notaMedica.codigoCIE10Principal) &&
+        notaMedica.confirmacionDiagnostica !== undefined) ||
+      notaMedica.codigoCIECausaExterna ||
+      notaMedica.causaExterna
+        ? [
+            // Diagnóstico Principal CIE-10
+            notaMedica.codigoCIE10Principal
+              ? {
+                  text: [
+                    { text: `Diagnóstico Principal: `, bold: true },
+                    {
+                      text: `${
+                        extractCIE10Description(
+                          notaMedica.codigoCIE10Principal,
+                        ) ||
+                        extractCIE10Code(notaMedica.codigoCIE10Principal)
+                      } `,
+                    },
+                  ],
+                  margin: [0, 0, 0, 10] as [number, number, number, number],
+                  style: 'paragraph',
+                }
+              : null,
+
+            // Diagnósticos Complementarios CIE-10
+            notaMedica.codigosCIE10Complementarios &&
+            notaMedica.codigosCIE10Complementarios.length > 0
+              ? {
+                  text: [
+                    {
+                      text: `Diagnósticos relacionados al diagnóstico principal: `,
+                      bold: true,
+                    },
+                    {
+                      text: `${
+                        notaMedica.codigosCIE10Complementarios
+                          .map((codigo) => {
+                            return (
+                              extractCIE10Description(codigo) ||
+                              extractCIE10Code(codigo)
+                            );
+                          })
+                          .join(', ')
+                      } `,
+                    },
+                  ],
+                  margin: [0, 0, 0, 10] as [number, number, number, number],
+                  style: 'paragraph',
+                }
+              : null,
+
+            // Relación Temporal
+            notaMedica.relacionTemporal !== undefined &&
+            notaMedica.relacionTemporal !== null
+              ? {
+                  text: [
+                    { text: `Relación Temporal: `, bold: true },
+                    {
+                      text: `${
+                        notaMedica.relacionTemporal === 0
+                          ? 'Primera Vez'
+                          : 'Subsecuente'
+                      } `,
+                    },
+                  ],
+                  margin: [0, 0, 0, 10] as [number, number, number, number],
+                  style: 'paragraph',
+                }
+              : null,
+
+            // Confirmación Diagnóstica
+            requiereConfirmacionDiagnostica(notaMedica.codigoCIE10Principal) &&
+            notaMedica.confirmacionDiagnostica !== undefined
+              ? {
+                  text: [
+                    { text: `Confirmación Diagnóstica: `, bold: true },
+                    {
+                      text: `${
+                        notaMedica.confirmacionDiagnostica ? 'Sí' : 'No'
+                      } `,
+                    },
+                  ],
+                  margin: [0, 0, 0, 10] as [number, number, number, number],
+                  style: 'paragraph',
+                }
+              : null,
+
+            // Causa Externa
+            notaMedica.codigoCIECausaExterna
+              ? {
+                  text: [
+                    { text: `Causa Externa: `, bold: true },
+                    {
+                      text: `${
+                        extractCIE10Description(notaMedica.codigoCIECausaExterna) ||
+                        extractCIE10Code(notaMedica.codigoCIECausaExterna)
+                      } `,
+                    },
+                  ],
+                  margin: [0, 0, 0, 10] as [number, number, number, number],
+                  style: 'paragraph',
+                }
+              : null,
+
+            // Descripción Causa Externa
+            notaMedica.causaExterna
+              ? {
+                  text: [
+                    { text: `Descripción Causa Externa: `, bold: true },
+                    { text: `${notaMedica.causaExterna} ` },
+                  ],
+                  margin: [0, 0, 0, 10] as [number, number, number, number],
+                  style: 'paragraph',
+                }
+              : null,
+          ].filter((item) => item !== null)
+        : []),
+
+      // Diagnóstico Secundario (Diagnóstico 2)
+      ...(notaMedica.primeraVezDiagnostico2 &&
+      notaMedica.codigoCIEDiagnostico2
+        ? [
+            {
+              text: [
+                { text: `Diagnóstico 2 (Comorbilidad clínica): `, bold: true },
+                {
+                  text: `${
+                    extractCIE10Description(notaMedica.codigoCIEDiagnostico2) ||
+                    extractCIE10Code(notaMedica.codigoCIEDiagnostico2)
+                  } `,
+                },
+              ],
+              margin: [0, 0, 0, 10] as [number, number, number, number],
+              style: 'paragraph',
+            },
+          ]
+        : []),
+
+      // Descripción complementaria (diagnosticoTexto)
+      ...(notaMedica.diagnosticoTexto && notaMedica.diagnosticoTexto.trim() !== ''
+        ? [
+            {
+              text: [
+                { text: `Descripción complementaria: `, bold: true },
+                { text: `${notaMedica.diagnosticoTexto} ` },
+              ],
+              margin: [0, 0, 0, 10] as [number, number, number, number],
+              style: 'paragraph',
+            },
+          ]
+        : []),
+
+      // Diagnóstico legacy (solo si no hay diagnosticoTexto ni codigoCIEDiagnostico2)
+      ...(notaMedica.diagnostico &&
+      notaMedica.diagnostico.trim() !== '' &&
+      !notaMedica.primeraVezDiagnostico2 &&
+      !notaMedica.codigoCIEDiagnostico2
+        ? [
+            {
+              text: [
+                { text: `IDX:`, bold: true },
+                {
+                  text: ` ${(notaMedica.diagnostico || '').toUpperCase()} `,
+                  bold: true,
+                },
+              ],
+              margin: [0, 0, 0, 10] as [number, number, number, number],
+              style: 'paragraph',
+            },
+          ]
+        : []),
 
       // Tratamiento
       notaMedica.tratamiento && notaMedica.tratamiento.length > 0

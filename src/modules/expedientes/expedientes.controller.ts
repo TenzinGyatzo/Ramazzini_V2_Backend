@@ -349,6 +349,19 @@ export class ExpedientesController {
 
       return { message: `${documentType} actualizado`, data: updatedDocument };
     } catch (error) {
+      // Si el error ya es un BadRequestException con un mensaje estructurado, propagarlo
+      if (error instanceof BadRequestException) {
+        // Si tiene un response con message, code, ruleId, etc., propagarlo tal cual
+        const errorResponse = error.getResponse();
+        if (typeof errorResponse === 'object' && errorResponse !== null) {
+          // Si tiene estructura de validación (code, ruleId, message, details), propagarlo
+          if ('code' in errorResponse && 'message' in errorResponse) {
+
+            throw error; // Propagar el error original con toda su estructura
+          }
+        }
+      }
+      // Para otros errores, log y usar mensaje genérico
       console.error('Error detallado:', error);
       throw new BadRequestException(`Error al actualizar el ${documentType}`);
     }

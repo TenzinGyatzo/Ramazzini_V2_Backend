@@ -3006,7 +3006,17 @@ export class InformesService {
       frecuenciaRespiratoria: notaMedica.frecuenciaRespiratoria,
       temperatura: notaMedica.temperatura,
       saturacionOxigeno: notaMedica.saturacionOxigeno,
-      diagnostico: notaMedica.diagnostico,
+      diagnostico: notaMedica.diagnostico, // Legacy field, opcional
+      // NOM-024: CIE-10 Diagnosis Codes
+      codigoCIE10Principal: notaMedica.codigoCIE10Principal,
+      codigosCIE10Complementarios: notaMedica.codigosCIE10Complementarios,
+      relacionTemporal: notaMedica.relacionTemporal,
+      primeraVezDiagnostico2: notaMedica.primeraVezDiagnostico2,
+      codigoCIEDiagnostico2: notaMedica.codigoCIEDiagnostico2,
+      diagnosticoTexto: notaMedica.diagnosticoTexto,
+      confirmacionDiagnostica: notaMedica.confirmacionDiagnostica,
+      codigoCIECausaExterna: notaMedica.codigoCIECausaExterna,
+      causaExterna: notaMedica.causaExterna,
       tratamiento: notaMedica.tratamiento,
       recomendaciones: notaMedica.recomendaciones,
       observaciones: notaMedica.observaciones,

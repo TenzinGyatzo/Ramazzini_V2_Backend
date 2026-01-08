@@ -17,11 +17,12 @@ import {
   calcularAntiguedad,
   convertirFechaADDMMAAAA,
 } from 'src/utils/dates';
-import { validateCURP } from 'src/utils/curp-validator.util';
+import { validateCURP, validateCURPCrossCheck } from 'src/utils/curp-validator.util';
 import { NOM024ComplianceUtil } from 'src/utils/nom024-compliance.util';
 import { validateTrabajadorNames } from 'src/utils/name-validator.util';
 import { validateFechaNacimiento } from '../expedientes/validators/date-validators';
 import { CatalogsService } from '../catalogs/catalogs.service';
+import { GeographyValidator } from '../catalogs/validators/geography.validator';
 import { Antidoping } from '../expedientes/schemas/antidoping.schema';
 import { AptitudPuesto } from '../expedientes/schemas/aptitud-puesto.schema';
 import { Audiometria } from '../expedientes/schemas/audiometria.schema';
@@ -76,6 +77,7 @@ export class TrabajadoresService {
     private filesService: FilesService,
     private nom024Util: NOM024ComplianceUtil,
     private catalogsService: CatalogsService,
+    private geographyValidator: GeographyValidator,
   ) {}
 
   /**
@@ -103,6 +105,59 @@ export class TrabajadoresService {
       return empresa.idProveedorSalud.toString();
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Validate geographic hierarchy (A3) - applies to all providers
+   * This is the "last guardian" for direct payloads, imports, and regulatory integrity
+   */
+  private async validateGeographyHierarchy(
+    dto: CreateTrabajadorDto | UpdateTrabajadorDto,
+  ): Promise<void> {
+    const errors: Array<{ field: string; reason: string }> = [];
+
+    // Validate entidadNacimiento hierarchy if provided
+    if (dto.entidadNacimiento) {
+      const entidadNac = dto.entidadNacimiento.trim().toUpperCase();
+      const isValid = await this.geographyValidator.validateEntidad(entidadNac);
+      if (!isValid) {
+        errors.push({
+          field: 'entidadNacimiento',
+          reason: `La entidad "${entidadNac}" no existe en el catálogo`,
+        });
+      }
+    }
+
+    // Validate residencia hierarchy if any field is provided
+    if (
+      dto.entidadResidencia ||
+      dto.municipioResidencia ||
+      dto.localidadResidencia
+    ) {
+      const validationResult = await this.geographyValidator.validateGeography({
+        entidad: dto.entidadResidencia,
+        municipio: dto.municipioResidencia,
+        localidad: dto.localidadResidencia,
+      });
+
+      if (!validationResult.valid) {
+        errors.push(...validationResult.errors.map((e) => ({
+          field: e.field === 'entidad' ? 'entidadResidencia' : 
+                e.field === 'municipio' ? 'municipioResidencia' : 
+                'localidadResidencia',
+          reason: e.reason,
+        })));
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        ruleId: 'A3',
+        message: 'La información geográfica es inconsistente',
+        details: errors,
+      });
     }
   }
 
@@ -265,6 +320,14 @@ export class TrabajadoresService {
   private async validateCURPForMX(
     curp: string | undefined,
     proveedorSaludId: string | null,
+    trabajadorData?: {
+      fechaNacimiento?: Date;
+      sexo?: string;
+      entidadNacimiento?: string;
+      nombre?: string;
+      primerApellido?: string;
+      segundoApellido?: string;
+    },
   ): Promise<void> {
     if (!proveedorSaludId) {
       // If we can't determine provider, allow (backward compatibility)
@@ -290,6 +353,29 @@ export class TrabajadoresService {
         throw new BadRequestException(
           `CURP inválido: ${validation.errors.join(', ')}`,
         );
+      }
+
+      // Validación cruzada A1 (solo si hay datos demográficos)
+      if (trabajadorData && trabajadorData.fechaNacimiento && trabajadorData.sexo) {
+        const crossCheck = validateCURPCrossCheck(normalizedCurp, {
+          fechaNacimiento: trabajadorData.fechaNacimiento,
+          sexo: trabajadorData.sexo,
+          entidadNacimiento: trabajadorData.entidadNacimiento,
+          nombre: trabajadorData.nombre,
+          primerApellido: trabajadorData.primerApellido,
+          segundoApellido: trabajadorData.segundoApellido,
+        });
+
+        if (!crossCheck.isValid) {
+          // Construir mensaje específico con campos que fallaron
+          const fieldsFailed = crossCheck.discrepancies.map((d) => d.field).join(', ');
+          throw new BadRequestException({
+            code: 'VALIDATION_ERROR',
+            ruleId: 'A1',
+            message: `La CURP no es consistente con los datos demográficos del trabajador. Campos con discrepancias: ${fieldsFailed}`,
+            details: crossCheck.discrepancies,
+          });
+        }
       }
     } else {
       // Non-MX provider: CURP is optional, but if provided, it should be valid format
@@ -367,6 +453,9 @@ export class TrabajadoresService {
     // Validar fechaNacimiento (A2)
     validateFechaNacimiento(normalizedDto.fechaNacimiento);
 
+    // Validate geographic hierarchy (A3) - applies to all providers
+    await this.validateGeographyHierarchy(normalizedDto);
+
     // Validar unicidad del número de empleado a nivel empresa si se proporciona
     if (normalizedDto.numeroEmpleado) {
       await this.validateNumeroEmpleadoUniqueness(
@@ -380,7 +469,14 @@ export class TrabajadoresService {
       normalizedDto.idCentroTrabajo,
     );
     await this.validateNOM024PersonFields(normalizedDto, proveedorSaludId);
-    await this.validateCURPForMX(normalizedDto.curp, proveedorSaludId);
+    await this.validateCURPForMX(normalizedDto.curp, proveedorSaludId, {
+      fechaNacimiento: normalizedDto.fechaNacimiento,
+      sexo: normalizedDto.sexo,
+      entidadNacimiento: normalizedDto.entidadNacimiento,
+      nombre: normalizedDto.nombre,
+      primerApellido: normalizedDto.primerApellido,
+      segundoApellido: normalizedDto.segundoApellido,
+    });
 
     // NOM-024: Validate name format (MX strict, non-MX warnings)
     await this.validateNOM024NameFormat(
@@ -1155,6 +1251,14 @@ export class TrabajadoresService {
       validateFechaNacimiento(normalizedDto.fechaNacimiento);
     }
 
+    // Validate geographic hierarchy (A3) - applies to all providers
+    // Merge current worker data with update DTO for validation
+    const mergedDtoForGeography = {
+      ...trabajadorActual.toObject(),
+      ...normalizedDto,
+    } as CreateTrabajadorDto;
+    await this.validateGeographyHierarchy(mergedDtoForGeography);
+
     // Validar unicidad del número de empleado a nivel empresa si se proporciona
     if (normalizedDto.numeroEmpleado) {
       // Solo validar si el número está cambiando
@@ -1186,7 +1290,14 @@ export class TrabajadoresService {
       normalizedDto.curp !== undefined
         ? normalizedDto.curp
         : trabajadorActual.curp;
-    await this.validateCURPForMX(curpToValidate, proveedorSaludId);
+    await this.validateCURPForMX(curpToValidate, proveedorSaludId, {
+      fechaNacimiento: mergedDto.fechaNacimiento,
+      sexo: mergedDto.sexo,
+      entidadNacimiento: mergedDto.entidadNacimiento,
+      nombre: mergedDto.nombre,
+      primerApellido: mergedDto.primerApellido,
+      segundoApellido: mergedDto.segundoApellido,
+    });
 
     // NOM-024: Validate name format (MX strict, non-MX warnings)
     // Use merged values for validation

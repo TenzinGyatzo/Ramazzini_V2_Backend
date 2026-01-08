@@ -64,10 +64,11 @@ import {
 import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
 import { NOM024ComplianceModule } from '../nom024-compliance/nom024-compliance.module';
 import { CatalogsModule } from '../catalogs/catalogs.module';
+import { Cie10CatalogLookupService } from './services/cie10-catalog-lookup.service';
 
 @Module({
   controllers: [ExpedientesController],
-  providers: [ExpedientesService, PdfCleanerService],
+  providers: [ExpedientesService, PdfCleanerService, Cie10CatalogLookupService],
   imports: [
     MongooseModule.forFeature([
       { name: Antidoping.name, schema: AntidopingSchema },

@@ -1,0 +1,317 @@
+/**
+ * CIE-10 Catalog-Based Sex and Age Validator
+ * 
+ * Validador que verifica que los diagnósticos CIE-10 en Nota Médica
+ * cumplan con las restricciones de sexo (LSEX) y edad (LINF/LSUP)
+ * usando el catálogo oficial de diagnósticos.
+ */
+
+import { calculateAge } from '../../../utils/age-calculator.util';
+import { extractCIE10Code } from '../../../utils/cie10.util';
+import { parseAgeLimit } from '../../../utils/cie10-age-parser.util';
+import { DiagnosisRule } from '../services/cie10-catalog-lookup.service';
+
+/**
+ * Validation issue for a single CIE-10 code
+ */
+export interface CIE10CatalogValidationIssue {
+  field: string;
+  cie10: string;
+  catalogKeyUsed: string;
+  lsex: string;
+  linf: string | null;
+  lsup: string | null;
+  sexoTrabajador: 'HOMBRE' | 'MUJER';
+  edadTrabajador: number;
+  reason: 'Sexo no permitido' | 'Edad fuera de rango';
+}
+
+/**
+ * Validation result
+ */
+export interface CIE10CatalogValidationResult {
+  ok: boolean;
+  issues: CIE10CatalogValidationIssue[];
+}
+
+/**
+ * Validation parameters
+ */
+export interface CIE10CatalogValidationParams {
+  trabajadorSexo: string; // "Masculino" | "Femenino" | "HOMBRE" | "MUJER"
+  trabajadorFechaNacimiento: Date;
+  fechaNotaMedica?: Date;
+  cie10Fields: Array<{ field: string; value: string | string[] }>;
+  lookup: (code: string) => Promise<DiagnosisRule | null>;
+}
+
+/**
+ * Normalizes sex to HOMBRE/MUJER format
+ */
+function normalizeSexo(sexo: string): 'MUJER' | 'HOMBRE' | null {
+  if (!sexo) {
+    return null;
+  }
+
+  const normalized = sexo.trim().toLowerCase();
+
+  if (
+    normalized === 'masculino' ||
+    normalized === 'hombre' ||
+    normalized === 'm' ||
+    normalized === 'h'
+  ) {
+    return 'HOMBRE';
+  }
+
+  if (
+    normalized === 'femenino' ||
+    normalized === 'mujer' ||
+    normalized === 'f'
+  ) {
+    return 'MUJER';
+  }
+
+  // If already in uppercase format
+  if (normalized === 'hombre' || normalized === 'hombres') {
+    return 'HOMBRE';
+  }
+
+  if (normalized === 'mujer' || normalized === 'mujeres') {
+    return 'MUJER';
+  }
+
+  return null;
+}
+
+/**
+ * Collects all CIE-10 codes from fields
+ */
+function collectCIE10Codes(
+  cie10Fields: Array<{ field: string; value: string | string[] }>,
+): Array<{ field: string; value: string }> {
+  const codes: Array<{ field: string; value: string }> = [];
+
+  for (const field of cie10Fields) {
+    if (!field.value) {
+      continue;
+    }
+
+    if (Array.isArray(field.value)) {
+      // Array of complementary codes
+      for (const code of field.value) {
+        if (code && code.trim() !== '') {
+          codes.push({ field: field.field, value: code });
+        }
+      }
+    } else {
+      // Single code
+      if (field.value.trim() !== '') {
+        codes.push({ field: field.field, value: field.value });
+      }
+    }
+  }
+
+  return codes;
+}
+
+/**
+ * Validates sex restriction (LSEX)
+ */
+function validateSex(
+  lsex: string,
+  sexoTrabajador: 'HOMBRE' | 'MUJER',
+): boolean {
+  if (!lsex || lsex === 'NO') {
+    // No sex restriction
+    return true;
+  }
+
+  const lsexUpper = lsex.trim().toUpperCase();
+
+  // Direct match
+  if (lsexUpper === sexoTrabajador) {
+    return true;
+  }
+
+  // Handle "SI" as typically meaning HOMBRE (masculine-only)
+  if (lsexUpper === 'SI' && sexoTrabajador === 'HOMBRE') {
+    return true;
+  }
+
+  // If LSEX specifies a sex and it doesn't match, invalid
+  if (lsexUpper === 'MUJER' || lsexUpper === 'HOMBRE') {
+    return lsexUpper === sexoTrabajador;
+  }
+
+  // Unknown LSEX value, allow (conservative approach)
+  return true;
+}
+
+/**
+ * Validates age restrictions (LINF/LSUP)
+ */
+function validateAge(
+  linf: string | null,
+  lsup: string | null,
+  edadTrabajador: number,
+): { valid: boolean; reason?: string } {
+  const edadMin = linf ? parseAgeLimit(linf) : null;
+  const edadMax = lsup ? parseAgeLimit(lsup) : null;
+
+  if (edadMin !== null && edadTrabajador < edadMin) {
+    return {
+      valid: false,
+      reason: `Edad mínima requerida: ${edadMin.toFixed(2)} años. Edad del trabajador: ${edadTrabajador} años`,
+    };
+  }
+
+  if (edadMax !== null && edadTrabajador > edadMax) {
+    return {
+      valid: false,
+      reason: `Edad máxima permitida: ${edadMax.toFixed(2)} años. Edad del trabajador: ${edadTrabajador} años`,
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Validates a single CIE-10 code against catalog rules
+ */
+async function validateSingleCIE10Code(
+  cie10Code: string,
+  field: string,
+  sexoTrabajador: 'HOMBRE' | 'MUJER',
+  edadTrabajador: number,
+  lookup: (code: string) => Promise<DiagnosisRule | null>,
+): Promise<CIE10CatalogValidationIssue | null> {
+  // Extract normalized code
+  const normalizedCode = extractCIE10Code(cie10Code);
+  if (!normalizedCode) {
+    // Invalid code format, skip (don't block)
+    return null;
+  }
+
+  // Lookup rule in catalog
+  const rule = await lookup(normalizedCode);
+  if (!rule) {
+    // No rule in catalog, don't block (conservative approach)
+    return null;
+  }
+
+  // Validate sex
+  const sexValid = validateSex(rule.lsex, sexoTrabajador);
+  if (!sexValid) {
+    return {
+      field,
+      cie10: normalizedCode,
+      catalogKeyUsed: rule.key,
+      lsex: rule.lsex,
+      linf: rule.linf,
+      lsup: rule.lsup,
+      sexoTrabajador,
+      edadTrabajador,
+      reason: 'Sexo no permitido',
+    };
+  }
+
+  // Validate age
+  const ageValidation = validateAge(rule.linf, rule.lsup, edadTrabajador);
+  if (!ageValidation.valid) {
+    return {
+      field,
+      cie10: normalizedCode,
+      catalogKeyUsed: rule.key,
+      lsex: rule.lsex,
+      linf: rule.linf,
+      lsup: rule.lsup,
+      sexoTrabajador,
+      edadTrabajador,
+      reason: 'Edad fuera de rango',
+    };
+  }
+
+  // All validations passed
+  return null;
+}
+
+/**
+ * Validates that all CIE-10 diagnoses in a Nota Médica comply
+ * with sex and age restrictions from the official catalog.
+ * 
+ * @param params - Validation parameters
+ * @returns Validation result with list of issues found
+ * 
+ * @example
+ * const result = await validateCie10SexAgeAgainstCatalog({
+ *   trabajadorSexo: 'MUJER',
+ *   trabajadorFechaNacimiento: new Date('1990-01-01'),
+ *   fechaNotaMedica: new Date('2024-01-01'),
+ *   cie10Fields: [
+ *     { field: 'codigoCIE10Principal', value: 'C53' },
+ *     { field: 'codigosCIE10Complementarios', value: ['C50'] }
+ *   ],
+ *   lookup: lookupService.findDiagnosisRule.bind(lookupService)
+ * });
+ */
+export async function validateCie10SexAgeAgainstCatalog(
+  params: CIE10CatalogValidationParams,
+): Promise<CIE10CatalogValidationResult> {
+  const {
+    trabajadorSexo,
+    trabajadorFechaNacimiento,
+    fechaNotaMedica,
+    cie10Fields,
+    lookup,
+  } = params;
+
+  // Normalize sex
+  const sexoTrabajador = normalizeSexo(trabajadorSexo);
+  if (!sexoTrabajador) {
+    // Sex not recognized, don't validate (fallback)
+    return { ok: true, issues: [] };
+  }
+
+  // Calculate age
+  const fechaReferencia = fechaNotaMedica || new Date();
+  let edadTrabajador: number;
+
+  try {
+    edadTrabajador = calculateAge(trabajadorFechaNacimiento, fechaReferencia);
+  } catch (error) {
+    // Error calculating age, don't validate (fallback)
+    console.warn('Error calculando edad para validación CIE-10:', error);
+    return { ok: true, issues: [] };
+  }
+
+  // Collect all CIE-10 codes
+  const codes = collectCIE10Codes(cie10Fields);
+
+  if (codes.length === 0) {
+    // No codes to validate
+    return { ok: true, issues: [] };
+  }
+
+  // Validate each code
+  const issues: CIE10CatalogValidationIssue[] = [];
+
+  for (const { field, value } of codes) {
+    const issue = await validateSingleCIE10Code(
+      value,
+      field,
+      sexoTrabajador,
+      edadTrabajador,
+      lookup,
+    );
+    if (issue) {
+      issues.push(issue);
+    }
+  }
+
+  return {
+    ok: issues.length === 0,
+    issues,
+  };
+}
+

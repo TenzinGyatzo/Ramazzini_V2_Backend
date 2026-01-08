@@ -6,6 +6,15 @@
  */
 
 /**
+ * Discrepancy information for CURP cross-check validation
+ */
+export interface Discrepancy {
+  field: 'fechaNacimiento' | 'sexo' | 'entidadNacimiento';
+  expected: string;
+  gotFromCurp: string;
+}
+
+/**
  * Validates CURP format according to RENAPO specification
  * Format: [A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d (18 characters)
  * Also allows generic CURP: XXXX999999XXXXXX99 (for unknown/foreign patients)
@@ -194,5 +203,326 @@ export function validateCURP(curp: string): {
   return {
     isValid: true,
     errors: [],
+  };
+}
+
+/**
+ * Mapeo estático de entidades federativas: código INEGI → abreviatura CURP
+ * Basado en catálogo oficial de entidades federativas
+ */
+const ENTIDAD_MAP: Record<string, string> = {
+  '00': 'NE', // NO ESPECIFICADO
+  '01': 'AS', // AGUASCALIENTES
+  '02': 'BC', // BAJA CALIFORNIA
+  '03': 'BS', // BAJA CALIFORNIA SUR
+  '04': 'CC', // CAMPECHE
+  '05': 'CL', // COAHUILA DE ZARAGOZA
+  '06': 'CM', // COLIMA
+  '07': 'CS', // CHIAPAS
+  '08': 'CH', // CHIHUAHUA
+  '09': 'DF', // CIUDAD DE MÉXICO
+  '10': 'DG', // DURANGO
+  '11': 'GT', // GUANAJUATO
+  '12': 'GR', // GUERRERO
+  '13': 'HG', // HIDALGO
+  '14': 'JC', // JALISCO
+  '15': 'MC', // MÉXICO
+  '16': 'MN', // MICHOACÁN DE OCAMPO
+  '17': 'MS', // MORELOS
+  '18': 'NT', // NAYARIT
+  '19': 'NL', // NUEVO LEÓN
+  '20': 'OC', // OAXACA
+  '21': 'PL', // PUEBLA
+  '22': 'QT', // QUERÉTARO
+  '23': 'QR', // QUINTANA ROO
+  '24': 'SP', // SAN LUIS POTOSÍ
+  '25': 'SL', // SINALOA
+  '26': 'SR', // SONORA
+  '27': 'TC', // TABASCO
+  '28': 'TS', // TAMAULIPAS
+  '29': 'TL', // TLAXCALA
+  '30': 'VZ', // VERACRUZ DE IGNACIO DE LA LLAVE
+  '31': 'YN', // YUCATÁN
+  '32': 'ZS', // ZACATECAS
+};
+
+/**
+ * Mapeo estático de nombres de entidades → abreviatura CURP
+ */
+const ENTIDAD_NAME_MAP: Record<string, string> = {
+  'NO ESPECIFICADO': 'NE',
+  'AGUASCALIENTES': 'AS',
+  'BAJA CALIFORNIA': 'BC',
+  'BAJA CALIFORNIA SUR': 'BS',
+  'CAMPECHE': 'CC',
+  'COAHUILA DE ZARAGOZA': 'CL',
+  'COAHUILA': 'CL',
+  'COLIMA': 'CM',
+  'CHIAPAS': 'CS',
+  'CHIHUAHUA': 'CH',
+  'CIUDAD DE MÉXICO': 'DF',
+  'DISTRITO FEDERAL': 'DF',
+  'DURANGO': 'DG',
+  'GUANAJUATO': 'GT',
+  'GUERRERO': 'GR',
+  'HIDALGO': 'HG',
+  'JALISCO': 'JC',
+  'MÉXICO': 'MC',
+  'ESTADO DE MÉXICO': 'MC',
+  'MICHOACÁN DE OCAMPO': 'MN',
+  'MICHOACAN': 'MN',
+  'MORELOS': 'MS',
+  'NAYARIT': 'NT',
+  'NUEVO LEÓN': 'NL',
+  'NUEVO LEON': 'NL',
+  'OAXACA': 'OC',
+  'PUEBLA': 'PL',
+  'QUERÉTARO': 'QT',
+  'QUERETARO': 'QT',
+  'QUINTANA ROO': 'QR',
+  'SAN LUIS POTOSÍ': 'SP',
+  'SAN LUIS POTOSI': 'SP',
+  'SINALOA': 'SL',
+  'SONORA': 'SR',
+  'TABASCO': 'TC',
+  'TAMAULIPAS': 'TS',
+  'TLAXCALA': 'TL',
+  'VERACRUZ DE IGNACIO DE LA LLAVE': 'VZ',
+  'VERACRUZ': 'VZ',
+  'YUCATÁN': 'YN',
+  'YUCATAN': 'YN',
+  'ZACATECAS': 'ZS',
+};
+
+/**
+ * Normaliza entidad de nacimiento a código CURP (2 letras)
+ * Soporta: código INEGI (01-32), nombre de estado, o ya código CURP
+ */
+function normalizeEntidadToCURPCode(entidad: string): string | null {
+  if (!entidad || typeof entidad !== 'string') {
+    return null;
+  }
+
+  const normalized = entidad.trim().toUpperCase();
+
+  // Si ya es código CURP (2 letras), retornar
+  if (/^[A-Z]{2}$/.test(normalized)) {
+    return normalized;
+  }
+
+  // Si es código INEGI (01-32), buscar en mapeo
+  if (/^\d{2}$/.test(normalized)) {
+    return ENTIDAD_MAP[normalized] || null;
+  }
+
+  // Si es nombre de estado, buscar en mapeo de nombres
+  return ENTIDAD_NAME_MAP[normalized] || null;
+}
+
+/**
+ * Normaliza sexo a código CURP (H o M)
+ * Soporta: "Masculino", "Femenino", "Hombre", "Mujer", "H", "M", "1", "2"
+ */
+function normalizeSexoToCURPCode(sexo: string): string | null {
+  if (!sexo || typeof sexo !== 'string') {
+    return null;
+  }
+
+  const normalized = sexo.trim().toUpperCase();
+
+  // Mapeo directo
+  if (normalized === 'H' || normalized === 'M') {
+    return normalized;
+  }
+
+  // Mapeo de nombres completos
+  if (
+    normalized === 'MASCULINO' ||
+    normalized === 'HOMBRE' ||
+    normalized === '1'
+  ) {
+    return 'H';
+  }
+
+  if (
+    normalized === 'FEMENINO' ||
+    normalized === 'MUJER' ||
+    normalized === '2'
+  ) {
+    return 'M';
+  }
+
+  return null;
+}
+
+/**
+ * Parsea fecha de forma segura evitando problemas de zona horaria
+ * Soporta: Date object o string ISO (YYYY-MM-DD)
+ */
+function parseDateSafe(
+  dateInput: Date | string,
+): { year: number; month: number; day: number } {
+  if (typeof dateInput === 'string') {
+    // Si es formato ISO YYYY-MM-DD, parsear directamente sin zona horaria
+    const match = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return {
+        year: parseInt(match[1], 10),
+        month: parseInt(match[2], 10),
+        day: parseInt(match[3], 10),
+      };
+    }
+  }
+
+  // Si es Date, intentar extraer de forma segura
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  
+  // Para fechas creadas desde string ISO (ej: new Date('1991-05-15')),
+  // JavaScript las interpreta como UTC medianoche, pero getDate() usa hora local
+  // que puede cambiar el día. Usar UTC para fechas que parecen ser "date-only"
+  
+  // Si la fecha tiene hora 00:00:00 UTC y no tiene milisegundos significativos,
+  // probablemente fue creada desde un string ISO sin hora
+  const isLikelyDateOnly =
+    date.getUTCHours() === 0 &&
+    date.getUTCMinutes() === 0 &&
+    date.getUTCSeconds() === 0 &&
+    date.getUTCMilliseconds() === 0;
+
+  if (isLikelyDateOnly) {
+    // Usar UTC para evitar problemas de zona horaria
+    return {
+      year: date.getUTCFullYear(),
+      month: date.getUTCMonth() + 1,
+      day: date.getUTCDate(),
+    };
+  }
+
+  // Para fechas con hora específica, usar métodos locales
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+  };
+}
+
+/**
+ * Valida coherencia semántica entre CURP y datos demográficos (A1)
+ *
+ * Estructura CURP RENAPO:
+ * - Posiciones 0-3: Primeras letras del primer apellido
+ * - Posiciones 4-9: AAMMDD (año, mes, día de nacimiento)
+ * - Posición 10: H (Hombre) o M (Mujer)
+ * - Posiciones 11-15: Letras del segundo apellido y nombre
+ * - Posición 16: Alfanumérico
+ * - Posición 17: Dígito verificador
+ *
+ * @param curp - CURP string (debe estar normalizado a uppercase)
+ * @param data - Datos demográficos del trabajador
+ * @returns objeto con isValid y discrepancies (estructuradas)
+ */
+export function validateCURPCrossCheck(
+  curp: string,
+  data: {
+    fechaNacimiento: Date | string;
+    sexo: string;
+    entidadNacimiento?: string;
+    nombre?: string;
+    primerApellido?: string;
+    segundoApellido?: string;
+  },
+): {
+  isValid: boolean;
+  discrepancies: Discrepancy[];
+} {
+  const discrepancies: Discrepancy[] = [];
+  const normalizedCurp = curp.trim().toUpperCase();
+
+  // Si es CURP genérica, no validar cruzada
+  if (isGenericCURP(normalizedCurp)) {
+    return { isValid: true, discrepancies: [] };
+  }
+
+  // Validar formato básico antes de extraer componentes
+  if (!validateCURPFormat(normalizedCurp)) {
+    return {
+      isValid: false,
+      discrepancies: [
+        {
+          field: 'fechaNacimiento',
+          expected: 'CURP con formato válido',
+          gotFromCurp: 'CURP con formato inválido',
+        },
+      ],
+    };
+  }
+
+  // Extraer componentes de la CURP
+  const curpAAMMDD = normalizedCurp.substring(4, 10); // posiciones 4-9 (AAMMDD)
+  const curpSexo = normalizedCurp.charAt(10); // posición 10 (H/M)
+  const curpEntidad = normalizedCurp.substring(11, 13); // posiciones 11-12 (entidad)
+
+  // 1. Validación BLOQUEANTE: Fecha de nacimiento
+  const fechaParsed = parseDateSafe(data.fechaNacimiento);
+  const añoCURP = String(fechaParsed.year).slice(-2);
+  const mes = String(fechaParsed.month).padStart(2, '0');
+  const dia = String(fechaParsed.day).padStart(2, '0');
+  const fechaEsperada = `${añoCURP}${mes}${dia}`;
+
+  if (curpAAMMDD !== fechaEsperada) {
+    discrepancies.push({
+      field: 'fechaNacimiento',
+      expected: fechaEsperada,
+      gotFromCurp: curpAAMMDD,
+    });
+  }
+
+  // 2. Validación BLOQUEANTE: Sexo
+  const sexoEsperado = normalizeSexoToCURPCode(data.sexo);
+  if (sexoEsperado && curpSexo !== sexoEsperado) {
+    discrepancies.push({
+      field: 'sexo',
+      expected: sexoEsperado,
+      gotFromCurp: curpSexo,
+    });
+  }
+
+  // 3. Validación BLOQUEANTE: Entidad de nacimiento (solo si está presente)
+  if (data.entidadNacimiento && data.entidadNacimiento.trim() !== '') {
+    const entidadNormalizada = normalizeEntidadToCURPCode(
+      data.entidadNacimiento,
+    );
+
+    // Si es código especial (NE, 00), no validar contra CURP
+    if (entidadNormalizada && entidadNormalizada !== 'NE' && entidadNormalizada !== '00') {
+      if (curpEntidad !== entidadNormalizada) {
+        discrepancies.push({
+          field: 'entidadNacimiento',
+          expected: entidadNormalizada,
+          gotFromCurp: curpEntidad,
+        });
+      }
+    }
+  }
+
+  // 4. Validación NO BLOQUEANTE: Nombres y apellidos (solo advertencia en logs)
+  // Nota: Esta validación es compleja debido a homonimias, nombres compuestos, Ñ, etc.
+  // Por ahora, solo logueamos si hay discrepancias obvias, pero no bloqueamos
+  if (data.primerApellido && data.nombre) {
+    // Extraer primera letra del primer apellido (posición 0 de CURP)
+    const primeraLetraApellido = normalizedCurp.charAt(0);
+    const primeraLetraEsperada = data.primerApellido.trim().toUpperCase().charAt(0);
+
+    if (primeraLetraApellido !== primeraLetraEsperada) {
+      console.warn(
+        `CURP ${normalizedCurp}: Primera letra del apellido en CURP (${primeraLetraApellido}) no coincide con primerApellido (${primeraLetraEsperada}). Esto puede ser por homonimias o nombres compuestos.`,
+      );
+    }
+  }
+
+  // isValid = false solo si hay discrepancias BLOQUEANTES
+  return {
+    isValid: discrepancies.length === 0,
+    discrepancies,
   };
 }

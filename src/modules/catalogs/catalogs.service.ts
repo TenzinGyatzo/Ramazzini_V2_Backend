@@ -250,6 +250,30 @@ export class CatalogsService implements OnModuleInit {
           };
 
         case CatalogType.CIE10:
+          // Store raw values for LINF/LSUP (format: "010A", "028D", "NO", etc.)
+          const linfRaw = record.LINF ? String(record.LINF).trim().toUpperCase() : undefined;
+          const lsupRaw = record.LSUP ? String(record.LSUP).trim().toUpperCase() : undefined;
+          
+          // Try to parse as number if it's a plain number, otherwise leave undefined
+          let linf: number | undefined;
+          let lsup: number | undefined;
+          
+          if (linfRaw && linfRaw !== 'NO') {
+            const linfNum = parseInt(linfRaw, 10);
+            if (!isNaN(linfNum) && linfRaw.match(/^\d+$/)) {
+              // Only use parsed number if it's a plain number (no letters)
+              linf = linfNum;
+            }
+          }
+          
+          if (lsupRaw && lsupRaw !== 'NO') {
+            const lsupNum = parseInt(lsupRaw, 10);
+            if (!isNaN(lsupNum) && lsupRaw.match(/^\d+$/)) {
+              // Only use parsed number if it's a plain number (no letters)
+              lsup = lsupNum;
+            }
+          }
+          
           return {
             code: record.CATALOG_KEY || record.codigo || record.code,
             description:
@@ -259,8 +283,10 @@ export class CatalogsService implements OnModuleInit {
             catalogKey: record.CATALOG_KEY,
             nombre: record.NOMBRE,
             lsex: record.LSEX,
-            linf: record.LINF ? parseInt(record.LINF) : undefined,
-            lsup: record.LSUP ? parseInt(record.LSUP) : undefined,
+            linf,
+            lsup,
+            linfRaw,
+            lsupRaw,
           } as CIE10Entry;
 
         case CatalogType.CLUES:
