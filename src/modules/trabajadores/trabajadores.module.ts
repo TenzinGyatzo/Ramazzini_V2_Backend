@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TrabajadoresService } from './trabajadores.service';
 import { TrabajadoresController } from './trabajadores.controller';
 import { TransferenciasController } from './transferencias.controller';
 import { Trabajador, TrabajadorSchema } from './schemas/trabajador.schema';
 import { NOM024ComplianceModule } from '../nom024-compliance/nom024-compliance.module';
+import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
 import {
   Antidoping,
   AntidopingSchema,
@@ -95,6 +96,7 @@ import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
     ]),
     FilesModule,
     NOM024ComplianceModule,
+    forwardRef(() => ProveedoresSaludModule),
   ],
   controllers: [TrabajadoresController, TransferenciasController],
   providers: [TrabajadoresService],

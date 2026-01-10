@@ -164,6 +164,30 @@ export function normalizeProveedorSaludData(
       cantidad: addOn.cantidad,
     }));
 
+  if ('regimenRegulatorio' in dto) {
+    const regimenNormalized =
+      typeof dto.regimenRegulatorio === 'string'
+        ? dto.regimenRegulatorio.trim().toUpperCase()
+        : undefined;
+    // Normalizar valores antiguos a nuevo formato
+    if (regimenNormalized === 'NO_SUJETO_SIRES') {
+      result.regimenRegulatorio = 'SIN_REGIMEN';
+    } else {
+      result.regimenRegulatorio = regimenNormalized;
+    }
+  }
+
+  if ('declaracionAceptada' in dto) {
+    result.declaracionAceptada = dto.declaracionAceptada === true;
+  }
+
+  if ('declaracionVersion' in dto) {
+    result.declaracionVersion =
+      typeof dto.declaracionVersion === 'string'
+        ? dto.declaracionVersion.trim()
+        : undefined;
+  }
+
   return result;
 }
 

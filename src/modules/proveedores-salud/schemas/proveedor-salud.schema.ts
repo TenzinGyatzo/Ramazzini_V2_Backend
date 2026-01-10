@@ -61,6 +61,34 @@ export class ProveedorSalud extends Document {
   @Prop()
   termsVersion: string;
 
+  // **Régimen Regulatorio**
+  @Prop({
+    type: String,
+    enum: ['SIRES_NOM024', 'SIN_REGIMEN'],
+    required: false, // Opcional para compatibilidad con datos existentes
+  })
+  regimenRegulatorio?: string;
+
+  // **Metadatos de auditoría para cambio de régimen regulatorio**
+  @Prop({ required: false })
+  regimenChangedAt?: Date;
+
+  @Prop({ required: false })
+  regimenChangedByUserId?: string;
+
+  @Prop({ required: false, maxlength: 500 })
+  regimenChangeReason?: string;
+
+  // **Declaración de contexto operativo (solo para régimen SIN_REGIMEN)**
+  @Prop({ required: false })
+  declaracionAceptada?: boolean;
+
+  @Prop({ required: false })
+  declaracionAceptadaAt?: Date;
+
+  @Prop({ required: false })
+  declaracionVersion?: string; // Similar a termsVersion
+
   // **Información de periodo de prueba y límites**
   @Prop({ default: new Date() })
   fechaInicioTrial: Date; // Fecha de inicio de los 15 días de prueba

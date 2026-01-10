@@ -11,6 +11,8 @@ import {
   ProveedorSalud,
   ProveedorSaludSchema,
 } from '../proveedores-salud/schemas/proveedor-salud.schema';
+import { RegulatoryPolicyService } from 'src/utils/regulatory-policy.service';
+import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
 
 @Module({
   imports: [
@@ -19,9 +21,10 @@ import {
       { name: User.name, schema: UserSchema },
       { name: ProveedorSalud.name, schema: ProveedorSaludSchema },
     ]),
+    ProveedoresSaludModule,
   ],
   controllers: [TecnicosFirmantesController],
-  providers: [TecnicosFirmantesService],
+  providers: [TecnicosFirmantesService, RegulatoryPolicyService],
   exports: [TecnicosFirmantesService],
 })
 export class TecnicosFirmantesModule {}

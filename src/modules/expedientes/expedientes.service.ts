@@ -48,6 +48,10 @@ import { validateFechaDocumento } from './validators/date-validators';
 import { validateNoDuplicateCIE10PrincipalAndComplementary } from './validators/diagnosis-duplicate.validator';
 import { validateCie10SexAgeAgainstCatalog } from './validators/cie10-catalog-sex-age.validator';
 import { Cie10CatalogLookupService } from './services/cie10-catalog-lookup.service';
+import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.service';
+import { RegulatoryPolicyService } from '../../utils/regulatory-policy.service';
+import { createRegulatoryError } from '../../utils/regulatory-error-helper';
+import { RegulatoryErrorCode } from '../../utils/regulatory-error-codes';
 
 @Injectable()
 export class ExpedientesService {
@@ -92,6 +96,9 @@ export class ExpedientesService {
     private readonly cie10CatalogLookupService: Cie10CatalogLookupService,
     @Inject(forwardRef(() => InformesService))
     private readonly informesService: InformesService,
+    private readonly proveedoresSaludService: ProveedoresSaludService,
+    @Inject(forwardRef(() => RegulatoryPolicyService))
+    private readonly regulatoryPolicyService: RegulatoryPolicyService,
   ) {
     this.models = {
       antidoping: this.antidopingModel,
@@ -141,8 +148,8 @@ export class ExpedientesService {
     dto: any,
     trabajadorId: string,
   ): Promise<void> {
-    // Only validate for NotaMedica
-    if (documentType !== 'notaMedica') {
+    // Only validate for NotaMedica and HistoriaClinica (documents that require CIE-10)
+    if (documentType !== 'notaMedica' && documentType !== 'historiaClinica') {
       return;
     }
 
@@ -153,14 +160,29 @@ export class ExpedientesService {
       return;
     }
 
-    const requiresCompliance =
-      await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
-    if (!requiresCompliance) {
-      // Non-MX provider: CIE-10 is optional
-      return;
+    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+      proveedorSaludId,
+    );
+
+    // Validate CIE-10 principal required based on policy
+    if (policy.validation.cie10Principal === 'required') {
+      // SIRES: CIE-10 principal is mandatory
+      const cie10FieldName =
+        documentType === 'notaMedica'
+          ? 'codigoCIE10Principal'
+          : 'codigoCIE10Principal';
+      const cie10Value = dto[cie10FieldName];
+
+      if (!cie10Value || cie10Value.trim() === '') {
+        throw createRegulatoryError({
+          errorCode: RegulatoryErrorCode.REGIMEN_FIELD_REQUIRED,
+          details: { fieldName: 'cie10Principal' },
+          regime: policy.regime,
+        });
+      }
     }
 
-    // MX provider: validate CIE-10 codes with cross-checks
+    // SIRES provider: validate CIE-10 codes with cross-checks (format, catalog, sex/age)
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -472,6 +494,65 @@ export class ExpedientesService {
       }
     }
 
+    // Validación específica para notas aclaratorias: solo permitir para SIRES_NOM024
+    if (documentType === 'notaAclaratoria') {
+      // Obtener trabajador
+      const trabajador = await this.trabajadorModel
+        .findById(createDto.idTrabajador)
+        .lean();
+      if (!trabajador) {
+        throw new BadRequestException('Trabajador no encontrado');
+      }
+
+      // Obtener centro de trabajo
+      const centroTrabajo = await this.centroTrabajoModel
+        .findById(trabajador.idCentroTrabajo)
+        .lean();
+      if (!centroTrabajo) {
+        throw new BadRequestException('Centro de trabajo no encontrado');
+      }
+
+      // Obtener empresa
+      const empresa = await this.empresaModel
+        .findById(centroTrabajo.idEmpresa)
+        .lean();
+      if (!empresa) {
+        throw new BadRequestException('Empresa no encontrada');
+      }
+
+      // Obtener política regulatoria para validar feature de notas aclaratorias
+      const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+        empresa.idProveedorSalud.toString(),
+      );
+
+      // Validar que la feature de notas aclaratorias esté habilitada
+      if (!policy.features.notaAclaratoriaEnabled) {
+        throw createRegulatoryError({
+          errorCode: RegulatoryErrorCode.REGIMEN_FEATURE_DISABLED,
+          details: { feature: 'notaAclaratoria' },
+          regime: policy.regime,
+        });
+      }
+
+      // Validar estado del documento origen
+      const documentoOrigen = await this.findDocument(
+        createDto.documentoOrigenTipo,
+        createDto.documentoOrigenId,
+      );
+      if (!documentoOrigen) {
+        throw new BadRequestException('Documento origen no encontrado');
+      }
+
+      if (
+        documentoOrigen.estado !== DocumentoEstado.FINALIZADO &&
+        documentoOrigen.estado !== DocumentoEstado.ANULADO
+      ) {
+        throw new BadRequestException(
+          'Solo se pueden crear notas aclaratorias para documentos finalizados o anulados',
+        );
+      }
+    }
+
     const createdDocument = new model(createDto);
     const savedDocument = await createdDocument.save();
 
@@ -554,6 +635,32 @@ export class ExpedientesService {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Verifica si un documento es inmutable según la política regulatoria
+   * @param proveedorSaludId - ID del proveedor de salud
+   * @param estado - Estado del documento (FINALIZADO, ANULADO, BORRADOR)
+   * @returns Promise<boolean> - true si el documento es inmutable, false en caso contrario
+   */
+  private async isDocumentImmutable(
+    proveedorSaludId: string,
+    estado: DocumentoEstado,
+  ): Promise<boolean> {
+    // Solo documentos FINALIZADOS o ANULADOS pueden ser inmutables
+    if (
+      estado !== DocumentoEstado.FINALIZADO &&
+      estado !== DocumentoEstado.ANULADO
+    ) {
+      return false;
+    }
+
+    // Obtener política regulatoria
+    const policy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
+
+    // El documento es inmutable solo si la feature está habilitada
+    return policy.features.documentImmutabilityEnabled;
   }
 
   /**
@@ -689,18 +796,26 @@ export class ExpedientesService {
       throw new BadRequestException(`Documento con ID ${id} no encontrado`);
     }
 
-    // Check immutability for MX providers (NOM-024)
-    if (existingDocument.estado === DocumentoEstado.FINALIZADO) {
-      const proveedorSaludId =
-        await this.getProveedorSaludIdFromDocument(existingDocument);
-      if (proveedorSaludId) {
-        const requiresCompliance =
-          await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
-        if (requiresCompliance) {
-          throw new ForbiddenException(
-            'No se puede actualizar un documento finalizado. Los documentos finalizados son inmutables para proveedores en México según NOM-024.',
-          );
-        }
+    // Check immutability based on regulatory policy
+    const proveedorSaludId =
+      await this.getProveedorSaludIdFromDocument(existingDocument);
+    if (proveedorSaludId) {
+      const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+        proveedorSaludId,
+      );
+      const isImmutable = await this.isDocumentImmutable(
+        proveedorSaludId,
+        existingDocument.estado,
+      );
+      if (isImmutable) {
+        throw createRegulatoryError({
+          errorCode: RegulatoryErrorCode.REGIMEN_DOCUMENT_IMMUTABLE,
+          details: {
+            documentState: existingDocument.estado,
+            documentType: documentType,
+          },
+          regime: policy.regime,
+        });
       }
     }
 
@@ -1199,18 +1314,26 @@ export class ExpedientesService {
       throw new BadRequestException(`Lesión con ID ${id} no encontrada`);
     }
 
-    // Check immutability for MX providers
-    if (existingLesion.estado === DocumentoEstado.FINALIZADO) {
-      const proveedorSaludId =
-        await this.getProveedorSaludIdFromDocument(existingLesion);
-      if (proveedorSaludId) {
-        const requiresCompliance =
-          await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
-        if (requiresCompliance) {
-          throw new ForbiddenException(
-            'No se puede actualizar una lesión finalizada. Los registros finalizados son inmutables para proveedores en México según NOM-024.',
-          );
-        }
+    // Check immutability based on regulatory policy
+    const proveedorSaludId =
+      await this.getProveedorSaludIdFromDocument(existingLesion);
+    if (proveedorSaludId) {
+      const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+        proveedorSaludId,
+      );
+      const isImmutable = await this.isDocumentImmutable(
+        proveedorSaludId,
+        existingLesion.estado,
+      );
+      if (isImmutable) {
+        throw createRegulatoryError({
+          errorCode: RegulatoryErrorCode.REGIMEN_DOCUMENT_IMMUTABLE,
+          details: {
+            documentState: existingLesion.estado,
+            documentType: 'lesion',
+          },
+          regime: policy.regime,
+        });
       }
     }
 
@@ -1300,9 +1423,17 @@ export class ExpedientesService {
       throw new BadRequestException(`Lesión con ID ${id} no encontrada`);
     }
 
-    const isMX = await this.isProveedorMX(lesion.idTrabajador.toString());
+    // Obtener política regulatoria para verificar inmutabilidad
+    const proveedorSaludId = await this.getProveedorSaludIdFromDocument(lesion);
+    let isImmutable = false;
+    if (proveedorSaludId) {
+      isImmutable = await this.isDocumentImmutable(
+        proveedorSaludId,
+        lesion.estado,
+      );
+    }
 
-    if (lesion.estado === DocumentoEstado.FINALIZADO && isMX) {
+    if (lesion.estado === DocumentoEstado.FINALIZADO && isImmutable) {
       if (!userId || !razonAnulacion) {
         throw new BadRequestException(
           'Se requiere userId y razonAnulacion para anular una lesión finalizada',
@@ -2115,18 +2246,26 @@ export class ExpedientesService {
       throw new BadRequestException(`Detección con ID ${id} no encontrada`);
     }
 
-    // Check immutability for MX providers
-    if (existingDeteccion.estado === DocumentoEstado.FINALIZADO) {
-      const proveedorSaludId =
-        await this.getProveedorSaludIdFromDocument(existingDeteccion);
-      if (proveedorSaludId) {
-        const requiresCompliance =
-          await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
-        if (requiresCompliance) {
-          throw new ForbiddenException(
-            'No se puede actualizar una detección finalizada. Los registros finalizados son inmutables para proveedores en México según NOM-024.',
-          );
-        }
+    // Check immutability based on regulatory policy
+    const proveedorSaludId =
+      await this.getProveedorSaludIdFromDocument(existingDeteccion);
+    if (proveedorSaludId) {
+      const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+        proveedorSaludId,
+      );
+      const isImmutable = await this.isDocumentImmutable(
+        proveedorSaludId,
+        existingDeteccion.estado,
+      );
+      if (isImmutable) {
+        throw createRegulatoryError({
+          errorCode: RegulatoryErrorCode.REGIMEN_DOCUMENT_IMMUTABLE,
+          details: {
+            documentState: existingDeteccion.estado,
+            documentType: 'deteccion',
+          },
+          regime: policy.regime,
+        });
       }
     }
 
@@ -2183,9 +2322,17 @@ export class ExpedientesService {
       throw new BadRequestException(`Detección con ID ${id} no encontrada`);
     }
 
-    const isMX = await this.isProveedorMX(deteccion.idTrabajador.toString());
+    // Obtener política regulatoria para verificar inmutabilidad
+    const proveedorSaludId = await this.getProveedorSaludIdFromDocument(deteccion);
+    let isImmutable = false;
+    if (proveedorSaludId) {
+      isImmutable = await this.isDocumentImmutable(
+        proveedorSaludId,
+        deteccion.estado,
+      );
+    }
 
-    if (deteccion.estado === DocumentoEstado.FINALIZADO && isMX) {
+    if (deteccion.estado === DocumentoEstado.FINALIZADO && isImmutable) {
       if (!userId || !razonAnulacion) {
         throw new BadRequestException(
           'Se requiere userId y razonAnulacion para anular una detección finalizada',

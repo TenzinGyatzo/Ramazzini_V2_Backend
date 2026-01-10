@@ -1,38 +1,94 @@
 import {
   Injectable,
   BadRequestException,
+  ForbiddenException,
   Inject,
   forwardRef,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateProveedoresSaludDto } from './dto/create-proveedores-salud.dto';
 import { UpdateProveedoresSaludDto } from './dto/update-proveedores-salud.dto';
+import { ChangeRegimenRegulatorioDto } from './dto/change-regimen-regulatorio.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ProveedorSalud } from './schemas/proveedor-salud.schema';
 import { Model, Types } from 'mongoose';
 import { normalizeProveedorSaludData } from 'src/utils/normalization';
 import { NOM024ComplianceUtil } from 'src/utils/nom024-compliance.util';
 import { CatalogsService } from '../catalogs/catalogs.service';
+import { RegulatoryPolicyService } from 'src/utils/regulatory-policy.service';
 
 @Injectable()
 export class ProveedoresSaludService {
   constructor(
     @InjectModel(ProveedorSalud.name)
     private proveedoresSaludModel: Model<ProveedorSalud>,
+    @InjectModel('User')
+    private userModel: Model<any>,
     @Inject(forwardRef(() => NOM024ComplianceUtil))
     private nom024Util: NOM024ComplianceUtil,
     private catalogsService: CatalogsService,
+    @Inject(forwardRef(() => RegulatoryPolicyService))
+    private regulatoryPolicyService: RegulatoryPolicyService,
   ) {}
 
   /**
-   * Validate CLUES according to NOM-024 requirements
-   * CLUES is optional in all cases, but if provided, it must be valid for MX providers
+   * Validate régimen regulatorio according to business rules
+   */
+  private validateRegimenRegulatorio(
+    dto: CreateProveedoresSaludDto | any,
+  ): void {
+    const pais = dto.pais?.trim().toUpperCase();
+    const isMX = pais === 'MX';
+    let regimen = dto.regimenRegulatorio;
+
+    // Normalización: convertir valores antiguos a nuevo formato
+    if (regimen === 'NO_SUJETO_SIRES') {
+      regimen = 'SIN_REGIMEN';
+      dto.regimenRegulatorio = 'SIN_REGIMEN';
+    }
+
+    // Regla 1: Si país NO es México, rechazar régimen mexicano
+    if (!isMX && regimen) {
+      if (regimen === 'SIRES_NOM024') {
+        throw new BadRequestException(
+          'El régimen regulatorio SIRES solo aplica para proveedores en México',
+        );
+      }
+      // Para países != México, normalizar a SIN_REGIMEN si viene otro valor
+      if (regimen && regimen !== 'SIN_REGIMEN') {
+        dto.regimenRegulatorio = 'SIN_REGIMEN';
+      }
+    }
+
+    // Regla 2: Si es México y no se envía régimen, normalizar a SIN_REGIMEN
+    if (isMX && !regimen) {
+      dto.regimenRegulatorio = 'SIN_REGIMEN';
+    }
+
+    // Regla 3: Si es México y régimen es SIN_REGIMEN, declaración es obligatoria
+    if (isMX && (regimen === 'SIN_REGIMEN' || dto.regimenRegulatorio === 'SIN_REGIMEN')) {
+      if (!dto.declaracionAceptada) {
+        throw new BadRequestException(
+          'La declaración de contexto operativo es obligatoria para continuar sin régimen regulatorio',
+        );
+      }
+    }
+
+    // Regla 4: Si régimen es SIRES_NOM024, CLUES sigue siendo opcional
+    // (ya está manejado en la validación existente de CLUES)
+  }
+
+  /**
+   * Validate CLUES according to regulatory policy
+   * CLUES is optional in all cases, but if provided, it must be valid for SIRES_NOM024 providers
    */
   private async validateCLUESForMX(
     clues: string | undefined,
     proveedorSaludId: string,
   ): Promise<void> {
-    const requiresCompliance =
-      await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+      proveedorSaludId,
+    );
 
     // CLUES is now optional in all cases. Only validate if provided.
     if (!clues || clues.trim() === '') {
@@ -41,15 +97,16 @@ export class ProveedoresSaludService {
 
     const normalizedClues = clues.trim().toUpperCase();
 
-    // Validate format (11 alphanumeric characters)
+    // Validate format (11 alphanumeric characters) - always validate format if provided
     if (!/^[A-Z0-9]{11}$/.test(normalizedClues)) {
       throw new BadRequestException(
         'CLUES debe tener exactamente 11 caracteres alfanuméricos',
       );
     }
 
-    if (requiresCompliance) {
-      // MX provider: Validate against catalog if provided
+    // Only validate against catalog if policy allows CLUES field (SIRES_NOM024)
+    if (policy.features.cluesFieldVisible) {
+      // SIRES provider: Validate against catalog if provided
       const isValid = await this.catalogsService.validateCLUES(normalizedClues);
       if (!isValid) {
         throw new BadRequestException(
@@ -69,6 +126,7 @@ export class ProveedoresSaludService {
         );
       }
     }
+    // SIN_REGIMEN: CLUES ignored (no catalog validation, but format was already validated)
   }
 
   async create(
@@ -78,23 +136,39 @@ export class ProveedoresSaludService {
       createProveedoresSaludDto,
     );
 
-    // Validate CLUES for MX providers
-    // Check directly from pais field since we're creating a new provider
-    const isMX =
-      normalizedDto.pais && normalizedDto.pais.toUpperCase() === 'MX';
+    // Validar régimen regulatorio ANTES de otras validaciones
+    this.validateRegimenRegulatorio(normalizedDto);
+
+    // Asignar timestamp de declaración si aplica
+    if (
+      (normalizedDto.regimenRegulatorio === 'SIN_REGIMEN' || normalizedDto.regimenRegulatorio === 'NO_SUJETO_SIRES') &&
+      normalizedDto.declaracionAceptada
+    ) {
+      normalizedDto.declaracionAceptadaAt = new Date();
+      // Asignar versión si no viene (opcional, similar a termsVersion)
+      if (!normalizedDto.declaracionVersion) {
+        normalizedDto.declaracionVersion = '1.0';
+      }
+    }
+
+    // Validate CLUES according to regulatory policy
+    // For new providers, check regimenRegulatorio from DTO
+    const regimen = normalizedDto.regimenRegulatorio || 'SIN_REGIMEN';
+    const cluesFieldVisible = regimen === 'SIRES_NOM024';
 
     if (normalizedDto.clues && normalizedDto.clues.trim() !== '') {
       const normalizedClues = normalizedDto.clues.trim().toUpperCase();
 
-      // Validate format (11 alphanumeric characters)
+      // Validate format (11 alphanumeric characters) - always validate format if provided
       if (!/^[A-Z0-9]{11}$/.test(normalizedClues)) {
         throw new BadRequestException(
           'CLUES debe tener exactamente 11 caracteres alfanuméricos',
         );
       }
 
-      if (isMX) {
-        // MX provider: Validate against catalog
+      // Only validate against catalog if policy allows CLUES field (SIRES_NOM024)
+      if (cluesFieldVisible) {
+        // SIRES provider: Validate against catalog
         const isValid =
           await this.catalogsService.validateCLUES(normalizedClues);
         if (!isValid) {
@@ -115,12 +189,18 @@ export class ProveedoresSaludService {
           );
         }
       }
+      // SIN_REGIMEN: CLUES ignored (no catalog validation, but format was already validated)
 
       normalizedDto.clues = normalizedClues;
     }
 
     const createdProveedorSalud = new this.proveedoresSaludModel(normalizedDto);
-    return createdProveedorSalud.save();
+    const saved = await createdProveedorSalud.save();
+
+    // Limpiar cache después de crear (aunque no debería haber cache aún)
+    this.nom024Util.clearProviderCache(saved._id.toString());
+
+    return saved;
   }
 
   async findAll(): Promise<ProveedorSalud[]> {
@@ -147,17 +227,58 @@ export class ProveedoresSaludService {
 
     const normalizedDto = normalizeProveedorSaludData(updateDto);
 
-    // Validate CLUES for MX providers
-    // Use current proveedor.pais or updated pais from DTO
-    const paisToCheck = normalizedDto.pais || proveedor.pais;
-    const isMX = paisToCheck && paisToCheck.toUpperCase() === 'MX';
+    // Validar régimen regulatorio si se está actualizando
+    if (
+      normalizedDto.regimenRegulatorio !== undefined ||
+      normalizedDto.pais !== undefined
+    ) {
+      // Crear un DTO temporal con los valores actuales y los nuevos para validar
+      const dtoToValidate = {
+        pais: normalizedDto.pais || proveedor.pais,
+        regimenRegulatorio:
+          normalizedDto.regimenRegulatorio || proveedor.regimenRegulatorio,
+        declaracionAceptada:
+          normalizedDto.declaracionAceptada !== undefined
+            ? normalizedDto.declaracionAceptada
+            : proveedor.declaracionAceptada,
+      };
+      this.validateRegimenRegulatorio(dtoToValidate);
+
+      // Normalizar valores antiguos a nuevo formato
+      if (dtoToValidate.regimenRegulatorio === 'NO_SUJETO_SIRES') {
+        dtoToValidate.regimenRegulatorio = 'SIN_REGIMEN';
+        normalizedDto.regimenRegulatorio = 'SIN_REGIMEN';
+      }
+      if (proveedor.regimenRegulatorio === 'NO_SUJETO_SIRES' && !normalizedDto.regimenRegulatorio) {
+        // Si el proveedor tiene valor antiguo y no se está actualizando, normalizar
+        normalizedDto.regimenRegulatorio = 'SIN_REGIMEN';
+      }
+
+      // Si se actualiza el régimen, actualizar también los campos relacionados
+      if (normalizedDto.regimenRegulatorio === 'SIN_REGIMEN' || normalizedDto.regimenRegulatorio === 'NO_SUJETO_SIRES') {
+        if (normalizedDto.declaracionAceptada) {
+          normalizedDto.declaracionAceptadaAt = new Date();
+          if (!normalizedDto.declaracionVersion) {
+            normalizedDto.declaracionVersion = '1.0';
+          }
+        }
+      }
+    }
+
+    // Limpiar cache del proveedor después de actualizar
+    this.nom024Util.clearProviderCache(id);
+
+    // Obtener política regulatoria para validar CLUES
+    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(id);
 
     // Use current CLUES if not being updated, otherwise use new CLUES
     const cluesToValidate =
       normalizedDto.clues !== undefined ? normalizedDto.clues : proveedor.clues;
 
-    // CLUES is optional in all cases. Validate only if provided.
-    if (cluesToValidate && cluesToValidate.trim() !== '') {
+    // Validar CLUES solo si:
+    // 1. El campo debe ser visible según el régimen (SIRES_NOM024)
+    // 2. Se proporciona un valor
+    if (policy.features.cluesFieldVisible && cluesToValidate && cluesToValidate.trim() !== '') {
       await this.validateCLUESForMX(cluesToValidate, id);
     }
 
@@ -546,5 +667,115 @@ export class ProveedoresSaludService {
     }
 
     return proveedor.reglasPuntaje;
+  }
+
+  /**
+   * Cambia el régimen regulatorio de un proveedor de salud
+   * Solo permite upgrade: SIN_REGIMEN → SIRES_NOM024
+   * Bloquea downgrade: SIRES_NOM024 → SIN_REGIMEN
+   * Persiste metadatos de auditoría del cambio
+   */
+  async changeRegimenRegulatorio(
+    proveedorSaludId: string,
+    userId: string,
+    dto: ChangeRegimenRegulatorioDto,
+  ): Promise<{ proveedorSalud: ProveedorSalud; regulatoryPolicy: any }> {
+    // Validar ObjectId
+    if (!Types.ObjectId.isValid(proveedorSaludId)) {
+      throw new BadRequestException('ID de proveedor de salud inválido');
+    }
+
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('ID de usuario inválido');
+    }
+
+    // Validar que el usuario existe y pertenece al tenant
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    // Validar que el usuario pertenece al tenant
+    const userProveedorId = user.idProveedorSalud?.toString();
+    const proveedorIdStr = proveedorSaludId.toString();
+
+    if (userProveedorId !== proveedorIdStr) {
+      throw new ForbiddenException(
+        'No tienes permisos para modificar este proveedor de salud',
+      );
+    }
+
+    // Opcional: Solo usuarios con rol "Principal" pueden cambiar régimen
+    // if (user.role !== 'Principal') {
+    //   throw new ForbiddenException('Solo el usuario principal puede cambiar el régimen regulatorio');
+    // }
+
+    // Obtener proveedor actual
+    const proveedor = await this.proveedoresSaludModel
+      .findById(proveedorSaludId)
+      .exec();
+
+    if (!proveedor) {
+      throw new NotFoundException('Proveedor de salud no encontrado');
+    }
+
+    const regimenActual = proveedor.regimenRegulatorio || 'SIN_REGIMEN';
+    const regimenNuevo = dto.regimenRegulatorio;
+
+    // Validar que no es el mismo régimen
+    if (regimenActual === regimenNuevo) {
+      throw new BadRequestException(
+        `El proveedor ya tiene el régimen ${regimenNuevo}`,
+      );
+    }
+
+    // Validar transiciones permitidas
+    // Solo permitir upgrade: SIN_REGIMEN → SIRES_NOM024
+    if (regimenActual === 'SIRES_NOM024' && regimenNuevo === 'SIN_REGIMEN') {
+      throw new ForbiddenException(
+        'No se permite cambiar de SIRES_NOM024 a SIN_REGIMEN. Contacta a soporte si necesitas desactivar SIRES.',
+      );
+    }
+
+    // Validar que solo se permite upgrade
+    if (regimenActual !== 'SIN_REGIMEN' || regimenNuevo !== 'SIRES_NOM024') {
+      throw new BadRequestException(
+        `Transición no permitida: ${regimenActual} → ${regimenNuevo}. Solo se permite cambiar de SIN_REGIMEN a SIRES_NOM024.`,
+      );
+    }
+
+    // Actualizar régimen regulatorio con metadatos de auditoría
+    const updatedProveedor = await this.proveedoresSaludModel
+      .findByIdAndUpdate(
+        proveedorSaludId,
+        {
+          $set: {
+            regimenRegulatorio: regimenNuevo,
+            regimenChangedAt: new Date(),
+            regimenChangedByUserId: userId,
+            regimenChangeReason: dto.reason,
+          },
+        },
+        { new: true },
+      )
+      .exec();
+
+    if (!updatedProveedor) {
+      throw new NotFoundException(
+        'Error al actualizar el proveedor de salud',
+      );
+    }
+
+    // Limpiar cache NOM024 después del cambio
+    this.nom024Util.clearProviderCache(proveedorSaludId);
+
+    // Obtener la nueva política regulatoria
+    const regulatoryPolicy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
+
+    return {
+      proveedorSalud: updatedProveedor,
+      regulatoryPolicy,
+    };
   }
 }

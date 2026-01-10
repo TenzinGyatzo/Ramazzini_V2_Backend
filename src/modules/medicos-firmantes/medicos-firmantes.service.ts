@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { CreateMedicoFirmanteDto } from './dto/create-medico-firmante.dto';
 import { UpdateMedicoFirmanteDto } from './dto/update-medico-firmante.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -7,7 +7,8 @@ import { Model } from 'mongoose';
 import { normalizeMedicoFirmanteData } from 'src/utils/normalization';
 import { User } from '../users/schemas/user.schema';
 import { ProveedorSalud } from '../proveedores-salud/schemas/proveedor-salud.schema';
-import { validateCURP } from 'src/utils/curp-validator.util';
+import { RegulatoryPolicyService } from 'src/utils/regulatory-policy.service';
+import { validateCurpByPolicy } from 'src/utils/curp-policy-validator.util';
 
 @Injectable()
 export class MedicosFirmantesService {
@@ -18,62 +19,39 @@ export class MedicosFirmantesService {
     private userModel: Model<User>,
     @InjectModel(ProveedorSalud.name)
     private proveedorSaludModel: Model<ProveedorSalud>,
+    @Inject(forwardRef(() => RegulatoryPolicyService))
+    private readonly regulatoryPolicyService: RegulatoryPolicyService,
   ) {}
 
   /**
-   * Check if a user belongs to a Mexican provider (pais === 'MX')
+   * Validate CURP based on regulatory policy
+   * Uses Policy Layer to determine if CURP is required or optional
    */
-  private async isMexicanProvider(idUser: string): Promise<boolean> {
-    const user = await this.userModel.findById(idUser).exec();
-    if (!user || !user.idProveedorSalud) {
-      return false;
-    }
-    const proveedor = await this.proveedorSaludModel
-      .findById(user.idProveedorSalud)
-      .exec();
-    return proveedor?.pais?.toUpperCase() === 'MX';
-  }
-
-  /**
-   * Validate CURP for NOM-024 compliance
-   * - MX providers: CURP is required and must be valid
-   * - Non-MX providers: CURP is optional, but if provided must be valid
-   */
-  private async validateCURPForNOM024(
+  private async validateCURPByPolicy(
     curp: string | undefined,
     idUser: string,
   ): Promise<void> {
-    const isMX = await this.isMexicanProvider(idUser);
-
-    if (isMX) {
-      // MX provider: CURP is required
-      if (!curp) {
-        throw new BadRequestException(
-          'NOM-024: CURP es obligatorio para profesionales de salud de proveedores mexicanos',
-        );
-      }
-      const validation = validateCURP(curp);
-      if (!validation.isValid) {
-        throw new BadRequestException(
-          `NOM-024: ${validation.errors.join(', ')}`,
-        );
-      }
-    } else {
-      // Non-MX provider: CURP is optional but must be valid if provided
-      if (curp) {
-        const validation = validateCURP(curp);
-        if (!validation.isValid) {
-          throw new BadRequestException(validation.errors.join(', '));
-        }
-      }
+    // Get user to obtain idProveedorSalud
+    const user = await this.userModel.findById(idUser).exec();
+    if (!user || !user.idProveedorSalud) {
+      // If no user or provider, assume SIN_REGIMEN (most permissive)
+      return;
     }
+
+    // Get regulatory policy for the provider
+    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+      user.idProveedorSalud,
+    );
+
+    // Validate CURP using policy
+    validateCurpByPolicy(curp, policy);
   }
 
   async create(createMedicoFirmanteDto: CreateMedicoFirmanteDto) {
     const normalizedDto = normalizeMedicoFirmanteData(createMedicoFirmanteDto);
 
-    // NOM-024: Validate CURP based on provider country
-    await this.validateCURPForNOM024(
+    // Validate CURP based on regulatory policy
+    await this.validateCURPByPolicy(
       (normalizedDto as any).curp,
       createMedicoFirmanteDto.idUser,
     );
@@ -108,13 +86,13 @@ export class MedicosFirmantesService {
       const idUser =
         updateMedicoFirmanteDto.idUser || existing.idUser?.toString();
       if (idUser) {
-        // NOM-024: Validate CURP based on provider country
+        // Validate CURP based on regulatory policy
         // Use updated curp if provided, otherwise use existing curp
         const curpToValidate =
           (normalizedDto as any).curp !== undefined
             ? (normalizedDto as any).curp
             : (existing as any).curp;
-        await this.validateCURPForNOM024(curpToValidate, idUser);
+        await this.validateCURPByPolicy(curpToValidate, idUser);
       }
     }
 

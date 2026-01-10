@@ -11,10 +11,13 @@ import {
   NotFoundException,
   Res,
   StreamableFile,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ProveedoresSaludService } from './proveedores-salud.service';
 import { CreateProveedoresSaludDto } from './dto/create-proveedores-salud.dto';
 import { UpdateProveedoresSaludDto } from './dto/update-proveedores-salud.dto';
+import { ChangeRegimenRegulatorioDto } from './dto/change-regimen-regulatorio.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import path from 'path';
@@ -22,11 +25,14 @@ import { BadRequestException } from '@nestjs/common';
 import { isValidObjectId } from 'mongoose';
 import { isAfter, addDays } from 'date-fns';
 import * as fs from 'fs';
+import { RegulatoryPolicyService } from '../../utils/regulatory-policy.service';
+import { getUserIdFromRequest } from '../../utils/auth-helpers';
 
 @Controller('proveedores-salud')
 export class ProveedoresSaludController {
   constructor(
     private readonly proveedoresSaludService: ProveedoresSaludService,
+    private readonly regulatoryPolicyService: RegulatoryPolicyService,
   ) {}
 
   @Post('crear-proveedor-salud')
@@ -118,7 +124,17 @@ export class ProveedoresSaludController {
       throw new NotFoundException('No se encontró el proveedor de salud');
     }
 
-    return proveedorSalud;
+    // Obtener política regulatoria basada en régimen
+    const regulatoryPolicy = await this.regulatoryPolicyService.getRegulatoryPolicy(id);
+
+    // Convertir Document de Mongoose a objeto plano si es necesario
+    const proveedorSaludObj = proveedorSalud.toObject ? proveedorSalud.toObject() : proveedorSalud;
+
+    // Incluir policy en la respuesta
+    return {
+      ...proveedorSaludObj,
+      regulatoryPolicy,
+    };
   }
 
   @Post('actualizar-proveedor-salud/:id')
@@ -407,5 +423,40 @@ export class ProveedoresSaludController {
       idProveedorSalud,
       reglasPuntaje,
     );
+  }
+
+  @Patch(':id/regimen-regulatorio')
+  async changeRegimenRegulatorio(
+    @Param('id') id: string,
+    @Body() dto: ChangeRegimenRegulatorioDto,
+    @Req() req: Request,
+  ) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('El ID proporcionado no es válido');
+    }
+
+    // Extraer userId del JWT token
+    const userId = getUserIdFromRequest(req);
+
+    // Cambiar régimen regulatorio
+    const result =
+      await this.proveedoresSaludService.changeRegimenRegulatorio(
+        id,
+        userId,
+        dto,
+      );
+
+    // Convertir Document de Mongoose a objeto plano si es necesario
+    const proveedorSaludObj = result.proveedorSalud.toObject
+      ? result.proveedorSalud.toObject()
+      : result.proveedorSalud;
+
+    return {
+      message: 'Régimen regulatorio actualizado exitosamente',
+      data: {
+        ...proveedorSaludObj,
+        regulatoryPolicy: result.regulatoryPolicy,
+      },
+    };
   }
 }

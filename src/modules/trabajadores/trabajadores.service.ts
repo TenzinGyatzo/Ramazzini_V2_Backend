@@ -20,6 +20,9 @@ import {
 import { validateCURP, validateCURPCrossCheck } from 'src/utils/curp-validator.util';
 import { NOM024ComplianceUtil } from 'src/utils/nom024-compliance.util';
 import { validateTrabajadorNames } from 'src/utils/name-validator.util';
+import { RegulatoryPolicyService } from 'src/utils/regulatory-policy.service';
+import { createRegulatoryError } from 'src/utils/regulatory-error-helper';
+import { RegulatoryErrorCode } from 'src/utils/regulatory-error-codes';
 import { validateFechaNacimiento } from '../expedientes/validators/date-validators';
 import { CatalogsService } from '../catalogs/catalogs.service';
 import { GeographyValidator } from '../catalogs/validators/geography.validator';
@@ -78,6 +81,7 @@ export class TrabajadoresService {
     private nom024Util: NOM024ComplianceUtil,
     private catalogsService: CatalogsService,
     private geographyValidator: GeographyValidator,
+    private regulatoryPolicyService: RegulatoryPolicyService,
   ) {}
 
   /**
@@ -173,22 +177,25 @@ export class TrabajadoresService {
       return;
     }
 
-    const requiresCompliance =
-      await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+      proveedorSaludId,
+    );
 
-    if (!requiresCompliance) {
-      // Non-MX provider: fields are optional, no validation needed
+    if (policy.validation.geoFields !== 'required') {
+      // SIN_REGIMEN: fields are optional, no validation needed
       return;
     }
 
-    // MX provider: validate required fields and catalog codes
+    // SIRES: validate required fields and catalog codes
     const errors: string[] = [];
 
-    // 1. Validate entidadNacimiento (required for MX)
+    // 1. Validate entidadNacimiento (required for SIRES)
     if (!dto.entidadNacimiento || dto.entidadNacimiento.trim() === '') {
-      errors.push(
-        'Entidad de nacimiento es obligatoria para proveedores en México (NOM-024)',
-      );
+      throw createRegulatoryError({
+        errorCode: RegulatoryErrorCode.REGIMEN_FIELD_REQUIRED,
+        details: { fieldName: 'entidadNacimiento' },
+        regime: policy.regime,
+      });
     } else {
       const entidadNac = dto.entidadNacimiento.trim().toUpperCase();
       // Allow edge case codes: NE (Extranjero), 00 (No disponible)
@@ -205,11 +212,13 @@ export class TrabajadoresService {
       }
     }
 
-    // 2. Validate nacionalidad (required for MX)
+    // 2. Validate nacionalidad (required for SIRES)
     if (!dto.nacionalidad || dto.nacionalidad.trim() === '') {
-      errors.push(
-        'Nacionalidad es obligatoria para proveedores en México (NOM-024)',
-      );
+      throw createRegulatoryError({
+        errorCode: RegulatoryErrorCode.REGIMEN_FIELD_REQUIRED,
+        details: { fieldName: 'nacionalidad' },
+        regime: policy.regime,
+      });
     } else {
       const nacionalidad = dto.nacionalidad.trim().toUpperCase();
       // Allow edge case code: NND (No disponible)
@@ -224,11 +233,13 @@ export class TrabajadoresService {
       }
     }
 
-    // 3. Validate entidadResidencia (required for MX)
+    // 3. Validate entidadResidencia (required for SIRES)
     if (!dto.entidadResidencia || dto.entidadResidencia.trim() === '') {
-      errors.push(
-        'Entidad de residencia es obligatoria para proveedores en México (NOM-024)',
-      );
+      throw createRegulatoryError({
+        errorCode: RegulatoryErrorCode.REGIMEN_FIELD_REQUIRED,
+        details: { fieldName: 'entidadResidencia' },
+        regime: policy.regime,
+      });
     } else {
       const entidadRes = dto.entidadResidencia.trim().toUpperCase();
       // Allow edge case codes: NE (Extranjero), 00 (No disponible)
@@ -245,11 +256,13 @@ export class TrabajadoresService {
       }
     }
 
-    // 4. Validate municipioResidencia (required for MX, allows "000" as sentinel)
+    // 4. Validate municipioResidencia (required for SIRES, allows "000" as sentinel)
     if (!dto.municipioResidencia || dto.municipioResidencia.trim() === '') {
-      errors.push(
-        'Municipio de residencia es obligatorio para proveedores en México (NOM-024). Use "000" si no está disponible.',
-      );
+      throw createRegulatoryError({
+        errorCode: RegulatoryErrorCode.REGIMEN_FIELD_REQUIRED,
+        details: { fieldName: 'municipioResidencia' },
+        regime: policy.regime,
+      });
     } else {
       const municipioRes = dto.municipioResidencia.trim();
       const entidadRes = dto.entidadResidencia?.trim().toUpperCase() || '';
@@ -275,11 +288,13 @@ export class TrabajadoresService {
       }
     }
 
-    // 5. Validate localidadResidencia (required for MX, allows "0000" as sentinel)
+    // 5. Validate localidadResidencia (required for SIRES, allows "0000" as sentinel)
     if (!dto.localidadResidencia || dto.localidadResidencia.trim() === '') {
-      errors.push(
-        'Localidad de residencia es obligatoria para proveedores en México (NOM-024). Use "0000" si no está disponible.',
-      );
+      throw createRegulatoryError({
+        errorCode: RegulatoryErrorCode.REGIMEN_FIELD_REQUIRED,
+        details: { fieldName: 'localidadResidencia' },
+        regime: policy.regime,
+      });
     } else {
       const localidadRes = dto.localidadResidencia.trim();
       const municipioRes = dto.municipioResidencia?.trim() || '';
@@ -315,7 +330,7 @@ export class TrabajadoresService {
   }
 
   /**
-   * Validate CURP according to NOM-024 requirements (MX providers only)
+   * Validate CURP according to regulatory policy
    */
   private async validateCURPForMX(
     curp: string | undefined,
@@ -334,15 +349,20 @@ export class TrabajadoresService {
       return;
     }
 
-    const requiresCompliance =
-      await this.nom024Util.requiresNOM024Compliance(proveedorSaludId);
+    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+      proveedorSaludId,
+    );
 
-    if (requiresCompliance) {
-      // MX provider: CURP is mandatory and must be valid
+    const workerCurpPolicy = policy.validation.workerCurp;
+
+    if (workerCurpPolicy === 'required_strict') {
+      // SIRES: CURP is mandatory and must be valid
       if (!curp || curp.trim() === '') {
-        throw new BadRequestException(
-          'CURP es obligatorio para proveedores de salud en México (NOM-024)',
-        );
+        throw createRegulatoryError({
+          errorCode: RegulatoryErrorCode.REGIMEN_FIELD_REQUIRED,
+          details: { fieldName: 'curp' },
+          regime: policy.regime,
+        });
       }
 
       // Normalize CURP (uppercase, trim)
@@ -378,10 +398,19 @@ export class TrabajadoresService {
         }
       }
     } else {
-      // Non-MX provider: CURP is optional, but if provided, it should be valid format
+      // SIN_REGIMEN: CURP is optional, but if provided, validate format (basic validation)
       if (curp && curp.trim() !== '') {
-        // For non-MX, we allow invalid format but log a warning
-        // This maintains backward compatibility
+        const normalizedCurp = curp.trim().toUpperCase();
+        const validation = validateCURP(normalizedCurp);
+
+        if (!validation.isValid) {
+          // For SIN_REGIMEN, we still validate format but don't require it
+          // Log warning but allow (backward compatibility)
+          console.warn(
+            `CURP con formato inválido para proveedor SIN_REGIMEN: ${validation.errors.join(', ')}`,
+          );
+        }
+        // No cross-check for SIN_REGIMEN
       }
     }
   }

@@ -5,12 +5,14 @@ import { MedicosFirmantesService } from './medicos-firmantes.service';
 import { MedicoFirmante } from './schemas/medico-firmante.schema';
 import { User } from '../users/schemas/user.schema';
 import { ProveedorSalud } from '../proveedores-salud/schemas/proveedor-salud.schema';
+import { RegulatoryPolicyService, RegulatoryPolicy } from '../../utils/regulatory-policy.service';
 
 describe('MedicosFirmantesService', () => {
   let service: MedicosFirmantesService;
   let mockMedicoFirmanteModel: any;
   let mockUserModel: any;
   let mockProveedorSaludModel: any;
+  let mockRegulatoryPolicyService: jest.Mocked<RegulatoryPolicyService>;
 
   const createMockModel = () => ({
     findById: jest
@@ -55,6 +57,9 @@ describe('MedicosFirmantesService', () => {
 
     mockUserModel = createMockModel();
     mockProveedorSaludModel = createMockModel();
+    mockRegulatoryPolicyService = {
+      getRegulatoryPolicy: jest.fn(),
+    } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -67,6 +72,10 @@ describe('MedicosFirmantesService', () => {
         {
           provide: getModelToken(ProveedorSalud.name),
           useValue: mockProveedorSaludModel,
+        },
+        {
+          provide: RegulatoryPolicyService,
+          useValue: mockRegulatoryPolicyService,
         },
       ],
     }).compile();
@@ -236,6 +245,153 @@ describe('MedicosFirmantesService', () => {
 
         const result = await service.create(dto);
         expect(result.curp).toBe(validCURP.toUpperCase());
+      });
+    });
+  });
+
+  describe('CURP Validation - Regulatory Policy', () => {
+    const siresProveedorId = '507f1f77bcf86cd799439055';
+    const sinRegimenProveedorId = '507f1f77bcf86cd799439066';
+    const siresUserId = '507f1f77bcf86cd799439077';
+    const sinRegimenUserId = '507f1f77bcf86cd799439088';
+
+    const createSiresPolicy = (): RegulatoryPolicy => ({
+      regime: 'SIRES_NOM024',
+      features: {
+        sessionTimeoutEnabled: true,
+        enforceDocumentImmutabilityUI: true,
+        documentImmutabilityEnabled: true,
+        showSiresUI: true,
+        giisExportEnabled: true,
+        notaAclaratoriaEnabled: true,
+        cluesFieldVisible: true,
+      },
+      validation: {
+        curpFirmantes: 'required',
+        workerCurp: 'required_strict',
+        cie10Principal: 'required',
+        geoFields: 'required',
+      },
+    });
+
+    const createSinRegimenPolicy = (): RegulatoryPolicy => ({
+      regime: 'SIN_REGIMEN',
+      features: {
+        sessionTimeoutEnabled: false,
+        enforceDocumentImmutabilityUI: false,
+        documentImmutabilityEnabled: false,
+        showSiresUI: false,
+        giisExportEnabled: false,
+        notaAclaratoriaEnabled: false,
+        cluesFieldVisible: false,
+      },
+      validation: {
+        curpFirmantes: 'optional',
+        workerCurp: 'optional',
+        cie10Principal: 'optional',
+        geoFields: 'optional',
+      },
+    });
+
+    describe('SIRES_NOM024 - CURP Required', () => {
+      beforeEach(() => {
+        mockUserModel.findById.mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            _id: siresUserId,
+            idProveedorSalud: siresProveedorId,
+          }),
+        });
+        mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
+          createSiresPolicy(),
+        );
+      });
+
+      it('should require CURP for SIRES_NOM024', async () => {
+        const dto = {
+          nombre: 'Dr. Juan Pérez',
+          idUser: siresUserId,
+          // No curp provided
+        };
+
+        await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+        await expect(service.create(dto)).rejects.toThrow(
+          'CURP es obligatorio para firmantes en régimen SIRES_NOM024',
+        );
+      });
+
+      it('should accept valid CURP for SIRES_NOM024', async () => {
+        const dto = {
+          nombre: 'Dr. Juan Pérez',
+          idUser: siresUserId,
+          curp: validCURP,
+        };
+
+        const result = await service.create(dto);
+        expect(result).toBeDefined();
+        expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
+          siresProveedorId,
+        );
+      });
+
+      it('should reject invalid CURP format for SIRES_NOM024', async () => {
+        const dto = {
+          nombre: 'Dr. Juan Pérez',
+          idUser: siresUserId,
+          curp: invalidCURPFormat,
+        };
+
+        await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+        await expect(service.create(dto)).rejects.toThrow('NOM-024:');
+      });
+    });
+
+    describe('SIN_REGIMEN - CURP Optional', () => {
+      beforeEach(() => {
+        mockUserModel.findById.mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            _id: sinRegimenUserId,
+            idProveedorSalud: sinRegimenProveedorId,
+          }),
+        });
+        mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
+          createSinRegimenPolicy(),
+        );
+      });
+
+      it('should allow creation without CURP for SIN_REGIMEN', async () => {
+        const dto = {
+          nombre: 'Dr. Carlos García',
+          idUser: sinRegimenUserId,
+          // No curp - should be allowed
+        };
+
+        const result = await service.create(dto);
+        expect(result).toBeDefined();
+        expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
+          sinRegimenProveedorId,
+        );
+      });
+
+      it('should accept valid CURP for SIN_REGIMEN (optional)', async () => {
+        const dto = {
+          nombre: 'Dr. Carlos García',
+          idUser: sinRegimenUserId,
+          curp: validCURP,
+        };
+
+        const result = await service.create(dto);
+        expect(result).toBeDefined();
+      });
+
+      it('should reject invalid CURP even for SIN_REGIMEN when provided', async () => {
+        const dto = {
+          nombre: 'Dr. Carlos García',
+          idUser: sinRegimenUserId,
+          curp: invalidCURPFormat,
+        };
+
+        await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+        // Should validate format even if optional
       });
     });
   });

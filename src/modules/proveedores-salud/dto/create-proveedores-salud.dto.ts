@@ -118,6 +118,21 @@ export class CreateProveedoresSaludDto {
   @IsString({ message: 'El campo termsVersion debe ser un string' })
   termsVersion: string;
 
+  // **Régimen Regulatorio**
+  @IsOptional()
+  @IsEnum(['SIRES_NOM024', 'SIN_REGIMEN', 'NO_SUJETO_SIRES'], {
+    message: 'El régimen regulatorio debe ser SIRES_NOM024, SIN_REGIMEN o NO_SUJETO_SIRES',
+  })
+  regimenRegulatorio?: 'SIRES_NOM024' | 'SIN_REGIMEN' | 'NO_SUJETO_SIRES';
+
+  @IsOptional()
+  @IsBoolean({ message: 'declaracionAceptada debe ser un booleano' })
+  declaracionAceptada?: boolean;
+
+  @IsOptional()
+  @IsString({ message: 'declaracionVersion debe ser un string' })
+  declaracionVersion?: string;
+
   // **Campos de periodo de prueba y límites**
   @IsOptional()
   @Type(() => Date)

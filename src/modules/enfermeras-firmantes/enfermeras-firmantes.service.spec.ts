@@ -5,12 +5,14 @@ import { EnfermerasFirmantesService } from './enfermeras-firmantes.service';
 import { EnfermeraFirmante } from './schemas/enfermera-firmante.schema';
 import { User } from '../users/schemas/user.schema';
 import { ProveedorSalud } from '../proveedores-salud/schemas/proveedor-salud.schema';
+import { RegulatoryPolicyService, RegulatoryPolicy } from '../../utils/regulatory-policy.service';
 
 describe('EnfermerasFirmantesService', () => {
   let service: EnfermerasFirmantesService;
   let mockEnfermeraFirmanteModel: any;
   let mockUserModel: any;
   let mockProveedorSaludModel: any;
+  let mockRegulatoryPolicyService: jest.Mocked<RegulatoryPolicyService>;
 
   const createMockModel = () => ({
     findById: jest
@@ -61,6 +63,12 @@ describe('EnfermerasFirmantesService', () => {
         {
           provide: getModelToken(ProveedorSalud.name),
           useValue: mockProveedorSaludModel,
+        },
+        {
+          provide: RegulatoryPolicyService,
+          useValue: (mockRegulatoryPolicyService = {
+            getRegulatoryPolicy: jest.fn(),
+          } as any),
         },
       ],
     }).compile();
@@ -216,6 +224,122 @@ describe('EnfermerasFirmantesService', () => {
 
         const result = await service.update('existing-id', updateDto);
         expect(result).toBeDefined();
+      });
+    });
+  });
+
+  describe('CURP Validation - Regulatory Policy', () => {
+    const siresProveedorId = '507f1f77bcf86cd799439055';
+    const sinRegimenProveedorId = '507f1f77bcf86cd799439066';
+    const siresUserId = '507f1f77bcf86cd799439077';
+    const sinRegimenUserId = '507f1f77bcf86cd799439088';
+
+    const createSiresPolicy = (): RegulatoryPolicy => ({
+      regime: 'SIRES_NOM024',
+      features: {
+        sessionTimeoutEnabled: true,
+        enforceDocumentImmutabilityUI: true,
+        documentImmutabilityEnabled: true,
+        showSiresUI: true,
+        giisExportEnabled: true,
+        notaAclaratoriaEnabled: true,
+        cluesFieldVisible: true,
+      },
+      validation: {
+        curpFirmantes: 'required',
+        workerCurp: 'required_strict',
+        cie10Principal: 'required',
+        geoFields: 'required',
+      },
+    });
+
+    const createSinRegimenPolicy = (): RegulatoryPolicy => ({
+      regime: 'SIN_REGIMEN',
+      features: {
+        sessionTimeoutEnabled: false,
+        enforceDocumentImmutabilityUI: false,
+        documentImmutabilityEnabled: false,
+        showSiresUI: false,
+        giisExportEnabled: false,
+        notaAclaratoriaEnabled: false,
+        cluesFieldVisible: false,
+      },
+      validation: {
+        curpFirmantes: 'optional',
+        workerCurp: 'optional',
+        cie10Principal: 'optional',
+        geoFields: 'optional',
+      },
+    });
+
+    describe('SIRES_NOM024 - CURP Required', () => {
+      beforeEach(() => {
+        mockUserModel.findById.mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            _id: siresUserId,
+            idProveedorSalud: siresProveedorId,
+          }),
+        });
+        mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
+          createSiresPolicy(),
+        );
+      });
+
+      it('should require CURP for SIRES_NOM024', async () => {
+        const dto = {
+          nombre: 'Enf. María López',
+          idUser: siresUserId,
+        };
+
+        await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+        await expect(service.create(dto)).rejects.toThrow(
+          'CURP es obligatorio para firmantes en régimen SIRES_NOM024',
+        );
+      });
+
+      it('should accept valid CURP for SIRES_NOM024', async () => {
+        const dto = {
+          nombre: 'Enf. María López',
+          idUser: siresUserId,
+          curp: validCURP,
+        };
+
+        const result = await service.create(dto);
+        expect(result).toBeDefined();
+      });
+    });
+
+    describe('SIN_REGIMEN - CURP Optional', () => {
+      beforeEach(() => {
+        mockUserModel.findById.mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            _id: sinRegimenUserId,
+            idProveedorSalud: sinRegimenProveedorId,
+          }),
+        });
+        mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
+          createSinRegimenPolicy(),
+        );
+      });
+
+      it('should allow creation without CURP for SIN_REGIMEN', async () => {
+        const dto = {
+          nombre: 'Enf. Ana García',
+          idUser: sinRegimenUserId,
+        };
+
+        const result = await service.create(dto);
+        expect(result).toBeDefined();
+      });
+
+      it('should reject invalid CURP even for SIN_REGIMEN when provided', async () => {
+        const dto = {
+          nombre: 'Enf. Ana García',
+          idUser: sinRegimenUserId,
+          curp: invalidCURPFormat,
+        };
+
+        await expect(service.create(dto)).rejects.toThrow(BadRequestException);
       });
     });
   });

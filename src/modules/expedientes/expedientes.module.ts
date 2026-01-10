@@ -65,6 +65,7 @@ import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
 import { NOM024ComplianceModule } from '../nom024-compliance/nom024-compliance.module';
 import { CatalogsModule } from '../catalogs/catalogs.module';
 import { Cie10CatalogLookupService } from './services/cie10-catalog-lookup.service';
+import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
 
 @Module({
   controllers: [ExpedientesController],
@@ -97,6 +98,7 @@ import { Cie10CatalogLookupService } from './services/cie10-catalog-lookup.servi
     FilesModule,
     NOM024ComplianceModule,
     CatalogsModule,
+    ProveedoresSaludModule,
   ],
   exports: [ExpedientesService],
 })

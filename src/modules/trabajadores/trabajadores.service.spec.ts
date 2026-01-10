@@ -7,12 +7,14 @@ import { NOM024ComplianceUtil } from '../../utils/nom024-compliance.util';
 import { CatalogsService } from '../catalogs/catalogs.service';
 import { FilesService } from '../files/files.service';
 import { GeographyValidator } from '../catalogs/validators/geography.validator';
+import { RegulatoryPolicyService, RegulatoryPolicy } from '../../utils/regulatory-policy.service';
 
 describe('TrabajadoresService - NOM-024 Person Identification Fields', () => {
   let service: TrabajadoresService;
   let mockNom024Util: any;
   let mockCatalogsService: any;
   let mockGeographyValidator: any;
+  let mockRegulatoryPolicyService: jest.Mocked<RegulatoryPolicyService>;
 
   // Create mock model factory
   const createMockModel = () => ({
@@ -126,6 +128,12 @@ describe('TrabajadoresService - NOM-024 Person Identification Fields', () => {
         { provide: CatalogsService, useValue: mockCatalogsService },
         { provide: FilesService, useValue: mockFilesService },
         { provide: GeographyValidator, useValue: mockGeographyValidator },
+        {
+          provide: RegulatoryPolicyService,
+          useValue: (mockRegulatoryPolicyService = {
+            getRegulatoryPolicy: jest.fn(),
+          } as any),
+        },
       ],
     }).compile();
 
@@ -709,6 +717,288 @@ describe('TrabajadoresService - NOM-024 Person Identification Fields', () => {
           code: 'VALIDATION_ERROR',
           ruleId: 'A3',
         },
+      });
+    });
+  });
+
+  describe('Regulatory Policy - geoFields and workerCurp', () => {
+    const siresProveedorId = '507f1f77bcf86cd799439055';
+    const sinRegimenProveedorId = '507f1f77bcf86cd799439066';
+    const centroTrabajoId = '507f1f77bcf86cd799439011';
+
+    const createSiresPolicy = (): RegulatoryPolicy => ({
+      regime: 'SIRES_NOM024',
+      features: {
+        sessionTimeoutEnabled: true,
+        enforceDocumentImmutabilityUI: true,
+        documentImmutabilityEnabled: true,
+        showSiresUI: true,
+        giisExportEnabled: true,
+        notaAclaratoriaEnabled: true,
+        cluesFieldVisible: true,
+      },
+      validation: {
+        curpFirmantes: 'required',
+        workerCurp: 'required_strict',
+        cie10Principal: 'required',
+        geoFields: 'required',
+      },
+    });
+
+    const createSinRegimenPolicy = (): RegulatoryPolicy => ({
+      regime: 'SIN_REGIMEN',
+      features: {
+        sessionTimeoutEnabled: false,
+        enforceDocumentImmutabilityUI: false,
+        documentImmutabilityEnabled: false,
+        showSiresUI: false,
+        giisExportEnabled: false,
+        notaAclaratoriaEnabled: false,
+        cluesFieldVisible: false,
+      },
+      validation: {
+        curpFirmantes: 'optional',
+        workerCurp: 'optional',
+        cie10Principal: 'optional',
+        geoFields: 'optional',
+      },
+    });
+
+    beforeEach(() => {
+      // Mock getProveedorSaludIdFromCentroTrabajo
+      jest
+        .spyOn(service as any, 'getProveedorSaludIdFromCentroTrabajo')
+        .mockImplementation(async (id: string) => {
+          if (id === centroTrabajoId) {
+            return siresProveedorId;
+          }
+          return null;
+        });
+    });
+
+    describe('geoFields - SIRES_NOM024 Required', () => {
+      beforeEach(() => {
+        mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
+          createSiresPolicy(),
+        );
+        mockCatalogsService.validateINEGI.mockResolvedValue(true);
+        mockCatalogsService.validateNacionalidad.mockResolvedValue(true);
+      });
+
+      it('should require entidadNacimiento for SIRES_NOM024', async () => {
+        const mockTrabajadorModel = service['trabajadorModel'];
+        mockTrabajadorModel.save = jest.fn().mockResolvedValue({
+          _id: 'new-id',
+        });
+
+        const dto = {
+          primerApellido: 'García',
+          nombre: 'Juan',
+          fechaNacimiento: new Date('1990-01-01'),
+          sexo: 'Masculino',
+          escolaridad: 'Licenciatura',
+          puesto: 'Desarrollador',
+          estadoCivil: 'Soltero/a',
+          estadoLaboral: 'Activo',
+          idCentroTrabajo: centroTrabajoId,
+          createdBy: '507f1f77bcf86cd799439012',
+          updatedBy: '507f1f77bcf86cd799439012',
+          // No entidadNacimiento provided
+        };
+
+        // Mock validateGeographyHierarchy and validateCURPForMX to pass
+        jest
+          .spyOn(service as any, 'validateGeographyHierarchy')
+          .mockResolvedValue(undefined);
+        jest
+          .spyOn(service as any, 'validateCURPForMX')
+          .mockResolvedValue(undefined);
+        jest
+          .spyOn(service as any, 'validateNOM024NameFormat')
+          .mockResolvedValue(undefined);
+
+        await expect(service.create(dto as any)).rejects.toThrow(
+          BadRequestException,
+        );
+        await expect(service.create(dto as any)).rejects.toThrow(
+          'Entidad de nacimiento es obligatoria',
+        );
+      });
+
+      it('should require nacionalidad for SIRES_NOM024', async () => {
+        const mockTrabajadorModel = service['trabajadorModel'];
+        mockTrabajadorModel.save = jest.fn().mockResolvedValue({
+          _id: 'new-id',
+        });
+
+        const dto = {
+          primerApellido: 'García',
+          nombre: 'Juan',
+          fechaNacimiento: new Date('1990-01-01'),
+          sexo: 'Masculino',
+          escolaridad: 'Licenciatura',
+          puesto: 'Desarrollador',
+          estadoCivil: 'Soltero/a',
+          estadoLaboral: 'Activo',
+          idCentroTrabajo: centroTrabajoId,
+          createdBy: '507f1f77bcf86cd799439012',
+          updatedBy: '507f1f77bcf86cd799439012',
+          entidadNacimiento: '25',
+          // No nacionalidad provided
+        };
+
+        // Mock validateGeographyHierarchy and validateCURPForMX to pass
+        jest
+          .spyOn(service as any, 'validateGeographyHierarchy')
+          .mockResolvedValue(undefined);
+        jest
+          .spyOn(service as any, 'validateCURPForMX')
+          .mockResolvedValue(undefined);
+        jest
+          .spyOn(service as any, 'validateNOM024NameFormat')
+          .mockResolvedValue(undefined);
+
+        await expect(service.create(dto as any)).rejects.toThrow(
+          BadRequestException,
+        );
+        await expect(service.create(dto as any)).rejects.toThrow(
+          'Nacionalidad es obligatoria',
+        );
+      });
+    });
+
+    describe('geoFields - SIN_REGIMEN Optional', () => {
+      beforeEach(() => {
+        mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
+          createSinRegimenPolicy(),
+        );
+        const mockTrabajadorModel = createMockModel();
+        mockTrabajadorModel.save = jest.fn().mockResolvedValue({
+          _id: 'new-id',
+        });
+        (service as any).trabajadorModel = mockTrabajadorModel;
+      });
+
+      it('should allow missing geoFields for SIN_REGIMEN', async () => {
+        const dto = {
+          primerApellido: 'García',
+          nombre: 'Juan',
+          fechaNacimiento: new Date('1990-01-01'),
+          sexo: 'Masculino',
+          escolaridad: 'Licenciatura',
+          puesto: 'Desarrollador',
+          estadoCivil: 'Soltero/a',
+          estadoLaboral: 'Activo',
+          idCentroTrabajo: centroTrabajoId,
+          createdBy: '507f1f77bcf86cd799439012',
+          updatedBy: '507f1f77bcf86cd799439012',
+          // No geoFields provided - should be allowed
+        };
+
+        // Mock validateGeographyHierarchy to avoid errors
+        jest
+          .spyOn(service as any, 'validateGeographyHierarchy')
+          .mockResolvedValue(undefined);
+        jest
+          .spyOn(service as any, 'validateCURPForMX')
+          .mockResolvedValue(undefined);
+        jest
+          .spyOn(service as any, 'validateNOM024NameFormat')
+          .mockResolvedValue(undefined);
+
+        const result = await service.create(dto as any);
+        expect(result).toBeDefined();
+      });
+    });
+
+    describe('workerCurp - SIRES_NOM024 Required', () => {
+      beforeEach(() => {
+        mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
+          createSiresPolicy(),
+        );
+        const mockTrabajadorModel = createMockModel();
+        mockTrabajadorModel.save = jest.fn().mockResolvedValue({
+          _id: 'new-id',
+        });
+        (service as any).trabajadorModel = mockTrabajadorModel;
+      });
+
+      it('should require CURP for SIRES_NOM024', async () => {
+        const dto = {
+          primerApellido: 'García',
+          nombre: 'Juan',
+          fechaNacimiento: new Date('1990-01-01'),
+          sexo: 'Masculino',
+          escolaridad: 'Licenciatura',
+          puesto: 'Desarrollador',
+          estadoCivil: 'Soltero/a',
+          estadoLaboral: 'Activo',
+          idCentroTrabajo: centroTrabajoId,
+          createdBy: '507f1f77bcf86cd799439012',
+          updatedBy: '507f1f77bcf86cd799439012',
+          entidadNacimiento: '25',
+          nacionalidad: 'MX',
+          // No curp provided
+        };
+
+        // Mock validateNOM024PersonFields to pass
+        jest
+          .spyOn(service as any, 'validateNOM024PersonFields')
+          .mockResolvedValue(undefined);
+        jest
+          .spyOn(service as any, 'validateNOM024NameFormat')
+          .mockResolvedValue(undefined);
+
+        await expect(service.create(dto as any)).rejects.toThrow(
+          BadRequestException,
+        );
+        await expect(service.create(dto as any)).rejects.toThrow(
+          'CURP es obligatorio para proveedores con régimen SIRES_NOM024',
+        );
+      });
+    });
+
+    describe('workerCurp - SIN_REGIMEN Optional', () => {
+      beforeEach(() => {
+        mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
+          createSinRegimenPolicy(),
+        );
+        const mockTrabajadorModel = createMockModel();
+        mockTrabajadorModel.save = jest.fn().mockResolvedValue({
+          _id: 'new-id',
+        });
+        (service as any).trabajadorModel = mockTrabajadorModel;
+      });
+
+      it('should allow missing CURP for SIN_REGIMEN', async () => {
+        const dto = {
+          primerApellido: 'García',
+          nombre: 'Juan',
+          fechaNacimiento: new Date('1990-01-01'),
+          sexo: 'Masculino',
+          escolaridad: 'Licenciatura',
+          puesto: 'Desarrollador',
+          estadoCivil: 'Soltero/a',
+          estadoLaboral: 'Activo',
+          idCentroTrabajo: centroTrabajoId,
+          createdBy: '507f1f77bcf86cd799439012',
+          updatedBy: '507f1f77bcf86cd799439012',
+          // No curp provided - should be allowed
+        };
+
+        // Mock all validations to pass
+        jest
+          .spyOn(service as any, 'validateGeographyHierarchy')
+          .mockResolvedValue(undefined);
+        jest
+          .spyOn(service as any, 'validateCURPForMX')
+          .mockResolvedValue(undefined);
+        jest
+          .spyOn(service as any, 'validateNOM024NameFormat')
+          .mockResolvedValue(undefined);
+
+        const result = await service.create(dto as any);
+        expect(result).toBeDefined();
       });
     });
   });

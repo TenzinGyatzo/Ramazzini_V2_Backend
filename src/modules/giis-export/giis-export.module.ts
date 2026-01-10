@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GIISExportService } from './giis-export.service';
 import { Lesion, LesionSchema } from '../expedientes/schemas/lesion.schema';
@@ -19,6 +19,7 @@ import {
   CentroTrabajoSchema,
 } from '../centros-trabajo/schemas/centro-trabajo.schema';
 import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
+import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
 
 /**
  * GIIS Export Module
@@ -50,6 +51,7 @@ import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
       { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
       { name: Empresa.name, schema: EmpresaSchema },
     ]),
+    forwardRef(() => ProveedoresSaludModule),
   ],
   providers: [GIISExportService],
   exports: [GIISExportService],

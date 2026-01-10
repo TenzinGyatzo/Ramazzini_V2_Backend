@@ -15,6 +15,9 @@ import {
   transformDeteccionToGIIS,
   getGIISB019FieldCount,
 } from './transformers/deteccion.transformer';
+import { RegulatoryPolicyService } from '../../utils/regulatory-policy.service';
+import { createRegulatoryError } from '../../utils/regulatory-error-helper';
+import { RegulatoryErrorCode } from '../../utils/regulatory-error-codes';
 
 /**
  * GIIS Export Parameters
@@ -96,10 +99,12 @@ export class GIISExportService {
     @InjectModel(CentroTrabajo.name)
     private centroTrabajoModel: Model<CentroTrabajo>,
     @InjectModel(Empresa.name) private empresaModel: Model<Empresa>,
+    private readonly regulatoryPolicyService: RegulatoryPolicyService,
   ) {}
 
   /**
    * Export Lesion records to GIIS-B013 format
+   * Only available for SIRES_NOM024 regime
    *
    * @param params - Export parameters
    * @returns Array of pipe-delimited GIIS-B013 records
@@ -107,6 +112,27 @@ export class GIISExportService {
   async exportLesionesGIIS(
     params: GIISExportParams = {},
   ): Promise<GIISExportResult> {
+    // Validate regime: GIIS export requires proveedorSaludId to check regime
+    if (!params.proveedorSaludId) {
+      throw createRegulatoryError({
+        errorCode: RegulatoryErrorCode.REGIMEN_FEATURE_DISABLED,
+        details: { feature: 'giisExport' },
+      });
+    }
+
+    // Validate regime using policy layer
+    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+      params.proveedorSaludId,
+    );
+
+    if (!policy.features.giisExportEnabled) {
+      throw createRegulatoryError({
+        errorCode: RegulatoryErrorCode.REGIMEN_FEATURE_DISABLED,
+        details: { feature: 'giisExport' },
+        regime: policy.regime,
+      });
+    }
+
     const records: string[] = [];
     let skipped = 0;
 
@@ -205,6 +231,7 @@ export class GIISExportService {
 
   /**
    * Export Deteccion records to GIIS-B019 format
+   * Only available for SIRES_NOM024 regime
    *
    * @param params - Export parameters
    * @returns Array of pipe-delimited GIIS-B019 records
@@ -212,6 +239,27 @@ export class GIISExportService {
   async exportDeteccionesGIIS(
     params: GIISExportParams = {},
   ): Promise<GIISExportResult> {
+    // Validate regime: GIIS export requires proveedorSaludId to check regime
+    if (!params.proveedorSaludId) {
+      throw createRegulatoryError({
+        errorCode: RegulatoryErrorCode.REGIMEN_FEATURE_DISABLED,
+        details: { feature: 'giisExport' },
+      });
+    }
+
+    // Validate regime using policy layer
+    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+      params.proveedorSaludId,
+    );
+
+    if (!policy.features.giisExportEnabled) {
+      throw createRegulatoryError({
+        errorCode: RegulatoryErrorCode.REGIMEN_FEATURE_DISABLED,
+        details: { feature: 'giisExport' },
+        regime: policy.regime,
+      });
+    }
+
     const records: string[] = [];
     let skipped = 0;
 
@@ -371,16 +419,24 @@ export class GIISExportService {
 
   /**
    * Get export statistics for a provider
+   * Only available for SIRES_NOM024 regime
    */
   async getExportStats(proveedorSaludId: string): Promise<{
     lesionCount: number;
     deteccionCount: number;
     isMX: boolean;
   }> {
-    const isMX = await this.isProveedorMX(proveedorSaludId);
+    // Validate regime using policy layer
+    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
+      proveedorSaludId,
+    );
 
-    if (!isMX) {
-      return { lesionCount: 0, deteccionCount: 0, isMX: false };
+    if (!policy.features.giisExportEnabled) {
+      throw createRegulatoryError({
+        errorCode: RegulatoryErrorCode.REGIMEN_FEATURE_DISABLED,
+        details: { feature: 'giisExport' },
+        regime: policy.regime,
+      });
     }
 
     // Get all trabajadores for this provider
@@ -395,7 +451,10 @@ export class GIISExportService {
       .countDocuments({ idTrabajador: { $in: trabajadorIds } })
       .exec();
 
-    return { lesionCount, deteccionCount, isMX: true };
+    // Check if provider is MX for the isMX flag (for backward compatibility)
+    const isMX = await this.isProveedorMX(proveedorSaludId);
+
+    return { lesionCount, deteccionCount, isMX };
   }
 
   /**
