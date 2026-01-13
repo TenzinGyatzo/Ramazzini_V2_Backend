@@ -66,10 +66,16 @@ import { NOM024ComplianceModule } from '../nom024-compliance/nom024-compliance.m
 import { CatalogsModule } from '../catalogs/catalogs.module';
 import { Cie10CatalogLookupService } from './services/cie10-catalog-lookup.service';
 import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
+import { ConsentimientoDiarioModule } from '../consentimiento-diario/consentimiento-diario.module';
+import {
+  ConsentimientoDiario,
+  ConsentimientoDiarioSchema,
+} from '../consentimiento-diario/schemas/consentimiento-diario.schema';
+import { DailyConsentGuard } from '../../utils/guards/daily-consent.guard';
 
 @Module({
   controllers: [ExpedientesController],
-  providers: [ExpedientesService, PdfCleanerService, Cie10CatalogLookupService],
+  providers: [ExpedientesService, PdfCleanerService, Cie10CatalogLookupService, DailyConsentGuard],
   imports: [
     MongooseModule.forFeature([
       { name: Antidoping.name, schema: AntidopingSchema },
@@ -93,12 +99,14 @@ import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.m
       { name: Deteccion.name, schema: DeteccionSchema },
       { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
       { name: Empresa.name, schema: EmpresaSchema },
+      { name: ConsentimientoDiario.name, schema: ConsentimientoDiarioSchema },
     ]),
     forwardRef(() => InformesModule),
     FilesModule,
     NOM024ComplianceModule,
     CatalogsModule,
     ProveedoresSaludModule,
+    ConsentimientoDiarioModule,
   ],
   exports: [ExpedientesService],
 })

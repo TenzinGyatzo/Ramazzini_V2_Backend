@@ -60,6 +60,12 @@ export const policyFeatures = {
    */
   enforceDocumentImmutabilityUI: (policy: RegulatoryPolicy): boolean =>
     policy.features.enforceDocumentImmutabilityUI,
+
+  /**
+   * Indica si el consentimiento diario está habilitado
+   */
+  dailyConsentEnabled: (policy: RegulatoryPolicy): boolean =>
+    policy.features.dailyConsentEnabled,
 };
 
 /**

@@ -1,11 +1,7 @@
 // Servicios para gestionar la data que se almacena en la base de datos
-import {
-  Injectable,
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Antidoping } from './schemas/antidoping.schema';
 import { AptitudPuesto } from './schemas/aptitud-puesto.schema';
 import { Audiometria } from './schemas/audiometria.schema';
@@ -43,7 +39,10 @@ import { InformesService } from '../informes/informes.service';
 import { forwardRef, Inject } from '@nestjs/common';
 import { mapSexoToNumeric } from '../../utils/sexo-mapper.util';
 import { calculateAge } from '../../utils/age-calculator.util';
-import { CIE10Entry, CatalogType } from '../catalogs/interfaces/catalog-entry.interface';
+import {
+  CIE10Entry,
+  CatalogType,
+} from '../catalogs/interfaces/catalog-entry.interface';
 import { validateFechaDocumento } from './validators/date-validators';
 import { validateNoDuplicateCIE10PrincipalAndComplementary } from './validators/diagnosis-duplicate.validator';
 import { validateCie10SexAgeAgainstCatalog } from './validators/cie10-catalog-sex-age.validator';
@@ -52,6 +51,8 @@ import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.
 import { RegulatoryPolicyService } from '../../utils/regulatory-policy.service';
 import { createRegulatoryError } from '../../utils/regulatory-error-helper';
 import { RegulatoryErrorCode } from '../../utils/regulatory-error-codes';
+import { ConsentimientoDiario } from '../consentimiento-diario/schemas/consentimiento-diario.schema';
+import { calculateDateKey } from '../../utils/date-key.util';
 
 @Injectable()
 export class ExpedientesService {
@@ -90,6 +91,8 @@ export class ExpedientesService {
     @InjectModel(CentroTrabajo.name)
     private centroTrabajoModel: Model<CentroTrabajo>,
     @InjectModel(Empresa.name) private empresaModel: Model<Empresa>,
+    @InjectModel(ConsentimientoDiario.name)
+    private consentimientoDiarioModel: Model<ConsentimientoDiario>,
     private readonly filesService: FilesService,
     private readonly nom024Util: NOM024ComplianceUtil,
     private readonly catalogsService: CatalogsService,
@@ -160,17 +163,17 @@ export class ExpedientesService {
       return;
     }
 
-    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-      proveedorSaludId,
-    );
+    const policy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
 
     // Validate CIE-10 principal required based on policy
-    if (policy.validation.cie10Principal === 'required') {
-      // SIRES: CIE-10 principal is mandatory
-      const cie10FieldName =
-        documentType === 'notaMedica'
-          ? 'codigoCIE10Principal'
-          : 'codigoCIE10Principal';
+    // IMPORTANTE: Esta validación solo aplica a notas médicas, NO a historias clínicas
+    if (
+      policy.validation.cie10Principal === 'required' &&
+      documentType === 'notaMedica'
+    ) {
+      // SIRES: CIE-10 principal is mandatory only for notas médicas
+      const cie10FieldName = 'codigoCIE10Principal';
       const cie10Value = dto[cie10FieldName];
 
       if (!cie10Value || cie10Value.trim() === '') {
@@ -227,7 +230,8 @@ export class ExpedientesService {
       const codigoNormalizado = extractCodeFromFullText(codigo).toUpperCase();
 
       // Validar existencia en catálogo
-      const isValid = await this.catalogsService.validateCIE10(codigoNormalizado);
+      const isValid =
+        await this.catalogsService.validateCIE10(codigoNormalizado);
       if (!isValid) {
         errors.push(
           `Código CIE-10 ${tipo} inválido: ${codigoNormalizado}. No se encuentra en el catálogo CIE-10`,
@@ -284,7 +288,9 @@ export class ExpedientesService {
       // Si código inicia con S/T (Cap. XIX) o V-Y (Cap. XX) → requerir causaExterna
       const primeraLetra = codigoNormalizado.charAt(0);
       if (
-        (primeraLetra === 'S' || primeraLetra === 'T' || (primeraLetra >= 'V' && primeraLetra <= 'Y')) &&
+        (primeraLetra === 'S' ||
+          primeraLetra === 'T' ||
+          (primeraLetra >= 'V' && primeraLetra <= 'Y')) &&
         tipo === 'principal'
       ) {
         const codigoCausaFull = dto.codigoCIECausaExterna?.trim() || '';
@@ -304,14 +310,14 @@ export class ExpedientesService {
     };
 
     // Validate primary CIE-10 code
+    // IMPORTANTE: La obligatoriedad solo aplica a notas médicas, no a historias clínicas
+    // La validación de obligatoriedad ya se hizo arriba basándose en la política regulatoria
     const codigoPrincipalFull = dto.codigoCIE10Principal?.trim() || '';
-    if (!codigoPrincipalFull) {
-      errors.push(
-        'Código CIE-10 principal es obligatorio para proveedores en México (NOM-024)',
-      );
-    } else {
+    if (codigoPrincipalFull) {
+      // Si el código está presente, validarlo (aplica a ambos tipos de documentos)
       await validateCIE10Code(codigoPrincipalFull, 'principal');
     }
+    // Si no hay código, la validación de obligatoriedad ya se hizo arriba (líneas 167-182)
 
     // Validate secondary CIE-10 codes if provided
     if (
@@ -326,27 +332,31 @@ export class ExpedientesService {
     }
 
     // Validar Regla B4: No duplicar principal en complementarios
-    const duplicateCheck = validateNoDuplicateCIE10PrincipalAndComplementary(
-      dto.codigoCIE10Principal,
-      dto.codigosCIE10Complementarios,
-    );
-    if (!duplicateCheck.isValid) {
-      throw new BadRequestException({
-        code: 'VALIDATION_ERROR',
-        ruleId: 'B4',
-        message:
-          'El diagnóstico principal no puede repetirse en los diagnósticos complementarios',
-        details: [
-          {
-            field: 'codigosCIE10Complementarios',
-            duplicatedCode: duplicateCheck.duplicated,
-          },
-        ],
-      });
+    // IMPORTANTE: Esta validación solo aplica a notas médicas
+    if (documentType === 'notaMedica') {
+      const duplicateCheck = validateNoDuplicateCIE10PrincipalAndComplementary(
+        dto.codigoCIE10Principal,
+        dto.codigosCIE10Complementarios,
+      );
+      if (!duplicateCheck.isValid) {
+        throw new BadRequestException({
+          code: 'VALIDATION_ERROR',
+          ruleId: 'B4',
+          message:
+            'El diagnóstico principal no puede repetirse en los diagnósticos complementarios',
+          details: [
+            {
+              field: 'codigosCIE10Complementarios',
+              duplicatedCode: duplicateCheck.duplicated,
+            },
+          ],
+        });
+      }
     }
 
     // Validate segundo diagnóstico (codigoCIEDiagnostico2)
-    if (dto.primeraVezDiagnostico2 === true) {
+    // IMPORTANTE: Esta validación solo aplica a notas médicas
+    if (documentType === 'notaMedica' && dto.primeraVezDiagnostico2 === true) {
       const codigoDiagnostico2Full = dto.codigoCIEDiagnostico2?.trim() || '';
       if (!codigoDiagnostico2Full) {
         errors.push(
@@ -355,7 +365,9 @@ export class ExpedientesService {
       } else {
         // Validar que sea diferente al principal (comparar códigos extraídos)
         const codigoPrincipal = extractCodeFromFullText(codigoPrincipalFull);
-        const codigoDiagnostico2 = extractCodeFromFullText(codigoDiagnostico2Full);
+        const codigoDiagnostico2 = extractCodeFromFullText(
+          codigoDiagnostico2Full,
+        );
         if (
           codigoPrincipal &&
           codigoPrincipal.toUpperCase() === codigoDiagnostico2.toUpperCase()
@@ -372,7 +384,8 @@ export class ExpedientesService {
     // Validar causa externa si se proporciona
     if (dto.codigoCIECausaExterna && dto.codigoCIECausaExterna.trim() !== '') {
       const codigoCausaFull = dto.codigoCIECausaExterna.trim();
-      const codigoCausa = extractCodeFromFullText(codigoCausaFull).toUpperCase();
+      const codigoCausa =
+        extractCodeFromFullText(codigoCausaFull).toUpperCase();
       // Validar que esté en rango V01-Y98
       if (!/^[V-Y][0-9]{2}(\.[0-9]{1,2})?$/.test(codigoCausa)) {
         errors.push(
@@ -421,7 +434,11 @@ export class ExpedientesService {
     }
 
     // Validación E1: fechaDocumento para notaMedica
-    if (documentType === 'notaMedica' && createDto.fechaNotaMedica && createDto.idTrabajador) {
+    if (
+      documentType === 'notaMedica' &&
+      createDto.fechaNotaMedica &&
+      createDto.idTrabajador
+    ) {
       const trabajador = await this.trabajadorModel
         .findById(createDto.idTrabajador)
         .lean();
@@ -549,6 +566,47 @@ export class ExpedientesService {
       ) {
         throw new BadRequestException(
           'Solo se pueden crear notas aclaratorias para documentos finalizados o anulados',
+        );
+      }
+    }
+
+    // Vincular Consentimiento Diario (NOM-024)
+    if (createDto.idTrabajador) {
+      try {
+        const proveedorSaludId =
+          await this.getProveedorSaludIdFromTrabajador(createDto.idTrabajador);
+        if (proveedorSaludId) {
+          const policy =
+            await this.regulatoryPolicyService.getRegulatoryPolicy(
+              proveedorSaludId,
+            );
+          if (policy.features.dailyConsentEnabled) {
+            // Obtener proveedor para calcular dateKey con timezone
+            const proveedor = await this.proveedoresSaludService.findOne(
+              proveedorSaludId,
+            );
+            const dateKey = calculateDateKey(proveedor || null);
+
+            // Buscar consentimiento del día
+            const consentimiento = await this.consentimientoDiarioModel
+              .findOne({
+                proveedorSaludId: new Types.ObjectId(proveedorSaludId),
+                trabajadorId: new Types.ObjectId(createDto.idTrabajador),
+                dateKey,
+              })
+              .lean();
+
+            if (consentimiento) {
+              createDto.consentimientoDiarioId = consentimiento._id;
+            }
+          }
+        }
+      } catch (error) {
+        // Si hay error al obtener consentimiento, no bloquear la creación
+        // El guard ya validó que el consentimiento existe
+        console.warn(
+          'Error al obtener consentimiento diario para documento:',
+          error,
         );
       }
     }
@@ -800,9 +858,10 @@ export class ExpedientesService {
     const proveedorSaludId =
       await this.getProveedorSaludIdFromDocument(existingDocument);
     if (proveedorSaludId) {
-      const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-        proveedorSaludId,
-      );
+      const policy =
+        await this.regulatoryPolicyService.getRegulatoryPolicy(
+          proveedorSaludId,
+        );
       const isImmutable = await this.isDocumentImmutable(
         proveedorSaludId,
         existingDocument.estado,
@@ -825,7 +884,11 @@ export class ExpedientesService {
     await this.validateVitalSignsForNOM024(updateDto, trabajadorId);
 
     // Validación E1: fechaDocumento para notaMedica
-    if (documentType === 'notaMedica' && updateDto.fechaNotaMedica && trabajadorId) {
+    if (
+      documentType === 'notaMedica' &&
+      updateDto.fechaNotaMedica &&
+      trabajadorId
+    ) {
       const trabajador = await this.trabajadorModel
         .findById(trabajadorId)
         .lean();
@@ -1318,9 +1381,10 @@ export class ExpedientesService {
     const proveedorSaludId =
       await this.getProveedorSaludIdFromDocument(existingLesion);
     if (proveedorSaludId) {
-      const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-        proveedorSaludId,
-      );
+      const policy =
+        await this.regulatoryPolicyService.getRegulatoryPolicy(
+          proveedorSaludId,
+        );
       const isImmutable = await this.isDocumentImmutable(
         proveedorSaludId,
         existingLesion.estado,
@@ -1537,6 +1601,14 @@ export class ExpedientesService {
       .populate('createdBy', '_id username role')
       .populate('finalizadoPor', 'username')
       .populate('anuladoPor', 'username')
+      .populate({
+        path: 'consentimientoDiarioId',
+        select: '_id acceptedAt consentMethod acceptedByUserId',
+        populate: {
+          path: 'acceptedByUserId',
+          select: 'username nombre',
+        },
+      })
       .exec();
   }
 
@@ -1552,6 +1624,14 @@ export class ExpedientesService {
       .populate('createdBy', '_id username role')
       .populate('finalizadoPor', 'username')
       .populate('anuladoPor', 'username')
+      .populate({
+        path: 'consentimientoDiarioId',
+        select: '_id acceptedAt consentMethod acceptedByUserId',
+        populate: {
+          path: 'acceptedByUserId',
+          select: 'username nombre',
+        },
+      })
       .exec();
   }
 
@@ -2250,9 +2330,10 @@ export class ExpedientesService {
     const proveedorSaludId =
       await this.getProveedorSaludIdFromDocument(existingDeteccion);
     if (proveedorSaludId) {
-      const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-        proveedorSaludId,
-      );
+      const policy =
+        await this.regulatoryPolicyService.getRegulatoryPolicy(
+          proveedorSaludId,
+        );
       const isImmutable = await this.isDocumentImmutable(
         proveedorSaludId,
         existingDeteccion.estado,
@@ -2323,7 +2404,8 @@ export class ExpedientesService {
     }
 
     // Obtener política regulatoria para verificar inmutabilidad
-    const proveedorSaludId = await this.getProveedorSaludIdFromDocument(deteccion);
+    const proveedorSaludId =
+      await this.getProveedorSaludIdFromDocument(deteccion);
     let isImmutable = false;
     if (proveedorSaludId) {
       isImmutable = await this.isDocumentImmutable(

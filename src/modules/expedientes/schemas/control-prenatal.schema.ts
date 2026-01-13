@@ -280,6 +280,14 @@ export class ControlPrenatal extends Document {
   @Prop({ default: Date.now })
   updatedAt: Date;
 
+  // Consentimiento Diario (NOM-024)
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'ConsentimientoDiario',
+    required: false,
+  })
+  consentimientoDiarioId?: MongooseSchema.Types.ObjectId;
+
   // Document State Management (NOM-024)
   @Prop({
     enum: DocumentoEstado,

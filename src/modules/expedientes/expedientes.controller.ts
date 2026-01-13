@@ -12,6 +12,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import { ExpedientesService } from './expedientes.service';
 import { isValidObjectId } from 'mongoose';
@@ -60,6 +61,8 @@ import path from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { convertirFechaISOaDDMMYYYY } from '../../utils/dates';
 import jwt from 'jsonwebtoken';
+import { DailyConsentGuard } from '../../utils/guards/daily-consent.guard';
+import { RequireDailyConsent } from '../../utils/decorators/require-daily-consent.decorator';
 
 interface JwtPayload {
   id: string;
@@ -130,6 +133,8 @@ export class ExpedientesController {
   }
 
   @Post(':documentType/crear')
+  @UseGuards(DailyConsentGuard)
+  @RequireDailyConsent({ action: 'CREATE_DOCUMENT' })
   async createDocument(
     @Param('documentType') documentType: string,
     @Body() createDto: any,
@@ -209,6 +214,8 @@ export class ExpedientesController {
       }),
     }),
   )
+  @UseGuards(DailyConsentGuard)
+  @RequireDailyConsent({ action: 'CREATE_DOCUMENT' })
   async uploadDocument(
     @Param('trabajadorId') trabajadorId: string,
     @Body() createDocumentoExternoDto: CreateDocumentoExternoDto,
@@ -433,6 +440,8 @@ export class ExpedientesController {
 
   // GIIS-B013: Lesion CRUD Endpoints
   @Post('lesion')
+  @UseGuards(DailyConsentGuard)
+  @RequireDailyConsent({ action: 'CREATE_DOCUMENT', skipIfNoTrabajadorId: true })
   async createLesion(@Body() createLesionDto: CreateLesionDto) {
     try {
       const lesion =
@@ -603,6 +612,8 @@ export class ExpedientesController {
   // ==================== GIIS-B019 Detección CRUD Endpoints ====================
 
   @Post('deteccion')
+  @UseGuards(DailyConsentGuard)
+  @RequireDailyConsent({ action: 'CREATE_DOCUMENT', skipIfNoTrabajadorId: true })
   async createDeteccion(@Body() createDeteccionDto: CreateDeteccionDto) {
     try {
       const deteccion =

@@ -16,6 +16,7 @@ export interface RegulatoryPolicy {
     giisExportEnabled: boolean;
     notaAclaratoriaEnabled: boolean;
     cluesFieldVisible: boolean; // CLUES visible solo en SIRES
+    dailyConsentEnabled: boolean; // Consentimiento informado diario
   };
   validation: {
     curpFirmantes: 'required' | 'optional';
@@ -106,6 +107,7 @@ export class RegulatoryPolicyService {
         giisExportEnabled: true,
         notaAclaratoriaEnabled: true,
         cluesFieldVisible: true,
+        dailyConsentEnabled: true,
       },
       validation: {
         curpFirmantes: 'required',
@@ -131,11 +133,12 @@ export class RegulatoryPolicyService {
         giisExportEnabled: false,
         notaAclaratoriaEnabled: false,
         cluesFieldVisible: false,
+        dailyConsentEnabled: false,
       },
       validation: {
         curpFirmantes: 'optional',
         workerCurp: 'optional',
-        cie10Principal: 'optional',
+        cie10Principal: 'required',
         geoFields: 'optional',
       },
     };

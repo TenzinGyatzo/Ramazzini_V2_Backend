@@ -57,7 +57,7 @@ describe('ExpedientesService - Regulatory Policy Enforcement', () => {
     validation: {
       curpFirmantes: 'optional',
       workerCurp: 'optional',
-      cie10Principal: 'optional',
+      cie10Principal: 'required',
       geoFields: 'optional',
     },
   });
@@ -518,19 +518,10 @@ describe('ExpedientesService - Regulatory Policy Enforcement', () => {
       ).rejects.toThrow('Código CIE-10 principal es obligatorio');
     });
 
-    it('should allow missing CIE-10 principal for SIN_REGIMEN when creating notaMedica', async () => {
+    it('should require CIE-10 principal for SIN_REGIMEN when creating notaMedica', async () => {
       mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
         createSinRegimenPolicy(),
       );
-
-      const mockNotaMedicaModel = service['models']['notaMedica'];
-      const mockSave = jest.fn().mockResolvedValue({
-        _id: 'new-id',
-      });
-      mockNotaMedicaModel.constructor = jest.fn().mockImplementation((dto) => ({
-        ...dto,
-        save: mockSave,
-      }));
 
       // Mock validateVitalSignsForNOM024
       jest
@@ -544,11 +535,14 @@ describe('ExpedientesService - Regulatory Policy Enforcement', () => {
         idTrabajador: trabajadorId,
         createdBy: '507f1f77bcf86cd799439016',
         updatedBy: '507f1f77bcf86cd799439016',
-        // No codigoCIE10Principal provided - should be allowed
+        // No codigoCIE10Principal provided - should throw error
       };
 
-      const result = await service.createDocument('notaMedica', createDto);
-      expect(result).toBeDefined();
+      await expect(
+        service.createDocument('notaMedica', createDto),
+      ).rejects.toThrow();
+      
+      expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalled();
     });
   });
 });

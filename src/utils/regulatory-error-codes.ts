@@ -25,6 +25,30 @@ export enum RegulatoryErrorCode {
    * Ejemplos: CURP, campos geográficos, CIE-10 principal
    */
   REGIMEN_FIELD_REQUIRED = 'REGIMEN_FIELD_REQUIRED',
+
+  /**
+   * Consentimiento informado diario no habilitado
+   * Ocurre cuando se intenta usar consentimiento diario en régimen SIN_REGIMEN
+   */
+  CONSENT_NOT_ENABLED = 'CONSENT_NOT_ENABLED',
+
+  /**
+   * Consentimiento ya existe para el trabajador en la fecha especificada
+   * Ocurre cuando se intenta crear un consentimiento duplicado para el mismo día
+   */
+  CONSENT_ALREADY_EXISTS = 'CONSENT_ALREADY_EXISTS',
+
+  /**
+   * Se requiere consentimiento informado diario para realizar esta acción
+   * Ocurre cuando se intenta realizar una acción protegida sin consentimiento del día
+   */
+  CONSENT_REQUIRED = 'CONSENT_REQUIRED',
+
+  /**
+   * El consentimiento usado corresponde a una fecha diferente
+   * Ocurre cuando el consentimiento existe pero su dateKey no coincide con el dateKey actual del servidor
+   */
+  CONSENT_INVALID_DATE = 'CONSENT_INVALID_DATE',
 }
 
 /**
@@ -54,4 +78,20 @@ export interface RegulatoryErrorDetails {
    * Ejemplos: 'notaMedica', 'historiaClinica', 'lesion'
    */
   documentType?: string;
+
+  /**
+   * ID del trabajador para errores de consentimiento requerido
+   */
+  trabajadorId?: string;
+
+  /**
+   * DateKey (YYYY-MM-DD) para errores de consentimiento requerido
+   */
+  dateKey?: string;
+
+  /**
+   * Acción que requiere consentimiento
+   * Ejemplos: 'create_document', 'export_giis', 'finalize_document'
+   */
+  action?: string;
 }

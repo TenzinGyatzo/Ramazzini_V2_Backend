@@ -25,6 +25,7 @@ import { InformePersonalizacionModule } from './modules/informe-personalizacion/
 import { CatalogsModule } from './modules/catalogs/catalogs.module';
 import { NOM024ComplianceModule } from './modules/nom024-compliance/nom024-compliance.module';
 import { GIISExportModule } from './modules/giis-export/giis-export.module';
+import { ConsentimientoDiarioModule } from './modules/consentimiento-diario/consentimiento-diario.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { GIISExportModule } from './modules/giis-export/giis-export.module';
     CatalogsModule,
     NOM024ComplianceModule,
     GIISExportModule,
+    ConsentimientoDiarioModule,
     EmpresasModule,
     CentrosTrabajoModule,
     TrabajadoresModule,

@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   BadRequestException,
   UnprocessableEntityException,
+  ConflictException,
 } from '@nestjs/common';
 import {
   RegulatoryErrorCode,
@@ -63,7 +64,7 @@ export interface CreateRegulatoryErrorOptions {
  */
 export function createRegulatoryError(
   options: CreateRegulatoryErrorOptions,
-): ForbiddenException | BadRequestException | UnprocessableEntityException {
+): ForbiddenException | BadRequestException | UnprocessableEntityException | ConflictException {
   const { errorCode, details, regime } = options;
 
   // Generar mensaje base según el código de error
@@ -84,6 +85,8 @@ export function createRegulatoryError(
   switch (statusCode) {
     case 403:
       return new ForbiddenException(response);
+    case 409:
+      return new ConflictException(response);
     case 422:
       return new UnprocessableEntityException(response);
     case 400:
@@ -130,6 +133,18 @@ function generateBaseMessage(
       }
       return `El campo ${fieldName} es obligatorio`;
 
+    case RegulatoryErrorCode.CONSENT_NOT_ENABLED:
+      return 'El consentimiento informado diario solo está disponible para proveedores con régimen SIRES (NOM-024)';
+
+    case RegulatoryErrorCode.CONSENT_ALREADY_EXISTS:
+      return 'Ya existe un consentimiento registrado para este trabajador en la fecha especificada';
+
+    case RegulatoryErrorCode.CONSENT_REQUIRED:
+      return 'Se requiere consentimiento informado diario para realizar esta acción';
+
+    case RegulatoryErrorCode.CONSENT_INVALID_DATE:
+      return 'El consentimiento usado corresponde a una fecha diferente. Se requiere consentimiento del día actual.';
+
     default:
       return 'Error regulatorio';
   }
@@ -144,9 +159,14 @@ function getStatusCodeForErrorCode(
   switch (errorCode) {
     case RegulatoryErrorCode.REGIMEN_FEATURE_DISABLED:
     case RegulatoryErrorCode.REGIMEN_DOCUMENT_IMMUTABLE:
+    case RegulatoryErrorCode.CONSENT_NOT_ENABLED:
+    case RegulatoryErrorCode.CONSENT_REQUIRED:
+    case RegulatoryErrorCode.CONSENT_INVALID_DATE:
       return 403; // Forbidden
     case RegulatoryErrorCode.REGIMEN_FIELD_REQUIRED:
       return 400; // Bad Request (validación)
+    case RegulatoryErrorCode.CONSENT_ALREADY_EXISTS:
+      return 409; // Conflict
     default:
       return 400;
   }
@@ -163,6 +183,7 @@ function getFeatureDisplayName(feature?: string): string {
     notaAclaratoria: 'Notas aclaratorias',
     sessionTimeout: 'Timeout de sesión',
     documentImmutability: 'Inmutabilidad de documentos',
+    dailyConsent: 'Consentimiento informado diario',
   };
   
   return featureNames[feature] || feature;

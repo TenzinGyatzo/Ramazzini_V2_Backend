@@ -341,6 +341,14 @@ export class HistoriaClinica extends Document {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   updatedBy: User;
 
+  // Consentimiento Diario (NOM-024)
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'ConsentimientoDiario',
+    required: false,
+  })
+  consentimientoDiarioId?: MongooseSchema.Types.ObjectId;
+
   // Document State Management (NOM-024)
   @Prop({
     enum: DocumentoEstado,
