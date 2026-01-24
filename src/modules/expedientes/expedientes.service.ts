@@ -200,6 +200,18 @@ export class ExpedientesService {
     if (!model) {
       throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
     }
+    
+    // Si es documentoExterno, incluir populate de resultadoClinico
+    if (documentType === 'documentoExterno') {
+      return model
+        .find({ idTrabajador: trabajadorId })
+        .populate({
+          path: 'idResultadoClinico',
+          select: 'tipoEstudio fechaEstudio resultadoGlobal',
+        })
+        .exec();
+    }
+    
     return model.find({ idTrabajador: trabajadorId }).exec();
   }
 
@@ -208,6 +220,18 @@ export class ExpedientesService {
     if (!model) {
       throw new BadRequestException(`Tipo de documento ${documentType} no soportado`);
     }
+    
+    // Si es documentoExterno, incluir populate de resultadoClinico
+    if (documentType === 'documentoExterno') {
+      return model
+        .findById(id)
+        .populate({
+          path: 'idResultadoClinico',
+          select: 'tipoEstudio fechaEstudio resultadoGlobal',
+        })
+        .exec();
+    }
+    
     return model.findById(id).exec();
   }
   

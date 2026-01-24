@@ -135,4 +135,13 @@ export class CreateResultadoClinicoDto {
   @IsOptional()
   @IsMongoId({ message: 'El ID de "updatedBy" debe ser un ObjectId válido' })
   updatedBy?: string;
+
+  @ApiProperty({
+    description: 'ID del documento externo vinculado',
+    example: '60d9f70fc39b3c1b8f0d6c0d',
+    required: false,
+  })
+  @IsOptional()
+  @IsMongoId({ message: 'El ID del documento externo debe ser válido' })
+  idDocumentoExterno?: string;
 }

@@ -26,6 +26,9 @@ export class DocumentoExterno extends Document {
     @Prop({ required: true })
     rutaDocumento: string;
 
+    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ResultadoClinico' })
+    idResultadoClinico?: MongooseSchema.Types.ObjectId;
+
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
     createdBy: User;
   

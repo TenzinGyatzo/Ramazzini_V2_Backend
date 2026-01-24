@@ -949,8 +949,8 @@ export class EmailsService {
    @Cron('*/10 7-19 * * *')   // De 12 AM a 2 AM UTC-7 (convertido a 12 AM - 2 AM UTC)
    async trackMetrics() {
      console.log(`📊 Guardando métricas de servidor a las ${new Date().toLocaleString()} (hora local)`);
-     await this.saveMetric();
-     await this.checkAndSendAlertIfCritical(); // <- agregar esta línea
+     /* await this.saveMetric(); */
+     /* await this.checkAndSendAlertIfCritical(); */ // <- agregar esta línea
    }
  
    // 🔹 Ejecutar el reporte automáticamente cada día a las 19:00 AM

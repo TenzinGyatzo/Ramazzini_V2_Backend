@@ -77,6 +77,10 @@ export class ResultadoClinico extends Document {
   @Prop({ type: String })
   recomendacion?: string;
 
+  // Relación con Documento Externo (opcional)
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'DocumentoExterno' })
+  idDocumentoExterno?: MongooseSchema.Types.ObjectId;
+
   // Campos específicos para Espirometría (solo si resultadoGlobal = ANORMAL)
   @Prop({ type: String, enum: TipoAlteracionEspirometria })
   tipoAlteracion?: TipoAlteracionEspirometria;

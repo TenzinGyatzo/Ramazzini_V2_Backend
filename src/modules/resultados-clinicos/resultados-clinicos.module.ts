@@ -6,6 +6,10 @@ import {
   ResultadoClinico,
   ResultadoClinicoSchema,
 } from './schemas/resultado-clinico.schema';
+import {
+  DocumentoExterno,
+  DocumentoExternoSchema,
+} from '../expedientes/schemas/documento-externo.schema';
 
 @Module({
   controllers: [ResultadosClinicosController],
@@ -13,6 +17,7 @@ import {
   imports: [
     MongooseModule.forFeature([
       { name: ResultadoClinico.name, schema: ResultadoClinicoSchema },
+      { name: DocumentoExterno.name, schema: DocumentoExternoSchema },
     ]),
   ],
   exports: [ResultadosClinicosService],

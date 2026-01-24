@@ -15,6 +15,7 @@ import {
 import { ResultadosClinicosService } from './resultados-clinicos.service';
 import { CreateResultadoClinicoDto } from './dto/create-resultado-clinico.dto';
 import { UpdateResultadoClinicoDto } from './dto/update-resultado-clinico.dto';
+import { VincularDocumentoDto } from './dto/vincular-documento.dto';
 import { isValidObjectId } from 'mongoose';
 
 @Controller('api/resultados-clinicos')
@@ -75,6 +76,32 @@ export class ResultadosClinicosController {
       throw new BadRequestException('ID inválido');
     }
     return await this.resultadosClinicosService.update(id, updateDto);
+  }
+
+  @Patch(':id/vincular-documento')
+  async vincularDocumento(
+    @Param('id') id: string,
+    @Body(ValidationPipe) vincularDto: VincularDocumentoDto,
+  ) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('ID de resultado inválido');
+    }
+    if (!isValidObjectId(vincularDto.idDocumentoExterno)) {
+      throw new BadRequestException('ID de documento inválido');
+    }
+    return await this.resultadosClinicosService.vincularDocumento(
+      id,
+      vincularDto.idDocumentoExterno,
+    );
+  }
+
+  @Delete(':id/desvincular-documento')
+  @HttpCode(HttpStatus.OK)
+  async desvincularDocumento(@Param('id') id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('ID inválido');
+    }
+    return await this.resultadosClinicosService.desvincularDocumento(id);
   }
 
   @Delete(':id')
