@@ -34,6 +34,7 @@ import { MedicosFirmantesService } from '../medicos-firmantes/medicos-firmantes.
 import { EnfermerasFirmantesService } from '../enfermeras-firmantes/enfermeras-firmantes.service';
 import { TecnicosFirmantesService } from '../tecnicos-firmantes/tecnicos-firmantes.service';
 import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.service';
+import { ResultadosClinicosService } from '../resultados-clinicos/resultados-clinicos.service';
 
 @Injectable()
 export class InformesService {
@@ -48,6 +49,7 @@ export class InformesService {
     private readonly enfermerasFirmantesService: EnfermerasFirmantesService,
     private readonly proveedoresSaludService: ProveedoresSaludService,
     private readonly tecnicosFirmantesService: TecnicosFirmantesService,
+    private readonly resultadosClinicosService: ResultadosClinicosService,
   ) {}
 
   private mapMedicoFirmante(
@@ -273,6 +275,7 @@ export class InformesService {
     trabajadorId: string,
     aptitudId: string,
     userId: string,
+    includeResultadosClinicos = true,
   ): Promise<string> {
     const empresa = await this.empresasService.findOne(empresaId);
     const nombreEmpresa = empresa.nombreComercial;
@@ -456,6 +459,48 @@ export class InformesService {
         }
       : null;
 
+    const resultadosClinicos = includeResultadosClinicos
+      ? await this.resultadosClinicosService.findByTrabajador(trabajadorId)
+      : [];
+
+    const findMostRecentResultadoClinico = (items: any[], tipoEstudio: string) =>
+      items.find((item) => item?.tipoEstudio === tipoEstudio && item?.fechaEstudio) || null;
+
+    const nearestEKG = findMostRecentResultadoClinico(resultadosClinicos, 'EKG');
+    const nearestEspirometria = findMostRecentResultadoClinico(
+      resultadosClinicos,
+      'ESPIROMETRIA',
+    );
+    const nearestTipoSangre = findMostRecentResultadoClinico(
+      resultadosClinicos,
+      'TIPO_SANGRE',
+    );
+
+    const datosResultadoClinicoEKG = nearestEKG
+      ? {
+          fechaEstudio: nearestEKG.fechaEstudio,
+          resultadoGlobal: nearestEKG.resultadoGlobal,
+          hallazgoEspecifico: nearestEKG.hallazgoEspecifico,
+          tipoAlteracionPrincipal: nearestEKG.tipoAlteracionPrincipal,
+        }
+      : null;
+
+    const datosResultadoClinicoEspirometria = nearestEspirometria
+      ? {
+          fechaEstudio: nearestEspirometria.fechaEstudio,
+          resultadoGlobal: nearestEspirometria.resultadoGlobal,
+          hallazgoEspecifico: nearestEspirometria.hallazgoEspecifico,
+          tipoAlteracion: nearestEspirometria.tipoAlteracion,
+        }
+      : null;
+
+    const datosResultadoClinicoTipoSangre = nearestTipoSangre
+      ? {
+          fechaEstudio: nearestTipoSangre.fechaEstudio,
+          tipoSangre: nearestTipoSangre.tipoSangre,
+        }
+      : null;
+
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
     const datosMedicoFirmante = this.mapMedicoFirmante(
       medicoFirmante
@@ -534,6 +579,9 @@ export class InformesService {
       datosExamenVista,
       datosAudiometria,
       datosAntidoping,
+      datosResultadoClinicoTipoSangre,
+      datosResultadoClinicoEKG,
+      datosResultadoClinicoEspirometria,
       datosMedicoFirmante,
       datosProveedorSalud,
     );

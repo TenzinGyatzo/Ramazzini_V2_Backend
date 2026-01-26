@@ -31,8 +31,15 @@ export class InformesController {
     @Param('aptitudId') aptitudId: string,
     @Param('userId') userId: string,
     @Res() res: Response,
+    @Query('includeResultadosClinicos') includeResultadosClinicos?: string,
   ) {
-    const rutaPDF = await this.informesService.getInformeAptitudPuesto(empresaId, trabajadorId, aptitudId, userId);
+    const rutaPDF = await this.informesService.getInformeAptitudPuesto(
+      empresaId,
+      trabajadorId,
+      aptitudId,
+      userId,
+      includeResultadosClinicos !== 'false',
+    );
     return res.status(200).json({ message: 'PDF generado exitosamente', ruta: rutaPDF });
   }
 

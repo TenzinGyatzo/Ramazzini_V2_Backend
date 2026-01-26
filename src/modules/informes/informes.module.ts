@@ -11,6 +11,7 @@ import { EnfermerasFirmantesModule } from '../enfermeras-firmantes/enfermeras-fi
 import { TecnicosFirmantesModule } from '../tecnicos-firmantes/tecnicos-firmantes.module';
 import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
 import { UsersModule } from '../users/users.module';
+import { ResultadosClinicosModule } from '../resultados-clinicos/resultados-clinicos.module';
 
 @Module({
   controllers: [InformesController],
@@ -25,7 +26,8 @@ import { UsersModule } from '../users/users.module';
     EnfermerasFirmantesModule,
     TecnicosFirmantesModule,
     ProveedoresSaludModule,
-    UsersModule
+    UsersModule,
+    ResultadosClinicosModule,
   ],
   exports: [InformesService],
 })

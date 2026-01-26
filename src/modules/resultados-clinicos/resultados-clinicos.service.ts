@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ResultadoClinico, TipoEstudio } from './schemas/resultado-clinico.schema';
+import { ResultadoClinico, ResultadoGlobal, TipoEstudio, TipoSangre } from './schemas/resultado-clinico.schema';
 import { CreateResultadoClinicoDto } from './dto/create-resultado-clinico.dto';
 import { UpdateResultadoClinicoDto } from './dto/update-resultado-clinico.dto';
 import { DocumentoExterno } from '../expedientes/schemas/documento-externo.schema';
@@ -55,7 +55,7 @@ export class ResultadosClinicosService {
       .find({ idTrabajador: trabajadorId })
       .populate({
         path: 'idDocumentoExterno',
-        select: 'nombreDocumento fechaDocumento extension',
+        select: 'nombreDocumento fechaDocumento extension notasDocumento',
       })
       .sort({ fechaEstudio: -1 })
       .exec();
@@ -95,6 +95,27 @@ export class ResultadosClinicosService {
     if (updateDto.fechaEstudio) {
       const fechaEstudio = new Date(updateDto.fechaEstudio);
       updateData.anioEstudio = fechaEstudio.getFullYear();
+    }
+
+    // Si el resultado global cambia a NORMAL o NO_CONCLUYENTE, eliminar campos de ANORMAL
+    if (
+      updateDto.resultadoGlobal &&
+      updateDto.resultadoGlobal !== ResultadoGlobal.ANORMAL
+    ) {
+      updateData.$unset = {
+        hallazgoEspecifico: 1,
+        relevanciaClinica: 1,
+        recomendacion: 1,
+        tipoAlteracion: 1,
+        tipoAlteracionPrincipal: 1,
+      };
+      
+      // También eliminamos de updateData para que no se intenten establecer como null/empty
+      delete updateData.hallazgoEspecifico;
+      delete updateData.relevanciaClinica;
+      delete updateData.recomendacion;
+      delete updateData.tipoAlteracion;
+      delete updateData.tipoAlteracionPrincipal;
     }
 
     const resultado = await this.resultadoClinicoModel
@@ -168,6 +189,25 @@ export class ResultadosClinicosService {
     resultado.idDocumentoExterno = documento._id as any;
     await resultado.save();
 
+    if (
+      resultado.tipoEstudio === TipoEstudio.EKG ||
+      resultado.tipoEstudio === TipoEstudio.ESPIROMETRIA
+    ) {
+      documento.notasDocumento = resultado.resultadoGlobal;
+    } else if (resultado.tipoEstudio === TipoEstudio.TIPO_SANGRE) {
+      const mapeoTipoSangre: Record<TipoSangre, string> = {
+        [TipoSangre.A_POS]: 'A+',
+        [TipoSangre.A_NEG]: 'A-',
+        [TipoSangre.B_POS]: 'B+',
+        [TipoSangre.B_NEG]: 'B-',
+        [TipoSangre.AB_POS]: 'AB+',
+        [TipoSangre.AB_NEG]: 'AB-',
+        [TipoSangre.O_POS]: 'O+',
+        [TipoSangre.O_NEG]: 'O-',
+      };
+      documento.notasDocumento = mapeoTipoSangre[resultado.tipoSangre] || resultado.tipoSangre;
+    }
+
     documento.idResultadoClinico = resultado._id as any;
     await documento.save();
 
@@ -175,7 +215,7 @@ export class ResultadosClinicosService {
       .findById(resultadoId)
       .populate({
         path: 'idDocumentoExterno',
-        select: 'nombreDocumento fechaDocumento extension',
+        select: 'nombreDocumento fechaDocumento extension notasDocumento',
       })
       .exec();
   }

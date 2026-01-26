@@ -281,6 +281,62 @@ const obtenerResumenAntidoping = (a: any) => {
   return `Positivo a: ${sustanciasPositivas}`;
 };
 
+const tipoSangreLabels: Record<string, string> = {
+  A_POS: 'A RH Positivo',
+  A_NEG: 'A RH Negativo',
+  B_POS: 'B RH Positivo',
+  B_NEG: 'B RH Negativo',
+  AB_POS: 'AB RH Positivo',
+  AB_NEG: 'AB RH Negativo',
+  O_POS: 'O RH Positivo',
+  O_NEG: 'O RH Negativo',
+};
+
+const tipoAlteracionEspirometriaLabels: Record<string, string> = {
+  ANORMAL_OBSTRUCTIVO: 'Anormal obstructivo',
+  ANORMAL_RESTRICTIVO_SOSPECHADO: 'Anormal restrictivo sospechado',
+  ANORMAL_MIXTO: 'Anormal mixto',
+};
+
+const tipoAlteracionEKGLabels: Record<string, string> = {
+  ANORMAL_ARRITMIA: 'Anormal arritmia',
+  ANORMAL_TRASTORNO_CONDUCCION: 'Anormal trastorno de conducción',
+  ANORMAL_ISQUEMIA_INFARTO: 'Anormal isquemia/infarto',
+  ANORMAL_REPOLARIZACION: 'Anormal repolarización',
+  ANORMAL_HIPERTROFIA_CRECIMIENTO_CAVIDADES: 'Anormal hipertrofia/crecimiento de cavidades',
+  ANORMAL_QT_ALTERADO: 'Anormal QT alterado',
+};
+
+const obtenerResumenTipoSangre = (resultado: ResultadoClinicoTipoSangre | null) => {
+  if (!resultado) return null;
+  if (!resultado.tipoSangre) return null;
+  return tipoSangreLabels[resultado.tipoSangre] || resultado.tipoSangre;
+};
+
+const obtenerResumenEKG = (resultado: ResultadoClinicoEKG | null) => {
+  if (!resultado || resultado.resultadoGlobal === 'NO_CONCLUYENTE') return null;
+  if (resultado.hallazgoEspecifico) return resultado.hallazgoEspecifico;
+  if (resultado.resultadoGlobal === 'NORMAL') {
+    return 'Normal, valores dentro del rango de referencia';
+  }
+  if (resultado.resultadoGlobal === 'ANORMAL') {
+    return tipoAlteracionEKGLabels[resultado.tipoAlteracionPrincipal] || resultado.tipoAlteracionPrincipal || 'Anormal';
+  }
+  return null;
+};
+
+const obtenerResumenEspirometria = (resultado: ResultadoClinicoEspirometria | null) => {
+  if (!resultado || resultado.resultadoGlobal === 'NO_CONCLUYENTE') return null;
+  if (resultado.hallazgoEspecifico) return resultado.hallazgoEspecifico;
+  if (resultado.resultadoGlobal === 'NORMAL') {
+    return 'Normal, valores dentro del rango de referencia';
+  }
+  if (resultado.resultadoGlobal === 'ANORMAL') {
+    return tipoAlteracionEspirometriaLabels[resultado.tipoAlteracion] || resultado.tipoAlteracion || 'Anormal';
+  }
+  return null;
+};
+
 // ==================== INTERFACES ====================
 interface Trabajador {
   primerApellido: string;
@@ -371,6 +427,25 @@ interface Antidoping {
   antidepresivosTriciclicos: string;
 }
 
+interface ResultadoClinicoTipoSangre {
+  fechaEstudio: Date;
+  tipoSangre?: string;
+}
+
+interface ResultadoClinicoEKG {
+  fechaEstudio: Date;
+  resultadoGlobal?: string;
+  hallazgoEspecifico?: string;
+  tipoAlteracionPrincipal?: string;
+}
+
+interface ResultadoClinicoEspirometria {
+  fechaEstudio: Date;
+  resultadoGlobal?: string;
+  hallazgoEspecifico?: string;
+  tipoAlteracion?: string;
+}
+
 interface MedicoFirmante {
   nombre: string;
   tituloProfesional: string;
@@ -414,6 +489,9 @@ export const aptitudPuestoInforme = (
   examenVista: ExamenVista | null,
   audiometria: Audiometria | null,
   antidoping: Antidoping | null,
+  resultadoTipoSangre: ResultadoClinicoTipoSangre | null,
+  resultadoEKG: ResultadoClinicoEKG | null,
+  resultadoEspirometria: ResultadoClinicoEspirometria | null,
   medicoFirmante: MedicoFirmante,
   proveedorSalud: ProveedorSalud,
 ): TDocumentDefinitions => {
@@ -459,6 +537,10 @@ export const aptitudPuestoInforme = (
       ? `OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion} - ${examenVista.sinCorreccionLejanaInterpretacion}, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
       : `OI: 20/${examenVista.ojoIzquierdoLejanaConCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaConCorreccion} - ${examenVista.conCorreccionLejanaInterpretacion} Corregida, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
     : 'No se cuenta con examen visual';
+
+  const tipoSangreResumen = obtenerResumenTipoSangre(resultadoTipoSangre);
+  const ekgResumen = obtenerResumenEKG(resultadoEKG);
+  const espirometriaResumen = obtenerResumenEspirometria(resultadoEspirometria);
 
   const identificadorLabel =
     proveedorSalud.pais === 'MX'
@@ -614,6 +696,45 @@ if (trabajador.nss || trabajador.curp) {
               'tableCell',
               'center',
             ),
+          ],
+        ]
+      : []),
+    ...(resultadoTipoSangre && tipoSangreResumen
+      ? [
+          [
+            createTableCell('TIPO DE SANGRE', 'sectionHeader', 'center'),
+            createTableCell(
+              formatearFechaUTC(resultadoTipoSangre.fechaEstudio),
+              'tableCell',
+              'center',
+            ),
+            createTableCell(tipoSangreResumen, 'tableCell', 'center'),
+          ],
+        ]
+      : []),
+    ...(resultadoEKG && ekgResumen
+      ? [
+          [
+            createTableCell('ELECTROCARDIOGRAMA', 'sectionHeader', 'center'),
+            createTableCell(
+              formatearFechaUTC(resultadoEKG.fechaEstudio),
+              'tableCell',
+              'center',
+            ),
+            createTableCell(ekgResumen, 'tableCell', 'center'),
+          ],
+        ]
+      : []),
+    ...(resultadoEspirometria && espirometriaResumen
+      ? [
+          [
+            createTableCell('ESPIROMETRIA', 'sectionHeader', 'center'),
+            createTableCell(
+              formatearFechaUTC(resultadoEspirometria.fechaEstudio),
+              'tableCell',
+              'center',
+            ),
+            createTableCell(espirometriaResumen, 'tableCell', 'center'),
           ],
         ]
       : []),
