@@ -18,6 +18,7 @@ import { NotaMedica, NotaMedicaSchema } from '../expedientes/schemas/nota-medica
 import { Receta, RecetaSchema } from '../expedientes/schemas/receta.schema';
 import { ConstanciaAptitud, ConstanciaAptitudSchema } from '../expedientes/schemas/constancia-aptitud.schema';
 import { RiesgoTrabajo, RiesgoTrabajoSchema } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
+import { ResultadoClinico, ResultadoClinicoSchema } from '../resultados-clinicos/schemas/resultado-clinico.schema';
 import { FilesModule } from '../files/files.module';
 import { CentroTrabajo, CentroTrabajoSchema } from '../centros-trabajo/schemas/centro-trabajo.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
@@ -41,6 +42,7 @@ import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
       { name: Receta.name, schema: RecetaSchema },
       { name: ConstanciaAptitud.name, schema: ConstanciaAptitudSchema },
       { name: RiesgoTrabajo.name, schema: RiesgoTrabajoSchema },
+      { name: ResultadoClinico.name, schema: ResultadoClinicoSchema },
       { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
       { name: User.name, schema: UserSchema },
       { name: Empresa.name, schema: EmpresaSchema },

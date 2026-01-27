@@ -71,7 +71,7 @@ export class CreateResultadoClinicoDto {
     required: false,
     example: RelevanciaClinica.MODERADA,
   })
-  @ValidateIf((o) => o.relevanciaClinica !== undefined)
+  @ValidateIf((o) => o.resultadoGlobal === ResultadoGlobal.ANORMAL && o.relevanciaClinica !== undefined)
   @IsEnum(RelevanciaClinica, { message: 'La relevancia clínica debe ser válida' })
   relevanciaClinica?: RelevanciaClinica;
 
