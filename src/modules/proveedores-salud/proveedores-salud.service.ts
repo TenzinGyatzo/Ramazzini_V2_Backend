@@ -282,8 +282,8 @@ export class ProveedoresSaludService {
       await this.validateCLUESForMX(cluesToValidate, id);
     }
 
-    // Normalize CLUES to uppercase if provided
-    if (normalizedDto.clues) {
+    // Normalize CLUES to uppercase if provided (non-empty); empty string clears the field
+    if (normalizedDto.clues !== undefined && normalizedDto.clues !== '') {
       normalizedDto.clues = normalizedDto.clues.trim().toUpperCase();
     }
 

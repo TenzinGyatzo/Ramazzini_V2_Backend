@@ -31,6 +31,7 @@
     "@nestjs/serve-static": "^4.0.2",
     "@nestjs/swagger": "^7.4.2",
     "@types/pidusage": "^2.0.5",
+    "archiver": "^7.0.1",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",

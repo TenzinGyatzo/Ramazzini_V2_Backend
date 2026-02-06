@@ -9,4 +9,5 @@ export * from './proveedor-salud.fixtures';
 export * from './professional.fixtures';
 export * from './lesion.fixtures';
 export * from './deteccion.fixtures';
+export * from './nota-medica.fixtures';
 export * from './vital-signs.fixtures';

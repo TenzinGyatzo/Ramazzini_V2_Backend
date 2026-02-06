@@ -1,0 +1,844 @@
+{
+    "guide": "CDT",
+    "version": "GIIS-B019-04-09",
+    "encoding": "windows-1252",
+    "delimiter": "|",
+    "listDelimiter": "&",
+    "subattrDelimiter": "#",
+    "fields": [
+      {
+        "id": 1,
+        "name": "clues",
+        "description": "Clave Única de Establecimientos en Salud",
+        "type": { "kind": "string", "maxLength": 11 },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe registrar el valor del campo clues que corresponda a la Unidad Médica donde se otorgó la atención de acuerdo al catálogo ESTABLECIMIENTO DE SALUD SIS. Se debe validar que para la CLUES registrada, el valor del campo en_operacion sea igual a “1 - EN OPERACIÓN”. En caso contrario, no se debe permitir el registro."
+      },
+      {
+        "id": 2,
+        "name": "paisNacimiento",
+        "description": "País de nacimiento del prestador de servicio de salud",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe registrar el valor del campo CATALOG_KEY que corresponda al País de Nacimiento del prestador de servicios de acuerdo al catálogo PAIS."
+      },
+      {
+        "id": 3,
+        "name": "curpPrestador",
+        "description": "Clave Única de Registro de Población del prestador de servicio de salud",
+        "type": { "kind": "string", "maxLength": 18 },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe realizar la validación de conformidad con el Instructivo Normativo para la Asignación de la Clave Única de Registro de Población emitido por RENAPO, tomando en cuenta todos los elementos que conforman la misma. Si el valor registrado en la variable “paisNacimiento” es diferente de “142 – MÉXICO”, se podrá registrar el valor genérico “XXXX999999XXXXXX99” (4 equis, 6 nueves, 6 equis y 2 nueves) y omitir la validación con las variables asociadas  Se debe validar que la edad del prestador de servicios, se encuentre entre los 18 y 90 años."
+      }
+      ,
+      {
+        "id": 4,
+        "name": "nombrePrestador",
+        "description": "Nombre del prestador de servicio de salud",
+        "type": { "kind": "string", "maxLength": 50 },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe validar que el nombre: Tenga una longitud mínima de dos caracteres y máxima de 50 caracteres. Se deben omitir espacios en blanco al inicio y al final de la variable y no se permite más de un espacio consecutivo. Los caracteres válidos son sólo de A – Z incluyendo Ñ, en mayúsculas. Los caracteres especiales permitidos son: guion medio “-”, coma “,”, punto “.”, diagonal “/”, apóstrofe “'” y diéresis “¨”  En caso de nombres compuestos, pueden ir separados por un espacio o guion medio “-” o coma “,” o punto “.” o diagonal “/”. No se acepta ningún otro tipo de caracter especial, ni acentos. El espacio no debe ser considerado como un caracter especial. No se permite el registro de más de un caracter especial de manera consecutiva. Si el valor registrado en la variable “curpPrestador” es diferente al valor genérico, el valor registrado en esta variable debe corresponder con dicho valor."
+      },
+      {
+        "id": 5,
+        "name": "primerApellidoPrestador",
+        "description": "Primer apellido del prestador de servicio de salud",
+        "type": { "kind": "string", "maxLength": 50 },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe validar que el primer apellido: Tenga una longitud mínima de dos caracteres y máxima de 50 caracteres. Se deben omitir espacios en blanco al inicio y al final de la variable y no se permite más de un espacio consecutivo. Los caracteres válidos son sólo de A – Z, incluyendo Ñ, en mayúsculas. En caso de apellidos compuestos, pueden ir separados por un espacio o guion medio “-” o coma “,” o punto “.” o diagonal “/”. Los caracteres especiales permitidos son: guion medio “-”, coma “,”, punto “.”, diagonal “/”, apóstrofe “'” y diéresis “¨”  No se acepta ningún otro tipo de caracter especial, ni acentos. El espacio no debe ser considerado como un caracter especial. No se permite el registro de más de un caracter especial de manera consecutiva. Si el valor registrado en la variable “curpPrestador” es diferente al valor genérico, el valor registrado en esta variable debe corresponder con dicho valor."
+      },
+      {
+        "id": 6,
+        "name": "segundoApellidoPrestador",
+        "description": "Segundo apellido del prestador de servicio de salud",
+        "type": { "kind": "string", "maxLength": 50 },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe validar que el segundo apellido: Tenga una longitud mínima de dos caracteres y máxima de 50 caracteres. Se deben omitir espacios en blanco al inicio y al final de la variable. Los caracteres válidos son sólo de A – Z, incluyendo Ñ, en mayúsculas. Los caracteres especiales permitidos son: guion medio “-”, coma “,”, punto “.”, diagonal “/”, apóstrofe “'” y diéresis “¨”  En caso de apellidos compuestos, pueden ir separados por un espacio o guion medio “-” o coma “,” o punto “.” o diagonal “/”. No se acepta ningún otro tipo de caracter especial, ni acentos. El espacio no debe ser considerado como un caracter especial. No se permite el registro de más de un caracter especial de manera consecutiva. Si el valor registrado en la variable “curpPrestador” es diferente al valor genérico, el valor registrado en esta variable debe corresponder con dicho valor. En caso de no contar con el segundo apellido, se debe registrar el valor “XX”."
+      }
+      ,
+      {
+        "id": 7,
+        "name": "tipoPersonal",
+        "description": "Tipo de profesional de la salud.",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Con base en el catálogo TIPO PERSONAL – SIS debe registrar una de las siguientes opciones: 1 – MÉDICA(O) PASANTE 2 – MÉDICA(O) GENERAL 3 – MÉDICA(O) RESIDENTE 4 – MÉDICA(O) ESPECIALISTA 5 – PASANTE DE ENFERMERÍA 6 – ENFERMERA(O) 7 – PASANTE DE NUTRICIÓN 8 – NUTRIÓLOGA(O) 9 – HOMEÓPATA 10 – MÉDICA(O) TRADICIONAL 11 – TAPS 15 – PASANTE DE PSICOLOGÍA 16 – PSICÓLOGA(O) 17 – RESIDENTE DE PSIQUIATRÍA 18 – PSIQUIATRA 19 – MÉDICA(O) GENERAL HABILITADO PARA SALUD MENTAL 20 – LICENCIADA(O) EN ENFERMERÍA Y OBSTETRICIA 21 – PARTERA(O) TÉCNICA 22 – PROMOTOR(A) DE SALUD 24 – MÉDICA(O) ESPECIALISTA HABILITADO PARA SALUD MENTAL 25 – LICENCIADA(O) EN GERONTOLOGÍA 27 – PASANTE DE GERONTOLOGÍA 30 – TRABAJADORA(OR) SOCIAL"
+      },
+      {
+        "id": 8,
+        "name": "programaSMyMG",
+        "description": "Indica si el prestador de servicios está contratado para el Programa U013 de Servicios Médicos y Medicamentos Gratuitos",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor registrado en la variable “clues”, en la columna de institucion es igual a “SSA” o “IMB” de acuerdo al catálogo de ESTABLECIMIENTO DE SALUD SIS, se debe registrar una de las siguientes opciones: 0 – NO 1 – SI En caso contrario, se debe registrar el valor “0 – NO”. El valor registrado, deberá estar asociado al tipo de contratación del Prestador de Servicios de Salud y, se deberá registrar el mismo valor para todas las atenciones registradas por el prestador por contrato."
+      },
+      {
+        "id": 9,
+        "name": "curpPaciente",
+        "description": "Clave Única de Registro de Población del paciente",
+        "type": { "kind": "string", "maxLength": 18 },
+        "requiredColumn": true,
+        "confidential": true,
+        "validationRaw": "Se debe realizar la validación de conformidad con el Instructivo Normativo para la Asignación de la Clave Única de Registro de Población emitido por RENAPO, tomando en cuenta todos los elementos que conforman la misma. El valor registrado, debe ser diferente al registrado en la variable CURP, correspondiente al Prestador de Servicio de Salud, a excepción del valor genérico. Por excepción, si no se cuenta con la información de la CURP, se debe registrar el valor genérico “XXXX999999XXXXXX99” (4 equis, 6 nueves, 6 equis y 2 nueves) y omitir la validación con las variables “nombre”, “primerApellido”, “segundoApellido”, “fechaNacimiento”, “entidadNacimiento” y “sexoCURP”."
+      },
+      {
+        "id": 10,
+        "name": "nombre",
+        "description": "Nombre(s) del paciente",
+        "type": { "kind": "string", "maxLength": 50 },
+        "requiredColumn": true,
+        "confidential": true,
+        "validationRaw": "Se debe validar que el nombre: Tenga una longitud mínima de dos caracteres y máxima de 50 caracteres. Se deben omitir espacios en blanco al inicio y al final de la variable y no se permite más de un espacio consecutivo. Debe tener al menos dos caracteres. Los caracteres válidos son sólo de A – Z incluyendo Ñ, en mayúsculas. Los caracteres especiales permitidos son: guion medio “-”, coma “,”, punto “.”, diagonal “/”, apóstrofe “'” y diéresis “¨”  En caso de nombres compuestos, pueden ir separados por un espacio o guion medio “-” o coma “,” o punto “.” o diagonal “/”. No se acepta ningún otro tipo de caracter especial, ni acentos. El espacio no debe ser considerado como un caracter especial. No debe permitir el registro de más de un caracter especial de manera consecutiva. Si el valor registrado en la variable “curpPaciente” es diferente al valor genérico, el valor registrado en esta variable debe corresponder con dicho valor."
+      }
+      ,
+      {
+        "id": 11,
+        "name": "primerApellido",
+        "description": "Primer apellido del paciente",
+        "type": { "kind": "string", "maxLength": 50 },
+        "requiredColumn": true,
+        "confidential": true,
+        "validationRaw": "Se debe validar que el primer apellido: Tenga una longitud mínima de dos caracteres y máxima de 50 caracteres. Se deben omitir espacios en blanco al inicio y al final de la variable. Los caracteres válidos son sólo de A – Z, incluyendo Ñ, en mayúsculas. Los caracteres especiales permitidos son: guion medio “-”, coma “,”, punto “.”, diagonal “/”, apóstrofe “'” y diéresis “¨”  En caso de apellidos compuestos, pueden ir separados por un espacio o guion medio “-” o coma “,” o punto “.” o diagonal “/”. No se acepta ningún otro tipo de caracter especial, ni acentos. El espacio no debe ser considerado como un caracter especial. No se permite el registro de más de un caracter especial de manera consecutiva. Si el valor registrado en la variable “curpPaciente” es diferente al valor genérico, el valor registrado en esta variable debe corresponder con dicho valor. En caso de no contar con el primer apellido, se debe registrar el valor “XX”."
+      },
+      {
+        "id": 12,
+        "name": "segundoApellido",
+        "description": "Segundo apellido del paciente",
+        "type": { "kind": "string", "maxLength": 50 },
+        "requiredColumn": true,
+        "confidential": true,
+        "validationRaw": "Se debe validar que el segundo apellido: Tenga una longitud mínima de dos caracteres y máxima de 50 caracteres. Se deben omitir espacios en blanco al inicio y al final de la variable. Los caracteres válidos son sólo de A – Z, incluyendo Ñ, en mayúsculas. Los caracteres especiales permitidos son: guion medio “-”, coma “,”, punto “.”, diagonal “/”, apóstrofe “'” y diéresis “¨”  En caso de apellidos compuestos, pueden ir separados por un espacio o guion medio “-” o coma “,” o punto “.” o diagonal “/”. No se permite ningún otro tipo de caracter especial, ni acentos. El espacio no debe ser considerado como un caracter especial. No se permite el registro de más de un mismo o diferente caracter especial de manera consecutiva. Si el valor registrado en la variable “curpPaciente” es diferente al valor genérico, el valor registrado en esta variable debe corresponder con dicho valor. En caso de no contar con el segundo apellido, se debe registrar el valor “XX”."
+      },
+      {
+        "id": 13,
+        "name": "fechaNacimiento",
+        "description": "Fecha de nacimiento del paciente",
+        "type": { "kind": "string", "maxLength": 10 },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se deben omitir espacios en blanco al inicio y al final de la variable. Debe contener el día, mes y año bajo el siguiente formato: dd/mm/aaaa. La longitud es de 8 dígitos y 2 caracteres especiales “/”. El valor registrado en esta variable, no puede ser mayor al registrado en la variable “fechaConsulta”. La edad del paciente se calculará a partir de la fecha de nacimiento con respecto a la fecha de la consulta y esta no debe ser mayor a 120 años. Si se desconoce la fecha precisa de nacimiento, se deberá registrar el valor: “30/06/[Año aproximado de nacimiento]” (fecha estimada, cuando la CURP sea genérica). Si el valor registrado en la variable “curpPaciente” es diferente al valor genérico, el valor registrado en esta variable debe corresponder con dicho valor."
+      },
+      {
+        "id": 14,
+        "name": "paisNacPaciente",
+        "description": "País de nacimiento del paciente",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe registrar el valor del campo CATALOG_KEY que corresponda al País de Nacimiento del paciente de acuerdo al catálogo PAIS."
+      },
+      {
+        "id": 15,
+        "name": "entidadNacimiento",
+        "description": "Entidad federativa de nacimiento del paciente",
+        "type": { "kind": "string", "maxLength": 2 },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor registrado en la variable “paisNacPaciente” es “142 – MÉXICO”, se debe registrar el valor del campo CATALOG_KEY que corresponda a la entidad de nacimiento del paciente de acuerdo al catálogo ENTIDAD FEDERATIVA, o bien: 99 – SE IGNORA (si se desconoce el dato) 00 – NO ESPECIFICADO (Si no está descrito en la hoja diaria). En caso contrario, se debe registrar: 88 – NO APLICA (si es extranjero) Si el valor registrado en la variable “curpPaciente” es diferente al valor genérico, el valor registrado en esta variable debe corresponder con dicho valor."
+      },
+      {
+        "id": 16,
+        "name": "sexoCURP",
+        "description": "Sexo del paciente registrado ante RENAPO.",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor registrado en la variable “curpPaciente” es diferente al valor genérico, entonces, de acuerdo al carácter en la posición 11 de la CURP, se puede registrar uno de los siguientes valores: Si es “M”, se debe registrar “2 – MUJER”. Si es “H”, se debe registrar “1 – HOMBRE”. Si es “X”, se debe registrar “3 – NO BINARIO”. Si el valor registrado en la variable “curpPaciente” es el valor genérico, se podrá registrar una de las siguientes opciones: 1 – HOMBRE 2 – MUJER 3 – NO BINARIO"
+      },
+      {
+        "id": 17,
+        "name": "sexoBiologico",
+        "description": "Sexo del paciente, es decir la condición biológica y fisiológica de nacimiento.",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe registrar una de las siguientes opciones: 1 – HOMBRE 2 – MUJER 3 – INTERSEXUAL"
+      },
+      {
+        "id": 18,
+        "name": "seAutodenominaAfromexicano",
+        "description": "Autodenominación como afromexicano",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se puede registrar una de las siguientes opciones: 0 – NO 1 – SI 2 – NO RESPONDE 3 – NO SABE Si se desconoce el dato, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 19,
+        "name": "seConsideraIndigena",
+        "description": "Identifica si el paciente se considera indígena",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se puede registrar una de las siguientes opciones: 0 – NO 1 – SI 2 – NO RESPONDE 3 – NO SABE Si se desconoce el dato, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 20,
+        "name": "migrante",
+        "description": "Identifica el paciente se considera migrante",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se puede registrar una de las siguientes opciones: 0 – NO 1 – NACIONAL 2 – INTERNACIONAL 3 – RETORNADO (Sólo nacional) Si se desconoce el dato, se debe registrar el valor “-1”"
+      },
+      {
+        "id": 21,
+        "name": "paisProcedencia",
+        "description": "País de procedencia de la persona migrante.",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor registrado en la variable “migrante” es “2 –INTERNACIONAL” se debe registrar el valor del campo CATALOG_KEY que corresponda al País de procedencia del paciente, de acuerdo al catálogo PAIS, dicho valor debe ser diferente a “142 – MÉXICO”. Si el valor registrado en la variable “migrante” es “1 – NACIONAL” o “3 – RETORNADO” se debe registrar el valor “142 – MÉXICO”. Si el valor registrado en la variable “migrante” es “0 – NO”, o “-1”, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 22,
+        "name": "genero",
+        "description": "Identidad de género del paciente o atributos sociales aprendidos o adoptados por la persona.",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe registrar una de las siguientes opciones: 0 – NO ESPECIFICADO 1 – MASCULINO 2 – FEMENINO 3 – TRANSGÉNERO 4 – TRANSEXUAL 5 – TRAVESTI 6 – INTERSEXUAL 88 – OTRO"
+      },
+      {
+        "id": 23,
+        "name": "derechohabiencia",
+        "description": "Institución (es) del SNS en la(s) cual(es) se encuentran afiliados los usuarios de los servicios de salud",
+        "type": { "kind": "string", "maxLength": 20 },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Con base en el catálogo AFILIACION, se debe registrar al menos una de las siguientes opciones: 0 – NO ESPECIFICADO 1 – NINGUNA 2 – IMSS 3 – ISSSTE 4 – PEMEX 5 – SEDENA 6 – SEMAR 8 – OTRA 10 – IMSS BIENESTAR 11 – ISSFAM 14 – OPD IMSS BIENESTAR 99 – SE IGNORA Si se identifica más de una afiliación, los valores correspondientes deben ir separados por “&”. Se podrá registrar más de una afiliación excepto cuando se seleccione alguno de los siguientes valores: “0”, “1” o “99”. No se deberá registrar el mismo valor más de una vez."
+      },
+      {
+        "id": 24,
+        "name": "fechaDeteccion",
+        "description": "Fecha en la cual se realizó la(s) detección(es).",
+        "type": { "kind": "string", "maxLength": 10 },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se deben omitir espacios en blanco al inicio y al final de la variable. Formato: dd/mm/aaaa con una longitud de 8 dígitos y 2 caracteres especiales. El valor registrado no debe ser posterior a la fecha de registro y no puede ser anterior al valor registrado en la variable “fechaNacimiento”."
+      },
+      {
+        "id": 25,
+        "name": "servicioAtencion",
+        "description": "Servicio donde se proporciona la atención al paciente",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Con base en el valor registrado en la variable “tipoPersonal” se debe registrar una de las siguientes opciones de acuerdo al catálogo SERVICIOS DE ATENCIÓN POR TIPO DE PERSONAL SIS-DET. Si el valor registrado es “15 – PAIDOPSIQUIATRÍA” o “16 – PEDIATRÍA”, se debe validar que la edad del paciente sea menor de “18 años”. Si el valor registrado es “19 – PSICOGERIATRÍA”, “39 – GERIATRÍA” o “62 – GERONTOLOGÍA”, se debe validar que la edad del paciente sea mayor o igual a “60 años”. Si el servicio de atención es “22 – SERVICIO AMIGABLE”, se debe validar que la edad del paciente se encuentre en el rango permitido de “10” a “19 años” y que el registro en la variable “clues” se encuentre en el catálogo de DIRECTORIO DE SERVICIOS AMIGABLES."
+      },
+      {
+        "id": 26,
+        "name": "peso",
+        "description": "Peso del paciente (kg)",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "El valor registrado, debe tener una longitud máxima de 7 caracteres en formato ###.### con un máximo de 3 dígitos en la parte entera y 3 dígitos en la parte decimal. Debe registrarse un valor que se encuentre dentro del rango mayor o igual “1” y menor o igual a “400” kilogramos. Si se desconoce el dato, se debe registrar el valor “999”."
+      },
+      {
+        "id": 27,
+        "name": "talla",
+        "description": "Registro de la talla (cm)",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "El valor registrado, debe tener una longitud máxima de 3 dígitos. Debe registrarse un valor que se encuentre dentro del rango mayor o igual a “30” y menor o igual “220” centímetros. Si se desconoce el dato, se debe registrar el valor “999”."
+      },
+      {
+        "id": 28,
+        "name": "circunferenciaCintura",
+        "description": "Registro de circunferencia de cintura (cm)",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "El valor registrado, debe tener una longitud máxima de 3 dígitos. Puede registrarse un valor que se encuentre dentro del rango mayor o igual a “20” y menor o igual “300” centímetros. Si se desconoce el dato, se debe registrar el valor “0”."
+      },
+      {
+        "id": 29,
+        "name": "sistolica",
+        "description": "Presión arterial sistólica (mm/Hg)",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "El valor registrado, debe tener una longitud máxima de 3 dígitos. Si el valor registrado en la variable “diastolica” es diferente a “0”, debe registrarse un valor que se encuentre dentro del rango mayor o igual a “50” y menor o igual “300” milímetros de mercurio. El valor no puede ser menor que el registrado en la variable “diastolica”. Si se desconoce el dato o el valor registrado en la variable “diastolica” es “0”, se debe registrar el valor “0”."
+      },
+      {
+        "id": 30,
+        "name": "diastolica",
+        "description": "Presión arterial diastólica (mm/Hg)",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "El valor registrado, debe tener una longitud máxima de 3 dígitos. Si el valor registrado en la variable “sistolica” es diferente a “0”, debe registrarse un valor que se encuentre dentro del rango mayor o igual a “20” y menor o igual “200” milímetros de mercurio. El valor no puede ser mayor que el registrado en la variable “sistolica”. Si se desconoce el dato o el valor registrado en la variable “sistolica” es “0”, se debe registrar el valor “0”."
+      }
+      ,
+      {
+        "id": 31,
+        "name": "frecuenciaCardiaca",
+        "description": "Cantidad de latidos por minuto",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "El valor registrado, debe tener una longitud máxima de 3 dígitos. Puede registrarse un valor que se encuentre dentro del rango mayor o igual a “40” y menor o igual “220” latidos por minuto. Si se desconoce el dato, se debe registrar el valor “0”."
+      },
+      {
+        "id": 32,
+        "name": "frecuenciaRespiratoria",
+        "description": "Cantidad de respiraciones por minuto",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "El valor registrado, debe tener una longitud máxima de 2 dígitos. Puede registrarse un valor que se encuentre dentro del rango mayor o igual a “10” y menor o igual “99” respiraciones por minuto. Si se desconoce el dato, se debe registrar el valor “0”."
+      },
+      {
+        "id": 33,
+        "name": "temperatura",
+        "description": "Temperatura corporal (oC)",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "El valor registrado, debe tener una longitud máxima de 4 caracteres en formato ##.# con un máximo de 2 dígitos en la parte entera y 1 dígito en la parte decimal. Puede registrarse un valor que se encuentre dentro del rango mayor o igual “30” y menor o igual a “44” grados centígrados. Si se desconoce el dato, se debe registrar el valor “0”."
+      },
+      {
+        "id": 34,
+        "name": "saturacionOxigeno",
+        "description": "Porcentaje de saturación de oxígeno en sangre (SpO2)",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "El valor registrado, debe tener una longitud máxima de 3 dígitos. Puede registrarse un valor que se encuentre dentro del rango mayor o igual a “1” y menor o igual “100” % de SpO2. Si se desconoce el dato, se debe registrar el valor “0”."
+      },
+      {
+        "id": 35,
+        "name": "glucemia",
+        "description": "Glucosa en sangre mg/dl",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "El valor registrado, debe tener una longitud máxima de 3 dígitos. Puede registrarse un valor que se encuentre dentro del rango mayor o igual a “20” y menor o igual “999”. Si se desconoce el dato, se debe registrar el valor “0”."
+      },
+      {
+        "id": 36,
+        "name": "tipoMedicion",
+        "description": "Identifica si la medición de la glucosa es en ayunas",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor registrado en la variable “glucemia” es diferente de “0”, se puede registrar una de las siguientes opciones: 0 – NO 1 – SI En caso contrario, o si se desconoce el dato, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 37,
+        "name": "tirasDeteccion",
+        "description": "Número de tiras usadas para detección",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “glucemia” es diferente de “0”, se puede registrar un valor entre 1 y 5. En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “0”."
+      },
+      {
+        "id": 38,
+        "name": "primeraVezAnio",
+        "description": "Identificación de la primera consulta en el año o cobertura.",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe validar la existencia de una consulta o atención previa en el año de acuerdo a la fecha de consulta para el mismo paciente en la misma unidad médica, independientemente del tipo: externa, bucal, mental, planificación familiar o detección. Se debe registrar el valor de acuerdo a cada caso: Si no existe una consulta previa, se debe registrar el valor “1 – SI”. Si existe una consulta previa, se debe registrar el valor “0 – NO”."
+      },
+      {
+        "id": 39,
+        "name": "depresionTamizaje",
+        "description": "Tamizaje ¿Se siente usted frecuentemente triste o deprimido?",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es mayor o igual a “10 años”, se puede registrar una de las siguientes opciones: 0 – NO 1 – SI En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 40,
+        "name": "depresion",
+        "description": "Detección de depresión, para el caso de las acciones realizadas por el gerontólogo se denomina sintomatología depresiva",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “depresionTamizaje” es “1 – SI”, se debe registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 41,
+        "name": "ansiedad",
+        "description": "Detección de ansiedad en pacientes a partir de los 10 años de edad",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es mayor o igual a “10 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO Si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 42,
+        "name": "haOlvidadoMasCosas",
+        "description": "Tamizaje ¿Ha olvidado más cosas que de costumbre?",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “60 años”, se puede registrar una de las siguientes opciones: 0 – NO 1 – SI En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 43,
+        "name": "alteracionesDeMemoria",
+        "description": "Detección de Alteración de la Memoria",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “haOlvidadoMasCosas” es “1 – SI”, se debe registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 44,
+        "name": "demencia",
+        "description": "Riesgo de Demencia",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “50 años”, se puede registrar una de las siguientes opciones: 1 – BAJO RIESGO 2 – MEDIANO RIESGO 3 – ALTO RIESGO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 45,
+        "name": "tamizajeFugaDeOrina",
+        "description": "Tamizaje ¿Ha tenido fuga de orina?",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “60 años”, se puede registrar una de las siguientes opciones: 0 – NO 1 – SI En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 46,
+        "name": "incontinenciaUriaria",
+        "description": "Detección de incontinencia urinaria",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tamizajeFugaDeOrina” es “1 – SI”, se debe registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 47,
+        "name": "tamizajeCaidas",
+        "description": "Tamizaje ¿Ha tenido una o más caídas?",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “60 años”, se puede registrar una de las siguientes opciones: 0 – NO 1 – SI En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 48,
+        "name": "caida60yMas",
+        "description": "Detección de síndrome de caídas",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tamizajeCaidas” es “1 – SI”, se debe registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 49,
+        "name": "marcha",
+        "description": "Evaluación de la estabilidad de la marcha en personas de 60 y más años de edad",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “60 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 50,
+        "name": "estadoNutricional",
+        "description": "Evaluación del estado nutricional de las personas de 60 y más años de edad",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “60 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 51,
+        "name": "abvdTamizaje",
+        "description": "Tamizaje de actividades básicas de la vida diaria",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “60 años”, se puede registrar una de las siguientes opciones: 0 – NO 1 – SI En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 52,
+        "name": "abvdEvaluacion",
+        "description": "Evaluación de actividades básicas de la vida diaria",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor de “60 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 53,
+        "name": "aivdTamizaje",
+        "description": "Tamizaje de actividades instrumentales de la vida diaria",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “60 años”, se puede registrar una de las siguientes opciones: 0 – NO 1 – SI En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 54,
+        "name": "aivdEvaluacion",
+        "description": "Evaluación de actividades instrumentales de la vida diaria",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor de “60 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 55,
+        "name": "edadCuidador",
+        "description": "Identifica la edad de la persona que realiza el cuidado de personas de 60 y más años de edad",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “60 años”, se puede registrar una de las siguientes opciones: 1 – <20 AÑOS DE EDAD 2 – 20 A 59 AÑOS DE EDAD 3 – 60 Y MÁS AÑOS DE EDAD En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 56,
+        "name": "sexoCuidador",
+        "description": "Identifica el sexo de la persona que realiza el cuidado de personas de 60 y más años de edad",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si la edad del paciente es igual o mayor a “60 años” y el valor de la variable “edadCuidador” es diferente de “-1”, se debe registrar una de las siguientes opciones: 1 – HOMBRE 2 – MUJER En caso contrario, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 57,
+        "name": "sobrecargaCuidador",
+        "description": "Evaluación de la existencia de sobrecarga del cuidador de personas de 60 y más años de edad",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si la edad del paciente es igual o mayor a “60 años” y el valor de la variable “edadCuidador” es diferente de “-1”, se debe registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 58,
+        "name": "riesgoFractura",
+        "description": "Riesgo de fractura por osteoporosis",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “50 años”, se puede registrar una de las siguientes opciones: 1 – BAJO RIESGO 2 – MEDIANO RIESGO 3 – ALTO RIESGO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 59,
+        "name": "diabetesMellitus",
+        "description": "Diabetes mellitus",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “20 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 60,
+        "name": "hipertensionArterial",
+        "description": "Hipertensión arterial",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “20 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 61,
+        "name": "obesidad",
+        "description": "Obesidad",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “20 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 62,
+        "name": "dislipidemias",
+        "description": "Dislipidemias",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y la edad del paciente es igual o mayor a “20 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 63,
+        "name": "alcohol",
+        "description": "Consumo de Sustancias Psicoactivas: Alcohol",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 64,
+        "name": "tabaco",
+        "description": "Consumo de Sustancias Psicoactivas: Tabaco",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 65,
+        "name": "cannabis",
+        "description": "Consumo de Sustancias Psicoactivas: Cannabis (Marihuana)",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 66,
+        "name": "cocaina",
+        "description": "Consumo de Sustancias Psicoactivas: Cocaína",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 67,
+        "name": "metanfetaminas",
+        "description": "Consumo de Sustancias Psicoactivas: Metanfetaminas",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 68,
+        "name": "inhalables",
+        "description": "Consumo de Sustancias Psicoactivas: Inhalables",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 69,
+        "name": "opiaceos",
+        "description": "Consumo de Sustancias Psicoactivas: Opiáceos",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 70,
+        "name": "alucinogenos",
+        "description": "Consumo de Sustancias Psicoactivas: Alucinógenos",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      }
+      ,
+      {
+        "id": 71,
+        "name": "tranquilizantes",
+        "description": "Consumo de Sustancias Psicoactivas: Tranquilizantes",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 72,
+        "name": "otrasSubstancias",
+        "description": "Consumo de Otras Sustancias Psicoactivas.",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 73,
+        "name": "B24X",
+        "description": "VIH incluye embarazadas",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 1 – 1A DETECCIÓN PRUEBA RÁPIDA (INMUNOCROMATOGRAFÍA) REACTIVA 2 – 1A DETECCIÓN PRUEBA RÁPIDA (INMUNOCROMATOGRAFÍA) NO REACTIVA 3 – 1A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) POSITIVA 4 – 1A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) NEGATIVA 5 – 2A DETECCIÓN PRUEBA RÁPIDA (INMUNOCROMATOGRAFÍA) REACTIVA 6 – 2A DETECCIÓN PRUEBA RÁPIDA (INMUNOCROMATOGRAFÍA) NO REACTIVA 7 – 2A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) POSITIVA 8 – 2A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) NEGATIVA 9 – PRUEBA CONFIRMATORIA Y/O SUPLEMENTARIA POSITIVA 10 – PRUEBA CONFIRMATORIA Y/O SUPLEMENTARIA NEGATIVA En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 74,
+        "name": "A539",
+        "description": "Sífilis incluye embarazadas",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 1 – 1A DETECCIÓN PRUEBA RÁPIDA (INMUNOCROMATOGRAFÍA) REACTIVA 2 – 1A DETECCIÓN PRUEBA RÁPIDA (INMUNOCROMATOGRAFÍA) NO REACTIVA 3 – 1A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) POSITIVA 4 – 1A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) NEGATIVA 5 – 2A DETECCIÓN PRUEBA RÁPIDA (INMUNOCROMATOGRAFÍA) REACTIVA 6 – 2A DETECCIÓN PRUEBA RÁPIDA (INMUNOCROMATOGRAFÍA) NO REACTIVA 7 – 2A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) POSITIVA 8 – 2A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) NEGATIVA 9 – PRUEBA CONFIRMATORIA Y/O SUPLEMENTARIA POSITIVA 10 – PRUEBA CONFIRMATORIA Y/O SUPLEMENTARIA NEGATIVA En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 75,
+        "name": "gonorrea",
+        "description": "Gonorrea",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 9 – PRUEBA TREPONÉMICA POSITIVA 10 – PRUEBA TREPONÉMICA NEGATIVA En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1 ”."
+      },
+      {
+        "id": 76,
+        "name": "hepatitisB",
+        "description": "HepatitisB",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 1 – 1A DETECCIÓN PRUEBA RÁPIDA (INMUNOCROMATOGRAFÍA) REACTIVA 2 – 1A DETECCIÓN PRUEBA RÁPIDA (INMUNOCROMATOGRAFÍA) NO REACTIVA 3 – 1A DETECCIÓN ENZIMOINMUNOENSAYO POSITIVA 4 – 1A DETECCIÓN ENZIMOINMUNOENSAYO NEGATIVA En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1 ”."
+      },
+      {
+        "id": 77,
+        "name": "herpesGenital",
+        "description": "Herpes Genital",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 3 – 1A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) POSITIVA 4 – 1A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) NEGATIVA 9 – PRUEBA CONFIRMATORIA Y/O SUPLEMENTARIA (PCR O HISTOPATOLOGÍA) POSITIVA 10 – PRUEBA CONFIRMATORIA Y/O SUPLEMENTARIA (PCR O HISTOPATOLOGÍA) NEGATIVA En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1 ”."
+      },
+      {
+        "id": 78,
+        "name": "chlamydia",
+        "description": "Chlamydia",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 3 – 1A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) POSITIVA 4 – 1A DETECCIÓN ENZIMOINMUNOENSAYO (ELISA) NEGATIVA 9 – PRUEBA CONFIRMATORIA Y/O SUPLEMENTARIA (PCR O HISTOPATOLOGÍA) POSITIVA 10 – PRUEBA CONFIRMATORIA Y/O SUPLEMENTARIA (PCR O HISTOPATOLOGÍA) NEGATIVA En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1 ”."
+      },
+      {
+        "id": 79,
+        "name": "resultadoVPH",
+        "description": "Resultado de la prueba de Virus de Papiloma Humano",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, la edad del paciente es entre 35 a 64 años y la variable “sexoBiologico” es igual a “2 – MUJER”, se permite registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 80,
+        "name": "cancerCervicoUterino",
+        "description": "Detección de cáncer de cuello de útero",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, el valor de la variable “sexoBiologico” es “2 – MUJER” o “3 – INTERSEXUAL”, la edad de la paciente está entre 25 y 64 años, y el valor de la variable “resultadoCancerCervicoUterino”, es “-1”, se puede registrar una de las siguientes opciones: 0 – NO REALIZADO 1 – REALIZADO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 81,
+        "name": "resultadoCancerCervicoUterino",
+        "description": "Resultado de la Detección de cáncer de cuello de útero",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, el valor de la variable “sexoBiologico” es “2 – MUJER” o “3 – INTERSEXUAL”, la edad de la paciente está entre 25 y 64 años, y el valor de la variable “cancerCervicoUterino” es “-1”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 82,
+        "name": "cancerMama",
+        "description": "Detección de cáncer de mama",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – NORMAL 1 – ANORMAL En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 83,
+        "name": "violenciaSexual",
+        "description": "Identifica violencia sexual efectuada por agresor diferente a la pareja",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO Si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 84,
+        "name": "violenciaMujer15ymas",
+        "description": "Identifica violencia sexual, física y/o psicológica hacia mujeres de 15 y más años, donde el agresor es la pareja",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “sexoBiologico” es “2 – MUJER” y la edad de la paciente es igual o mayor a “15 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 85,
+        "name": "sospechaSindromeTurner",
+        "description": "Sospecha de Síndrome de Turner",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL” y el valor de la variable “sexoBiologico” es “2 – MUJER” o “3 – INTERSEXUAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 86,
+        "name": "hiperplasiaProstatica",
+        "description": "Hiperplasia prostática en hombres de 45 y más años (o de 40 años y más por carga genética directa)",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, el valor de la variable “sexoBiologico” es “1 – HOMBRE” y la edad del paciente es igual o mayor a “40 años”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 87,
+        "name": "reactivosAntigenoProstatico",
+        "description": "Número de reactivos de antígeno prostático usados",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “hiperplasiaProstatica” es diferente de “-1”, se debe registrar un valor entre “1” y “9”. En caso contrario, se debe registrar el valor “0”."
+      },
+      {
+        "id": 88,
+        "name": "sintomaticoRespiratorio",
+        "description": "Probable TB por estudio",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, se puede registrar una de las siguientes opciones: 0 – POSITIVO 1 – NEGATIVO En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 89,
+        "name": "espirometriaVEF1_CVF",
+        "description": "Resultado de VEF1/CVF de la prueba de espirometría",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “tipoPersonal” es diferente de “30 – TRABAJADORA(OR) SOCIAL”, la edad del paciente es igual o mayor a “19 años” y el valor registrado en la variable “clues” se encuentra en el catálogo DIRECTORIO DE CLUES CON ESPIRÓMETRO, se puede registrar un valor entre “1” y “100”. En caso contrario, si se desconoce el dato o no aplica, se debe registrar el valor “0”."
+      },
+      {
+        "id": 90,
+        "name": "LIN",
+        "description": "Límite Inferior de Normalidad de la espirometria",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “espirometriaVEF1_CVF” es diferente de “0”, se debe registrar un valor dentro del rango mayor o igual “0.655” y menor o igual a “0.785” utilizando 3 decimales como máximo, manteniendo el formato 0.###. En caso contrario, se debe registrar el valor “-1”. Si se desconoce el dato, se debe registrar el valor “0.999”."
+      },
+      {
+        "id": 91,
+        "name": "espirometriaResultado",
+        "description": "Resultado de la prueba de espirometría",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Si el valor de la variable “espirometriaVEF1_CVF” es diferente de “0”, se debe registrar una de las siguientes opciones: 1 – NORMAL CON RESPUESTA A BRONCODILATADOR 2 – MORMAL SIN RESPUESTA A BRONCODILATADOR 3 – OBSTRUIDO CON RESPUESTA A BRONCODILATADOR 4 – OBSTRUIDO SIN RESPUESTA A BRONCODILATADOR 5 – SUGIERE RESTRICCIÓN CON RESPUESTA A BRONCODILATADOR 6 – SUGIERE RESTRICCIÓN SIN RESPUESTA A BRONCODILATADOR 7 – SUGIERE PATRÓN MIXTO CON RESPUESTA A BRONCODILATADOR 8 – SUGIERE PATRÓN MIXTO SIN RESPUESTA A BRONCODILATADOR 9 – PATRÓN NO ESPECIFICO CON RESPUESTA A BRONCODILATADOR 10 – PATRÓN NO ESPECIFICO SIN RESPUESTA A BRONCODILATADOR En caso contrario, se debe registrar el valor “-1”."
+      },
+      {
+        "id": 92,
+        "name": "cartillaSalud",
+        "description": "Identifica si se presenta cartilla de salud",
+        "type": { "kind": "numeric" },
+        "requiredColumn": true,
+        "confidential": false,
+        "validationRaw": "Se debe registrar una de las siguientes opciones: 0 – NO 1 – SI"
+      }
+    ]
+  }
+  

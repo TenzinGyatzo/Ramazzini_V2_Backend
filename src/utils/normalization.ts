@@ -132,6 +132,11 @@ export function normalizeProveedorSaludData(
     result.sitioWeb =
       typeof dto.sitioWeb === 'string' ? dto.sitioWeb.trim() : '';
 
+  // CLUES opcional: si viene en el payload (incluido vacío) se actualiza/borra
+  if ('clues' in dto)
+    result.clues =
+      typeof dto.clues === 'string' ? dto.clues.trim() : '';
+
   if ('colorInforme' in dto) {
     result.colorInforme =
       typeof dto.colorInforme === 'string'

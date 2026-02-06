@@ -1,5 +1,0 @@
-diagnosis_text,cie10_code,reviewed_by,review_date,confidence,notes
-"EXAMPLE: DIABETES MELLITUS TIPO 2",E11.9,Dr. García,2024-12-18,HIGH,"Código principal para DM2 sin complicaciones"
-"EXAMPLE: HIPERTENSION ARTERIAL",I10,Dr. García,2024-12-18,HIGH,"HTA esencial primaria"
-"EXAMPLE: INFECCION RESPIRATORIA AGUDA",J06.9,Dr. López,2024-12-18,MEDIUM,"IRA superior no especificada - verificar con historia clínica"
-

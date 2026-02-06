@@ -1,0 +1,50 @@
+[
+  {
+    "timestamp": "2026-02-05T19:10:00.009Z",
+    "memoryUsagePercentage": 78.10795573625686,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 884.14 GB usados de 999.26 GB (88.48% ocupado)\n    📂 D: 1.24 GB usados de 480.10 GB (0.26% ocupado)\n    📂 P: 176.11 GB usados de 2199.02 GB (8.01% ocupado)"
+  },
+  {
+    "timestamp": "2026-02-05T19:20:00.012Z",
+    "memoryUsagePercentage": 85.86912556031692,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 884.19 GB usados de 999.26 GB (88.48% ocupado)\n    📂 D: 1.24 GB usados de 480.10 GB (0.26% ocupado)\n    📂 P: 176.11 GB usados de 2199.02 GB (8.01% ocupado)"
+  },
+  {
+    "timestamp": "2026-02-05T19:30:00.007Z",
+    "memoryUsagePercentage": 84.65307332430683,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 884.44 GB usados de 999.26 GB (88.51% ocupado)\n    📂 D: 1.24 GB usados de 480.10 GB (0.26% ocupado)\n    📂 P: 176.11 GB usados de 2199.02 GB (8.01% ocupado)"
+  },
+  {
+    "timestamp": "2026-02-05T19:40:00.012Z",
+    "memoryUsagePercentage": 87.0351285531654,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 884.43 GB usados de 999.26 GB (88.51% ocupado)\n    📂 D: 1.24 GB usados de 480.10 GB (0.26% ocupado)\n    📂 P: 176.11 GB usados de 2199.02 GB (8.01% ocupado)"
+  },
+  {
+    "timestamp": "2026-02-05T19:50:00.007Z",
+    "memoryUsagePercentage": 88.28325561664397,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 884.46 GB usados de 999.26 GB (88.51% ocupado)\n    📂 D: 1.24 GB usados de 480.10 GB (0.26% ocupado)\n    📂 P: 176.11 GB usados de 2199.02 GB (8.01% ocupado)"
+  },
+  {
+    "timestamp": "2026-02-05T20:00:00.003Z",
+    "memoryUsagePercentage": 91.03040563708475,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 884.45 GB usados de 999.26 GB (88.51% ocupado)\n    📂 D: 1.24 GB usados de 480.10 GB (0.26% ocupado)\n    📂 P: 176.11 GB usados de 2199.02 GB (8.01% ocupado)"
+  },
+  {
+    "timestamp": "2026-02-05T20:10:00.016Z",
+    "memoryUsagePercentage": 90.88097977168401,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 885.12 GB usados de 999.26 GB (88.58% ocupado)\n    📂 D: 1.24 GB usados de 480.10 GB (0.26% ocupado)\n    📂 P: 176.11 GB usados de 2199.02 GB (8.01% ocupado)"
+  },
+  {
+    "timestamp": "2026-02-05T20:20:00.002Z",
+    "memoryUsagePercentage": 86.64005233995852,
+    "cpuUsage": 0,
+    "diskStats": "📂 C: 883.35 GB usados de 999.26 GB (88.40% ocupado)\n    📂 D: 1.24 GB usados de 480.10 GB (0.26% ocupado)\n    📂 P: 176.11 GB usados de 2199.02 GB (8.01% ocupado)"
+  }
+]

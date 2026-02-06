@@ -50,6 +50,7 @@ async function bootstrap() {
     origin: ['https://ramazzini.app', 'http://localhost:5173'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     optionsSuccessStatus: 204,
+    exposedHeaders: ['Content-Disposition'],
   });
 
   // Escuchar puerto dinámico o 3000
