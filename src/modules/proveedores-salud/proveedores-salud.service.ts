@@ -689,13 +689,13 @@ export class ProveedoresSaludService {
       throw new BadRequestException('ID de usuario inválido');
     }
 
-    // Validar que el usuario existe y pertenece al tenant
+    // Validar que el usuario existe y pertenece al proveedor
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    // Validar que el usuario pertenece al tenant
+    // Validar que el usuario pertenece al proveedor
     const userProveedorId = user.idProveedorSalud?.toString();
     const proveedorIdStr = proveedorSaludId.toString();
 

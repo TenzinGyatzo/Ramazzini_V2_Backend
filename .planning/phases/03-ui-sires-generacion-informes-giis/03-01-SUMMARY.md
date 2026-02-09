@@ -17,6 +17,6 @@
 
 ## Verification
 
-- GET /giis-export/batches with SIRES tenant returns 200 and array.
+- GET /giis-export/batches with SIRES proveedor returns 200 and array.
 - GET /giis-export/batches with non-SIRES returns 403.
 - Each item has required fields for UI.

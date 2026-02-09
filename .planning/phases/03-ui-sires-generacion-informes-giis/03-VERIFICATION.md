@@ -5,7 +5,7 @@
 
 ## Goal (from ROADMAP)
 
-UI para que el tenant SIRES genere y obtenga informes GIIS: elegir período, disparar generación, ver estado y descargar CDT/CEX/LES (apoyado en Phase 1 y 2).
+UI para que el proveedor SIRES genere y obtenga informes GIIS: elegir período, disparar generación, ver estado y descargar CDT/CEX/LES (apoyado en Phase 1 y 2).
 
 ## must_haves verification
 
@@ -13,7 +13,7 @@ UI para que el tenant SIRES genere y obtenga informes GIIS: elegir período, dis
 
 | Criterio | Estado |
 |----------|--------|
-| GET /giis-export/batches lista del tenant; 403 si no SIRES | ✓ Controller listBatches con getProveedorSaludIdFromRequest y policy.regime check |
+| GET /giis-export/batches lista del proveedor; 403 si no SIRES | ✓ Controller listBatches con getProveedorSaludIdFromRequest y policy.regime check |
 | Respuesta con batchId, yearMonth, status, completedAt, validationStatus, establecimientoClues, errorMessage, excludedReport, artifacts | ✓ listBatchesForProveedor devuelve BatchListItem[] con todos los campos |
 | Orden yearMonth descendente | ✓ sort({ yearMonth: -1 }) |
 | Sin paginación | ✓ |

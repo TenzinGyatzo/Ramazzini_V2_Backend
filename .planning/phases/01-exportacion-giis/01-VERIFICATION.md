@@ -7,7 +7,7 @@ score: 15/15 must-haves verified
 
 # Phase 1: Exportación GIIS — Verification Report
 
-**Phase Goal:** Que un tenant SIRES pueda exportar la información según las 3 guías GIIS aplicables (formato y reglas correctos, salida usable por el ecosistema regulatorio).
+**Phase Goal:** Que un proveedor SIRES pueda exportar la información según las 3 guías GIIS aplicables (formato y reglas correctos, salida usable por el ecosistema regulatorio).
 
 **Verified:** 2026-02-05  
 **Status:** passed
@@ -66,7 +66,7 @@ score: 15/15 must-haves verified
 | GIIS-01: Export según 3 guías (CDT, CEX, LES) | ✓ SATISFIED | - |
 | Identificación y documentación de guías/formatos | ✓ SATISFIED | docs/nom-024, schemas JSON |
 | Backend generación que cumple guías | ✓ SATISFIED | Schema-driven mappers + serializer |
-| Tenant SIRES dispara export y obtiene archivos | ✓ SATISFIED | API batches + download; gate SIRES |
+| Proveedor SIRES dispara export y obtiene archivos | ✓ SATISFIED | API batches + download; gate SIRES |
 | Tests que confirmen salida | ✓ SATISFIED | test/nom024/*.spec.ts |
 
 **Coverage:** 5/5 requirements satisfied

@@ -1,7 +1,7 @@
 # Requirements — Milestone SIRES_NOM024
 
 **Project:** Ramazzini — features exclusivas SIRES_NOM024  
-**Core value:** Exportación de información según las 3 guías GIIS aplicables para tenants SIRES.
+**Core value:** Exportación de información según las 3 guías GIIS aplicables para proveedores SIRES.
 
 ---
 
@@ -9,7 +9,7 @@
 
 ### Exportación GIIS
 
-- [ ] **GIIS-01**: Un tenant con régimen SIRES_NOM024 puede exportar la información de expedientes/documentos según las **3 guías GIIS aplicables** (formato, campos y reglas definidas por cada guía; salida usable por el ecosistema regulatorio).
+- [ ] **GIIS-01**: Un proveedor con régimen SIRES_NOM024 puede exportar la información de expedientes/documentos según las **3 guías GIIS aplicables** (formato, campos y reglas definidas por cada guía; salida usable por el ecosistema regulatorio).
 
 ### Audit Trail
 
@@ -25,7 +25,7 @@
 
 ## Out of Scope
 
-- **Exigencia retroactiva** — Al cambiar un tenant de SIN_REGIMEN a SIRES_NOM024, no se exigen cumplimientos sobre datos/documentos creados antes del cambio.
+- **Exigencia retroactiva** — Al cambiar un proveedor de SIN_REGIMEN a SIRES_NOM024, no se exigen cumplimientos sobre datos/documentos creados antes del cambio.
 - **Otras regulaciones** — Solo NOM-024 / SIRES en este alcance.
 - **Cambio SIRES → SIN_REGIMEN** — No requerido en este milestone.
 

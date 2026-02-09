@@ -7,7 +7,7 @@
 
 ## Phase Boundary
 
-Ofrecer la **interfaz de usuario** para que un tenant SIRES pueda **generar y obtener informes GIIS**: elegir período, disparar la generación, ver estado y descargar archivos (CDT, CEX, LES), apoyado en el backend de Phase 1 y 2. Solo se define cómo implementar esta UI dentro de este alcance; capacidades nuevas (ej. programación, notificaciones) son otra fase.
+Ofrecer la **interfaz de usuario** para que un proveedor SIRES pueda **generar y obtener informes GIIS**: elegir período, disparar la generación, ver estado y descargar archivos (CDT, CEX, LES), apoyado en el backend de Phase 1 y 2. Solo se define cómo implementar esta UI dentro de este alcance; capacidades nuevas (ej. programación, notificaciones) son otra fase.
 
 ---
 
@@ -18,18 +18,18 @@ Ofrecer la **interfaz de usuario** para que un tenant SIRES pueda **generar y ob
 - La opción vive en el **menú desplegable** de `LayOut.vue` (nivel principal).
 - **Nombre de la opción:** "Exportación GIIS".
 - **Visibilidad y acceso:** Solo roles **Principal** y **Administrador** ven la opción y pueden acceder.
-- **Si el tenant no es SIRES:** No mostrar la opción en absoluto (ni en menú ni en rutas).
+- **Si el proveedor no es SIRES:** No mostrar la opción en absoluto (ni en menú ni en rutas).
 
 ### Flujo de generación
 
-- **Selección:** Solo mes y año; el establecimiento del tenant se usa por defecto (sin selector de establecimiento en UI).
-- **Concurrencia:** Un job a la vez por tenant; si hay uno en curso, no se puede lanzar otro hasta que termine.
+- **Selección:** Solo mes y año; el establecimiento del proveedor se usa por defecto (sin selector de establecimiento en UI).
+- **Concurrencia:** Un job a la vez por proveedor; si hay uno en curso, no se puede lanzar otro hasta que termine.
 - **Durante la generación:** Spinner/loading en la misma pantalla con mensaje "Generando informes GIIS…".
 - **Al terminar correctamente:** Redirigir o mostrar el listado/historial con el nuevo reporte y opción de descarga (no quedarse solo en enlaces en la misma pantalla).
 
 ### Listado e historial
 
-- **Alcance:** Todos los batches del tenant (todos los meses generados); el más reciente primero en experiencia (orden por defecto: por mes reportado descendente).
+- **Alcance:** Todos los batches del proveedor (todos los meses generados); el más reciente primero en experiencia (orden por defecto: por mes reportado descendente).
 - **Columnas por fila:** Mes reportado, fecha de generación, estado (Listo / Error / En proceso), botón/enlace descarga.
 - **Estado vacío:** Mensaje "Aún no hay reportes GIIS. Use el botón de arriba para generar el primero" y formulario de generación visible en la misma pantalla.
 

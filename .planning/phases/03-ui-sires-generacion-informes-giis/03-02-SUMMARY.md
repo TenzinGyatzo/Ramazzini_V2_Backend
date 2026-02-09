@@ -20,6 +20,6 @@
 
 ## Verification
 
-- Principal/Administrador con tenant SIRES ve el menú y puede generar y descargar.
+- Principal/Administrador con proveedor SIRES ve el menú y puede generar y descargar.
 - Sin rol o sin SIRES: mensaje en vista o menú oculto.
 - Listado ordenado por backend (yearMonth desc); descarga directa sin nueva pestaña.

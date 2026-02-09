@@ -53,6 +53,10 @@ import { createRegulatoryError } from '../../utils/regulatory-error-helper';
 import { RegulatoryErrorCode } from '../../utils/regulatory-error-codes';
 import { ConsentimientoDiario } from '../consentimiento-diario/schemas/consentimiento-diario.schema';
 import { calculateDateKey } from '../../utils/date-key.util';
+import { AuditService } from '../audit/audit.service';
+import { AuditActionType } from '../audit/constants/audit-action-type';
+import { AuditEventClass } from '../audit/constants/audit-event-class';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class ExpedientesService {
@@ -102,6 +106,8 @@ export class ExpedientesService {
     private readonly proveedoresSaludService: ProveedoresSaludService,
     @Inject(forwardRef(() => RegulatoryPolicyService))
     private readonly regulatoryPolicyService: RegulatoryPolicyService,
+    private readonly auditService: AuditService,
+    private readonly usersService: UsersService,
   ) {
     this.models = {
       antidoping: this.antidopingModel,
@@ -619,6 +625,14 @@ export class ExpedientesService {
       await this.actualizarUpdatedAtTrabajador(createDto.idTrabajador);
     }
 
+    await this.recordDocDraftCreated({
+      documentType,
+      documentId: savedDocument._id.toString(),
+      trabajadorId: createDto.idTrabajador ?? null,
+      actorId: createDto.createdBy,
+      source: 'createDocument',
+    });
+
     return savedDocument;
   }
 
@@ -693,6 +707,117 @@ export class ExpedientesService {
     } catch {
       return null;
     }
+  }
+
+  private async resolveProveedorSaludIdOrFail(params: {
+    trabajadorId?: string | null;
+    actorId?: string | null;
+  }): Promise<string> {
+    const { trabajadorId, actorId } = params;
+    if (trabajadorId) {
+      const proveedorSaludId =
+        await this.getProveedorSaludIdFromTrabajador(trabajadorId);
+      if (proveedorSaludId) return proveedorSaludId;
+    }
+    if (actorId) {
+      const proveedorSaludId =
+        await this.usersService.getIdProveedorSaludByUserId(actorId);
+      if (proveedorSaludId) return proveedorSaludId;
+    }
+    throw new BadRequestException(
+      'No se pudo resolver proveedorSaludId para auditoría',
+    );
+  }
+
+  private async recordDocDraftCreated(params: {
+    documentType: string;
+    documentId: string;
+    trabajadorId?: string | null;
+    actorId: string;
+    source: 'createDocument' | 'updateOrCreateDocument';
+  }): Promise<void> {
+    const proveedorSaludId = await this.resolveProveedorSaludIdOrFail({
+      trabajadorId: params.trabajadorId ?? null,
+      actorId: params.actorId,
+    });
+    await this.auditService.record({
+      proveedorSaludId,
+      actorId: params.actorId,
+      actionType: AuditActionType.DOC_CREATE_DRAFT,
+      resourceType: params.documentType,
+      resourceId: params.documentId,
+      payload: {
+        estadoNuevo: DocumentoEstado.BORRADOR,
+        documentType: params.documentType,
+        documentId: params.documentId,
+        ...(params.trabajadorId ? { trabajadorId: params.trabajadorId } : {}),
+        source: params.source,
+      },
+      eventClass: AuditEventClass.CLASS_2_SOFT_FAIL,
+    });
+  }
+
+  private async recordDocDraftUpdated(params: {
+    documentType: string;
+    documentId: string;
+    trabajadorId?: string | null;
+    actorId: string;
+    estadoActual: DocumentoEstado;
+    changedKeys: string[];
+  }): Promise<void> {
+    const proveedorSaludId = await this.resolveProveedorSaludIdOrFail({
+      trabajadorId: params.trabajadorId ?? null,
+      actorId: params.actorId,
+    });
+    await this.auditService.record({
+      proveedorSaludId,
+      actorId: params.actorId,
+      actionType: AuditActionType.DOC_UPDATE_DRAFT,
+      resourceType: params.documentType,
+      resourceId: params.documentId,
+      payload: {
+        estado: params.estadoActual,
+        documentType: params.documentType,
+        documentId: params.documentId,
+        ...(params.trabajadorId ? { trabajadorId: params.trabajadorId } : {}),
+        changedKeys: params.changedKeys,
+      },
+      eventClass: AuditEventClass.CLASS_2_SOFT_FAIL,
+    });
+  }
+
+  private async recordDocAnulated(params: {
+    documentType: string;
+    documentId: string;
+    trabajadorId?: string | null;
+    actorId: string;
+    estadoAnterior: DocumentoEstado;
+    razonAnulacion?: string;
+    fechaAnulacion?: Date | null;
+  }): Promise<void> {
+    const proveedorSaludId = await this.resolveProveedorSaludIdOrFail({
+      trabajadorId: params.trabajadorId ?? null,
+      actorId: params.actorId,
+    });
+    await this.auditService.record({
+      proveedorSaludId,
+      actorId: params.actorId,
+      actionType: AuditActionType.DOC_ANULATE,
+      resourceType: params.documentType,
+      resourceId: params.documentId,
+      payload: {
+        estadoAnterior: params.estadoAnterior,
+        estadoNuevo: DocumentoEstado.ANULADO,
+        razonAnulacion: params.razonAnulacion ?? null,
+        documentType: params.documentType,
+        documentId: params.documentId,
+        ...(params.trabajadorId ? { trabajadorId: params.trabajadorId } : {}),
+        fechaAnulacion: params.fechaAnulacion
+          ? params.fechaAnulacion.toISOString()
+          : null,
+      },
+      eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+    });
   }
 
   /**
@@ -1015,6 +1140,17 @@ export class ExpedientesService {
 
       const newDocument = new model(newDocumentData);
       result = await newDocument.save();
+      const resolvedTrabajadorId =
+        (
+          updateDto.idTrabajador ?? existingDocument.idTrabajador
+        )?.toString?.() ?? null;
+      await this.recordDocDraftCreated({
+        documentType,
+        documentId: result._id.toString(),
+        trabajadorId: resolvedTrabajadorId,
+        actorId: updateDto.updatedBy,
+        source: 'updateOrCreateDocument',
+      });
     } else {
       // Limpieza especial para antidoping
       if (documentType === 'antidoping') {
@@ -1045,6 +1181,18 @@ export class ExpedientesService {
       result = await model
         .findByIdAndUpdate(id, updateDto, { new: true })
         .exec();
+      const resolvedTrabajadorId =
+        (
+          updateDto.idTrabajador ?? existingDocument.idTrabajador
+        )?.toString?.() ?? null;
+      await this.recordDocDraftUpdated({
+        documentType,
+        documentId: result._id.toString(),
+        trabajadorId: resolvedTrabajadorId,
+        actorId: updateDto.updatedBy,
+        estadoActual: (result as any).estado ?? existingDocument.estado,
+        changedKeys: Object.keys(updateDto ?? {}),
+      });
     }
 
     // ✅ Actualizar el updatedAt del trabajador
@@ -1062,6 +1210,8 @@ export class ExpedientesService {
     documentType: string,
     id: string,
     userId: string,
+    proveedorSaludId?: string | null,
+    opciones?: { motivo?: string },
   ): Promise<any> {
     const model = this.models[documentType];
 
@@ -1087,6 +1237,29 @@ export class ExpedientesService {
         'No se puede finalizar un documento anulado',
       );
     }
+
+    const estadoAnterior = document.estado;
+    const idTrabajador = (document as any).idTrabajador?.toString?.() ?? null;
+
+    const payload: Record<string, unknown> = {
+      estadoAnterior,
+      estadoNuevo: DocumentoEstado.FINALIZADO,
+      documentType,
+      documentId: id,
+      ...(idTrabajador && { idTrabajador }),
+      ...(opciones?.motivo && { motivo: opciones.motivo }),
+    };
+
+    // Audit (Clase 1: if this fails, finalization does not proceed)
+    await this.auditService.record({
+      proveedorSaludId: proveedorSaludId ?? null,
+      actorId: userId,
+      actionType: AuditActionType.DOC_FINALIZE,
+      resourceType: documentType,
+      resourceId: id,
+      payload,
+      eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+    });
 
     // Update document state
     document.estado = DocumentoEstado.FINALIZADO;
@@ -1513,6 +1686,15 @@ export class ExpedientesService {
           lesion.idTrabajador.toString(),
         );
       }
+      await this.recordDocAnulated({
+        documentType: 'lesion',
+        documentId: lesion._id.toString(),
+        trabajadorId: lesion.idTrabajador?.toString?.() ?? null,
+        actorId: userId,
+        estadoAnterior: DocumentoEstado.FINALIZADO,
+        razonAnulacion,
+        fechaAnulacion: lesion.fechaAnulacion ?? null,
+      });
       return { deleted: false, anulado: true };
     }
 
@@ -1825,6 +2007,16 @@ export class ExpedientesService {
           document.idTrabajador.toString(),
         );
       }
+
+      await this.recordDocAnulated({
+        documentType,
+        documentId: document._id.toString(),
+        trabajadorId: document.idTrabajador?.toString?.() ?? null,
+        actorId: userId,
+        estadoAnterior: DocumentoEstado.FINALIZADO,
+        razonAnulacion,
+        fechaAnulacion: document.fechaAnulacion ?? null,
+      });
 
       return { deleted: false, anulado: true };
     }
@@ -2430,6 +2622,15 @@ export class ExpedientesService {
           deteccion.idTrabajador.toString(),
         );
       }
+      await this.recordDocAnulated({
+        documentType: 'deteccion',
+        documentId: deteccion._id.toString(),
+        trabajadorId: deteccion.idTrabajador?.toString?.() ?? null,
+        actorId: userId,
+        estadoAnterior: DocumentoEstado.FINALIZADO,
+        razonAnulacion,
+        fechaAnulacion: deteccion.fechaAnulacion ?? null,
+      });
       return { deleted: false, anulado: true };
     }
 

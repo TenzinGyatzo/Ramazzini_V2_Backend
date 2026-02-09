@@ -47,6 +47,41 @@ export class UsersService {
     return this.userModel.findById(id).select(selectFields).exec();
   }
 
+  /**
+   * Devuelve solo el idProveedorSalud del usuario (para auditoría/proveedor).
+   * Usa lean() para obtener el valor crudo de la BD.
+   */
+  async getIdProveedorSaludByUserId(userId: string): Promise<string | null> {
+    const doc = await this.userModel
+      .findById(userId)
+      .select('idProveedorSalud')
+      .lean()
+      .exec();
+    if (!doc || (doc as any).idProveedorSalud == null) return null;
+    return String((doc as any).idProveedorSalud);
+  }
+
+  /**
+   * Devuelve username, email y role del usuario para snapshot de auditoría.
+   * Una sola lectura con select mínimo.
+   */
+  async getAuditActorSnapshot(
+    userId: string,
+  ): Promise<{ username: string; email: string; role: string } | null> {
+    const doc = await this.userModel
+      .findById(userId)
+      .select('username email role')
+      .lean()
+      .exec();
+    if (!doc) return null;
+    const d = doc as { username?: string; email?: string; role?: string };
+    return {
+      username: d.username ?? '',
+      email: d.email ?? '',
+      role: d.role ?? '',
+    };
+  }
+
   async findByProveedorSaludId(
     idProveedorSalud: string,
   ): Promise<UserDocument[] | null> {

@@ -15,11 +15,11 @@ describe('NOM-024 CURP Validation (Task 3, 9)', () => {
   describe('CURP Format Validation (Task 3)', () => {
     describe('Valid CURP Formats', () => {
       const validCURPs = [
-        'ROAJ850102HDFLRN08',
-        'GODM850101HDFRZN00',
+        'ROAJ850102HDFLRN07',
+        'GODM850101HDFRZN02',
         'HEGG560427MVZRRL04',
-        'PEGJ850102HDFRNN08',
-        'GOLM900515MDFNZR02',
+        'PEGJ850102HDFRNN09',
+        'GOLM900515MDFNZR05',
       ];
 
       validCURPs.forEach((curp) => {
@@ -70,16 +70,21 @@ describe('NOM-024 CURP Validation (Task 3, 9)', () => {
       });
 
       it('should accept lowercase and convert to uppercase', () => {
-        expect(validateCURPFormat('roaj850102hdflrn08')).toBe(true);
+        expect(validateCURPFormat('roaj850102hdflrn07')).toBe(true);
       });
 
       it('should trim whitespace', () => {
-        expect(validateCURPFormat('  ROAJ850102HDFLRN08  ')).toBe(true);
+        expect(validateCURPFormat('  ROAJ850102HDFLRN07  ')).toBe(true);
       });
     });
   });
 
   describe('CURP Checksum Validation', () => {
+    it('should accept CURP with valid checksum (RENAPO table with Ñ)', () => {
+      expect(validateCURPChecksum('ROAJ850102HDFLRN07')).toBe(true);
+      expect(validateCURPChecksum('SAFG910226MSLNLD00')).toBe(true);
+    });
+
     it('should reject CURP with wrong length for checksum', () => {
       expect(validateCURPChecksum('ROAJ850102HDFLRN0')).toBe(false);
     });
@@ -102,8 +107,8 @@ describe('NOM-024 CURP Validation (Task 3, 9)', () => {
     });
 
     it('should NOT flag valid CURPs as generic', () => {
-      expect(isGenericCURP('ROAJ850102HDFLRN08')).toBe(false);
-      expect(isGenericCURP('GODM850101HDFRZN00')).toBe(false);
+      expect(isGenericCURP('ROAJ850102HDFLRN07')).toBe(false);
+      expect(isGenericCURP('GODM850101HDFRZN02')).toBe(false);
     });
 
     it('should handle edge cases', () => {
@@ -115,7 +120,7 @@ describe('NOM-024 CURP Validation (Task 3, 9)', () => {
 
   describe('Complete CURP Validation', () => {
     it('should return validation result object', () => {
-      const result = validateCURP('ROAJ850102HDFLRN08');
+      const result = validateCURP('ROAJ850102HDFLRN07');
       expect(result).toHaveProperty('isValid');
       expect(result).toHaveProperty('errors');
       expect(Array.isArray(result.errors)).toBe(true);
@@ -143,9 +148,9 @@ describe('NOM-024 CURP Validation (Task 3, 9)', () => {
       expect(result.errors.some((e) => e.includes('18 caracteres'))).toBe(true);
     });
 
-    it('should handle generic CURP', () => {
+    it('should accept generic CURP as valid (NOM-024 for unknown/foreign)', () => {
       const result = validateCURP('XXXX999999HXXXXX99');
-      expect(result.isValid).toBe(false);
+      expect(result.isValid).toBe(true);
     });
   });
 
@@ -154,9 +159,9 @@ describe('NOM-024 CURP Validation (Task 3, 9)', () => {
     // must have valid CURP when proveedorSalud.pais === 'MX'
 
     const professionalCURPs = {
-      medico: 'ROPC850102HDFDRL08',
-      enfermera: 'GOLM900515MDFNZR02',
-      tecnico: 'SAMR880720HDFNRB05',
+      medico: 'ROPC850102HDFDRL02',
+      enfermera: 'GOLM900515MDFNZR05',
+      tecnico: 'SAMR880720HDFNRB06',
     };
 
     Object.entries(professionalCURPs).forEach(([type, curp]) => {
@@ -167,9 +172,9 @@ describe('NOM-024 CURP Validation (Task 3, 9)', () => {
 
     it('should require valid CURP for MX professionals', () => {
       // These are the validation rules for MX providers
-      const mxRequiredCURP = 'ROPC850102HDFDRL08';
+      const mxRequiredCURP = 'ROPC850102HDFDRL02';
       const result = validateCURP(mxRequiredCURP);
-      // Format should be valid
+      expect(result.isValid).toBe(true);
       expect(validateCURPFormat(mxRequiredCURP)).toBe(true);
     });
 

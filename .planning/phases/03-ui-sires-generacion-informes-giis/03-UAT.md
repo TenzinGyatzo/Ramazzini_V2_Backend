@@ -10,9 +10,9 @@
 
 | # | Descripción | Resultado |
 |---|-------------|-----------|
-| 1 | Menú: como Principal o Administrador con tenant SIRES, en el menú desplegable aparece la opción "Exportación GIIS" y al hacer clic se navega a la pantalla de exportación. | ✓ pass |
+| 1 | Menú: como Principal o Administrador con proveedor SIRES, en el menú desplegable aparece la opción "Exportación GIIS" y al hacer clic se navega a la pantalla de exportación. | ✓ pass |
 | 2 | Menú oculto: con usuario que no es Principal ni Administrador, la opción "Exportación GIIS" no aparece en el menú. | ✓ pass |
-| 3 | Tenant no SIRES: con usuario Principal/Administrador pero tenant sin régimen SIRES, la opción "Exportación GIIS" no aparece. | ✓ pass |
+| 3 | Proveedor no SIRES: con usuario Principal/Administrador pero proveedor sin régimen SIRES, la opción "Exportación GIIS" no aparece. | ✓ pass |
 | 4 | Acceso por URL sin permiso: al entrar a /exportacion-giis con usuario que no es Principal ni Administrador, se muestra mensaje de sin permiso (no el formulario). | ✓ pass |
 | 5 | Pantalla con permiso: en /exportacion-giis (Principal o Administrador + SIRES) se ve título "Exportación GIIS", formulario (mes/año, botón Generar) y sección "Historial de reportes". | ✓ pass |
 | 6 | Estado vacío: sin batches previos, se muestra "Aún no hay reportes GIIS. Use el botón de arriba para generar el primero." con el formulario visible. | ✓ pass |

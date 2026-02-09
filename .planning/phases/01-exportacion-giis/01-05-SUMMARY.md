@@ -23,5 +23,5 @@
 ## Verificación
 
 - Tests nom024 para giis-export-api, giis-batch, giis-export-cdt, giis-export-cex, giis-export-les y resto de giis pasan.
-- Solo tenants SIRES_NOM024 pueden crear batch y descargar; CLUES resuelta a real o 9998.
+- Solo proveedores SIRES_NOM024 pueden crear batch y descargar; CLUES resuelta a real o 9998.
 - Phase 1 no incluye 3DES/ZIP (solo TXT plano).

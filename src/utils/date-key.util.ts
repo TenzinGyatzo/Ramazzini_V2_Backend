@@ -2,7 +2,7 @@ const moment = require('moment-timezone');
 import { ProveedoresSalud } from '../modules/proveedores-salud/entities/proveedores-salud.entity';
 
 /**
- * Calcula dateKey (YYYY-MM-DD) usando timezone del tenant.
+ * Calcula dateKey (YYYY-MM-DD) usando timezone del proveedor.
  * Si el proveedor no tiene timezone configurado, usa fallback "America/Mazatlan".
  *
  * @param proveedor - ProveedorSalud (o null si no disponible)

@@ -7,7 +7,7 @@
 
 ## Phase Boundary
 
-Implementar exportación GIIS para tenants SIRES_NOM024: generar archivos por guía (CDT / CEX / LES) con formato correcto y validaciones internas; flujo disparable desde UI o API; tests en `backend/test/nom024/` extendidos. **No incluye** cifrado 3DES ni empaquetado ZIP en esta fase (ver Deferred). Alcance fijado por ROADMAP.md; la discusión define CÓMO implementar dentro de este límite.
+Implementar exportación GIIS para proveedores SIRES_NOM024: generar archivos por guía (CDT / CEX / LES) con formato correcto y validaciones internas; flujo disparable desde UI o API; tests en `backend/test/nom024/` extendidos. **No incluye** cifrado 3DES ni empaquetado ZIP en esta fase (ver Deferred). Alcance fijado por ROADMAP.md; la discusión define CÓMO implementar dentro de este límite.
 
 ---
 
@@ -29,7 +29,7 @@ Implementar exportación GIIS para tenants SIRES_NOM024: generar archivos por gu
 
 - Paquete DGIS Anexo 3: sustituta para privados sin CLUES.
 - Valores: **CLUES=9998**, institucion=**SMP**, nombre=**SERVICIOS MEDICOS PRIVADOS**, tipologia=**99**, subtipologia=**99**, estatus=**1**.
-- **Decisión producto:** soportar SIRES privado sin CLUES usando 9998/SMP; no prometer integración operativa SINBA si hay restricciones externas. Debe quedar reflejado en RegulatoryPolicy y en UI para que el tenant entienda qué está usando (CLUES real vs modo privado 9998/SMP).
+- **Decisión producto:** soportar SIRES privado sin CLUES usando 9998/SMP; no prometer integración operativa SINBA si hay restricciones externas. Debe quedar reflejado en RegulatoryPolicy y en UI para que el proveedor entienda qué está usando (CLUES real vs modo privado 9998/SMP).
 
 ---
 
@@ -37,10 +37,10 @@ Implementar exportación GIIS para tenants SIRES_NOM024: generar archivos por gu
 
 ### 1. Resolución de CLUES en exportación
 
-- Si el tenant tiene **CLUES real** (catálogo) → usarla en todos los registros del export.
+- Si el proveedor tiene **CLUES real** (catálogo) → usarla en todos los registros del export.
 - Si no tiene CLUES (privado) → usar **9998/SMP** (modo privado) en todos los registros.
 - **RegulatoryPolicy:** extender (o documentar) un campo/flag que indique “uso CLUES real” vs “uso 9998/SMP” para que el backend y la UI sean consistentes.
-- **UI:** el tenant debe poder ver en su perfil/onboarding qué está usando (CLUES válida vs “Reporte modo privado (9998/SMP)”).
+- **UI:** el proveedor debe poder ver en su perfil/onboarding qué está usando (CLUES válida vs “Reporte modo privado (9998/SMP)”).
 
 ### 2. Cifrado 3DES / ZIP
 
@@ -54,7 +54,7 @@ Implementar exportación GIIS para tenants SIRES_NOM024: generar archivos por gu
 
 ### 4. Unidad de exportación
 
-- **Batch mensual por tenant + establecimiento (CLUES).** Un “job” de export = un mes + un tenant (proveedor) + un establecimiento (CLUES o 9998). Un archivo por guía por ese batch (hasta 3 archivos: CDT, CEX, LES).
+- **Batch mensual por proveedor + establecimiento (CLUES).** Un “job” de export = un mes + un proveedor + un establecimiento (CLUES o 9998). Un archivo por guía por ese batch (hasta 3 archivos: CDT, CEX, LES).
 
 ### 5. Defaults y vacíos
 
@@ -98,7 +98,7 @@ eventos canónicos (desde BD: detecciones, lesiones, consulta externa)
   - `artifacts`: array de `{ guide: 'CDT'|'CEX'|'LES', path: string, rowCount?: number }`
   - `startedAt`, `completedAt`, `errorMessage?`
   - `options` (ej. onlyFinalized) por si se necesita auditoría de parámetros.
-- Los archivos físicos pueden vivir en un directorio por tenant y periodo (ej. `exports/giis/{proveedorId}/{yearMonth}/`) o en almacenamiento configurado; paths en BD relativos o absolutos según convención del proyecto.
+- Los archivos físicos pueden vivir en un directorio por proveedor y periodo (ej. `exports/giis/{proveedorId}/{yearMonth}/`) o en almacenamiento configurado; paths en BD relativos o absolutos según convención del proyecto.
 
 ### Riesgos y decisiones pendientes antes de ejecutar
 
@@ -114,7 +114,7 @@ eventos canónicos (desde BD: detecciones, lesiones, consulta externa)
 
 - **POST** `/api/giis-export/batches` (o `/api/proveedores-salud/:id/giis-batches`)  
   Body: `{ yearMonth: "2025-01", onlyFinalized?: boolean }`  
-  Crea un job de batch mensual para el tenant (y establecimiento resuelto por CLUES/9998). Devuelve `batchId` y status `pending`/`generating`. Solo permitido si `regulatoryPolicy.regime === 'SIRES_NOM024'`.
+  Crea un job de batch mensual para el proveedor (y establecimiento resuelto por CLUES/9998). Devuelve `batchId` y status `pending`/`generating`. Solo permitido si `regulatoryPolicy.regime === 'SIRES_NOM024'`.
 
 - **GET** `/api/giis-export/batches/:batchId`  
   Devuelve estado del batch y lista de artifacts (guía, path o URL de descarga, rowCount).
@@ -133,11 +133,11 @@ Cada subfase es verificable de forma independiente (MVP slice) y produce evidenc
 
 | Subfase | Objetivo | Definición de “done” | Guía |
 |---------|----------|----------------------|------|
-| **1A** | Pipeline base + batch y esquema | Esquema `GiisBatch` creado; servicio que acepta periodo y tenant y crea registro en estado `pending`/`generating`; sin archivos aún. Test: crear batch y leer estado. | — |
+| **1A** | Pipeline base + batch y esquema | Esquema `GiisBatch` creado; servicio que acepta periodo y proveedor y crea registro en estado `pending`/`generating`; sin archivos aún. Test: crear batch y leer estado. | — |
 | **1B** | Export CDT (B019 Detecciones) end-to-end | Mapper CDT + serializer TXT (header + 1 fila); validator básico; artifact guardado y asociado al batch. Test: fixture 1 detección → 1 archivo TXT con estructura correcta (encoding, separadores). | CDT (B019) |
 | **1C** | Export CEX (B015 Consulta externa) | Mismo patrón que 1B para CEX; 106 campos; tests con 1 fila válida. | CEX (B015) |
 | **1D** | Export LES (B013 Lesiones) | Mismo patrón para LES; 82 campos; reutilizar/adaptar transformer existente de lesiones; tests con 1 fila válida. | LES (B013) |
-| **1E** | UI/API y CLUES | Endpoints de creación de batch y descarga; resolución CLUES (real vs 9998/SMP) en pipeline y en RegulatoryPolicy/UI; tenant puede disparar export y descargar. Tests E2E o integración: crear batch desde API y descargar al menos CDT. | Todas |
+| **1E** | UI/API y CLUES | Endpoints de creación de batch y descarga; resolución CLUES (real vs 9998/SMP) en pipeline y en RegulatoryPolicy/UI; proveedor puede disparar export y descargar. Tests E2E o integración: crear batch desde API y descargar al menos CDT. | Todas |
 
 **Orden de guías:** CDT primero (ya hay base en codebase), luego CEX, luego LES.
 
@@ -151,10 +151,10 @@ Cada subfase es verificable de forma independiente (MVP slice) y produce evidenc
 ## Evidencia / tests para considerar la phase completada
 
 - **Unit:** por guía, transformer + serializer producen línea(s) TXT correctas (header + 1 fila) a partir de fixtures; formatters (fecha, sexo, etc.) con tests existentes extendidos si hace falta.
-- **Integration:** servicio de export recibe batch (tenant + periodo + CLUES/9998), genera archivos, actualiza estado del batch y guarda paths; test con MongoDB (o in-memory) y fixtures de detección/lesión/consulta.
+- **Integration:** servicio de export recibe batch (proveedor + periodo + CLUES/9998), genera archivos, actualiza estado del batch y guarda paths; test con MongoDB (o in-memory) y fixtures de detección/lesión/consulta.
 - **E2E o API:** al menos un flujo: crear batch vía API → esperar completed → descargar un archivo (ej. CDT) y verificar contenido mínimo (encabezado + separadores).
 - **CLUES:** test que con CLUES real se use en export y con “sin CLUES” se use 9998/SMP en el archivo generado.
-- **Regulatory:** export solo permitido cuando `regulatoryPolicy.regime === 'SIRES_NOM024'`; test que rechace o no exponga export para tenant SIN_REGIMEN.
+- **Regulatory:** export solo permitido cuando `regulatoryPolicy.regime === 'SIRES_NOM024'`; test que rechace o no exponga export para proveedor SIN_REGIMEN.
 
 ---
 

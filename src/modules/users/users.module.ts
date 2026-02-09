@@ -16,9 +16,11 @@ import { AntidopingSchema } from '../expedientes/schemas/antidoping.schema';
 import { NotaMedicaSchema } from '../expedientes/schemas/nota-medica.schema';
 import { DocumentoExternoSchema } from '../expedientes/schemas/documento-externo.schema';
 import { CentrosTrabajoModule } from '../centros-trabajo/centros-trabajo.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
+    forwardRef(() => AuditModule),
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: 'ProveedorSalud', schema: ProveedorSaludSchema },

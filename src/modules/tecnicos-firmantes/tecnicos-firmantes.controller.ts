@@ -6,9 +6,11 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
@@ -16,10 +18,20 @@ import { isValidObjectId } from 'mongoose';
 import { CreateTecnicoFirmanteDto } from './dto/create-tecnico-firmante.dto';
 import { UpdateTecnicoFirmanteDto } from './dto/update-tecnico-firmante.dto';
 import { TecnicosFirmantesService } from './tecnicos-firmantes.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActionType } from '../audit/constants/audit-action-type';
+import { AuditEventClass } from '../audit/constants/audit-event-class';
+import { UsersService } from '../users/users.service';
+import { getUserIdFromRequest } from '../../utils/auth-helpers';
+import { toSignerPayloadSnapshot } from '../../utils/signer-audit-payload.util';
 
 @Controller('tecnicos-firmantes')
 export class TecnicosFirmantesController {
-  constructor(private readonly tecnicosService: TecnicosFirmantesService) {}
+  constructor(
+    private readonly tecnicosService: TecnicosFirmantesService,
+    private readonly auditService: AuditService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('registrar-tecnico')
   @UseInterceptors(
@@ -43,6 +55,7 @@ export class TecnicosFirmantesController {
   async create(
     @Body() createTecnicoFirmanteDto: CreateTecnicoFirmanteDto,
     @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
   ) {
     console.log('Archivo recibido:', file);
     console.log('Datos del técnico firmante:', createTecnicoFirmanteDto);
@@ -58,11 +71,29 @@ export class TecnicosFirmantesController {
       const tecnico = await this.tecnicosService.create(
         createTecnicoFirmanteDto,
       );
+      const actorId = getUserIdFromRequest(req);
+      const proveedorSaludId =
+        await this.usersService.getIdProveedorSaludByUserId(actorId);
+      await this.auditService.record({
+        proveedorSaludId: proveedorSaludId ?? null,
+        actorId,
+        actionType: AuditActionType.SIGNER_PROFILE_CREATED,
+        resourceType: 'tecnicoFirmante',
+        resourceId: (tecnico as any)._id?.toString?.() ?? null,
+        payload: toSignerPayloadSnapshot(tecnico),
+        eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+      });
       return { message: 'Creado exitosamente', data: tecnico };
-    } catch (error) {
-      throw new BadRequestException(
-        'Error al registrar datos del técnico firmante',
-      );
+    } catch (error: any) {
+      // Propagar el mensaje real al cliente (ej. validación CURP, Mongoose, duplicado)
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      const message =
+        error?.response?.message ??
+        error?.message ??
+        'Error al registrar datos del técnico firmante';
+      throw new BadRequestException(message);
     }
   }
 
@@ -128,11 +159,13 @@ export class TecnicosFirmantesController {
     @Param('id') id: string,
     @Body() updateTecnicoFirmanteDto: UpdateTecnicoFirmanteDto,
     @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
   ) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
 
+    const existing = await this.tecnicosService.findOne(id);
     if (file) {
       updateTecnicoFirmanteDto.firma = {
         data: file.filename,
@@ -149,6 +182,22 @@ export class TecnicosFirmantesController {
         message: `No se pudo actualizar el técnico firmante con id ${id}`,
       };
     }
+
+    const actorId = getUserIdFromRequest(req);
+    const proveedorSaludId =
+      await this.usersService.getIdProveedorSaludByUserId(actorId);
+    await this.auditService.record({
+      proveedorSaludId: proveedorSaludId ?? null,
+      actorId,
+      actionType: AuditActionType.SIGNER_PROFILE_UPDATED,
+      resourceType: 'tecnicoFirmante',
+      resourceId: id,
+      payload: {
+        before: existing ? toSignerPayloadSnapshot(existing) : null,
+        after: toSignerPayloadSnapshot(tecnico),
+      },
+      eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+    });
 
     return {
       message: 'Actualizado exitosamente',

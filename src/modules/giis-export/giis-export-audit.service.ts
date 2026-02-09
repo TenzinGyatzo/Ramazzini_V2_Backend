@@ -8,6 +8,7 @@ import { Model, Types } from 'mongoose';
 import { GiisExportAudit } from './schemas/giis-export-audit.schema';
 
 export interface RecordGenerationAuditPayload {
+  proveedorSaludId?: string; // Phase 4 D5: required for new records
   usuarioGeneradorId?: string;
   periodo: string;
   establecimientoClues: string;
@@ -29,6 +30,9 @@ export class GiisExportAuditService {
   async recordGenerationAudit(payload: RecordGenerationAuditPayload) {
     const clues = payload.establecimientoClues?.trim() ?? '';
     const doc = await this.auditModel.create({
+      proveedorSaludId: payload.proveedorSaludId
+        ? new Types.ObjectId(payload.proveedorSaludId)
+        : undefined,
       usuarioGeneradorId: payload.usuarioGeneradorId
         ? new Types.ObjectId(payload.usuarioGeneradorId)
         : undefined,

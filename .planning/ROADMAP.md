@@ -7,7 +7,7 @@
 
 ## Phase 1: Exportación GIIS (3 guías aplicables)
 
-**Goal:** Que un tenant SIRES pueda exportar la información según las 3 guías GIIS aplicables (formato y reglas correctos, salida usable por el ecosistema regulatorio).
+**Goal:** Que un proveedor SIRES pueda exportar la información según las 3 guías GIIS aplicables (formato y reglas correctos, salida usable por el ecosistema regulatorio).
 
 **Requirements:** GIIS-01
 
@@ -63,12 +63,12 @@ Subfases (separadas):
 
 ## Phase 3: UI SIRES — Generación de informes GIIS
 
-**Goal:** UI para que el tenant SIRES genere y obtenga informes GIIS: elegir período, disparar generación, ver estado y descargar CDT/CEX/LES (apoyado en Phase 1 y 2).
+**Goal:** UI para que el proveedor SIRES genere y obtenga informes GIIS: elegir período, disparar generación, ver estado y descargar CDT/CEX/LES (apoyado en Phase 1 y 2).
 **Depends on:** Phase 2
 **Plans:** 2 plans (03-01, 03-02)
 
 Plans:
-- [x] 03-01 — Backend: listar batches GIIS del tenant (GET /giis-export/batches)
+- [x] 03-01 — Backend: listar batches GIIS del proveedor (GET /giis-export/batches)
 - [x] 03-02 — Frontend: menú, ruta y vista Exportación GIIS (LayOut, ExportacionGiisView)
 
 **Status:** Completed  
@@ -76,7 +76,54 @@ Plans:
 **UAT:** `phases/03-ui-sires-generacion-informes-giis/03-UAT.md` — 10/10 tests passed.
 
 **Details:**
-- Entrada en menú desplegable LayOut.vue, solo roles Principal/Administrador y tenant SIRES. Nombre "Exportación GIIS". Descarga por archivo (CDT, CEX, LES), listado con mes, fecha, estado, errores y aviso 9998. Un job a la vez. Context: `phases/03-ui-sires-generacion-informes-giis/CONTEXT.md`.
+- Entrada en menú desplegable LayOut.vue, solo roles Principal/Administrador y proveedor SIRES. Nombre "Exportación GIIS". Descarga por archivo (CDT, CEX, LES), listado con mes, fecha, estado, errores y aviso 9998. Un job a la vez. Context: `phases/03-ui-sires-generacion-informes-giis/CONTEXT.md`.
+
+---
+
+## Phase 4: AuditTrail
+
+**Goal:** Objetivo normativo (NOM-024, no negociable): registro cronológico, trazabilidad/autoría inequívoca, capacidad de reconstrucción fiel a estados anteriores, inalterabilidad post-resguardo, y soporte a no repudio.
+
+**Depends on:** Phase 3
+
+**Status:** Completed  
+**Verification:** Plans 04-01–04-07 executed; NOM-024 audit tests in `test/nom024/audit-*.nom024.spec.ts`.
+
+**Plans:** 7 plans (capas 1–7)
+
+Plans:
+- [x] 04-01 — Cimientos (enums, contrato, hash canónico)
+- [x] 04-02 — Modelos y datos (AuditEvent, versionado, proveedorSaludId, índices)
+- [x] 04-03 — Instrumentación (hooks, Clase 1/2, audit_outbox)
+- [x] 04-04 — APIs de consulta y UI mínima de auditoría
+- [x] 04-05 — Export verificable (incl. hashes)
+- [x] 04-06 — Pruebas de aceptación NOM-024
+- [x] 04-07 — Deuda diferida (DEFERRED.md)
+
+**Details:**
+Capas: 01 cimientos, 02 datos, 03 instrumentación, 04 API/UI, 05 export verificable, 06 pruebas, 07 deuda. Contexto y decisiones: `phases/04-audit-trail/CONTEXT.md`. Alcance diferido: `phases/04-audit-trail/DEFERRED.md`.
+
+---
+
+## Phase 5: Audit Trail — eventos de usuarios y perfiles firmantes
+
+**Goal:** Extender el sistema de Audit Trail existente con el registro de eventos que la app ya efectúa: gestión de usuarios (creación/invitación, activación, suspensión, reactivación, eliminación, cambio de contraseña) y perfiles de firmantes de documentos clínicos (medicoFirmante, enfermeraFirmante, tecnicoFirmante — creación y actualización).
+
+**Depends on:** Phase 4
+
+**Plans:** 4 plans (05-01 a 05-04)
+
+Plans:
+- [x] 05-01 — Tipos de evento y clases de criticidad (actionType + CLASS_1)
+- [x] 05-02 — Instrumentación eventos de usuarios (register, verify, toggle, delete, password)
+- [x] 05-03 — Instrumentación eventos de firmantes (create/update en 3 módulos)
+- [x] 05-04 — UI de auditoría: nuevos tipos y filtro opcional
+
+**Status:** Completed  
+**Verification:** `phases/05-audit-trail-eventos-usuarios-firmantes/05-VERIFICATION.md` (passed, 2026-02-09)
+
+**Details:**
+Contexto: `phases/05-audit-trail-eventos-usuarios-firmantes/05-CONTEXT.md`. Eventos de usuario: USER_INVITATION_SENT, USER_ACTIVATED, USER_SUSPENDED, USER_REACTIVATED, USER_DELETED, USER_PASSWORD_CHANGED. Eventos de firmante: SIGNER_PROFILE_CREATED, SIGNER_PROFILE_UPDATED (resourceType medicoFirmante | enfermeraFirmante | tecnicoFirmante). Payload sin contraseñas ni binarios de firma; actualización de firmante con before/after.
 
 ---
 
@@ -84,14 +131,16 @@ Plans:
 
 | # | Phase | Goal | Requirements | Status |
 |---|-------|------|--------------|--------|
-| 1 | Exportación GIIS | Export según 3 guías GIIS para tenant SIRES | GIIS-01 | Completed ✓ |
+| 1 | Exportación GIIS | Export según 3 guías GIIS para proveedor SIRES | GIIS-01 | Completed ✓ |
 | 2 | GIIS validación externa y entrega regulatoria | Archivos GIIS pasan validadores y listos para SINBA/regulatorio | — | Completed ✓ |
 | 3 | UI SIRES — Generación de informes GIIS | UI generar/descargar informes GIIS (menú, listado, descargas) | — | Completed ✓ |
+| 4 | AuditTrail | Registro cronológico NOM-024, trazabilidad, no repudio, inalterabilidad | — | Completed ✓ |
+| 5 | Audit Trail — eventos usuarios y firmantes | Registro de eventos de gestión de usuarios y perfiles firmantes | — | Completed ✓ |
 
-**Total:** 3 phases | 2 requirements mapped ✓
+**Total:** 5 phases | 2 requirements mapped ✓
 
 ---
 
 ---
 
-*Last updated: 2026-02-05*
+*Last updated: 2026-02-09*

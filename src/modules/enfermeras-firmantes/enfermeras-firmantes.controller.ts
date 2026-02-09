@@ -10,7 +10,9 @@ import {
   UploadedFile,
   BadRequestException,
   NotFoundException,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { EnfermerasFirmantesService } from './enfermeras-firmantes.service';
 import { CreateEnfermeraFirmanteDto } from './dto/create-enfermera-firmante.dto';
 import { UpdateEnfermeraFirmanteDto } from './dto/update-enfermera-firmante.dto';
@@ -18,11 +20,19 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import path from 'path';
 import { isValidObjectId } from 'mongoose';
+import { AuditService } from '../audit/audit.service';
+import { AuditActionType } from '../audit/constants/audit-action-type';
+import { AuditEventClass } from '../audit/constants/audit-event-class';
+import { UsersService } from '../users/users.service';
+import { getUserIdFromRequest } from '../../utils/auth-helpers';
+import { toSignerPayloadSnapshot } from '../../utils/signer-audit-payload.util';
 
 @Controller('enfermeras-firmantes')
 export class EnfermerasFirmantesController {
   constructor(
     private readonly enfermerasFirmantesService: EnfermerasFirmantesService,
+    private readonly auditService: AuditService,
+    private readonly usersService: UsersService,
   ) {}
 
   @Post('registrar-enfermera')
@@ -54,6 +64,7 @@ export class EnfermerasFirmantesController {
   async create(
     @Body() createEnfermeraFirmanteDto: CreateEnfermeraFirmanteDto,
     @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
   ) {
     console.log('Archivo recibidos:', file);
     console.log('Datos del enfermera firmante:', createEnfermeraFirmanteDto);
@@ -69,6 +80,18 @@ export class EnfermerasFirmantesController {
       const enfermera = await this.enfermerasFirmantesService.create(
         createEnfermeraFirmanteDto,
       );
+      const actorId = getUserIdFromRequest(req);
+      const proveedorSaludId =
+        await this.usersService.getIdProveedorSaludByUserId(actorId);
+      await this.auditService.record({
+        proveedorSaludId: proveedorSaludId ?? null,
+        actorId,
+        actionType: AuditActionType.SIGNER_PROFILE_CREATED,
+        resourceType: 'enfermeraFirmante',
+        resourceId: (enfermera as any)._id?.toString?.() ?? null,
+        payload: toSignerPayloadSnapshot(enfermera),
+        eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+      });
       return { message: 'Creado exitosamente', data: enfermera };
     } catch (error) {
       throw new BadRequestException(
@@ -154,10 +177,12 @@ export class EnfermerasFirmantesController {
     @Param('id') id: string,
     @Body() updateEnfermeraFirmanteDto: UpdateEnfermeraFirmanteDto,
     @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
   ) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('El ID proporcionado no es válido');
     }
+    const existing = await this.enfermerasFirmantesService.findOne(id);
     // Si se sube un archivo, se añade al DTO para actualizar el logotipo
     if (file) {
       updateEnfermeraFirmanteDto.firma = {
@@ -176,6 +201,22 @@ export class EnfermerasFirmantesController {
         message: `No se pudo actualziar la enfermera firmante con id ${id}`,
       };
     }
+
+    const actorId = getUserIdFromRequest(req);
+    const proveedorSaludId =
+      await this.usersService.getIdProveedorSaludByUserId(actorId);
+    await this.auditService.record({
+      proveedorSaludId: proveedorSaludId ?? null,
+      actorId,
+      actionType: AuditActionType.SIGNER_PROFILE_UPDATED,
+      resourceType: 'enfermeraFirmante',
+      resourceId: id,
+      payload: {
+        before: existing ? toSignerPayloadSnapshot(existing) : null,
+        after: toSignerPayloadSnapshot(enfermera),
+      },
+      eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+    });
 
     return {
       message: 'Actualizado exitosamente',

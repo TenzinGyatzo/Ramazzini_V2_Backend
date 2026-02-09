@@ -33,6 +33,7 @@ import {
 import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
 import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
 import { UsersModule } from '../users/users.module';
+import { AuditModule } from '../audit/audit.module';
 
 /**
  * GIIS Export Module
@@ -69,6 +70,7 @@ import { UsersModule } from '../users/users.module';
     ]),
     forwardRef(() => ProveedoresSaludModule),
     forwardRef(() => UsersModule),
+    AuditModule,
   ],
   controllers: [GiisExportController],
   providers: [

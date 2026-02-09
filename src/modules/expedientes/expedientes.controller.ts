@@ -17,6 +17,7 @@ import {
 import { ExpedientesService } from './expedientes.service';
 import { isValidObjectId } from 'mongoose';
 import { CatalogsService } from '../catalogs/catalogs.service';
+import { UsersService } from '../users/users.service';
 import { CatalogType } from '../catalogs/interfaces/catalog-entry.interface';
 import { Query } from '@nestjs/common';
 import { CreateAntidopingDto } from './dto/create-antidoping.dto';
@@ -73,6 +74,7 @@ export class ExpedientesController {
   constructor(
     private readonly expedientesService: ExpedientesService,
     private readonly catalogsService: CatalogsService,
+    private readonly usersService: UsersService,
   ) {}
 
   // Mapeo de los DTOs correspondientes a cada tipo de documento
@@ -378,6 +380,7 @@ export class ExpedientesController {
   async finalizarDocumento(
     @Param('documentType') documentType: string,
     @Param('id') id: string,
+    @Body() body: { motivo?: string },
     @Request() req: any,
   ) {
     if (!isValidObjectId(id)) {
@@ -399,12 +402,19 @@ export class ExpedientesController {
       throw new BadRequestException('Usuario no autenticado');
     }
 
+    const user = await this.usersService.findById(userId, 'idProveedorSalud');
+    const proveedorSaludId = user?.idProveedorSalud
+      ? String(user.idProveedorSalud)
+      : undefined;
+
     try {
       const finalizedDocument =
         await this.expedientesService.finalizarDocumento(
           documentType,
           id,
           userId,
+          proveedorSaludId,
+          body?.motivo != null ? { motivo: body.motivo } : undefined,
         );
       return { message: `${documentType} finalizado`, data: finalizedDocument };
     } catch (error) {

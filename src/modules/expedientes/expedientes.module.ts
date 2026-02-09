@@ -51,6 +51,10 @@ import { Receta, RecetaSchema } from './schemas/receta.schema';
 import { Lesion, LesionSchema } from './schemas/lesion.schema';
 import { Deteccion, DeteccionSchema } from './schemas/deteccion.schema';
 import {
+  DocumentVersion,
+  DocumentVersionSchema,
+} from './schemas/document-version.schema';
+import {
   Trabajador,
   TrabajadorSchema,
 } from '../trabajadores/schemas/trabajador.schema';
@@ -72,6 +76,8 @@ import {
   ConsentimientoDiarioSchema,
 } from '../consentimiento-diario/schemas/consentimiento-diario.schema';
 import { DailyConsentGuard } from '../../utils/guards/daily-consent.guard';
+import { AuditModule } from '../audit/audit.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   controllers: [ExpedientesController],
@@ -100,6 +106,7 @@ import { DailyConsentGuard } from '../../utils/guards/daily-consent.guard';
       { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
       { name: Empresa.name, schema: EmpresaSchema },
       { name: ConsentimientoDiario.name, schema: ConsentimientoDiarioSchema },
+      { name: DocumentVersion.name, schema: DocumentVersionSchema },
     ]),
     forwardRef(() => InformesModule),
     FilesModule,
@@ -107,6 +114,8 @@ import { DailyConsentGuard } from '../../utils/guards/daily-consent.guard';
     CatalogsModule,
     ProveedoresSaludModule,
     ConsentimientoDiarioModule,
+    AuditModule,
+    UsersModule,
   ],
   exports: [ExpedientesService],
 })

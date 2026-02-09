@@ -25,6 +25,9 @@ import type {
 import { GiisCryptoService } from './crypto/giis-crypto.service';
 import { getOfficialBaseName, getOfficialFileName } from './naming/giis-official-naming';
 import { GiisExportAuditService } from './giis-export-audit.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActionType } from '../audit/constants/audit-action-type';
+import { AuditEventClass } from '../audit/constants/audit-event-class';
 
 export type CreateBatchOptions = GiisBatchOptions;
 
@@ -67,6 +70,7 @@ export class GiisBatchService {
     private readonly giisValidationService: GiisValidationService,
     private readonly giisCryptoService: GiisCryptoService,
     private readonly giisExportAuditService: GiisExportAuditService,
+    private readonly auditService: AuditService,
   ) {}
 
   async createBatch(
@@ -88,7 +92,7 @@ export class GiisBatchService {
 
   /**
    * Create batch for GIIS export with SIRES gate and CLUES resolution.
-   * Only tenants with regime SIRES_NOM024 can create. establecimientoClues = proveedor.clues (valid 11 chars) or "9998" (modo privado SMP).
+   * Only proveedores with regime SIRES_NOM024 can create. establecimientoClues = proveedor.clues (valid 11 chars) or "9998" (modo privado SMP).
    */
   async createBatchForExport(
     proveedorSaludId: string,
@@ -120,6 +124,14 @@ export class GiisBatchService {
       startedAt: new Date(),
       options: options ?? {},
     });
+    await this.auditService.record({
+      proveedorSaludId,
+      actorId: (options as { createdByUserId?: string })?.createdByUserId ?? 'SYSTEM',
+      actionType: AuditActionType.GIIS_EXPORT_STARTED,
+      resourceType: 'GiisBatch',
+      resourceId: batch._id.toString(),
+      eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+    });
     return batch;
   }
 
@@ -131,7 +143,7 @@ export class GiisBatchService {
   }
 
   /**
-   * List batches for a tenant (proveedor), one row per yearMonth (most recent batch only).
+   * List batches for a proveedor, one row per yearMonth (most recent batch only).
    * Ordered by yearMonth descending. Used by UI to show export history without duplicate months.
    */
   async listBatchesForProveedor(proveedorSaludId: string): Promise<BatchListItem[]> {
@@ -431,10 +443,12 @@ export class GiisBatchService {
     const resumen = `${totalRows} procesados, ${totalExcluded} excluidos`;
     const userId = (batch.options as { createdByUserId?: string })?.createdByUserId;
 
+    const proveedorSaludId = batch.proveedorSaludId.toString();
     for (const art of batch.artifacts ?? []) {
       const guide = art.guide as 'CDT' | 'CEX' | 'LES';
       const baseName = getOfficialBaseName(guide, clues, year, month);
       await this.giisExportAuditService.recordGenerationAudit({
+        proveedorSaludId,
         usuarioGeneradorId: userId,
         periodo: batch.yearMonth,
         establecimientoClues: clues,
@@ -442,6 +456,15 @@ export class GiisBatchService {
         nombreArchivoOficial: getOfficialFileName(baseName, 'TXT'),
         resumenValidacion: resumen,
         batchId: batch._id.toString(),
+      });
+      await this.auditService.record({
+        proveedorSaludId,
+        actorId: userId ?? 'SYSTEM',
+        actionType: AuditActionType.GIIS_EXPORT_FILE_GENERATED,
+        resourceType: 'GiisBatch',
+        resourceId: batch._id.toString(),
+        payload: { guide },
+        eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
       });
     }
   }
@@ -538,9 +561,11 @@ export class GiisBatchService {
 
     const updatedBatch = await this.getBatch(batchId);
     const cluesAudit = batch.establecimientoClues || '9998';
+    const proveedorSaludId = batch.proveedorSaludId.toString();
     for (const art of updatedArtifacts) {
       if (art.zipPath && art.hashSha256) {
         await this.giisExportAuditService.recordGenerationAudit({
+          proveedorSaludId,
           usuarioGeneradorId,
           periodo: batch.yearMonth,
           establecimientoClues: cluesAudit,

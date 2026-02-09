@@ -22,6 +22,9 @@ import { RegulatoryPolicyService } from '../../utils/regulatory-policy.service';
 import { getOfficialBaseName, getOfficialFileName } from './naming/giis-official-naming';
 import * as fs from 'fs';
 import * as path from 'path';
+import { AuditService } from '../audit/audit.service';
+import { AuditActionType } from '../audit/constants/audit-action-type';
+import { AuditEventClass } from '../audit/constants/audit-event-class';
 
 const EXPORTS_BASE = 'exports/giis';
 const VALID_GUIDES = ['CDT', 'CEX', 'LES'] as const;
@@ -37,6 +40,7 @@ export class GiisExportController {
     private readonly giisValidationService: GiisValidationService,
     private readonly usersService: UsersService,
     private readonly regulatoryPolicyService: RegulatoryPolicyService,
+    private readonly auditService: AuditService,
   ) {}
 
   private async getProveedorSaludIdFromRequest(req: Request): Promise<string> {
@@ -294,6 +298,15 @@ export class GiisExportController {
     if ((batch.establecimientoClues ?? '').trim() === '9998') {
       res.setHeader('X-Delivery-Warning', DELIVERY_WARNING_9998);
     }
+    await this.auditService.record({
+      proveedorSaludId: batch.proveedorSaludId.toString(),
+      actorId: getUserIdFromRequest(req) ?? 'SYSTEM',
+      actionType: AuditActionType.GIIS_EXPORT_DOWNLOADED,
+      resourceType: 'GiisBatch',
+      resourceId: batchId,
+      payload: { guide: guideUpper },
+      eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+    });
     const stream = fs.createReadStream(fullPath);
     stream.pipe(res);
   }
@@ -354,6 +367,15 @@ export class GiisExportController {
       'Content-Disposition',
       `attachment; filename="${filename}"`,
     );
+    await this.auditService.record({
+      proveedorSaludId: batch.proveedorSaludId.toString(),
+      actorId: getUserIdFromRequest(req) ?? 'SYSTEM',
+      actionType: AuditActionType.GIIS_EXPORT_DOWNLOADED,
+      resourceType: 'GiisBatch',
+      resourceId: batchId,
+      payload: { guide: guideUpper },
+      eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+    });
     // Necesario para que el navegador exponga Content-Disposition a JS (CORS)
     res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
     const stream = fs.createReadStream(fullPath, { encoding: 'utf-8' });

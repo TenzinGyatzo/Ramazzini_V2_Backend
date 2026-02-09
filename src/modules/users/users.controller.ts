@@ -23,19 +23,129 @@ import { UserDocument } from './schemas/user.schema';
 import { generateJWT } from 'src/utils/jwt';
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 import { EmailsService } from '../emails/emails.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActionType } from '../audit/constants/audit-action-type';
+import { AuditEventClass } from '../audit/constants/audit-event-class';
+import { getUserIdFromRequest } from '../../utils/auth-helpers';
 
 interface JwtPayload {
   id: string;
 }
 
+const LOGIN_FAIL_REASON = {
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  USER_NOT_VERIFIED: 'USER_NOT_VERIFIED',
+  USER_LOCKED: 'USER_LOCKED',
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  UNKNOWN: 'UNKNOWN',
+} as const;
+
+type LoginFailReason = (typeof LOGIN_FAIL_REASON)[keyof typeof LOGIN_FAIL_REASON];
+const RESOURCE_TYPE_USER = 'USER';
+
+type LoginContext = 'PRIMARY_LOGIN' | 'SESSION_UNLOCK' | 'TOKEN_REFRESH';
+
 @Controller('auth/users')
 @ApiTags('Usuarios')
 export class UsersController {
+  private normalizeIds(values?: string[] | null): string[] {
+    if (!values) return [];
+    return Array.from(new Set(values.map(String))).sort();
+  }
+
+  private diffPermissionChanges(before: Record<string, boolean> = {}, after: Record<string, boolean> = {}) {
+    const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+    const addedPermissions: string[] = [];
+    const removedPermissions: string[] = [];
+    for (const key of keys) {
+      const beforeVal = Boolean(before[key]);
+      const afterVal = Boolean(after[key]);
+      if (!beforeVal && afterVal) addedPermissions.push(key);
+      if (beforeVal && !afterVal) removedPermissions.push(key);
+    }
+    return { addedPermissions, removedPermissions };
+  }
+
+  private diffAssignments(beforeIds: string[], afterIds: string[]) {
+    const beforeSet = new Set(beforeIds);
+    const afterSet = new Set(afterIds);
+    const added: string[] = [];
+    const removed: string[] = [];
+    for (const id of afterSet) {
+      if (!beforeSet.has(id)) added.push(id);
+    }
+    for (const id of beforeSet) {
+      if (!afterSet.has(id)) removed.push(id);
+    }
+    return { added, removed };
+  }
   constructor(
     private readonly usersService: UsersService,
     private readonly emailsService: EmailsService,
+    private readonly auditService: AuditService,
   ) {}
+
+  private getRequestContext(req: Request) {
+    return {
+      ip: req?.ip ?? null,
+      userAgent: req?.get?.('user-agent') ?? null,
+    };
+  }
+
+  private buildLoginFailPayload(
+    usernameAttempted: string,
+    reason: LoginFailReason,
+    req: Request,
+    context: {
+      loginContext: LoginContext;
+      sid?: string | null;
+      inactivityTimeoutMinutes?: number;
+      lockedAt?: string;
+      unlockedAt?: string;
+    },
+  ) {
+    const { ip, userAgent } = this.getRequestContext(req);
+    return {
+      usernameAttempted,
+      reason,
+      loginContext: context.loginContext,
+      ...(context.sid ? { sid: context.sid } : {}),
+      ...(context.inactivityTimeoutMinutes != null
+        ? { inactivityTimeoutMinutes: context.inactivityTimeoutMinutes }
+        : {}),
+      ...(context.lockedAt ? { lockedAt: context.lockedAt } : {}),
+      ...(context.unlockedAt ? { unlockedAt: context.unlockedAt } : {}),
+      ip,
+      userAgent,
+    };
+  }
+
+  private buildLoginSuccessPayload(
+    req: Request,
+    context: {
+      loginContext: LoginContext;
+      sid?: string | null;
+      inactivityTimeoutMinutes?: number;
+      lockedAt?: string;
+      unlockedAt?: string;
+    },
+  ) {
+    const { ip, userAgent } = this.getRequestContext(req);
+    return {
+      authMethod: 'password',
+      loginContext: context.loginContext,
+      ...(context.sid ? { sid: context.sid } : {}),
+      ...(context.inactivityTimeoutMinutes != null
+        ? { inactivityTimeoutMinutes: context.inactivityTimeoutMinutes }
+        : {}),
+      ...(context.lockedAt ? { lockedAt: context.lockedAt } : {}),
+      ...(context.unlockedAt ? { unlockedAt: context.unlockedAt } : {}),
+      ip,
+      userAgent,
+    };
+  }
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
@@ -72,6 +182,23 @@ export class UsersController {
       token: user.token,
     });
 
+    // Phase 5: audit USER_INVITATION_SENT (register = invitation; actor = self or from context)
+    const proveedorSaludId = (user as any).idProveedorSalud?.toString?.() ?? null;
+    const actorId = (user as any)._id?.toString?.() ?? null;
+    await this.auditService.record({
+      proveedorSaludId,
+      actorId,
+      actionType: AuditActionType.USER_INVITATION_SENT,
+      resourceType: RESOURCE_TYPE_USER,
+      resourceId: (user as any)._id?.toString?.() ?? null,
+      payload: {
+        email: user.email,
+        username: user.username,
+        role: (user as any).role ?? null,
+      },
+      eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+    });
+
     // Respuesta al cliente
     res.json({
       msg: 'El usuario se creó correctamente, revisa el email',
@@ -99,6 +226,22 @@ export class UsersController {
       user.verified = true;
       user.token = '';
       await user.save();
+      // Phase 5: audit USER_ACTIVATED
+      const proveedorSaludId = (user as any).idProveedorSalud?.toString?.() ?? null;
+      const userIdStr = (user as any)._id?.toString?.() ?? null;
+      await this.auditService.record({
+        proveedorSaludId,
+        actorId: userIdStr,
+        actionType: AuditActionType.USER_ACTIVATED,
+        resourceType: RESOURCE_TYPE_USER,
+        resourceId: userIdStr,
+        payload: {
+          email: user.email,
+          username: user.username,
+          role: (user as any).role ?? null,
+        },
+        eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+      });
       return res.json({ msg: 'Usuario confirmado correctamente' });
     } catch (error) {
       console.log(error);
@@ -107,10 +250,36 @@ export class UsersController {
 
   @Post('login')
   async login(
-    @Body() loginData: { email: string; password: string },
+    @Body()
+    loginData: {
+      email: string;
+      password: string;
+      loginContext?: LoginContext;
+      sid?: string;
+      inactivityTimeoutMinutes?: number;
+      lockedAt?: string;
+      unlockedAt?: string;
+    },
     @Res() res: Response,
+    @Req() req: Request,
   ) {
-    const { email, password } = loginData;
+    const {
+      email,
+      password,
+      loginContext,
+      sid,
+      inactivityTimeoutMinutes,
+      lockedAt,
+      unlockedAt,
+    } = loginData;
+    const resolvedContext: LoginContext = loginContext ?? 'PRIMARY_LOGIN';
+    const isSessionUnlock = resolvedContext === 'SESSION_UNLOCK';
+    const actionTypeFail = isSessionUnlock
+      ? AuditActionType.SESSION_UNLOCK_FAIL
+      : AuditActionType.LOGIN_FAIL;
+    const actionTypeSuccess = isSessionUnlock
+      ? AuditActionType.SESSION_UNLOCK_SUCCESS
+      : AuditActionType.LOGIN_SUCCESS;
     // Revisar que si sea un email
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!emailRegex.test(email)) {
@@ -121,11 +290,61 @@ export class UsersController {
     const user: UserDocument | null =
       await this.usersService.findByEmail(email);
     if (!user) {
+      await this.auditService
+        .record({
+          proveedorSaludId: null,
+          actorId: null,
+          actionType: actionTypeFail,
+          resourceType: 'AUTH',
+          resourceId: null,
+          payload: this.buildLoginFailPayload(
+            email,
+            LOGIN_FAIL_REASON.USER_NOT_FOUND,
+            req,
+            {
+              loginContext: resolvedContext,
+              sid: sid ?? null,
+              inactivityTimeoutMinutes,
+              lockedAt,
+              unlockedAt,
+            },
+          ),
+          eventClass: AuditEventClass.CLASS_2_SOFT_FAIL,
+        })
+        .catch(() => {});
       throw new UnauthorizedException('El usuario no existe');
     }
 
+    // idProveedorSalud desde BD (lean) para auditoría/proveedor
+    const proveedorSaludId =
+      await this.usersService.getIdProveedorSaludByUserId(
+        String((user as any)._id),
+      );
+
     // Revisar si el usuario confirmo su cuenta
     if (!user.verified) {
+      await this.auditService
+        .record({
+          proveedorSaludId,
+          actorId: user._id.toString(),
+          actionType: actionTypeFail,
+          resourceType: 'AUTH',
+          resourceId: user._id.toString(),
+          payload: this.buildLoginFailPayload(
+            email,
+            LOGIN_FAIL_REASON.USER_NOT_VERIFIED,
+            req,
+            {
+              loginContext: resolvedContext,
+              sid: sid ?? null,
+              inactivityTimeoutMinutes,
+              lockedAt,
+              unlockedAt,
+            },
+          ),
+          eventClass: AuditEventClass.CLASS_2_SOFT_FAIL,
+        })
+        .catch(() => {});
       throw new UnauthorizedException(
         'Tu cuenta no ha sido confirmada aún, revisa tu email',
       );
@@ -133,6 +352,28 @@ export class UsersController {
 
     // Revisar si la cuenta está activa
     if (!user.cuentaActiva) {
+      await this.auditService
+        .record({
+          proveedorSaludId,
+          actorId: user._id.toString(),
+          actionType: actionTypeFail,
+          resourceType: 'AUTH',
+          resourceId: user._id.toString(),
+          payload: this.buildLoginFailPayload(
+            email,
+            LOGIN_FAIL_REASON.USER_LOCKED,
+            req,
+            {
+              loginContext: resolvedContext,
+              sid: sid ?? null,
+              inactivityTimeoutMinutes,
+              lockedAt,
+              unlockedAt,
+            },
+          ),
+          eventClass: AuditEventClass.CLASS_2_SOFT_FAIL,
+        })
+        .catch(() => {});
       throw new UnauthorizedException(
         'Tu cuenta ha sido suspendida. Contacta al administrador.',
       );
@@ -141,12 +382,51 @@ export class UsersController {
     // Comprobar el password utilizando el método definido en el esquema
     const isPasswordValid = await user.checkPassword(password);
     if (!isPasswordValid) {
+      await this.auditService
+        .record({
+          proveedorSaludId,
+          actorId: user._id.toString(),
+          actionType: actionTypeFail,
+          resourceType: 'AUTH',
+          resourceId: user._id.toString(),
+          payload: this.buildLoginFailPayload(
+            email,
+            LOGIN_FAIL_REASON.INVALID_CREDENTIALS,
+            req,
+            {
+              loginContext: resolvedContext,
+              sid: sid ?? null,
+              inactivityTimeoutMinutes,
+              lockedAt,
+              unlockedAt,
+            },
+          ),
+          eventClass: AuditEventClass.CLASS_2_SOFT_FAIL,
+        })
+        .catch(() => {});
       throw new UnauthorizedException('Contraseña incorrecta');
-    } else {
-      const token = generateJWT(user._id);
-      res.json({ token });
-      // return token;
     }
+    const token = generateJWT(user._id);
+    const sidToReturn =
+      resolvedContext === 'PRIMARY_LOGIN' ? randomUUID() : sid ?? null;
+    res.json({ token, ...(sidToReturn ? { sid: sidToReturn } : {}) });
+    await this.auditService
+      .record({
+        proveedorSaludId,
+        actorId: user._id.toString(),
+        actionType: actionTypeSuccess,
+        resourceType: 'AUTH',
+        resourceId: user._id.toString(),
+        payload: this.buildLoginSuccessPayload(req, {
+          loginContext: resolvedContext,
+          sid: sidToReturn,
+          inactivityTimeoutMinutes,
+          lockedAt,
+          unlockedAt,
+        }),
+        eventClass: AuditEventClass.CLASS_2_SOFT_FAIL,
+      })
+      .catch(() => {});
   }
 
   @Post('forgot-password')
@@ -212,6 +492,18 @@ export class UsersController {
       user.token = '';
       user.password = password;
       await user.save();
+      // Phase 5: audit USER_PASSWORD_CHANGED (user changing own password)
+      const proveedorSaludId = (user as any).idProveedorSalud?.toString?.() ?? null;
+      const userIdStr = (user as any)._id?.toString?.() ?? null;
+      await this.auditService.record({
+        proveedorSaludId,
+        actorId: userIdStr,
+        actionType: AuditActionType.USER_PASSWORD_CHANGED,
+        resourceType: RESOURCE_TYPE_USER,
+        resourceId: userIdStr,
+        payload: { userId: userIdStr },
+        eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+      });
       res.json({ msg: 'Contraseña actualizada correctamente' });
     } catch (error) {
       console.log(error);
@@ -233,12 +525,43 @@ export class UsersController {
   }
 
   @Delete('delete-user/:email')
-  async removeUserByEmail(@Param('email') email: string, @Res() res: Response) {
+  async removeUserByEmail(
+    @Param('email') email: string,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
     try {
+      const existingUser = await this.usersService.findByEmail(email);
+      if (!existingUser) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+      const snapshot = {
+        email: existingUser.email,
+        username: existingUser.username,
+        role: (existingUser as any).role ?? null,
+      };
+      const resourceId = (existingUser as any)._id?.toString?.() ?? null;
       const user = await this.usersService.removeUserByEmail(email);
+      if (!user) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+      const actorId = getUserIdFromRequest(req);
+      const actorProveedorSaludId =
+        await this.usersService.getIdProveedorSaludByUserId(actorId);
+      await this.auditService.record({
+        proveedorSaludId: actorProveedorSaludId ?? null,
+        actorId,
+        actionType: AuditActionType.USER_DELETED,
+        resourceType: RESOURCE_TYPE_USER,
+        resourceId,
+        payload: snapshot,
+        eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+      });
       res.json(user);
     } catch (error) {
+      if (error instanceof NotFoundException) throw error;
       console.log(error);
+      res.status(500).json({ msg: 'Error al eliminar usuario' });
     }
   }
 
@@ -345,8 +668,28 @@ export class UsersController {
     @Param('userId') userId: string,
     @Body() updatePermissionsDto: UpdatePermissionsDto,
     @Res() res: Response,
+    @Req() req: Request,
   ) {
     try {
+      const actorId = getUserIdFromRequest(req);
+      const actorProveedorSaludId =
+        await this.usersService.getIdProveedorSaludByUserId(actorId);
+      if (!actorProveedorSaludId) {
+        throw new BadRequestException('Proveedor de salud del actor no resuelto');
+      }
+
+      const targetUser = await this.usersService.findById(
+        userId,
+        'idProveedorSalud role permisos',
+      );
+      if (!targetUser) {
+        return res.status(404).json({ msg: 'Usuario no encontrado' });
+      }
+      const targetProveedorId = targetUser.idProveedorSalud?.toString?.();
+      if (!targetProveedorId || targetProveedorId !== actorProveedorSaludId) {
+        throw new UnauthorizedException('Acceso fuera del proveedor de salud');
+      }
+
       const user = await this.usersService.updateUserPermissions(
         userId,
         updatePermissionsDto,
@@ -354,6 +697,31 @@ export class UsersController {
       if (!user) {
         return res.status(404).json({ msg: 'Usuario no encontrado' });
       }
+
+      const beforePerms =
+        (targetUser as any).permisos?.toObject?.() ??
+        (targetUser as any).permisos ??
+        {};
+      const afterPerms =
+        (user as any).permisos?.toObject?.() ?? (user as any).permisos ?? {};
+      const { addedPermissions, removedPermissions } =
+        this.diffPermissionChanges(beforePerms, afterPerms);
+
+      await this.auditService.record({
+        proveedorSaludId: actorProveedorSaludId,
+        actorId,
+        actionType: AuditActionType.ADMIN_ROLES_PERMISSIONS,
+        resourceType: RESOURCE_TYPE_USER,
+        resourceId: userId,
+        payload: {
+          actionScope: 'PERMISSIONS',
+          targetUserId: userId,
+          addedPermissions,
+          removedPermissions,
+          targetRole: (user as any).role ?? (targetUser as any).role ?? null,
+        },
+        eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+      });
       res.json({ msg: 'Permisos actualizados correctamente', user });
     } catch (error) {
       console.error('Error al actualizar permisos:', error);
@@ -366,6 +734,7 @@ export class UsersController {
     @Param('userId') userId: string,
     @Body() body: { cuentaActiva: boolean },
     @Res() res: Response,
+    @Req() req: Request,
   ) {
     try {
       const user = await this.usersService.toggleAccountStatus(
@@ -375,6 +744,25 @@ export class UsersController {
       if (!user) {
         return res.status(404).json({ msg: 'Usuario no encontrado' });
       }
+      const actorId = getUserIdFromRequest(req);
+      const actorProveedorSaludId =
+        await this.usersService.getIdProveedorSaludByUserId(actorId);
+      const actionType = body.cuentaActiva
+        ? AuditActionType.USER_REACTIVATED
+        : AuditActionType.USER_SUSPENDED;
+      await this.auditService.record({
+        proveedorSaludId: actorProveedorSaludId ?? null,
+        actorId,
+        actionType,
+        resourceType: RESOURCE_TYPE_USER,
+        resourceId: userId,
+        payload: {
+          email: user.email,
+          username: user.username,
+          role: (user as any).role ?? null,
+        },
+        eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+      });
       const estado = body.cuentaActiva ? 'reactivada' : 'suspendida';
       res.json({ msg: `Cuenta ${estado} correctamente`, user });
     } catch (error) {
@@ -388,8 +776,35 @@ export class UsersController {
     @Param('userId') userId: string,
     @Body() updateAssignmentsDto: UpdateAssignmentsDto,
     @Res() res: Response,
+    @Req() req: Request,
   ) {
     try {
+      const actorId = getUserIdFromRequest(req);
+      const actorProveedorSaludId =
+        await this.usersService.getIdProveedorSaludByUserId(actorId);
+      if (!actorProveedorSaludId) {
+        throw new BadRequestException('Proveedor de salud del actor no resuelto');
+      }
+
+      const targetUser = await this.usersService.findById(
+        userId,
+        'idProveedorSalud empresasAsignadas centrosTrabajoAsignados',
+      );
+      if (!targetUser) {
+        return res.status(404).json({ msg: 'Usuario no encontrado' });
+      }
+      const targetProveedorId = targetUser.idProveedorSalud?.toString?.();
+      if (!targetProveedorId || targetProveedorId !== actorProveedorSaludId) {
+        throw new UnauthorizedException('Acceso fuera del proveedor de salud');
+      }
+
+      const beforeEmpresas = this.normalizeIds(
+        (targetUser as any).empresasAsignadas ?? [],
+      );
+      const beforeCentros = this.normalizeIds(
+        (targetUser as any).centrosTrabajoAsignados ?? [],
+      );
+
       const user = await this.usersService.updateUserAssignments(
         userId,
         updateAssignmentsDto,
@@ -397,6 +812,45 @@ export class UsersController {
       if (!user) {
         return res.status(404).json({ msg: 'Usuario no encontrado' });
       }
+
+      const afterEmpresas = this.normalizeIds(
+        (user as any).empresasAsignadas ?? [],
+      );
+      const afterCentros = this.normalizeIds(
+        (user as any).centrosTrabajoAsignados ?? [],
+      );
+
+      const empresasDiff = this.diffAssignments(beforeEmpresas, afterEmpresas);
+      const centrosDiff = this.diffAssignments(beforeCentros, afterCentros);
+      const empresasChanged =
+        empresasDiff.added.length > 0 || empresasDiff.removed.length > 0;
+      const centrosChanged =
+        centrosDiff.added.length > 0 || centrosDiff.removed.length > 0;
+      const changed = empresasChanged || centrosChanged;
+
+      await this.auditService.record({
+        proveedorSaludId: actorProveedorSaludId,
+        actorId,
+        actionType: AuditActionType.ADMIN_USER_ASSIGNMENTS,
+        resourceType: RESOURCE_TYPE_USER,
+        resourceId: userId,
+        payload: {
+          actionScope: 'ASSIGNMENTS',
+          targetUserId: userId,
+          changed,
+          empresasChanged,
+          centrosChanged,
+          empresasCountBefore: beforeEmpresas.length,
+          empresasCountAfter: afterEmpresas.length,
+          centrosCountBefore: beforeCentros.length,
+          centrosCountAfter: afterCentros.length,
+          empresasIdsAdded: empresasDiff.added,
+          empresasIdsRemoved: empresasDiff.removed,
+          centrosIdsAdded: centrosDiff.added,
+          centrosIdsRemoved: centrosDiff.removed,
+        },
+        eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
+      });
       res.json({ msg: 'Asignaciones actualizadas correctamente', user });
     } catch (error) {
       console.error('Error al actualizar asignaciones:', error);

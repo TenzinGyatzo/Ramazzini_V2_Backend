@@ -47,12 +47,20 @@ export function validateCURPFormat(curp: string): boolean {
 }
 
 /**
+ * Tabla oficial RENAPO para el dígito verificador CURP.
+ * Orden: 0-9, A-N, Ñ, O-Z. La Ñ va entre N y O (valor 24).
+ * Referencia: Instructivo normativo CURP, implementaciones oficiales (ej. prestigos/curp.js).
+ */
+const RENAPO_CURP_CHARS =
+  '0123456789ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
+
+/**
  * Validates CURP checksum using RENAPO algorithm
  *
  * The checksum algorithm:
  * 1. Takes first 17 characters
- * 2. Assigns values to each character according to RENAPO table
- * 3. Multiplies each value by its position weight
+ * 2. Assigns values to each character according to RENAPO table (0-9, A-N, Ñ, O-Z)
+ * 3. Multiplies each value by its position weight (18, 17, ..., 2)
  * 4. Sums all results
  * 5. Calculates modulo 10
  * 6. If result is 0, check digit is 0, otherwise it's 10 - result
@@ -71,29 +79,20 @@ export function validateCURPChecksum(curp: string): boolean {
   const baseString = normalizedCurp.substring(0, 17);
   const providedCheckDigit = normalizedCurp.charAt(17);
 
-  // RENAPO character value mapping
-  // Letters: A=10, B=11, ..., Z=35
-  // Numbers: 0=0, 1=1, ..., 9=9
   const getCharValue = (char: string): number => {
-    if (/[0-9]/.test(char)) {
-      return parseInt(char, 10);
-    }
-    if (/[A-Z]/.test(char)) {
-      return char.charCodeAt(0) - 55; // A=10, B=11, etc.
-    }
-    return 0;
+    const idx = RENAPO_CURP_CHARS.indexOf(char);
+    return idx >= 0 ? idx : 0;
   };
 
-  // Calculate weighted sum
+  // Calculate weighted sum (weights 18, 17, ..., 2 for positions 0..16)
   let sum = 0;
   for (let i = 0; i < 17; i++) {
     const charValue = getCharValue(baseString[i]);
-    // Position weight: 18-i (18 for first char, 17 for second, ..., 2 for last)
     const weight = 18 - i;
     sum += charValue * weight;
   }
 
-  // Calculate check digit
+  // Calculate check digit: (10 - (sum % 10)) % 10 so that 10 becomes 0
   const modulo = sum % 10;
   const calculatedCheckDigit = modulo === 0 ? '0' : String(10 - modulo);
 
