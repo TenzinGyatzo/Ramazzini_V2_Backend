@@ -22,12 +22,15 @@ async function bootstrap() {
   // Registrar el filtro global para silenciar ENOENT en expedientes-medicos
   app.useGlobalFilters(new EnoentSilencerFilter());
 
-  // Servir el directorio de archivos estáticos
-  app.useStaticAssets(join(process.cwd(), 'assets', 'signatories'), {
+  // Servir firmas y logos desde el mismo directorio donde se guardan (evitar 404 en local/prod)
+  const signatoriesDir =
+    process.env.SIGNATORIES_UPLOADS_DIR || 'assets/signatories';
+  const providersLogosDir =
+    process.env.PROVIDERS_UPLOADS_DIR || 'assets/providers-logos';
+  app.useStaticAssets(join(process.cwd(), signatoriesDir), {
     prefix: '/assets/signatories',
   });
-
-  app.useStaticAssets(join(process.cwd(), 'assets', 'providers-logos'), {
+  app.useStaticAssets(join(process.cwd(), providersLogosDir), {
     prefix: '/assets/providers-logos',
   });
 

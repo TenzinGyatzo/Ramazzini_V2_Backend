@@ -216,9 +216,9 @@ describe('CentrosTrabajoService - Geographic Hierarchy Validation (A3)', () => {
         municipio: '999', // Municipio inválido
       };
 
-      await expect(
-        service.update(centroId, updateDto as any),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.update(centroId, updateDto as any)).rejects.toThrow(
+        BadRequestException,
+      );
 
       await expect(
         service.update(centroId, updateDto as any),
@@ -261,4 +261,3 @@ describe('CentrosTrabajoService - Geographic Hierarchy Validation (A3)', () => {
     });
   });
 });
-

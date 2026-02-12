@@ -23,7 +23,7 @@ describe('NOM-024 Catalog Service (Task 1, 12, 14, 19)', () => {
 
   // Define which catalogs are base (required) vs optional (GIIS)
   const baseCatalogs = [
-    { type: CatalogType.CIE10, file: 'diagnosticos.csv', name: 'CIE-10' },
+    { type: CatalogType.CIE10, file: 'diagnosticos_sis.csv', name: 'CIE-10' },
     {
       type: CatalogType.ENTIDADES_FEDERATIVAS,
       file: 'enitades_federativas.csv',
@@ -166,12 +166,12 @@ describe('NOM-024 Catalog Service (Task 1, 12, 14, 19)', () => {
     it('should return accurate catalog statistics', () => {
       const stats = service.getCatalogStats();
 
-      expect(stats.baseTotal).toBe(10);
+      expect(stats.baseTotal).toBe(11);
       expect(stats.giisTotal).toBe(8);
       expect(typeof stats.baseLoaded).toBe('number');
       expect(typeof stats.giisLoaded).toBe('number');
       expect(stats.baseLoaded).toBeGreaterThanOrEqual(0);
-      expect(stats.baseLoaded).toBeLessThanOrEqual(10);
+      expect(stats.baseLoaded).toBeLessThanOrEqual(11);
       expect(stats.giisLoaded).toBeGreaterThanOrEqual(0);
       expect(stats.giisLoaded).toBeLessThanOrEqual(8);
       expect(Array.isArray(stats.loadedCatalogs)).toBe(true);

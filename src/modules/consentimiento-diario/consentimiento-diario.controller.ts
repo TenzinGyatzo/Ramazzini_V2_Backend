@@ -11,7 +11,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import jwt from 'jsonwebtoken';
 import { ConsentimientoDiarioService } from './consentimiento-diario.service';
@@ -28,7 +33,7 @@ interface JwtPayload {
 
 /**
  * Controller para Consentimiento Diario
- * 
+ *
  * IMPORTANTE - Inmutabilidad del Consentimiento:
  * Los consentimientos son inmutables (create-only). No se permiten operaciones de
  * update o delete. Si en el futuro se requiere agregar estos endpoints, deben:
@@ -141,7 +146,8 @@ export class ConsentimientoDiarioController {
   })
   @ApiResponse({
     status: 409,
-    description: 'Ya existe un consentimiento para este trabajador en la fecha especificada',
+    description:
+      'Ya existe un consentimiento para este trabajador en la fecha especificada',
   })
   async create(
     @Body() createDto: CreateConsentimientoDiarioDto,

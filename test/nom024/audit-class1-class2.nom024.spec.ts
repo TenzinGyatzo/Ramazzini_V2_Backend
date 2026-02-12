@@ -4,14 +4,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { AuditService } from '../../src/modules/audit/audit.service';
-import { AuditEvent, AuditEventSchema } from '../../src/modules/audit/schemas/audit-event.schema';
-import { AuditOutbox, AuditOutboxSchema } from '../../src/modules/audit/schemas/audit-outbox.schema';
 import {
-  DocumentVersion,
-  DocumentVersionSchema,
-} from '../../src/modules/expedientes/schemas/document-version.schema';
+  AuditEvent,
+  AuditEventSchema,
+} from '../../src/modules/audit/schemas/audit-event.schema';
+import {
+  AuditOutbox,
+  AuditOutboxSchema,
+} from '../../src/modules/audit/schemas/audit-outbox.schema';
 import { AuditActionType } from '../../src/modules/audit/constants/audit-action-type';
 import { AuditEventClass } from '../../src/modules/audit/constants/audit-event-class';
+import { UsersService } from '../../src/modules/users/users.service';
 
 describe('NOM-024 Audit Class 1 / Class 2 (04-06)', () => {
   let auditService: AuditService;
@@ -21,7 +24,13 @@ describe('NOM-024 Audit Class 1 / Class 2 (04-06)', () => {
   beforeEach(async () => {
     auditEventModelMock = {
       findOne: jest.fn().mockReturnValue({
-        sort: jest.fn().mockReturnValue({ lean: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(null) }) }),
+        sort: jest
+          .fn()
+          .mockReturnValue({
+            lean: jest
+              .fn()
+              .mockReturnValue({ exec: jest.fn().mockResolvedValue(null) }),
+          }),
       }),
       create: jest.fn().mockResolvedValue({}),
     };
@@ -33,19 +42,31 @@ describe('NOM-024 Audit Class 1 / Class 2 (04-06)', () => {
       imports: [],
       providers: [
         AuditService,
-        { provide: getModelToken(AuditEvent.name), useValue: auditEventModelMock },
-        { provide: getModelToken(AuditOutbox.name), useValue: auditOutboxModelMock },
-        { provide: getModelToken(DocumentVersion.name), useValue: {} },
+        {
+          provide: getModelToken(AuditEvent.name),
+          useValue: auditEventModelMock,
+        },
+        {
+          provide: getModelToken(AuditOutbox.name),
+          useValue: auditOutboxModelMock,
+        },
+        {
+          provide: UsersService,
+          useValue: {
+            getAuditActorSnapshot: jest.fn().mockResolvedValue(null),
+          },
+        },
       ],
-    })
-      .compile();
+    }).compile();
 
     auditService = module.get<AuditService>(AuditService);
   });
 
   describe('Clase 1 — hard-fail', () => {
     it('when AuditEvent.create fails, record(CLASS_1) throws and operation fails', async () => {
-      auditEventModelMock.create.mockRejectedValueOnce(new Error('audit storage failed'));
+      auditEventModelMock.create.mockRejectedValueOnce(
+        new Error('audit storage failed'),
+      );
 
       await expect(
         auditService.record({
@@ -65,7 +86,9 @@ describe('NOM-024 Audit Class 1 / Class 2 (04-06)', () => {
 
   describe('Clase 2 — soft-fail y audit_outbox', () => {
     it('when AuditEvent.create fails, record(CLASS_2) does not throw and writes to outbox', async () => {
-      auditEventModelMock.create.mockRejectedValueOnce(new Error('audit storage failed'));
+      auditEventModelMock.create.mockRejectedValueOnce(
+        new Error('audit storage failed'),
+      );
 
       await expect(
         auditService.record({

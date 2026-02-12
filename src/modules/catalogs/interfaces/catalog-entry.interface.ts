@@ -75,6 +75,7 @@ export enum CatalogType {
   RELIGIONES = 'cat_religiones',
   LENGUAS_INDIGENAS = 'lenguas_indigenas',
   FORMACION_ACADEMICA = 'formacion_academica',
+  ESCOLARIDAD = 'escolaridad',
 
   // GIIS-B013 Catalogs (4) - Optional
   SITIO_OCURRENCIA = 'cat_sitio_ocurrencia',

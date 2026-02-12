@@ -1,19 +1,19 @@
 /**
  * CIE-10 Code Extraction Utility
- * 
+ *
  * Helper functions for extracting and normalizing CIE-10 diagnosis codes
  * from various input formats.
  */
 
 /**
  * Extracts the base CIE-10 code from various input formats
- * 
+ *
  * Examples:
  * - "C530" → "C530"
  * - "C530 - DESCRIPTION" → "C530"
  * - "C53" → "C53"
  * - "A30 - LEPRA [ENFERMEDAD DE HANSEN]" → "A30"
- * 
+ *
  * @param input - CIE-10 code in any format (with or without description)
  * @returns Normalized CIE-10 code (uppercase, trimmed) or empty string if invalid
  */
@@ -23,7 +23,7 @@ export function extractCIE10Code(input: string | null | undefined): string {
   }
 
   // Remove description if present (format: "CODE - DESCRIPTION")
-  const codePart = input.includes(' - ') 
+  const codePart = input.includes(' - ')
     ? input.split(' - ')[0].trim()
     : input.trim();
 
@@ -40,12 +40,12 @@ export function extractCIE10Code(input: string | null | undefined): string {
 
 /**
  * Gets the 3-character prefix from a CIE-10 code
- * 
+ *
  * Examples:
  * - "C530" → "C53"
  * - "C53" → "C53"
  * - "A30" → "A30"
- * 
+ *
  * @param code - CIE-10 code (already normalized)
  * @returns 3-character prefix or null if invalid
  */

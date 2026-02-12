@@ -11,7 +11,10 @@ describe('calculateDateKey', () => {
     const referenceDate = new Date('2024-03-15T12:00:00Z');
 
     // Act
-    const result = calculateDateKey(proveedor as ProveedoresSalud, referenceDate);
+    const result = calculateDateKey(
+      proveedor as ProveedoresSalud,
+      referenceDate,
+    );
 
     // Assert
     expect(result).toBe('2024-03-15');

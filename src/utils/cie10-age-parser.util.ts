@@ -1,6 +1,6 @@
 /**
  * CIE-10 Age Limit Parser Utility
- * 
+ *
  * Parses age limit values from the CIE-10 catalog (LINF/LSUP columns)
  * Format: 3 digits + unit code (A/D/M/Y)
  * Examples: "010A" (10 years), "028D" (28 days), "120A" (120 years), "NO" (no limit)
@@ -8,14 +8,14 @@
 
 /**
  * Parses an age limit value from the catalog format to years (number)
- * 
+ *
  * Format examples:
  * - "010A" → 10 (years)
  * - "028D" → ~0.0766 (28 days / 365.25)
  * - "120A" → 120 (years)
  * - "NO" → null (no limit)
  * - "020A" → 20 (years)
- * 
+ *
  * @param value - Age limit string from catalog (LINF/LSUP)
  * @returns Age in years (number) or null if no limit
  */
@@ -34,7 +34,7 @@ export function parseAgeLimit(value: string | null | undefined): number | null {
   // Format: 3 digits + unit code (A/D/M/Y)
   // Examples: "010A", "028D", "120A"
   const match = trimmed.match(/^(\d{3})([ADMY])$/);
-  
+
   if (!match) {
     // If format doesn't match, try to parse as plain number (fallback)
     const numValue = parseInt(trimmed, 10);
@@ -70,4 +70,3 @@ export function parseAgeLimit(value: string | null | undefined): number | null {
       return numericValue;
   }
 }
-

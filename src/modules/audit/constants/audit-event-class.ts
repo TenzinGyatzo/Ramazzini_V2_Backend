@@ -18,14 +18,19 @@ export type AuditEventClassValue =
  */
 import { AuditActionType } from './audit-action-type';
 
-export const ACTION_TYPE_TO_CLASS: Record<string, typeof AuditEventClass.CLASS_1_HARD_FAIL | typeof AuditEventClass.CLASS_2_SOFT_FAIL> = {
+export const ACTION_TYPE_TO_CLASS: Record<
+  string,
+  | typeof AuditEventClass.CLASS_1_HARD_FAIL
+  | typeof AuditEventClass.CLASS_2_SOFT_FAIL
+> = {
   [AuditActionType.DOC_FINALIZE]: AuditEventClass.CLASS_1_HARD_FAIL,
   [AuditActionType.DOC_CREATE_CORRECTION]: AuditEventClass.CLASS_1_HARD_FAIL,
   [AuditActionType.DOC_ANULATE]: AuditEventClass.CLASS_1_HARD_FAIL,
   [AuditActionType.ADMIN_ROLES_PERMISSIONS]: AuditEventClass.CLASS_1_HARD_FAIL,
   [AuditActionType.ADMIN_CONFIG_SIRES]: AuditEventClass.CLASS_1_HARD_FAIL,
   [AuditActionType.GIIS_EXPORT_STARTED]: AuditEventClass.CLASS_1_HARD_FAIL,
-  [AuditActionType.GIIS_EXPORT_FILE_GENERATED]: AuditEventClass.CLASS_1_HARD_FAIL,
+  [AuditActionType.GIIS_EXPORT_FILE_GENERATED]:
+    AuditEventClass.CLASS_1_HARD_FAIL,
   [AuditActionType.GIIS_EXPORT_DOWNLOADED]: AuditEventClass.CLASS_1_HARD_FAIL,
   [AuditActionType.GIIS_VALIDATION_EXECUTED]: AuditEventClass.CLASS_1_HARD_FAIL,
   [AuditActionType.AUDIT_EXPORT_DOWNLOAD]: AuditEventClass.CLASS_1_HARD_FAIL,

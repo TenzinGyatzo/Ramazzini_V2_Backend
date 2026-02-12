@@ -25,8 +25,8 @@ export class GiisExportAudit extends Document {
   @Prop({ default: false })
   cluesEs9998: boolean;
 
-  @Prop({ required: true, enum: ['CDT', 'CEX', 'LES'] })
-  tipoGuia: 'CDT' | 'CEX' | 'LES';
+  @Prop({ required: true, enum: ['CEX', 'LES'] })
+  tipoGuia: 'CEX' | 'LES';
 
   @Prop({ default: '' })
   nombreArchivoOficial: string;
@@ -44,7 +44,8 @@ export class GiisExportAudit extends Document {
   versionInterna?: string;
 }
 
-export const GiisExportAuditSchema = SchemaFactory.createForClass(GiisExportAudit);
+export const GiisExportAuditSchema =
+  SchemaFactory.createForClass(GiisExportAudit);
 GiisExportAuditSchema.index({ fechaHora: 1 });
 GiisExportAuditSchema.index({ batchId: 1 });
 GiisExportAuditSchema.index({ periodo: 1 });

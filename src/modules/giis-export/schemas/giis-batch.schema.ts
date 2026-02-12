@@ -4,7 +4,7 @@ import { Document, Types } from 'mongoose';
 export type GiisBatchStatus = 'pending' | 'generating' | 'completed' | 'failed';
 
 export interface GiisBatchArtifact {
-  guide: 'CDT' | 'CEX' | 'LES';
+  guide: 'CEX' | 'LES';
   path: string;
   rowCount?: number;
   /** Phase 2B: path to ZIP deliverable (only .CIF inside) */
@@ -31,7 +31,10 @@ export interface GiisExcludedReport {
   totalExcluded: number;
 }
 
-export type GiisValidationStatus = 'validated' | 'has_warnings' | 'has_blockers';
+export type GiisValidationStatus =
+  | 'validated'
+  | 'has_warnings'
+  | 'has_blockers';
 
 @Schema({ collection: 'giisbatches', timestamps: false })
 export class GiisBatch extends Document {
@@ -44,11 +47,23 @@ export class GiisBatch extends Document {
   @Prop({ required: true, match: /^\d{4}-\d{2}$/ })
   yearMonth: string;
 
-  @Prop({ required: true, enum: ['pending', 'generating', 'completed', 'failed'], default: 'pending' })
+  @Prop({
+    required: true,
+    enum: ['pending', 'generating', 'completed', 'failed'],
+    default: 'pending',
+  })
   status: GiisBatchStatus;
 
   @Prop({
-    type: [{ guide: String, path: String, rowCount: Number, zipPath: String, hashSha256: String }],
+    type: [
+      {
+        guide: String,
+        path: String,
+        rowCount: Number,
+        zipPath: String,
+        hashSha256: String,
+      },
+    ],
     default: [],
   })
   artifacts: GiisBatchArtifact[];
@@ -70,7 +85,9 @@ export class GiisBatch extends Document {
 
   @Prop({
     type: {
-      entries: [{ guide: String, rowIndex: Number, field: String, cause: String }],
+      entries: [
+        { guide: String, rowIndex: Number, field: String, cause: String },
+      ],
       totalExcluded: Number,
     },
   })

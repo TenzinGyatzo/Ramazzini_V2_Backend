@@ -486,7 +486,8 @@ export class CreateHistoriaClinicaDto {
   })
   @Matches(/^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, {
     each: true,
-    message: 'Cada código CIE-10 complementario debe tener el formato A00.0 o A00',
+    message:
+      'Cada código CIE-10 complementario debe tener el formato A00.0 o A00',
   })
   codigosCIE10Complementarios?: string[];
 

@@ -3,7 +3,7 @@
  *
  * Tests GIIS export transformers and formatters.
  * This test suite verifies the transformation layer creates correct
- * pipe-delimited output for GIIS-B013 and GIIS-B019 records.
+ * pipe-delimited output for GIIS-B013 records.
  */
 
 import {
@@ -25,10 +25,8 @@ import {
   formatResultEnum,
 } from '../../src/modules/giis-export/formatters/field.formatter';
 import { transformLesionToGIIS } from '../../src/modules/giis-export/transformers/lesion.transformer';
-import { transformDeteccionToGIIS } from '../../src/modules/giis-export/transformers/deteccion.transformer';
 
 import * as lesionFixtures from '../fixtures/lesion.fixtures';
-import * as deteccionFixtures from '../fixtures/deteccion.fixtures';
 import * as trabajadorFixtures from '../fixtures/trabajador.fixtures';
 import * as proveedorFixtures from '../fixtures/proveedor-salud.fixtures';
 
@@ -312,64 +310,6 @@ describe('NOM-024 GIIS Export Transformation (Task 16)', () => {
     });
   });
 
-  describe('Deteccion Transformer (GIIS-B019)', () => {
-    it('should produce pipe-delimited output', () => {
-      const deteccion = deteccionFixtures.validDeteccionAdult;
-      const trabajador = trabajadorFixtures.validMXTrabajador;
-      const proveedor = proveedorFixtures.validMXProvider;
-
-      const output = transformDeteccionToGIIS(deteccion, trabajador, proveedor);
-
-      expect(typeof output).toBe('string');
-      expect(output.includes('|')).toBe(true);
-    });
-
-    it('should have correct pipe count (91 fields = 90 pipes)', () => {
-      const deteccion = deteccionFixtures.validDeteccionAdult;
-      const trabajador = trabajadorFixtures.validMXTrabajador;
-      const proveedor = proveedorFixtures.validMXProvider;
-
-      const output = transformDeteccionToGIIS(deteccion, trabajador, proveedor);
-      const pipeCount = (output.match(/\|/g) || []).length;
-
-      // 91 fields means 90 delimiters
-      expect(pipeCount).toBe(90);
-    });
-
-    it('should include CLUES in output', () => {
-      const deteccion = deteccionFixtures.validDeteccionAdult;
-      const trabajador = trabajadorFixtures.validMXTrabajador;
-      const proveedor = proveedorFixtures.validMXProvider;
-
-      const output = transformDeteccionToGIIS(deteccion, trabajador, proveedor);
-
-      expect(output.includes(deteccion.clues)).toBe(true);
-    });
-
-    it('should include vital signs in output', () => {
-      const deteccion = deteccionFixtures.validDeteccionAdult;
-      const trabajador = trabajadorFixtures.validMXTrabajador;
-      const proveedor = proveedorFixtures.validMXProvider;
-
-      const output = transformDeteccionToGIIS(deteccion, trabajador, proveedor);
-
-      // Should contain peso and talla values
-      expect(output.includes(String(deteccion.peso))).toBe(true);
-      expect(output.includes(String(deteccion.talla))).toBe(true);
-    });
-
-    it('should handle result fields correctly', () => {
-      const deteccion = deteccionFixtures.validDeteccionAdult;
-      const trabajador = trabajadorFixtures.validMXTrabajador;
-      const proveedor = proveedorFixtures.validMXProvider;
-
-      const output = transformDeteccionToGIIS(deteccion, trabajador, proveedor);
-
-      // Output should be a valid pipe-delimited string
-      expect(typeof output).toBe('string');
-    });
-  });
-
   describe('Deterministic Output', () => {
     it('should produce same output for same input (Lesion)', () => {
       const lesion = lesionFixtures.validLesionAccidental;
@@ -382,23 +322,5 @@ describe('NOM-024 GIIS Export Transformation (Task 16)', () => {
       expect(output1).toBe(output2);
     });
 
-    it('should produce same output for same input (Deteccion)', () => {
-      const deteccion = deteccionFixtures.validDeteccionAdult;
-      const trabajador = trabajadorFixtures.validMXTrabajador;
-      const proveedor = proveedorFixtures.validMXProvider;
-
-      const output1 = transformDeteccionToGIIS(
-        deteccion,
-        trabajador,
-        proveedor,
-      );
-      const output2 = transformDeteccionToGIIS(
-        deteccion,
-        trabajador,
-        proveedor,
-      );
-
-      expect(output1).toBe(output2);
-    });
   });
 });

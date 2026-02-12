@@ -12,17 +12,42 @@ import {
   startMongoMemoryServer,
   stopMongoMemoryServer,
 } from '../utils/mongodb-memory.util';
-import { GiisBatch, GiisBatchSchema } from '../../src/modules/giis-export/schemas/giis-batch.schema';
+import {
+  GiisBatch,
+  GiisBatchSchema,
+} from '../../src/modules/giis-export/schemas/giis-batch.schema';
 import { GiisBatchService } from '../../src/modules/giis-export/giis-batch.service';
 import { GiisSerializerService } from '../../src/modules/giis-export/giis-serializer.service';
-import { Deteccion, DeteccionSchema } from '../../src/modules/expedientes/schemas/deteccion.schema';
-import { NotaMedica, NotaMedicaSchema } from '../../src/modules/expedientes/schemas/nota-medica.schema';
-import { Lesion, LesionSchema } from '../../src/modules/expedientes/schemas/lesion.schema';
+import {
+  Deteccion,
+  DeteccionSchema,
+} from '../../src/modules/expedientes/schemas/deteccion.schema';
+import {
+  NotaMedica,
+  NotaMedicaSchema,
+} from '../../src/modules/expedientes/schemas/nota-medica.schema';
+import {
+  Lesion,
+  LesionSchema,
+} from '../../src/modules/expedientes/schemas/lesion.schema';
+import {
+  Trabajador,
+  TrabajadorSchema,
+} from '../../src/modules/trabajadores/schemas/trabajador.schema';
+import {
+  CentroTrabajo,
+  CentroTrabajoSchema,
+} from '../../src/modules/centros-trabajo/schemas/centro-trabajo.schema';
+import {
+  Empresa,
+  EmpresaSchema,
+} from '../../src/modules/empresas/schemas/empresa.schema';
 import { RegulatoryPolicyService } from '../../src/utils/regulatory-policy.service';
 import { ProveedoresSaludService } from '../../src/modules/proveedores-salud/proveedores-salud.service';
 import { GiisValidationService } from '../../src/modules/giis-export/validation/giis-validation.service';
 import { GiisCryptoService } from '../../src/modules/giis-export/crypto/giis-crypto.service';
 import { GiisExportAuditService } from '../../src/modules/giis-export/giis-export-audit.service';
+import { AuditService } from '../../src/modules/audit/audit.service';
 
 const mockGiisValidationService = {
   validateAndFilterRows: jest.fn().mockImplementation(async (_guide, rows) => ({
@@ -47,6 +72,9 @@ describe('NOM-024 GIIS Batch (Phase 1A)', () => {
           { name: Deteccion.name, schema: DeteccionSchema },
           { name: NotaMedica.name, schema: NotaMedicaSchema },
           { name: Lesion.name, schema: LesionSchema },
+          { name: Trabajador.name, schema: TrabajadorSchema },
+          { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
+          { name: Empresa.name, schema: EmpresaSchema },
         ]),
       ],
       providers: [
@@ -65,7 +93,14 @@ describe('NOM-024 GIIS Batch (Phase 1A)', () => {
           useValue: mockGiisValidationService,
         },
         { provide: GiisCryptoService, useValue: {} },
-        { provide: GiisExportAuditService, useValue: { recordGenerationAudit: jest.fn().mockResolvedValue({}) } },
+        {
+          provide: GiisExportAuditService,
+          useValue: { recordGenerationAudit: jest.fn().mockResolvedValue({}) },
+        },
+        {
+          provide: AuditService,
+          useValue: { record: jest.fn().mockResolvedValue({}) },
+        },
       ],
     }).compile();
     service = module.get<GiisBatchService>(GiisBatchService);

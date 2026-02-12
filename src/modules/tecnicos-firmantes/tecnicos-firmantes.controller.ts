@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Req,
+  UnauthorizedException,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -37,9 +38,9 @@ export class TecnicosFirmantesController {
   @UseInterceptors(
     FileInterceptor('firma', {
       storage: diskStorage({
-        destination: path.resolve(
-          __dirname,
-          `../../../../${process.env.SIGNATORIES_UPLOADS_DIR}`,
+        destination: path.join(
+          process.cwd(),
+          process.env.SIGNATORIES_UPLOADS_DIR || 'assets/signatories',
         ),
         filename: (req, file, callback) => {
           const sanitizedName = req.body.nombre
@@ -85,8 +86,11 @@ export class TecnicosFirmantesController {
       });
       return { message: 'Creado exitosamente', data: tecnico };
     } catch (error: any) {
-      // Propagar el mensaje real al cliente (ej. validación CURP, Mongoose, duplicado)
-      if (error instanceof BadRequestException) {
+      // Propagar el error real (auth → 401, validación → 400)
+      if (
+        error instanceof BadRequestException ||
+        error instanceof UnauthorizedException
+      ) {
         throw error;
       }
       const message =
@@ -140,9 +144,9 @@ export class TecnicosFirmantesController {
   @UseInterceptors(
     FileInterceptor('firma', {
       storage: diskStorage({
-        destination: path.resolve(
-          __dirname,
-          `../../../../${process.env.SIGNATORIES_UPLOADS_DIR}`,
+        destination: path.join(
+          process.cwd(),
+          process.env.SIGNATORIES_UPLOADS_DIR || 'assets/signatories',
         ),
         filename: (req, file, callback) => {
           const sanitizedName = req.body.nombre

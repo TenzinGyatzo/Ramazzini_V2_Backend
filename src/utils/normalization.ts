@@ -134,8 +134,7 @@ export function normalizeProveedorSaludData(
 
   // CLUES opcional: si viene en el payload (incluido vacío) se actualiza/borra
   if ('clues' in dto)
-    result.clues =
-      typeof dto.clues === 'string' ? dto.clues.trim() : '';
+    result.clues = typeof dto.clues === 'string' ? dto.clues.trim() : '';
 
   if ('colorInforme' in dto) {
     result.colorInforme =

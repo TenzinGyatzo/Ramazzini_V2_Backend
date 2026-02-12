@@ -362,11 +362,11 @@ export class ExpedientesService {
 
     // Validate segundo diagnóstico (codigoCIEDiagnostico2)
     // IMPORTANTE: Esta validación solo aplica a notas médicas
-    if (documentType === 'notaMedica' && dto.primeraVezDiagnostico2 === true) {
+    if (documentType === 'notaMedica' && dto.primeraVezDiagnostico2 === 1) {
       const codigoDiagnostico2Full = dto.codigoCIEDiagnostico2?.trim() || '';
       if (!codigoDiagnostico2Full) {
         errors.push(
-          'El código CIE-10 diagnóstico 2 es obligatorio cuando primeraVezDiagnostico2 es true',
+          'El código CIE-10 diagnóstico 2 es obligatorio cuando primeraVezDiagnostico2 es Sí (1)',
         );
       } else {
         // Validar que sea diferente al principal (comparar códigos extraídos)
@@ -392,8 +392,8 @@ export class ExpedientesService {
       const codigoCausaFull = dto.codigoCIECausaExterna.trim();
       const codigoCausa =
         extractCodeFromFullText(codigoCausaFull).toUpperCase();
-      // Validar que esté en rango V01-Y98
-      if (!/^[V-Y][0-9]{2}(\.[0-9]{1,2})?$/.test(codigoCausa)) {
+      // Validar que esté en rango V01-Y98 (2 o 3 dígitos: W01, W013, etc.)
+      if (!/^[V-Y][0-9]{2,3}(\.[0-9]{1,2})?$/.test(codigoCausa)) {
         errors.push(
           `El código CIE-10 causa externa ${codigoCausa} debe estar en el rango V01-Y98`,
         );
@@ -579,8 +579,9 @@ export class ExpedientesService {
     // Vincular Consentimiento Diario (NOM-024)
     if (createDto.idTrabajador) {
       try {
-        const proveedorSaludId =
-          await this.getProveedorSaludIdFromTrabajador(createDto.idTrabajador);
+        const proveedorSaludId = await this.getProveedorSaludIdFromTrabajador(
+          createDto.idTrabajador,
+        );
         if (proveedorSaludId) {
           const policy =
             await this.regulatoryPolicyService.getRegulatoryPolicy(
@@ -588,9 +589,8 @@ export class ExpedientesService {
             );
           if (policy.features.dailyConsentEnabled) {
             // Obtener proveedor para calcular dateKey con timezone
-            const proveedor = await this.proveedoresSaludService.findOne(
-              proveedorSaludId,
-            );
+            const proveedor =
+              await this.proveedoresSaludService.findOne(proveedorSaludId);
             const dateKey = calculateDateKey(proveedor || null);
 
             // Buscar consentimiento del día
@@ -1466,10 +1466,10 @@ export class ExpedientesService {
     }
 
     if (lesionDto.codigoCIECausaExterna) {
-      // Validate that it's a Chapter XX code (V01-Y98)
+      // Validate that it's a Chapter XX code (V01-Y98, 2 o 3 dígitos)
       if (
-        !/^V[0-9]{2}|^W[0-9]{2}|^X[0-9]{2}|^Y[0-9]{2}$/.test(
-          lesionDto.codigoCIECausaExterna,
+        !/^[V-Y][0-9]{2,3}(\.[0-9]{1,2})?$/.test(
+          lesionDto.codigoCIECausaExterna.trim().toUpperCase(),
         )
       ) {
         errors.push(

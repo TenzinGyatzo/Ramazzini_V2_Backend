@@ -8,12 +8,11 @@ import { GiisValidationService } from './validation/giis-validation.service';
 import { GiisCryptoService } from './crypto/giis-crypto.service';
 import { GiisExportAuditService } from './giis-export-audit.service';
 import { GiisBatch, GiisBatchSchema } from './schemas/giis-batch.schema';
-import { GiisExportAudit, GiisExportAuditSchema } from './schemas/giis-export-audit.schema';
-import { Lesion, LesionSchema } from '../expedientes/schemas/lesion.schema';
 import {
-  Deteccion,
-  DeteccionSchema,
-} from '../expedientes/schemas/deteccion.schema';
+  GiisExportAudit,
+  GiisExportAuditSchema,
+} from './schemas/giis-export-audit.schema';
+import { Lesion, LesionSchema } from '../expedientes/schemas/lesion.schema';
 import {
   NotaMedica,
   NotaMedicaSchema,
@@ -34,6 +33,7 @@ import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
 import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
 import { UsersModule } from '../users/users.module';
 import { AuditModule } from '../audit/audit.module';
+import { FirmanteHelperModule } from '../expedientes/firmante-helper.module';
 
 /**
  * GIIS Export Module
@@ -43,7 +43,6 @@ import { AuditModule } from '../audit/audit.module';
  *
  * CAPABILITIES:
  * - Transform Lesion documents to GIIS-B013 format
- * - Transform Deteccion documents to GIIS-B019 format
  * - Filter by MX providers only
  * - Date range filtering
  *
@@ -61,7 +60,6 @@ import { AuditModule } from '../audit/audit.module';
       { name: GiisBatch.name, schema: GiisBatchSchema },
       { name: GiisExportAudit.name, schema: GiisExportAuditSchema },
       { name: Lesion.name, schema: LesionSchema },
-      { name: Deteccion.name, schema: DeteccionSchema },
       { name: NotaMedica.name, schema: NotaMedicaSchema },
       { name: Trabajador.name, schema: TrabajadorSchema },
       { name: ProveedorSalud.name, schema: ProveedorSaludSchema },
@@ -71,6 +69,7 @@ import { AuditModule } from '../audit/audit.module';
     forwardRef(() => ProveedoresSaludModule),
     forwardRef(() => UsersModule),
     AuditModule,
+    FirmanteHelperModule,
   ],
   controllers: [GiisExportController],
   providers: [
@@ -81,6 +80,13 @@ import { AuditModule } from '../audit/audit.module';
     GiisCryptoService,
     GiisExportAuditService,
   ],
-  exports: [GIISExportService, GiisBatchService, GiisSerializerService, GiisValidationService, GiisCryptoService, GiisExportAuditService],
+  exports: [
+    GIISExportService,
+    GiisBatchService,
+    GiisSerializerService,
+    GiisValidationService,
+    GiisCryptoService,
+    GiisExportAuditService,
+  ],
 })
 export class GIISExportModule {}

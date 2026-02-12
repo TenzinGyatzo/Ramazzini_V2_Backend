@@ -5,7 +5,10 @@ import { MedicosFirmantesService } from './medicos-firmantes.service';
 import { MedicoFirmante } from './schemas/medico-firmante.schema';
 import { User } from '../users/schemas/user.schema';
 import { ProveedorSalud } from '../proveedores-salud/schemas/proveedor-salud.schema';
-import { RegulatoryPolicyService, RegulatoryPolicy } from '../../utils/regulatory-policy.service';
+import {
+  RegulatoryPolicyService,
+  RegulatoryPolicy,
+} from '../../utils/regulatory-policy.service';
 
 describe('MedicosFirmantesService', () => {
   let service: MedicosFirmantesService;
@@ -328,9 +331,9 @@ describe('MedicosFirmantesService', () => {
 
         const result = await service.create(dto);
         expect(result).toBeDefined();
-        expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
-          siresProveedorId,
-        );
+        expect(
+          mockRegulatoryPolicyService.getRegulatoryPolicy,
+        ).toHaveBeenCalledWith(siresProveedorId);
       });
 
       it('should reject invalid CURP format for SIRES_NOM024', async () => {
@@ -367,9 +370,9 @@ describe('MedicosFirmantesService', () => {
 
         const result = await service.create(dto);
         expect(result).toBeDefined();
-        expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
-          sinRegimenProveedorId,
-        );
+        expect(
+          mockRegulatoryPolicyService.getRegulatoryPolicy,
+        ).toHaveBeenCalledWith(sinRegimenProveedorId);
       });
 
       it('should accept valid CURP for SIN_REGIMEN (optional)', async () => {

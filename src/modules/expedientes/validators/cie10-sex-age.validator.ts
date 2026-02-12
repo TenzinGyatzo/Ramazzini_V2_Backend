@@ -1,14 +1,17 @@
 /**
  * CIE-10 Sex and Age Validator
- * 
+ *
  * Validador reutilizable que verifica que los diagnósticos CIE-10 en Nota Médica
  * cumplan con las restricciones de sexo y/o edad del trabajador.
- * 
+ *
  * Bloque C3/C4: Validaciones determinísticas por SEXO y/o EDAD
  */
 
 import { calculateAge } from '../../../utils/age-calculator.util';
-import { getCIE10Restriction, getPrefixFromCode } from '../../../utils/cie10-restrictions.util';
+import {
+  getCIE10Restriction,
+  getPrefixFromCode,
+} from '../../../utils/cie10-restrictions.util';
 
 export interface CIE10ValidationIssue {
   field: string;
@@ -41,12 +44,21 @@ function normalizeSexo(sexo: string): 'MUJER' | 'HOMBRE' | null {
   }
 
   const normalized = sexo.trim().toLowerCase();
-  
-  if (normalized === 'masculino' || normalized === 'hombre' || normalized === 'm' || normalized === 'h') {
+
+  if (
+    normalized === 'masculino' ||
+    normalized === 'hombre' ||
+    normalized === 'm' ||
+    normalized === 'h'
+  ) {
     return 'HOMBRE';
   }
-  
-  if (normalized === 'femenino' || normalized === 'mujer' || normalized === 'f') {
+
+  if (
+    normalized === 'femenino' ||
+    normalized === 'mujer' ||
+    normalized === 'f'
+  ) {
     return 'MUJER';
   }
 
@@ -56,7 +68,9 @@ function normalizeSexo(sexo: string): 'MUJER' | 'HOMBRE' | null {
 /**
  * Recolecta todos los códigos CIE-10 de los campos especificados
  */
-function collectCIE10Codes(cie10Fields: Array<{ field: string; value: string | string[] }>): Array<{ field: string; value: string }> {
+function collectCIE10Codes(
+  cie10Fields: Array<{ field: string; value: string | string[] }>,
+): Array<{ field: string; value: string }> {
   const codes: Array<{ field: string; value: string }> = [];
 
   for (const field of cie10Fields) {
@@ -93,7 +107,7 @@ function validateSingleCIE10Code(
 ): CIE10ValidationIssue | null {
   // Obtener restricción del catálogo
   const restriction = getCIE10Restriction(cie10Code);
-  
+
   if (!restriction) {
     // No hay restricciones para este código
     return null;
@@ -101,7 +115,7 @@ function validateSingleCIE10Code(
 
   // Normalizar sexo del trabajador
   const sexoTrabajador = normalizeSexo(trabajadorSexo);
-  
+
   if (!sexoTrabajador) {
     // Sexo no reconocido, no validar (fallback)
     return null;
@@ -109,10 +123,11 @@ function validateSingleCIE10Code(
 
   // Validar sexo
   if (sexoTrabajador !== restriction.sexoPermitido) {
-    const reason = restriction.edadMin !== undefined || restriction.edadMax !== undefined
-      ? `Solo permitido para ${restriction.sexoPermitido}${restriction.edadMin !== undefined ? ` desde ${restriction.edadMin} años` : ''}${restriction.edadMax !== undefined ? ` hasta ${restriction.edadMax} años` : ''}`
-      : `Solo permitido para ${restriction.sexoPermitido}`;
-    
+    const reason =
+      restriction.edadMin !== undefined || restriction.edadMax !== undefined
+        ? `Solo permitido para ${restriction.sexoPermitido}${restriction.edadMin !== undefined ? ` desde ${restriction.edadMin} años` : ''}${restriction.edadMax !== undefined ? ` hasta ${restriction.edadMax} años` : ''}`
+        : `Solo permitido para ${restriction.sexoPermitido}`;
+
     return {
       field,
       cie10: getPrefixFromCode(cie10Code) || cie10Code,
@@ -125,10 +140,11 @@ function validateSingleCIE10Code(
 
   // Validar edad mínima
   if (restriction.edadMin !== undefined && edad < restriction.edadMin) {
-    const reason = restriction.edadMax !== undefined
-      ? `Solo permitido para ${restriction.sexoPermitido} entre ${restriction.edadMin} y ${restriction.edadMax} años`
-      : `Solo permitido para ${restriction.sexoPermitido} desde ${restriction.edadMin} años`;
-    
+    const reason =
+      restriction.edadMax !== undefined
+        ? `Solo permitido para ${restriction.sexoPermitido} entre ${restriction.edadMin} y ${restriction.edadMax} años`
+        : `Solo permitido para ${restriction.sexoPermitido} desde ${restriction.edadMin} años`;
+
     return {
       field,
       cie10: getPrefixFromCode(cie10Code) || cie10Code,
@@ -142,7 +158,7 @@ function validateSingleCIE10Code(
   // Validar edad máxima
   if (restriction.edadMax !== undefined && edad > restriction.edadMax) {
     const reason = `Solo permitido para ${restriction.sexoPermitido} entre ${restriction.edadMin} y ${restriction.edadMax} años`;
-    
+
     return {
       field,
       cie10: getPrefixFromCode(cie10Code) || cie10Code,
@@ -160,10 +176,10 @@ function validateSingleCIE10Code(
 /**
  * Valida que todos los diagnósticos CIE-10 en una Nota Médica cumplan
  * con las restricciones de sexo y/o edad del trabajador.
- * 
+ *
  * @param params - Parámetros de validación
  * @returns Resultado de la validación con lista de issues encontrados
- * 
+ *
  * @example
  * const result = validateNotaMedicaCIE10SexAgeRules({
  *   trabajadorSexo: 'MUJER',
@@ -178,13 +194,18 @@ function validateSingleCIE10Code(
 export function validateNotaMedicaCIE10SexAgeRules(
   params: CIE10ValidationParams,
 ): CIE10ValidationResult {
-  const { trabajadorSexo, trabajadorFechaNacimiento, fechaNotaMedica, cie10Fields } = params;
+  const {
+    trabajadorSexo,
+    trabajadorFechaNacimiento,
+    fechaNotaMedica,
+    cie10Fields,
+  } = params;
 
   // Calcular edad del trabajador
   // Usar fechaNotaMedica si existe, sino fecha actual
   const fechaReferencia = fechaNotaMedica || new Date();
   let edad: number;
-  
+
   try {
     edad = calculateAge(trabajadorFechaNacimiento, fechaReferencia);
   } catch (error) {
@@ -195,7 +216,7 @@ export function validateNotaMedicaCIE10SexAgeRules(
 
   // Recolectar todos los códigos CIE-10
   const codes = collectCIE10Codes(cie10Fields);
-  
+
   if (codes.length === 0) {
     // No hay códigos para validar
     return { ok: true, issues: [] };
@@ -216,4 +237,3 @@ export function validateNotaMedicaCIE10SexAgeRules(
     issues,
   };
 }
-

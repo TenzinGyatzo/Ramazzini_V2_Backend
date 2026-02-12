@@ -5,7 +5,10 @@ import { EnfermerasFirmantesService } from './enfermeras-firmantes.service';
 import { EnfermeraFirmante } from './schemas/enfermera-firmante.schema';
 import { User } from '../users/schemas/user.schema';
 import { ProveedorSalud } from '../proveedores-salud/schemas/proveedor-salud.schema';
-import { RegulatoryPolicyService, RegulatoryPolicy } from '../../utils/regulatory-policy.service';
+import {
+  RegulatoryPolicyService,
+  RegulatoryPolicy,
+} from '../../utils/regulatory-policy.service';
 
 describe('EnfermerasFirmantesService', () => {
   let service: EnfermerasFirmantesService;

@@ -43,7 +43,10 @@ export class NOM024ComplianceUtil {
       Date.now() - cached.timestamp < this.CACHE_TTL
     ) {
       // Normalizar valores antiguos del cache
-      const regimen = cached.regimenRegulatorio as 'SIRES_NOM024' | 'SIN_REGIMEN' | 'NO_SUJETO_SIRES';
+      const regimen = cached.regimenRegulatorio as
+        | 'SIRES_NOM024'
+        | 'SIN_REGIMEN'
+        | 'NO_SUJETO_SIRES';
       return regimen === 'NO_SUJETO_SIRES' ? 'SIN_REGIMEN' : regimen;
     }
 
@@ -65,7 +68,7 @@ export class NOM024ComplianceUtil {
           | 'SIRES_NOM024'
           | 'SIN_REGIMEN'
           | 'NO_SUJETO_SIRES';
-        
+
         // Normalizar valores antiguos
         if (regimen === 'NO_SUJETO_SIRES') {
           regimen = 'SIN_REGIMEN';

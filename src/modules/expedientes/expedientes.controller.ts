@@ -365,7 +365,6 @@ export class ExpedientesController {
         if (typeof errorResponse === 'object' && errorResponse !== null) {
           // Si tiene estructura de validación (code, ruleId, message, details), propagarlo
           if ('code' in errorResponse && 'message' in errorResponse) {
-
             throw error; // Propagar el error original con toda su estructura
           }
         }
@@ -451,7 +450,10 @@ export class ExpedientesController {
   // GIIS-B013: Lesion CRUD Endpoints
   @Post('lesion')
   @UseGuards(DailyConsentGuard)
-  @RequireDailyConsent({ action: 'CREATE_DOCUMENT', skipIfNoTrabajadorId: true })
+  @RequireDailyConsent({
+    action: 'CREATE_DOCUMENT',
+    skipIfNoTrabajadorId: true,
+  })
   async createLesion(@Body() createLesionDto: CreateLesionDto) {
     try {
       const lesion =
@@ -623,7 +625,10 @@ export class ExpedientesController {
 
   @Post('deteccion')
   @UseGuards(DailyConsentGuard)
-  @RequireDailyConsent({ action: 'CREATE_DOCUMENT', skipIfNoTrabajadorId: true })
+  @RequireDailyConsent({
+    action: 'CREATE_DOCUMENT',
+    skipIfNoTrabajadorId: true,
+  })
   async createDeteccion(@Body() createDeteccionDto: CreateDeteccionDto) {
     try {
       const deteccion =

@@ -19,9 +19,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C53' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C53' }],
       });
 
       expect(result.ok).toBe(true);
@@ -33,9 +31,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C50' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C50' }],
       });
 
       expect(result.ok).toBe(true);
@@ -47,9 +43,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C61' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C61' }],
       });
 
       expect(result.ok).toBe(false);
@@ -67,7 +61,10 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
         cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C56 - Tumor maligno del ovario' },
+          {
+            field: 'codigoCIE10Principal',
+            value: 'C56 - Tumor maligno del ovario',
+          },
         ],
       });
 
@@ -84,9 +81,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'N40' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'N40' }],
       });
 
       expect(result.ok).toBe(false);
@@ -105,9 +100,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C53' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C53' }],
       });
 
       expect(result.ok).toBe(false);
@@ -124,9 +117,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C50' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C50' }],
       });
 
       expect(result.ok).toBe(true);
@@ -144,9 +135,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C61' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C61' }],
       });
 
       expect(result.ok).toBe(true);
@@ -158,9 +147,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'N40' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'N40' }],
       });
 
       expect(result.ok).toBe(true);
@@ -172,9 +159,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C50' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C50' }],
       });
 
       expect(result.ok).toBe(false);
@@ -188,9 +173,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'O00' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'O00' }],
       });
 
       expect(result.ok).toBe(false);
@@ -203,9 +186,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: 'Femenino',
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C60' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C60' }],
       });
 
       expect(result.ok).toBe(false);
@@ -219,9 +200,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: 'Femenino',
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C62' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C62' }],
       });
 
       expect(result.ok).toBe(false);
@@ -240,9 +219,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'N40' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'N40' }],
       });
 
       expect(result.ok).toBe(false);
@@ -259,9 +236,7 @@ describe('CIE10 Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C61' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C61' }],
       });
 
       expect(result.ok).toBe(false);
@@ -306,7 +281,7 @@ describe('CIE10 Sex and Age Validator', () => {
       expect(result.ok).toBe(false);
       // Debe reportar C61, N40, y O00 (por sexo)
       expect(result.issues.length).toBeGreaterThan(0);
-      
+
       const fields = result.issues.map((i) => i.field);
       expect(fields).toContain('codigoCIE10Principal');
       expect(fields).toContain('codigosCIE10Complementarios');
@@ -375,13 +350,11 @@ describe('CIE10 Sex and Age Validator', () => {
     it('should use current date when fechaNotaMedica is not provided', () => {
       const fechaNacimiento = createDate(1994, 1, 1);
       // No proporcionar fechaNotaMedica, debería usar fecha actual
-      
+
       const result = validateNotaMedicaCIE10SexAgeRules({
         trabajadorSexo: 'Femenino',
         trabajadorFechaNacimiento: fechaNacimiento,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C50' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C50' }],
       });
 
       // Debe calcular la edad usando fecha actual
@@ -392,14 +365,12 @@ describe('CIE10 Sex and Age Validator', () => {
       // Mujer de exactamente 25 años (edad mínima para C53)
       const fechaNacimiento = createDate(1999, 1, 1);
       const fechaNotaMedica = createDate(2024, 1, 1); // Exactamente 25 años
-      
+
       const result = validateNotaMedicaCIE10SexAgeRules({
         trabajadorSexo: 'Femenino',
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C53' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C53' }],
       });
 
       expect(result.ok).toBe(true); // 25 es válido (>= 25)
@@ -409,14 +380,12 @@ describe('CIE10 Sex and Age Validator', () => {
       // Mujer de exactamente 64 años (edad máxima para C53)
       const fechaNacimiento = createDate(1960, 1, 1);
       const fechaNotaMedica = createDate(2024, 1, 1); // Exactamente 64 años
-      
+
       const result = validateNotaMedicaCIE10SexAgeRules({
         trabajadorSexo: 'Femenino',
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C53' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C53' }],
       });
 
       expect(result.ok).toBe(true); // 64 es válido (<= 64)
@@ -426,14 +395,12 @@ describe('CIE10 Sex and Age Validator', () => {
       // Mujer de 65 años (mayor que máximo para C53)
       const fechaNacimiento = createDate(1959, 1, 1);
       const fechaNotaMedica = createDate(2024, 1, 1); // 65 años
-      
+
       const result = validateNotaMedicaCIE10SexAgeRules({
         trabajadorSexo: 'Femenino',
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C53' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C53' }],
       });
 
       expect(result.ok).toBe(false);
@@ -441,4 +408,3 @@ describe('CIE10 Sex and Age Validator', () => {
     });
   });
 });
-

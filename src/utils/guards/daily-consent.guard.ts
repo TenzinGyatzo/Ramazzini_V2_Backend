@@ -30,11 +30,11 @@ import { isValidObjectId } from 'mongoose';
 
 /**
  * Guard para enforcement de consentimiento informado diario
- * 
+ *
  * Este guard valida que exista un consentimiento diario válido antes de permitir
  * ejecutar acciones protegidas. Solo aplica para proveedores con régimen SIRES_NOM024
  * cuando dailyConsentEnabled === true.
- * 
+ *
  * @example
  * @Post(':documentType/crear')
  * @UseGuards(DailyConsentGuard)
@@ -107,9 +107,8 @@ export class DailyConsentGuard implements CanActivate {
     }
 
     // 4. Obtener policy
-    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-      proveedorSaludId,
-    );
+    const policy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
 
     // 5. Si dailyConsentEnabled === false, permitir (pass-through silencioso)
     if (!policy.features.dailyConsentEnabled) {
@@ -119,10 +118,9 @@ export class DailyConsentGuard implements CanActivate {
     // 6. Calcular dateKey (backend es fuente de verdad del "día")
     let dateKey: string;
     try {
-      const proveedor = await this.proveedoresSaludService.findOne(
-        proveedorSaludId,
-      );
-      dateKey = calculateDateKey(proveedor as any || null);
+      const proveedor =
+        await this.proveedoresSaludService.findOne(proveedorSaludId);
+      dateKey = calculateDateKey((proveedor as any) || null);
     } catch (error) {
       this.logger.error(
         `Error al calcular dateKey para proveedor ${proveedorSaludId}:`,

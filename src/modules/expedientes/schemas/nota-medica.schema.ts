@@ -44,6 +44,10 @@ export class NotaMedica extends Document {
   @Prop()
   diagnostico: string; // Free-text diagnosis (kept for backward compatibility)
 
+  // NOM-024 GIIS-B015: Campos adicionales para diagnóstico
+  @Prop({ required: false })
+  relacionTemporal?: number; // 0=Primera Vez, 1=Subsecuente
+
   // NOM-024: CIE-10 Diagnosis Codes
   // Formato: "CODE - DESCRIPTION" o solo "CODE"
   @Prop({
@@ -52,6 +56,9 @@ export class NotaMedica extends Document {
   })
   codigoCIE10Principal?: string;
 
+  @Prop({ required: false })
+  confirmacionDiagnostica?: boolean; // Flag para crónicos/cáncer <18
+
   @Prop({
     type: [String],
     required: false,
@@ -59,12 +66,8 @@ export class NotaMedica extends Document {
   })
   codigosCIE10Complementarios?: string[];
 
-  // NOM-024 GIIS-B015: Campos adicionales para diagnóstico
   @Prop({ required: false })
-  relacionTemporal?: number; // 0=Primera Vez, 1=Subsecuente
-
-  @Prop({ required: false })
-  primeraVezDiagnostico2?: boolean;
+  primeraVezDiagnostico2?: number; // 0=No, 1=Si
 
   @Prop({
     required: false,
@@ -73,10 +76,10 @@ export class NotaMedica extends Document {
   codigoCIEDiagnostico2?: string; // Segundo diagnóstico
 
   @Prop({ required: false })
-  diagnosticoTexto?: string; // Texto libre complementario al diagnóstico 2
+  confirmacionDiagnostica2?: boolean; // Flag para crónicos/cáncer <18 (diagnóstico 2)
 
   @Prop({ required: false })
-  confirmacionDiagnostica?: boolean; // Flag para crónicos/cáncer <18
+  diagnosticoTexto?: string; // Texto libre complementario al diagnóstico 2
 
   @Prop({
     required: false,

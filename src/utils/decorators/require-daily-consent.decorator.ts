@@ -24,7 +24,7 @@ export const REQUIRE_DAILY_CONSENT_KEY = 'requireDailyConsent';
 
 /**
  * Decorador para marcar endpoints que requieren consentimiento informado diario
- * 
+ *
  * @example
  * @Post(':documentType/crear')
  * @UseGuards(DailyConsentGuard)

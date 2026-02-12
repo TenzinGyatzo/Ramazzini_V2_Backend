@@ -9,7 +9,10 @@
  * @param fechaConsulta - Consultation/visit date
  * @returns Age in years (integer)
  */
-export function calculateAge(fechaNacimiento: Date, fechaConsulta: Date): number {
+export function calculateAge(
+  fechaNacimiento: Date,
+  fechaConsulta: Date,
+): number {
   if (!fechaNacimiento || !fechaConsulta) {
     throw new Error('Both fechaNacimiento and fechaConsulta are required');
   }
@@ -45,4 +48,3 @@ export function calculateAge(fechaNacimiento: Date, fechaConsulta: Date): number
 export function calculateAgeToToday(fechaNacimiento: Date): number {
   return calculateAge(fechaNacimiento, new Date());
 }
-

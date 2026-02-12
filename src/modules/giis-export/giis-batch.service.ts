@@ -1,17 +1,24 @@
-import { Injectable, ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import * as fs from 'fs';
 import * as path from 'path';
 import { GiisBatch } from './schemas/giis-batch.schema';
-import { Deteccion } from '../expedientes/schemas/deteccion.schema';
 import { NotaMedica } from '../expedientes/schemas/nota-medica.schema';
+import { DocumentoEstado } from '../expedientes/enums/documento-estado.enum';
 import { Lesion } from '../expedientes/schemas/lesion.schema';
+import { FirmanteHelper } from '../expedientes/helpers/firmante-helper';
+import { Trabajador } from '../trabajadores/schemas/trabajador.schema';
+import { CentroTrabajo } from '../centros-trabajo/schemas/centro-trabajo.schema';
+import { Empresa } from '../empresas/schemas/empresa.schema';
 import { loadGiisSchema } from './schema-loader';
 import { GiisSerializerService } from './giis-serializer.service';
-import { mapDeteccionToCdtRow } from './transformers/cdt.mapper';
 import { mapNotaMedicaToCexRow } from './transformers/cex.mapper';
-import { mapLesionToLesRow } from './transformers/les.mapper';
+import { mapNotaMedicaToLesRows } from './transformers/les.mapper';
 import { RegulatoryPolicyService } from '../../utils/regulatory-policy.service';
 import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.service';
 import { formatCLUES } from './formatters/field.formatter';
@@ -23,11 +30,15 @@ import type {
   GiisValidationStatus,
 } from './schemas/giis-batch.schema';
 import { GiisCryptoService } from './crypto/giis-crypto.service';
-import { getOfficialBaseName, getOfficialFileName } from './naming/giis-official-naming';
+import {
+  getOfficialBaseName,
+  getOfficialFileName,
+} from './naming/giis-official-naming';
 import { GiisExportAuditService } from './giis-export-audit.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditActionType } from '../audit/constants/audit-action-type';
 import { AuditEventClass } from '../audit/constants/audit-event-class';
+import { CatalogsService } from '../catalogs/catalogs.service';
 
 export type CreateBatchOptions = GiisBatchOptions;
 
@@ -60,10 +71,16 @@ const EXPORTS_BASE = 'exports/giis';
 @Injectable()
 export class GiisBatchService {
   constructor(
-    @InjectModel(GiisBatch.name) private readonly giisBatchModel: Model<GiisBatch>,
-    @InjectModel(Deteccion.name) private readonly deteccionModel: Model<Deteccion>,
-    @InjectModel(NotaMedica.name) private readonly notaMedicaModel: Model<NotaMedica>,
+    @InjectModel(GiisBatch.name)
+    private readonly giisBatchModel: Model<GiisBatch>,
+    @InjectModel(NotaMedica.name)
+    private readonly notaMedicaModel: Model<NotaMedica>,
     @InjectModel(Lesion.name) private readonly lesionModel: Model<Lesion>,
+    @InjectModel(Trabajador.name)
+    private readonly trabajadorModel: Model<Trabajador>,
+    @InjectModel(CentroTrabajo.name)
+    private readonly centroTrabajoModel: Model<CentroTrabajo>,
+    @InjectModel(Empresa.name) private readonly empresaModel: Model<Empresa>,
     private readonly serializer: GiisSerializerService,
     private readonly regulatoryPolicyService: RegulatoryPolicyService,
     private readonly proveedoresSaludService: ProveedoresSaludService,
@@ -71,7 +88,40 @@ export class GiisBatchService {
     private readonly giisCryptoService: GiisCryptoService,
     private readonly giisExportAuditService: GiisExportAuditService,
     private readonly auditService: AuditService,
+    private readonly firmanteHelper: FirmanteHelper,
+    private readonly catalogsService: CatalogsService,
   ) {}
+
+  /**
+   * Obtiene los IDs de trabajadores que pertenecen al proveedor (tenant).
+   * Cadena: ProveedorSalud → Empresas → CentrosTrabajo → Trabajadores.
+   */
+  private async getTrabajadorIdsForProveedor(
+    proveedorSaludId: string,
+  ): Promise<Types.ObjectId[]> {
+    const empresas = await this.empresaModel
+      .find({ idProveedorSalud: proveedorSaludId })
+      .select('_id')
+      .lean()
+      .exec();
+    const empresaIds = empresas.map((e) => e._id);
+    if (empresaIds.length === 0) return [];
+
+    const centros = await this.centroTrabajoModel
+      .find({ idEmpresa: { $in: empresaIds } })
+      .select('_id')
+      .lean()
+      .exec();
+    const centroIds = centros.map((c) => c._id);
+    if (centroIds.length === 0) return [];
+
+    const trabajadores = await this.trabajadorModel
+      .find({ idCentroTrabajo: { $in: centroIds } })
+      .select('_id')
+      .lean()
+      .exec();
+    return trabajadores.map((t) => t._id as unknown as Types.ObjectId);
+  }
 
   async createBatch(
     proveedorSaludId: string,
@@ -99,21 +149,21 @@ export class GiisBatchService {
     yearMonth: string,
     options?: CreateBatchOptions,
   ): Promise<GiisBatch> {
-    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-      proveedorSaludId,
-    );
+    const policy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
     if (policy.regime !== 'SIRES_NOM024') {
       throw new ForbiddenException(
         'La exportación GIIS solo está disponible para proveedores con régimen SIRES_NOM024.',
       );
     }
 
-    const proveedor = await this.proveedoresSaludService.findOne(
-      proveedorSaludId,
-    );
+    const proveedor =
+      await this.proveedoresSaludService.findOne(proveedorSaludId);
     const cluesRaw = proveedor?.clues?.trim() ?? '';
     const establecimientoClues =
-      formatCLUES(cluesRaw) || (cluesRaw.length === 11 ? cluesRaw.toUpperCase() : '') || '9998';
+      formatCLUES(cluesRaw) ||
+      (cluesRaw.length === 11 ? cluesRaw.toUpperCase() : '') ||
+      '9998';
 
     const batch = await this.giisBatchModel.create({
       proveedorSaludId: new Types.ObjectId(proveedorSaludId),
@@ -126,7 +176,8 @@ export class GiisBatchService {
     });
     await this.auditService.record({
       proveedorSaludId,
-      actorId: (options as { createdByUserId?: string })?.createdByUserId ?? 'SYSTEM',
+      actorId:
+        (options as { createdByUserId?: string })?.createdByUserId ?? 'SYSTEM',
       actionType: AuditActionType.GIIS_EXPORT_STARTED,
       resourceType: 'GiisBatch',
       resourceId: batch._id.toString(),
@@ -146,7 +197,9 @@ export class GiisBatchService {
    * List batches for a proveedor, one row per yearMonth (most recent batch only).
    * Ordered by yearMonth descending. Used by UI to show export history without duplicate months.
    */
-  async listBatchesForProveedor(proveedorSaludId: string): Promise<BatchListItem[]> {
+  async listBatchesForProveedor(
+    proveedorSaludId: string,
+  ): Promise<BatchListItem[]> {
     const docs = await this.giisBatchModel
       .find({ proveedorSaludId: new Types.ObjectId(proveedorSaludId) })
       .sort({ yearMonth: -1, completedAt: -1, _id: -1 })
@@ -161,132 +214,135 @@ export class GiisBatchService {
         return true;
       })
       .map((d) => ({
-      batchId: String(d._id),
-      yearMonth: d.yearMonth,
-      status: d.status,
-      completedAt: d.completedAt,
-      validationStatus: d.validationStatus,
-      establecimientoClues: d.establecimientoClues ?? '',
-      errorMessage: d.errorMessage,
-      excludedReport: d.excludedReport
-        ? { totalExcluded: d.excludedReport.totalExcluded ?? 0 }
-        : undefined,
-      artifacts: (d.artifacts ?? []).map((a: { guide: string }) => ({ guide: a.guide })),
-    }));
+        batchId: String(d._id),
+        yearMonth: d.yearMonth,
+        status: d.status,
+        completedAt: d.completedAt,
+        validationStatus: d.validationStatus,
+        establecimientoClues: d.establecimientoClues ?? '',
+        errorMessage: d.errorMessage,
+        excludedReport: d.excludedReport
+          ? { totalExcluded: d.excludedReport.totalExcluded ?? 0 }
+          : undefined,
+        artifacts: (d.artifacts ?? []).map((a: { guide: string }) => ({
+          guide: a.guide,
+        })),
+      }));
 
     return items;
   }
 
   /**
-   * Generate CDT (B019) artifact for a batch and write TXT file.
-   * Loads detecciones for batch month; maps with schema-driven CDT mapper; serializes and writes.
-   */
-  async generateBatchCdt(batchId: string): Promise<GiisBatch | null> {
-    const batch = await this.getBatch(batchId);
-    if (!batch || batch.status !== 'pending') return null;
-
-    await this.giisBatchModel.updateOne(
-      { _id: batch._id },
-      { $set: { status: 'generating' } },
-    );
-
-    const [year, month] = batch.yearMonth.split('-').map(Number);
-    const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-    const clues = batch.establecimientoClues || '9998';
-
-    const detecciones = await this.deteccionModel
-      .find({
-        fechaDeteccion: { $gte: startOfMonth, $lte: endOfMonth },
-      })
-      .lean()
-      .exec();
-
-    const schema = loadGiisSchema('CDT');
-    const rows: Record<string, string | number>[] = [];
-    for (const doc of detecciones) {
-      const row = mapDeteccionToCdtRow(doc as any, { clues }, null);
-      rows.push(row);
-    }
-
-    const { validRows, excludedReport, warnings } =
-      await this.giisValidationService.validateAndFilterRows('CDT', rows, schema);
-    const validationStatus =
-      excludedReport.totalExcluded > 0
-        ? 'has_blockers'
-        : warnings.length > 0
-          ? 'has_warnings'
-          : 'validated';
-
-    const content = this.serializer.serialize(schema, validRows);
-    const proveedorId = batch.proveedorSaludId.toString();
-    const dir = path.join(process.cwd(), EXPORTS_BASE, proveedorId, batch.yearMonth);
-    fs.mkdirSync(dir, { recursive: true });
-    const filePath = path.join(dir, 'CDT.txt');
-    fs.writeFileSync(filePath, content, 'utf-8');
-
-    const relativePath = path.join(EXPORTS_BASE, proveedorId, batch.yearMonth, 'CDT.txt');
-    const reportToSave: GiisExcludedReport = {
-      entries: excludedReport.entries,
-      totalExcluded: excludedReport.totalExcluded,
-    };
-    await this.giisBatchModel.updateOne(
-      { _id: batch._id },
-      {
-        $set: {
-          status: 'completed',
-          completedAt: new Date(),
-          validationStatus,
-          excludedReport: reportToSave,
-        },
-        $push: {
-          artifacts: {
-            guide: 'CDT',
-            path: relativePath,
-            rowCount: validRows.length,
-          },
-        },
-      },
-    );
-    return this.getBatch(batchId);
-  }
-
-  /**
    * Generate CEX (B015 Consulta externa) artifact for a batch and write TXT file.
    * Loads NotaMedica (consulta externa) for batch month; maps with schema-driven CEX mapper; serializes and writes.
-   * Can be called after createBatch or after generateBatchCdt; appends artifact to batch.
+   * When batch has no artifacts yet, acts as lead generator: sets status to generating then completed.
    */
   async generateBatchCex(batchId: string): Promise<GiisBatch | null> {
     const batch = await this.getBatch(batchId);
     if (!batch) return null;
     if (batch.status === 'failed') return null;
 
+    const isFirstGenerator = (batch.artifacts?.length ?? 0) === 0;
+    if (isFirstGenerator) {
+      await this.giisBatchModel.updateOne(
+        { _id: batch._id },
+        { $set: { status: 'generating' } },
+      );
+    }
+
     const [year, month] = batch.yearMonth.split('-').map(Number);
     const startOfMonth = new Date(year, month - 1, 1);
     const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
     const clues = batch.establecimientoClues || '9998';
 
+    const trabajadorIds = await this.getTrabajadorIdsForProveedor(
+      batch.proveedorSaludId.toString(),
+    );
     const notas = await this.notaMedicaModel
       .find({
+        estado: DocumentoEstado.FINALIZADO,
         fechaNotaMedica: { $gte: startOfMonth, $lte: endOfMonth },
+        idTrabajador:
+          trabajadorIds.length > 0 ? { $in: trabajadorIds } : { $in: [] },
       })
       .populate('idTrabajador')
       .lean()
       .exec();
 
+    const startOfYear = new Date(year, 0, 1);
+    const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);
+    const notasDelAnio =
+      trabajadorIds.length > 0
+        ? await this.notaMedicaModel
+            .find({
+              estado: DocumentoEstado.FINALIZADO,
+              fechaNotaMedica: { $gte: startOfYear, $lte: endOfYear },
+              idTrabajador: { $in: trabajadorIds },
+            })
+            .select('idTrabajador fechaNotaMedica _id')
+            .lean()
+            .exec()
+        : [];
+    const firstInYearIds = new Set<string>();
+    const byTrabajador = new Map<string, { fecha: Date; _id: Types.ObjectId }[]>();
+    for (const n of notasDelAnio as any[]) {
+      const key = n.idTrabajador?.toString?.() ?? n.idTrabajador;
+      if (!key) continue;
+      if (!byTrabajador.has(key)) byTrabajador.set(key, []);
+      byTrabajador.get(key)!.push({
+        fecha: n.fechaNotaMedica,
+        _id: n._id,
+      });
+    }
+    for (const arr of byTrabajador.values()) {
+      arr.sort(
+        (a, b) =>
+          a.fecha.getTime() - b.fecha.getTime() ||
+          a._id.toString().localeCompare(b._id.toString()),
+      );
+      if (arr.length > 0) firstInYearIds.add(arr[0]._id.toString());
+    }
+
     const schema = loadGiisSchema('CEX');
     const rows: Record<string, string | number>[] = [];
     for (const doc of notas) {
       const nota = doc as any;
+      const primeraVezAnio = firstInYearIds.has(nota._id.toString()) ? 1 : 0;
+      const consultaWithPrimera = { ...nota, primeraVezAnio };
       const trabajador = nota.idTrabajador ? (nota.idTrabajador as any) : null;
-      const row = mapNotaMedicaToCexRow(nota, { clues }, trabajador);
+      const rawUser = nota.finalizadoPor ?? nota.updatedBy;
+      const userId =
+        rawUser != null
+          ? typeof rawUser === 'string'
+            ? rawUser
+            : (rawUser as Types.ObjectId).toString()
+          : '';
+      const prestadorData = userId
+        ? await this.firmanteHelper.getPrestadorDataFromUser(userId)
+        : null;
+      const cexContext = {
+        clues,
+        getPaisCatalogKeyFromNacionalidad: (clave: string) =>
+          this.catalogsService.getPaisCatalogKeyFromNacionalidad(clave),
+      };
+      const row = mapNotaMedicaToCexRow(
+        consultaWithPrimera,
+        cexContext,
+        trabajador,
+        prestadorData ?? undefined,
+      );
       rows.push(row);
     }
 
     const { validRows, excludedReport, warnings } =
-      await this.giisValidationService.validateAndFilterRows('CEX', rows, schema);
+      await this.giisValidationService.validateAndFilterRows(
+        'CEX',
+        rows,
+        schema,
+      );
     const currentBatch = await this.getBatch(batchId);
-    const existingEntries = (currentBatch?.excludedReport as GiisExcludedReport)?.entries ?? [];
+    const existingEntries =
+      (currentBatch?.excludedReport as GiisExcludedReport)?.entries ?? [];
     const mergedEntries = [
       ...existingEntries,
       ...excludedReport.entries.map((e) => ({
@@ -299,7 +355,8 @@ export class GiisBatchService {
     const mergedTotalExcluded = new Set(
       mergedEntries.map((e) => `${e.guide}:${e.rowIndex}`),
     ).size;
-    const hadBlockers = (currentBatch?.validationStatus as string) === 'has_blockers';
+    const hadBlockers =
+      (currentBatch?.validationStatus as string) === 'has_blockers';
     const validationStatus =
       mergedTotalExcluded > 0
         ? 'has_blockers'
@@ -307,26 +364,41 @@ export class GiisBatchService {
           ? 'has_blockers'
           : warnings.length > 0
             ? 'has_warnings'
-            : currentBatch?.validationStatus ?? 'validated';
+            : (currentBatch?.validationStatus ?? 'validated');
 
     const content = this.serializer.serialize(schema, validRows);
     const proveedorId = batch.proveedorSaludId.toString();
-    const dir = path.join(process.cwd(), EXPORTS_BASE, proveedorId, batch.yearMonth);
+    const dir = path.join(
+      process.cwd(),
+      EXPORTS_BASE,
+      proveedorId,
+      batch.yearMonth,
+    );
     fs.mkdirSync(dir, { recursive: true });
     const filePath = path.join(dir, 'CEX.txt');
     fs.writeFileSync(filePath, content, 'utf-8');
 
-    const relativePath = path.join(EXPORTS_BASE, proveedorId, batch.yearMonth, 'CEX.txt');
+    const relativePath = path.join(
+      EXPORTS_BASE,
+      proveedorId,
+      batch.yearMonth,
+      'CEX.txt',
+    );
+    const setPayload: Record<string, unknown> = {
+      excludedReport: {
+        entries: mergedEntries,
+        totalExcluded: mergedTotalExcluded,
+      },
+      validationStatus,
+    };
+    if (isFirstGenerator) {
+      setPayload.status = 'completed';
+      setPayload.completedAt = new Date();
+    }
     await this.giisBatchModel.updateOne(
       { _id: batch._id },
       {
-        $set: {
-          excludedReport: {
-            entries: mergedEntries,
-            totalExcluded: mergedTotalExcluded,
-          },
-          validationStatus,
-        },
+        $set: setPayload,
         $push: {
           artifacts: {
             guide: 'CEX',
@@ -341,7 +413,7 @@ export class GiisBatchService {
 
   /**
    * Generate LES (B013 Lesiones) artifact for a batch and write TXT file.
-   * Loads Lesion documents for batch month; maps with schema-driven LES mapper; serializes and writes.
+   * Derives from NotaMedica (finalizadas) that contain injury codes (S00-T98) or external cause (V01-Y98).
    * Can be called after createBatch or after other artifacts; appends artifact to batch.
    */
   async generateBatchLes(batchId: string): Promise<GiisBatch | null> {
@@ -354,27 +426,58 @@ export class GiisBatchService {
     const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
     const clues = batch.establecimientoClues || '9998';
 
-    const lesiones = await this.lesionModel
+    const trabajadorIds = await this.getTrabajadorIdsForProveedor(
+      batch.proveedorSaludId.toString(),
+    );
+    const notas = await this.notaMedicaModel
       .find({
-        fechaAtencion: { $gte: startOfMonth, $lte: endOfMonth },
+        estado: DocumentoEstado.FINALIZADO,
+        fechaNotaMedica: { $gte: startOfMonth, $lte: endOfMonth },
+        idTrabajador:
+          trabajadorIds.length > 0 ? { $in: trabajadorIds } : { $in: [] },
       })
       .populate('idTrabajador')
       .lean()
       .exec();
 
+    const lesContext = {
+      clues,
+      getPaisCatalogKeyFromNacionalidad: (clave: string) =>
+        this.catalogsService.getPaisCatalogKeyFromNacionalidad(clave),
+    };
     const schema = loadGiisSchema('LES');
     const rows: Record<string, string | number>[] = [];
-    for (const doc of lesiones) {
-      const lesion = doc as any;
-      const trabajador = lesion.idTrabajador ? (lesion.idTrabajador as any) : null;
-      const row = mapLesionToLesRow(lesion, { clues }, trabajador);
-      rows.push(row);
+    for (const doc of notas) {
+      const nota = doc as any;
+      const trabajador = nota.idTrabajador ? (nota.idTrabajador as any) : null;
+      const rawUser = nota.finalizadoPor ?? nota.updatedBy;
+      const userId =
+        rawUser != null
+          ? typeof rawUser === 'string'
+            ? rawUser
+            : (rawUser as Types.ObjectId).toString()
+          : '';
+      const prestadorData = userId
+        ? await this.firmanteHelper.getPrestadorDataFromUser(userId)
+        : null;
+      const lesRows = mapNotaMedicaToLesRows(
+        nota,
+        lesContext,
+        trabajador,
+        prestadorData ?? undefined,
+      );
+      rows.push(...lesRows);
     }
 
     const { validRows, excludedReport, warnings } =
-      await this.giisValidationService.validateAndFilterRows('LES', rows, schema);
+      await this.giisValidationService.validateAndFilterRows(
+        'LES',
+        rows,
+        schema,
+      );
     const currentBatch = await this.getBatch(batchId);
-    const existingEntries = (currentBatch?.excludedReport as GiisExcludedReport)?.entries ?? [];
+    const existingEntries =
+      (currentBatch?.excludedReport as GiisExcludedReport)?.entries ?? [];
     const mergedEntries = [
       ...existingEntries,
       ...excludedReport.entries.map((e) => ({
@@ -387,7 +490,8 @@ export class GiisBatchService {
     const mergedTotalExcluded = new Set(
       mergedEntries.map((e) => `${e.guide}:${e.rowIndex}`),
     ).size;
-    const hadBlockers = (currentBatch?.validationStatus as string) === 'has_blockers';
+    const hadBlockers =
+      (currentBatch?.validationStatus as string) === 'has_blockers';
     const validationStatus =
       mergedTotalExcluded > 0
         ? 'has_blockers'
@@ -395,16 +499,26 @@ export class GiisBatchService {
           ? 'has_blockers'
           : warnings.length > 0
             ? 'has_warnings'
-            : currentBatch?.validationStatus ?? 'validated';
+            : (currentBatch?.validationStatus ?? 'validated');
 
     const content = this.serializer.serialize(schema, validRows);
     const proveedorId = batch.proveedorSaludId.toString();
-    const dir = path.join(process.cwd(), EXPORTS_BASE, proveedorId, batch.yearMonth);
+    const dir = path.join(
+      process.cwd(),
+      EXPORTS_BASE,
+      proveedorId,
+      batch.yearMonth,
+    );
     fs.mkdirSync(dir, { recursive: true });
     const filePath = path.join(dir, 'LES.txt');
     fs.writeFileSync(filePath, content, 'utf-8');
 
-    const relativePath = path.join(EXPORTS_BASE, proveedorId, batch.yearMonth, 'LES.txt');
+    const relativePath = path.join(
+      EXPORTS_BASE,
+      proveedorId,
+      batch.yearMonth,
+      'LES.txt',
+    );
     await this.giisBatchModel.updateOne(
       { _id: batch._id },
       {
@@ -439,13 +553,15 @@ export class GiisBatchService {
       (s, a) => s + (Number(a.rowCount) || 0),
       0,
     );
-    const totalExcluded = (batch.excludedReport as GiisExcludedReport)?.totalExcluded ?? 0;
+    const totalExcluded =
+      (batch.excludedReport as GiisExcludedReport)?.totalExcluded ?? 0;
     const resumen = `${totalRows} procesados, ${totalExcluded} excluidos`;
-    const userId = (batch.options as { createdByUserId?: string })?.createdByUserId;
+    const userId = (batch.options as { createdByUserId?: string })
+      ?.createdByUserId;
 
     const proveedorSaludId = batch.proveedorSaludId.toString();
     for (const art of batch.artifacts ?? []) {
-      const guide = art.guide as 'CDT' | 'CEX' | 'LES';
+      const guide = art.guide as 'CEX' | 'LES';
       const baseName = getOfficialBaseName(guide, clues, year, month);
       await this.giisExportAuditService.recordGenerationAudit({
         proveedorSaludId,
@@ -514,7 +630,12 @@ export class GiisBatchService {
     const [year, month] = batch.yearMonth.split('-').map(Number);
     const clues = batch.establecimientoClues || '9998';
     const proveedorId = batch.proveedorSaludId.toString();
-    const dir = path.join(process.cwd(), EXPORTS_BASE, proveedorId, batch.yearMonth);
+    const dir = path.join(
+      process.cwd(),
+      EXPORTS_BASE,
+      proveedorId,
+      batch.yearMonth,
+    );
     const artifacts = Array.isArray(batch.artifacts) ? batch.artifacts : [];
     const updatedArtifacts = [];
 
@@ -527,7 +648,7 @@ export class GiisBatchService {
         continue;
       }
       const baseName = getOfficialBaseName(
-        guide as 'CDT' | 'CEX' | 'LES',
+        guide as 'CEX' | 'LES',
         clues,
         year,
         month,
@@ -538,11 +659,19 @@ export class GiisBatchService {
       const cifPath = path.join(dir, getOfficialFileName(baseName, 'CIF'));
       fs.writeFileSync(cifPath, cifBuffer);
 
-      const zipBuffer = await this.giisCryptoService.createZipWithCif(cifBuffer, baseName);
+      const zipBuffer = await this.giisCryptoService.createZipWithCif(
+        cifBuffer,
+        baseName,
+      );
       const zipFileName = getOfficialFileName(baseName, 'ZIP');
       const zipPathFull = path.join(dir, zipFileName);
       fs.writeFileSync(zipPathFull, zipBuffer);
-      const relativeZipPath = path.join(EXPORTS_BASE, proveedorId, batch.yearMonth, zipFileName);
+      const relativeZipPath = path.join(
+        EXPORTS_BASE,
+        proveedorId,
+        batch.yearMonth,
+        zipFileName,
+      );
       const hashSha256 = this.giisCryptoService.sha256Hex(zipBuffer);
 
       updatedArtifacts.push({
@@ -569,7 +698,7 @@ export class GiisBatchService {
           usuarioGeneradorId,
           periodo: batch.yearMonth,
           establecimientoClues: cluesAudit,
-          tipoGuia: art.guide as 'CDT' | 'CEX' | 'LES',
+          tipoGuia: art.guide as 'CEX' | 'LES',
           nombreArchivoOficial: path.basename(art.zipPath),
           hashSha256Archivo: art.hashSha256,
           resumenValidacion: `Entregable ZIP generado`,

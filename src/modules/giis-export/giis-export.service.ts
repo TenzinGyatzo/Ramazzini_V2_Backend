@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Lesion } from '../expedientes/schemas/lesion.schema';
-import { Deteccion } from '../expedientes/schemas/deteccion.schema';
 import { Trabajador } from '../trabajadores/schemas/trabajador.schema';
 import { ProveedorSalud } from '../proveedores-salud/schemas/proveedor-salud.schema';
 import { CentroTrabajo } from '../centros-trabajo/schemas/centro-trabajo.schema';
@@ -11,10 +10,6 @@ import {
   transformLesionToGIIS,
   getGIISB013FieldCount,
 } from './transformers/lesion.transformer';
-import {
-  transformDeteccionToGIIS,
-  getGIISB019FieldCount,
-} from './transformers/deteccion.transformer';
 import { RegulatoryPolicyService } from '../../utils/regulatory-policy.service';
 import { createRegulatoryError } from '../../utils/regulatory-error-helper';
 import { RegulatoryErrorCode } from '../../utils/regulatory-error-codes';
@@ -78,7 +73,7 @@ export interface GIISExportResult {
 /**
  * GIIS Export Service
  *
- * Transforms internal Ramazzini documents (Lesion, Deteccion) to GIIS pipe-delimited format.
+ * Transforms internal Ramazzini documents (Lesion) to GIIS pipe-delimited format.
  *
  * KEY BEHAVIORS:
  * - Only exports records for MX providers (proveedorSalud.pais === 'MX')
@@ -92,7 +87,6 @@ export class GIISExportService {
 
   constructor(
     @InjectModel(Lesion.name) private lesionModel: Model<Lesion>,
-    @InjectModel(Deteccion.name) private deteccionModel: Model<Deteccion>,
     @InjectModel(Trabajador.name) private trabajadorModel: Model<Trabajador>,
     @InjectModel(ProveedorSalud.name)
     private proveedorSaludModel: Model<ProveedorSalud>,
@@ -230,135 +224,6 @@ export class GIISExportService {
   }
 
   /**
-   * Export Deteccion records to GIIS-B019 format
-   * Only available for SIRES_NOM024 regime
-   *
-   * @param params - Export parameters
-   * @returns Array of pipe-delimited GIIS-B019 records
-   */
-  async exportDeteccionesGIIS(
-    params: GIISExportParams = {},
-  ): Promise<GIISExportResult> {
-    // Validate regime: GIIS export requires proveedorSaludId to check regime
-    if (!params.proveedorSaludId) {
-      throw createRegulatoryError({
-        errorCode: RegulatoryErrorCode.REGIMEN_FEATURE_DISABLED,
-        details: { feature: 'giisExport' },
-      });
-    }
-
-    // Validate regime using policy layer
-    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-      params.proveedorSaludId,
-    );
-
-    if (!policy.features.giisExportEnabled) {
-      throw createRegulatoryError({
-        errorCode: RegulatoryErrorCode.REGIMEN_FEATURE_DISABLED,
-        details: { feature: 'giisExport' },
-        regime: policy.regime,
-      });
-    }
-
-    const records: string[] = [];
-    let skipped = 0;
-
-    // Build query
-    const query: any = {};
-
-    if (params.fechaDesde || params.fechaHasta) {
-      query.fechaDeteccion = {};
-      if (params.fechaDesde) {
-        query.fechaDeteccion.$gte = params.fechaDesde;
-      }
-      if (params.fechaHasta) {
-        query.fechaDeteccion.$lte = params.fechaHasta;
-      }
-    }
-
-    if (params.onlyFinalized) {
-      query.estado = 'finalizado';
-    }
-
-    // Fetch detecciones
-    const detecciones = await this.deteccionModel.find(query).lean().exec();
-
-    this.logger.log(
-      `Processing ${detecciones.length} deteccion records for GIIS export`,
-    );
-
-    for (const deteccion of detecciones) {
-      try {
-        // Get trabajador
-        const trabajador = await this.trabajadorModel
-          .findById(deteccion.idTrabajador)
-          .lean()
-          .exec();
-
-        if (!trabajador) {
-          this.logger.warn(
-            `Skipping deteccion ${deteccion._id}: Trabajador not found`,
-          );
-          skipped++;
-          continue;
-        }
-
-        // Get proveedor through the chain
-        const proveedorSalud =
-          await this.getProveedorSaludFromTrabajador(trabajador);
-
-        // Check if MX provider
-        if (!proveedorSalud || proveedorSalud.pais !== 'MX') {
-          this.logger.debug(
-            `Skipping deteccion ${deteccion._id}: Non-MX provider`,
-          );
-          skipped++;
-          continue;
-        }
-
-        // Check provider filter if specified
-        if (
-          params.proveedorSaludId &&
-          proveedorSalud._id.toString() !== params.proveedorSaludId
-        ) {
-          skipped++;
-          continue;
-        }
-
-        // Transform to GIIS format
-        const giisRecord = transformDeteccionToGIIS(
-          deteccion as any,
-          trabajador as any,
-          proveedorSalud as any,
-        );
-
-        records.push(giisRecord);
-      } catch (error) {
-        this.logger.error(
-          `Error processing deteccion ${deteccion._id}: ${error.message}`,
-        );
-        skipped++;
-      }
-    }
-
-    this.logger.log(
-      `GIIS-B019 export complete: ${records.length} records, ${skipped} skipped`,
-    );
-
-    return {
-      records,
-      totalProcessed: detecciones.length,
-      skipped,
-      metadata: {
-        exportDate: new Date(),
-        giisVersion: 'B019-2023',
-        fieldCount: getGIISB019FieldCount(),
-        proveedorSaludId: params.proveedorSaludId,
-      },
-    };
-  }
-
-  /**
    * Get ProveedorSalud from a Trabajador document through the entity chain
    * Trabajador -> CentroTrabajo -> Empresa -> ProveedorSalud
    */
@@ -427,9 +292,8 @@ export class GIISExportService {
     isMX: boolean;
   }> {
     // Validate regime using policy layer
-    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-      proveedorSaludId,
-    );
+    const policy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
 
     if (!policy.features.giisExportEnabled) {
       throw createRegulatoryError({
@@ -447,14 +311,10 @@ export class GIISExportService {
       .countDocuments({ idTrabajador: { $in: trabajadorIds } })
       .exec();
 
-    const deteccionCount = await this.deteccionModel
-      .countDocuments({ idTrabajador: { $in: trabajadorIds } })
-      .exec();
-
     // Check if provider is MX for the isMX flag (for backward compatibility)
     const isMX = await this.isProveedorMX(proveedorSaludId);
 
-    return { lesionCount, deteccionCount, isMX };
+    return { lesionCount, deteccionCount: 0, isMX };
   }
 
   /**

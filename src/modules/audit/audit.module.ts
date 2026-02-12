@@ -5,10 +5,6 @@ import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuditEvent, AuditEventSchema } from './schemas/audit-event.schema';
 import { AuditOutbox, AuditOutboxSchema } from './schemas/audit-outbox.schema';
-import {
-  DocumentVersion,
-  DocumentVersionSchema,
-} from '../expedientes/schemas/document-version.schema';
 import { AuditService } from './audit.service';
 import { AuditController } from './audit.controller';
 import { UsersModule } from '../users/users.module';
@@ -18,7 +14,6 @@ import { UsersModule } from '../users/users.module';
     MongooseModule.forFeature([
       { name: AuditEvent.name, schema: AuditEventSchema },
       { name: AuditOutbox.name, schema: AuditOutboxSchema },
-      { name: DocumentVersion.name, schema: DocumentVersionSchema },
     ]),
     forwardRef(() => UsersModule),
   ],

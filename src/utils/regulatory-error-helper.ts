@@ -34,10 +34,10 @@ export interface CreateRegulatoryErrorOptions {
 
 /**
  * Helper para crear excepciones regulatorias con formato estándar
- * 
+ *
  * @param options - Opciones para crear el error
  * @returns HttpException con formato estándar (errorCode + message + details)
- * 
+ *
  * @example
  * // Feature deshabilitada
  * throw createRegulatoryError({
@@ -45,7 +45,7 @@ export interface CreateRegulatoryErrorOptions {
  *   details: { feature: 'giisExport' },
  *   regime: 'SIN_REGIMEN'
  * });
- * 
+ *
  * @example
  * // Documento inmutable
  * throw createRegulatoryError({
@@ -53,7 +53,7 @@ export interface CreateRegulatoryErrorOptions {
  *   details: { documentState: 'FINALIZADO', documentType: 'notaMedica' },
  *   regime: 'SIRES_NOM024'
  * });
- * 
+ *
  * @example
  * // Campo requerido
  * throw createRegulatoryError({
@@ -64,7 +64,11 @@ export interface CreateRegulatoryErrorOptions {
  */
 export function createRegulatoryError(
   options: CreateRegulatoryErrorOptions,
-): ForbiddenException | BadRequestException | UnprocessableEntityException | ConflictException {
+):
+  | ForbiddenException
+  | BadRequestException
+  | UnprocessableEntityException
+  | ConflictException {
   const { errorCode, details, regime } = options;
 
   // Generar mensaje base según el código de error
@@ -115,12 +119,13 @@ function generateBaseMessage(
       const documentType = details?.documentType
         ? getDocumentTypeDisplayName(details.documentType)
         : 'documento';
-      const stateDisplay = details?.documentState === 'FINALIZADO' 
-        ? 'finalizado' 
-        : details?.documentState === 'ANULADO'
-        ? 'anulado'
-        : 'en este estado';
-      
+      const stateDisplay =
+        details?.documentState === 'FINALIZADO'
+          ? 'finalizado'
+          : details?.documentState === 'ANULADO'
+            ? 'anulado'
+            : 'en este estado';
+
       if (regime === 'SIRES_NOM024') {
         return `No se puede modificar un ${documentType} ${stateDisplay}. Los documentos en este estado son inmutables según la política regulatoria SIRES (NOM-024)`;
       }
@@ -153,9 +158,7 @@ function generateBaseMessage(
 /**
  * Obtiene el código de estado HTTP apropiado para un código de error
  */
-function getStatusCodeForErrorCode(
-  errorCode: RegulatoryErrorCode,
-): number {
+function getStatusCodeForErrorCode(errorCode: RegulatoryErrorCode): number {
   switch (errorCode) {
     case RegulatoryErrorCode.REGIMEN_FEATURE_DISABLED:
     case RegulatoryErrorCode.REGIMEN_DOCUMENT_IMMUTABLE:
@@ -177,7 +180,7 @@ function getStatusCodeForErrorCode(
  */
 function getFeatureDisplayName(feature?: string): string {
   if (!feature) return '';
-  
+
   const featureNames: Record<string, string> = {
     giisExport: 'Exportación GIIS',
     notaAclaratoria: 'Notas aclaratorias',
@@ -185,7 +188,7 @@ function getFeatureDisplayName(feature?: string): string {
     documentImmutability: 'Inmutabilidad de documentos',
     dailyConsent: 'Consentimiento informado diario',
   };
-  
+
   return featureNames[feature] || feature;
 }
 
@@ -194,7 +197,7 @@ function getFeatureDisplayName(feature?: string): string {
  */
 function getDocumentTypeDisplayName(documentType?: string): string {
   if (!documentType) return 'documento';
-  
+
   const documentNames: Record<string, string> = {
     notaMedica: 'nota médica',
     historiaClinica: 'historia clínica',
@@ -203,7 +206,7 @@ function getDocumentTypeDisplayName(documentType?: string): string {
     aptitud: 'aptitud para el puesto',
     certificado: 'certificado médico',
   };
-  
+
   return documentNames[documentType] || documentType;
 }
 
@@ -212,7 +215,7 @@ function getDocumentTypeDisplayName(documentType?: string): string {
  */
 function getFieldDisplayName(fieldName?: string): string {
   if (!fieldName) return 'requerido';
-  
+
   const fieldNames: Record<string, string> = {
     curp: 'CURP',
     cie10Principal: 'CIE-10 principal',
@@ -222,6 +225,6 @@ function getFieldDisplayName(fieldName?: string): string {
     localidadResidencia: 'Localidad de residencia',
     nacionalidad: 'Nacionalidad',
   };
-  
+
   return fieldNames[fieldName] || fieldName;
 }

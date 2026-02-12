@@ -32,9 +32,7 @@ describe('CIE10 Catalog Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C53' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C53' }],
         lookup: createMockLookup(rules),
       });
 
@@ -55,9 +53,7 @@ describe('CIE10 Catalog Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C50' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C50' }],
         lookup: createMockLookup(rules),
       });
 
@@ -78,9 +74,7 @@ describe('CIE10 Catalog Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C61' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C61' }],
         lookup: createMockLookup(rules),
       });
 
@@ -110,9 +104,7 @@ describe('CIE10 Catalog Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C53' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C53' }],
         lookup: createMockLookup(rules),
       });
 
@@ -134,9 +126,7 @@ describe('CIE10 Catalog Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C61' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C61' }],
         lookup: createMockLookup(rules),
       });
 
@@ -162,9 +152,7 @@ describe('CIE10 Catalog Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C53' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C53' }],
         lookup: createMockLookup(rules),
       });
 
@@ -190,9 +178,7 @@ describe('CIE10 Catalog Sex and Age Validator', () => {
         trabajadorSexo: sexo,
         trabajadorFechaNacimiento: fechaNacimiento,
         fechaNotaMedica,
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'C53' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'C53' }],
         lookup: createMockLookup(rules),
       });
 
@@ -318,9 +304,7 @@ describe('CIE10 Catalog Sex and Age Validator', () => {
         trabajadorSexo: 'Femenino',
         trabajadorFechaNacimiento: createDate(1994, 1, 1),
         fechaNotaMedica: createDate(2024, 1, 1),
-        cie10Fields: [
-          { field: 'codigoCIE10Principal', value: 'UNKNOWN' },
-        ],
+        cie10Fields: [{ field: 'codigoCIE10Principal', value: 'UNKNOWN' }],
         lookup: async () => null, // Not in catalog
       });
 
@@ -328,4 +312,3 @@ describe('CIE10 Catalog Sex and Age Validator', () => {
     });
   });
 });
-

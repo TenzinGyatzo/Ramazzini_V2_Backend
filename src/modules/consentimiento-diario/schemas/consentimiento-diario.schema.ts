@@ -55,8 +55,9 @@ export class ConsentimientoDiario extends Document {
   consentTextVersion: string; // Versión del texto (ej: "1.0.0")
 }
 
-export const ConsentimientoDiarioSchema =
-  SchemaFactory.createForClass(ConsentimientoDiario).set('timestamps', true);
+export const ConsentimientoDiarioSchema = SchemaFactory.createForClass(
+  ConsentimientoDiario,
+).set('timestamps', true);
 
 // Índice único compuesto para garantizar unicidad diaria
 ConsentimientoDiarioSchema.index(

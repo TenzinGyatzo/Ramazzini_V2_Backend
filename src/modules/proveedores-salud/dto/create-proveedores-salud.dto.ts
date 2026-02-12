@@ -121,7 +121,8 @@ export class CreateProveedoresSaludDto {
   // **Régimen Regulatorio**
   @IsOptional()
   @IsEnum(['SIRES_NOM024', 'SIN_REGIMEN', 'NO_SUJETO_SIRES'], {
-    message: 'El régimen regulatorio debe ser SIRES_NOM024, SIN_REGIMEN o NO_SUJETO_SIRES',
+    message:
+      'El régimen regulatorio debe ser SIRES_NOM024, SIN_REGIMEN o NO_SUJETO_SIRES',
   })
   regimenRegulatorio?: 'SIRES_NOM024' | 'SIN_REGIMEN' | 'NO_SUJETO_SIRES';
 

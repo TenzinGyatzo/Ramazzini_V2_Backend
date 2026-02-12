@@ -28,10 +28,10 @@ export interface RegulatoryPolicy {
 
 /**
  * Regulatory Policy Service
- * 
+ *
  * Resuelve la política regulatoria basada en el régimen regulatorio del proveedor.
  * Esta es la fuente única de verdad para decisiones regulatorias en la aplicación.
- * 
+ *
  * Reglas:
  * - SIRES_NOM024: Todas las features regulatorias habilitadas (timeout, inmutabilidad, UI SIRES)
  * - SIN_REGIMEN: Todas las features regulatorias deshabilitadas

@@ -20,11 +20,15 @@ export class GiisCryptoService {
    */
   encryptToCif(plainBuffer: Buffer, key: Buffer, iv?: Buffer): Buffer {
     if (key.length !== KEY_LEN) {
-      throw new Error(`GIIS 3DES key must be ${KEY_LEN} bytes, got ${key.length}`);
+      throw new Error(
+        `GIIS 3DES key must be ${KEY_LEN} bytes, got ${key.length}`,
+      );
     }
     const ivBuf = iv ?? crypto.randomBytes(IV_LEN);
     if (ivBuf.length !== IV_LEN) {
-      throw new Error(`GIIS 3DES IV must be ${IV_LEN} bytes, got ${ivBuf.length}`);
+      throw new Error(
+        `GIIS 3DES IV must be ${IV_LEN} bytes, got ${ivBuf.length}`,
+      );
     }
     const cipher = crypto.createCipheriv(ALG, key, ivBuf);
     return Buffer.concat([ivBuf, cipher.update(plainBuffer), cipher.final()]);
@@ -44,7 +48,10 @@ export class GiisCryptoService {
   /**
    * Create ZIP containing a single entry: ${officialBaseName}.CIF = cifBuffer.
    */
-  async createZipWithCif(cifBuffer: Buffer, officialBaseName: string): Promise<Buffer> {
+  async createZipWithCif(
+    cifBuffer: Buffer,
+    officialBaseName: string,
+  ): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
       const archive = archiver('zip', { zlib: { level: 9 } });

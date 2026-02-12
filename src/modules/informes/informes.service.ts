@@ -3015,6 +3015,7 @@ export class InformesService {
       codigoCIEDiagnostico2: notaMedica.codigoCIEDiagnostico2,
       diagnosticoTexto: notaMedica.diagnosticoTexto,
       confirmacionDiagnostica: notaMedica.confirmacionDiagnostica,
+      confirmacionDiagnostica2: notaMedica.confirmacionDiagnostica2,
       codigoCIECausaExterna: notaMedica.codigoCIECausaExterna,
       causaExterna: notaMedica.causaExterna,
       tratamiento: notaMedica.tratamiento,

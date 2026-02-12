@@ -104,7 +104,9 @@ describe('validateCURPCrossCheck (A1)', () => {
     const result = validateCURPCrossCheck(curp, dataIncorrecta);
     expect(result.isValid).toBe(false);
     expect(result.discrepancies.length).toBeGreaterThan(0);
-    const sexoDiscrepancy = result.discrepancies.find((d) => d.field === 'sexo');
+    const sexoDiscrepancy = result.discrepancies.find(
+      (d) => d.field === 'sexo',
+    );
     expect(sexoDiscrepancy).toBeDefined();
     expect(sexoDiscrepancy?.field).toBe('sexo');
     expect(sexoDiscrepancy?.expected).toBe('M');
@@ -271,7 +273,9 @@ describe('validateCURPCrossCheck (A1)', () => {
     const fechaDiscrepancy = result.discrepancies.find(
       (d) => d.field === 'fechaNacimiento',
     );
-    const sexoDiscrepancy = result.discrepancies.find((d) => d.field === 'sexo');
+    const sexoDiscrepancy = result.discrepancies.find(
+      (d) => d.field === 'sexo',
+    );
     const entidadDiscrepancy = result.discrepancies.find(
       (d) => d.field === 'entidadNacimiento',
     );

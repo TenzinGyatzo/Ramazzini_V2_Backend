@@ -5,7 +5,10 @@ import { TecnicosFirmantesService } from './tecnicos-firmantes.service';
 import { TecnicoFirmante } from './schemas/tecnico-firmante.schema';
 import { User } from '../users/schemas/user.schema';
 import { ProveedorSalud } from '../proveedores-salud/schemas/proveedor-salud.schema';
-import { RegulatoryPolicyService, RegulatoryPolicy } from '../../utils/regulatory-policy.service';
+import {
+  RegulatoryPolicyService,
+  RegulatoryPolicy,
+} from '../../utils/regulatory-policy.service';
 
 describe('TecnicosFirmantesService', () => {
   let service: TecnicosFirmantesService;

@@ -51,8 +51,7 @@ export function validateCURPFormat(curp: string): boolean {
  * Orden: 0-9, A-N, Ñ, O-Z. La Ñ va entre N y O (valor 24).
  * Referencia: Instructivo normativo CURP, implementaciones oficiales (ej. prestigos/curp.js).
  */
-const RENAPO_CURP_CHARS =
-  '0123456789ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
+const RENAPO_CURP_CHARS = '0123456789ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
 
 /**
  * Validates CURP checksum using RENAPO algorithm
@@ -250,47 +249,47 @@ const ENTIDAD_MAP: Record<string, string> = {
  */
 const ENTIDAD_NAME_MAP: Record<string, string> = {
   'NO ESPECIFICADO': 'NE',
-  'AGUASCALIENTES': 'AS',
+  AGUASCALIENTES: 'AS',
   'BAJA CALIFORNIA': 'BC',
   'BAJA CALIFORNIA SUR': 'BS',
-  'CAMPECHE': 'CC',
+  CAMPECHE: 'CC',
   'COAHUILA DE ZARAGOZA': 'CL',
-  'COAHUILA': 'CL',
-  'COLIMA': 'CM',
-  'CHIAPAS': 'CS',
-  'CHIHUAHUA': 'CH',
+  COAHUILA: 'CL',
+  COLIMA: 'CM',
+  CHIAPAS: 'CS',
+  CHIHUAHUA: 'CH',
   'CIUDAD DE MÉXICO': 'DF',
   'DISTRITO FEDERAL': 'DF',
-  'DURANGO': 'DG',
-  'GUANAJUATO': 'GT',
-  'GUERRERO': 'GR',
-  'HIDALGO': 'HG',
-  'JALISCO': 'JC',
-  'MÉXICO': 'MC',
+  DURANGO: 'DG',
+  GUANAJUATO: 'GT',
+  GUERRERO: 'GR',
+  HIDALGO: 'HG',
+  JALISCO: 'JC',
+  MÉXICO: 'MC',
   'ESTADO DE MÉXICO': 'MC',
   'MICHOACÁN DE OCAMPO': 'MN',
-  'MICHOACAN': 'MN',
-  'MORELOS': 'MS',
-  'NAYARIT': 'NT',
+  MICHOACAN: 'MN',
+  MORELOS: 'MS',
+  NAYARIT: 'NT',
   'NUEVO LEÓN': 'NL',
   'NUEVO LEON': 'NL',
-  'OAXACA': 'OC',
-  'PUEBLA': 'PL',
-  'QUERÉTARO': 'QT',
-  'QUERETARO': 'QT',
+  OAXACA: 'OC',
+  PUEBLA: 'PL',
+  QUERÉTARO: 'QT',
+  QUERETARO: 'QT',
   'QUINTANA ROO': 'QR',
   'SAN LUIS POTOSÍ': 'SP',
   'SAN LUIS POTOSI': 'SP',
-  'SINALOA': 'SL',
-  'SONORA': 'SR',
-  'TABASCO': 'TC',
-  'TAMAULIPAS': 'TS',
-  'TLAXCALA': 'TL',
+  SINALOA: 'SL',
+  SONORA: 'SR',
+  TABASCO: 'TC',
+  TAMAULIPAS: 'TS',
+  TLAXCALA: 'TL',
   'VERACRUZ DE IGNACIO DE LA LLAVE': 'VZ',
-  'VERACRUZ': 'VZ',
-  'YUCATÁN': 'YN',
-  'YUCATAN': 'YN',
-  'ZACATECAS': 'ZS',
+  VERACRUZ: 'VZ',
+  YUCATÁN: 'YN',
+  YUCATAN: 'YN',
+  ZACATECAS: 'ZS',
 };
 
 /**
@@ -358,9 +357,11 @@ function normalizeSexoToCURPCode(sexo: string): string | null {
  * Parsea fecha de forma segura evitando problemas de zona horaria
  * Soporta: Date object o string ISO (YYYY-MM-DD)
  */
-function parseDateSafe(
-  dateInput: Date | string,
-): { year: number; month: number; day: number } {
+function parseDateSafe(dateInput: Date | string): {
+  year: number;
+  month: number;
+  day: number;
+} {
   if (typeof dateInput === 'string') {
     // Si es formato ISO YYYY-MM-DD, parsear directamente sin zona horaria
     const match = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -375,11 +376,11 @@ function parseDateSafe(
 
   // Si es Date, intentar extraer de forma segura
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-  
+
   // Para fechas creadas desde string ISO (ej: new Date('1991-05-15')),
   // JavaScript las interpreta como UTC medianoche, pero getDate() usa hora local
   // que puede cambiar el día. Usar UTC para fechas que parecen ser "date-only"
-  
+
   // Si la fecha tiene hora 00:00:00 UTC y no tiene milisegundos significativos,
   // probablemente fue creada desde un string ISO sin hora
   const isLikelyDateOnly =
@@ -493,7 +494,11 @@ export function validateCURPCrossCheck(
     );
 
     // Si es código especial (NE, 00), no validar contra CURP
-    if (entidadNormalizada && entidadNormalizada !== 'NE' && entidadNormalizada !== '00') {
+    if (
+      entidadNormalizada &&
+      entidadNormalizada !== 'NE' &&
+      entidadNormalizada !== '00'
+    ) {
       if (curpEntidad !== entidadNormalizada) {
         discrepancies.push({
           field: 'entidadNacimiento',
@@ -510,7 +515,10 @@ export function validateCURPCrossCheck(
   if (data.primerApellido && data.nombre) {
     // Extraer primera letra del primer apellido (posición 0 de CURP)
     const primeraLetraApellido = normalizedCurp.charAt(0);
-    const primeraLetraEsperada = data.primerApellido.trim().toUpperCase().charAt(0);
+    const primeraLetraEsperada = data.primerApellido
+      .trim()
+      .toUpperCase()
+      .charAt(0);
 
     if (primeraLetraApellido !== primeraLetraEsperada) {
       console.warn(

@@ -15,7 +15,11 @@ export class AuditEvent extends Document {
   actorId: string; // ObjectId hex or "SYSTEM"
 
   /** Snapshot del usuario al momento del evento (no forma parte del hash). */
-  @Prop({ type: { username: String, email: String, role: String }, required: false, default: null })
+  @Prop({
+    type: { username: String, email: String, role: String },
+    required: false,
+    default: null,
+  })
   actorSnapshot: { username?: string; email?: string; role?: string } | null;
 
   @Prop({ required: true })

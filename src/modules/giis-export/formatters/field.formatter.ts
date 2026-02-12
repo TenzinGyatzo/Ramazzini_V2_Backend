@@ -158,3 +158,54 @@ export function formatResultEnum(value: number | null | undefined): string {
   if (value === -1) return ''; // NA -> empty
   return String(value);
 }
+
+/** Mapa de acentos y ñ a letras GIIS (A-Z, Ñ). validationRaw: solo A–Z Ñ mayúsculas, sin acentos. */
+const GIIS_NAME_ACCENT_MAP: Record<string, string> = {
+  á: 'A', à: 'A', â: 'A', ä: 'A', Á: 'A', À: 'A', Â: 'A', Ä: 'A',
+  é: 'E', è: 'E', ê: 'E', ë: 'E', É: 'E', È: 'E', Ê: 'E', Ë: 'E',
+  í: 'I', ì: 'I', î: 'I', ï: 'I', Í: 'I', Ì: 'I', Î: 'I', Ï: 'I',
+  ó: 'O', ò: 'O', ô: 'O', ö: 'O', Ó: 'O', Ò: 'O', Ô: 'O', Ö: 'O',
+  ú: 'U', ù: 'U', û: 'U', ü: 'U', Ú: 'U', Ù: 'U', Û: 'U', Ü: 'U',
+  ñ: 'Ñ', Ñ: 'Ñ',
+};
+
+/** Caracteres permitidos en nombres GIIS: A-Z, Ñ, espacio, - , . / ' ¨ */
+const GIIS_NAME_ALLOWED = /^[A-ZÑ\s\-,\.\/'¨]$/u;
+
+/**
+ * Normaliza un nombre o apellido al formato GIIS (NOM-024 validationRaw).
+ * - Solo A–Z, Ñ en mayúsculas; sin acentos.
+ * - Especiales permitidos: - , . / ' ¨
+ * - No más de un espacio consecutivo; no más de un caracter especial consecutivo.
+ *
+ * @param value - Nombre o apellido (p. ej. salida de parseNombreCompleto)
+ * @returns String listo para nombrePrestador / primerApellidoPrestador / segundoApellidoPrestador
+ */
+export function normalizeNameForGiis(value: string | null | undefined): string {
+  if (value == null || typeof value !== 'string') return '';
+  let s = value.trim();
+  if (!s) return '';
+
+  // 1) Quitar acentos y normalizar ñ → Ñ
+  let out = '';
+  for (const c of s) {
+    out += GIIS_NAME_ACCENT_MAP[c] ?? c;
+  }
+
+  // 2) Mayúsculas
+  out = out.toUpperCase();
+
+  // 3) Dejar solo caracteres permitidos
+  out = out
+    .split('')
+    .filter((c) => GIIS_NAME_ALLOWED.test(c))
+    .join('');
+
+  // 4) Colapsar espacios consecutivos a uno
+  out = out.replace(/\s+/g, ' ').trim();
+
+  // 5) Colapsar el mismo caracter especial repetido (regla: no más de uno consecutivo del mismo)
+  out = out.replace(/([\-,\.\/'¨])\1+/g, '$1');
+
+  return out.trim();
+}

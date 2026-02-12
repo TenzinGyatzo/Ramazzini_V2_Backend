@@ -93,7 +93,7 @@ Plans:
 
 Plans:
 - [x] 04-01 — Cimientos (enums, contrato, hash canónico)
-- [x] 04-02 — Modelos y datos (AuditEvent, versionado, proveedorSaludId, índices)
+- [x] 04-02 — Modelos y datos (AuditEvent, proveedorSaludId, índices; document_versions removido)
 - [x] 04-03 — Instrumentación (hooks, Clase 1/2, audit_outbox)
 - [x] 04-04 — APIs de consulta y UI mínima de auditoría
 - [x] 04-05 — Export verificable (incl. hashes)

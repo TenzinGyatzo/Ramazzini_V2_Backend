@@ -11,7 +11,9 @@ describe('Date Validators', () => {
     it('debe lanzar error si fechaNacimiento es futura', () => {
       const fechaFutura = new Date();
       fechaFutura.setFullYear(fechaFutura.getFullYear() + 1);
-      expect(() => validateFechaNacimiento(fechaFutura)).toThrow(BadRequestException);
+      expect(() => validateFechaNacimiento(fechaFutura)).toThrow(
+        BadRequestException,
+      );
       expect(() => validateFechaNacimiento(fechaFutura)).toThrow(
         'La fecha de nacimiento no puede ser futura',
       );
@@ -20,7 +22,9 @@ describe('Date Validators', () => {
     it('debe lanzar error si edad > 120 años', () => {
       const fechaHace121 = new Date();
       fechaHace121.setFullYear(fechaHace121.getFullYear() - 121);
-      expect(() => validateFechaNacimiento(fechaHace121)).toThrow(BadRequestException);
+      expect(() => validateFechaNacimiento(fechaHace121)).toThrow(
+        BadRequestException,
+      );
       expect(() => validateFechaNacimiento(fechaHace121)).toThrow(
         `La edad calculada (121 años) está fuera del rango válido (${AGE_MIN_YEARS}-${AGE_MAX_YEARS} años)`,
       );
@@ -49,13 +53,17 @@ describe('Date Validators', () => {
 
     it('debe lanzar error si fechaNacimiento es string inválido', () => {
       const fechaInvalida = 'fecha-invalida';
-      expect(() => validateFechaNacimiento(fechaInvalida)).toThrow(BadRequestException);
+      expect(() => validateFechaNacimiento(fechaInvalida)).toThrow(
+        BadRequestException,
+      );
     });
 
     it('debe lanzar error si edad es negativa (fecha muy futura)', () => {
       const fechaMuyFutura = new Date();
       fechaMuyFutura.setFullYear(fechaMuyFutura.getFullYear() + 10);
-      expect(() => validateFechaNacimiento(fechaMuyFutura)).toThrow(BadRequestException);
+      expect(() => validateFechaNacimiento(fechaMuyFutura)).toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -64,7 +72,9 @@ describe('Date Validators', () => {
       const fechaFutura = new Date();
       fechaFutura.setDate(fechaFutura.getDate() + 1);
       fechaFutura.setHours(12, 0, 0, 0);
-      expect(() => validateFechaDocumento(fechaFutura)).toThrow(BadRequestException);
+      expect(() => validateFechaDocumento(fechaFutura)).toThrow(
+        BadRequestException,
+      );
       expect(() => validateFechaDocumento(fechaFutura)).toThrow(
         'La fecha del documento no puede ser futura',
       );
@@ -112,12 +122,16 @@ describe('Date Validators', () => {
     it('debe aceptar string ISO como fechaNacimiento', () => {
       const fechaDoc = new Date('2020-01-01');
       const fechaNacString = '1990-01-01T00:00:00.000Z';
-      expect(() => validateFechaDocumento(fechaDoc, fechaNacString)).not.toThrow();
+      expect(() =>
+        validateFechaDocumento(fechaDoc, fechaNacString),
+      ).not.toThrow();
     });
 
     it('debe lanzar error si fechaDocumento es string inválido', () => {
       const fechaInvalida = 'fecha-invalida';
-      expect(() => validateFechaDocumento(fechaInvalida)).toThrow(BadRequestException);
+      expect(() => validateFechaDocumento(fechaInvalida)).toThrow(
+        BadRequestException,
+      );
     });
 
     it('debe manejar null como fechaNacimiento (solo valida que no sea futura)', () => {
@@ -133,4 +147,3 @@ describe('Date Validators', () => {
     });
   });
 });
-

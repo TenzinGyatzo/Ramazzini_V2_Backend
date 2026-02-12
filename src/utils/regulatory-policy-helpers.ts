@@ -2,10 +2,10 @@ import { RegulatoryPolicy } from './regulatory-policy.service';
 
 /**
  * Regulatory Policy Helpers
- * 
+ *
  * Conjunto de helpers estandarizados para acceder a features y validaciones
  * de la política regulatoria sin comparar strings directamente.
- * 
+ *
  * Uso:
  * ```typescript
  * const policy = await regulatoryPolicyService.getRegulatoryPolicy(proveedorId);

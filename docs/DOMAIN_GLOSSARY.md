@@ -290,7 +290,7 @@ Este documento define los términos del dominio utilizados en el repositorio y s
 **Definición:** Sistema de códigos para diagnósticos médicos.
 
 **Ubicación:**
-- Catálogo: `backend/catalogs/normalized/diagnosticos.csv`
+- Catálogo: `backend/catalogs/normalized/diagnosticos_sis.csv`
 - Uso actual: Los documentos médicos usan texto libre en campo `diagnostico` (ej: `NotaMedica.diagnostico`)
 
 **Equivalencia NOM-024:** Obligatorio usar códigos CIE-10 para diagnósticos, no texto libre.
@@ -342,12 +342,12 @@ Este documento define los términos del dominio utilizados en el repositorio y s
 **Ubicación:** `backend/catalogs/normalized/*.csv`
 
 **Catálogos disponibles:**
-- `diagnosticos.csv` - CIE-10
+- `diagnosticos_sis.csv` - CIE-10
 - `codigos_postales.csv` - Códigos postales
 - `enitades_federativas.csv` - Estados
 - `municipios.csv` - Municipios
 - `localidades.csv` - Localidades
-- `establecimientos_salud.csv` - CLUES
+- `establecimiento_de_salud_sis.csv` - CLUES
 - `cat_nacionalidades.csv` - Nacionalidades
 - `cat_religiones.csv` - Religiones
 - `formacion_academica.csv` - Formación académica

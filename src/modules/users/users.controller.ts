@@ -42,7 +42,8 @@ const LOGIN_FAIL_REASON = {
   UNKNOWN: 'UNKNOWN',
 } as const;
 
-type LoginFailReason = (typeof LOGIN_FAIL_REASON)[keyof typeof LOGIN_FAIL_REASON];
+type LoginFailReason =
+  (typeof LOGIN_FAIL_REASON)[keyof typeof LOGIN_FAIL_REASON];
 const RESOURCE_TYPE_USER = 'USER';
 
 type LoginContext = 'PRIMARY_LOGIN' | 'SESSION_UNLOCK' | 'TOKEN_REFRESH';
@@ -55,7 +56,10 @@ export class UsersController {
     return Array.from(new Set(values.map(String))).sort();
   }
 
-  private diffPermissionChanges(before: Record<string, boolean> = {}, after: Record<string, boolean> = {}) {
+  private diffPermissionChanges(
+    before: Record<string, boolean> = {},
+    after: Record<string, boolean> = {},
+  ) {
     const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
     const addedPermissions: string[] = [];
     const removedPermissions: string[] = [];
@@ -148,7 +152,11 @@ export class UsersController {
   }
 
   @Post('register')
-  async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
+  async register(
+    @Body() createUserDto: CreateUserDto,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
     const { username, email, phone, country, password } = createUserDto;
 
     // Validar extensión del username
@@ -182,9 +190,17 @@ export class UsersController {
       token: user.token,
     });
 
-    // Phase 5: audit USER_INVITATION_SENT (register = invitation; actor = self or from context)
-    const proveedorSaludId = (user as any).idProveedorSalud?.toString?.() ?? null;
-    const actorId = (user as any)._id?.toString?.() ?? null;
+    // Phase 5: audit USER_INVITATION_SENT — actor = quien envía la invitación (admin con JWT) o el propio usuario (autoregistro)
+    const proveedorSaludId =
+      (user as any).idProveedorSalud?.toString?.() ?? null;
+    let actorId: string | null = (user as any)._id?.toString?.() ?? null;
+    try {
+      if (req?.headers?.authorization?.startsWith?.('Bearer ')) {
+        actorId = getUserIdFromRequest(req);
+      }
+    } catch {
+      // Sin JWT = autoregistro; actorId ya es el usuario creado
+    }
     await this.auditService.record({
       proveedorSaludId,
       actorId,
@@ -227,7 +243,8 @@ export class UsersController {
       user.token = '';
       await user.save();
       // Phase 5: audit USER_ACTIVATED
-      const proveedorSaludId = (user as any).idProveedorSalud?.toString?.() ?? null;
+      const proveedorSaludId =
+        (user as any).idProveedorSalud?.toString?.() ?? null;
       const userIdStr = (user as any)._id?.toString?.() ?? null;
       await this.auditService.record({
         proveedorSaludId,
@@ -408,7 +425,7 @@ export class UsersController {
     }
     const token = generateJWT(user._id);
     const sidToReturn =
-      resolvedContext === 'PRIMARY_LOGIN' ? randomUUID() : sid ?? null;
+      resolvedContext === 'PRIMARY_LOGIN' ? randomUUID() : (sid ?? null);
     res.json({ token, ...(sidToReturn ? { sid: sidToReturn } : {}) });
     await this.auditService
       .record({
@@ -493,7 +510,8 @@ export class UsersController {
       user.password = password;
       await user.save();
       // Phase 5: audit USER_PASSWORD_CHANGED (user changing own password)
-      const proveedorSaludId = (user as any).idProveedorSalud?.toString?.() ?? null;
+      const proveedorSaludId =
+        (user as any).idProveedorSalud?.toString?.() ?? null;
       const userIdStr = (user as any)._id?.toString?.() ?? null;
       await this.auditService.record({
         proveedorSaludId,
@@ -675,7 +693,9 @@ export class UsersController {
       const actorProveedorSaludId =
         await this.usersService.getIdProveedorSaludByUserId(actorId);
       if (!actorProveedorSaludId) {
-        throw new BadRequestException('Proveedor de salud del actor no resuelto');
+        throw new BadRequestException(
+          'Proveedor de salud del actor no resuelto',
+        );
       }
 
       const targetUser = await this.usersService.findById(
@@ -783,7 +803,9 @@ export class UsersController {
       const actorProveedorSaludId =
         await this.usersService.getIdProveedorSaludByUserId(actorId);
       if (!actorProveedorSaludId) {
-        throw new BadRequestException('Proveedor de salud del actor no resuelto');
+        throw new BadRequestException(
+          'Proveedor de salud del actor no resuelto',
+        );
       }
 
       const targetUser = await this.usersService.findById(

@@ -99,17 +99,32 @@ export class CreateNotaMedicaDto {
 
   // NOM-024 GIIS-B015: Campos adicionales para diagnóstico
   @IsOptional()
-  @IsNumber({ maxDecimalPlaces: 0 }, { message: 'relacionTemporal debe ser un número' })
-  @IsIn([0, 1], { message: 'relacionTemporal debe ser 0 (Primera Vez) o 1 (Subsecuente)' })
+  @IsNumber(
+    { maxDecimalPlaces: 0 },
+    { message: 'relacionTemporal debe ser un número' },
+  )
+  @IsIn([0, 1], {
+    message: 'relacionTemporal debe ser 0 (Primera Vez) o 1 (Subsecuente)',
+  })
   relacionTemporal?: number; // 0=Primera Vez, 1=Subsecuente
 
   @IsOptional()
-  @IsBoolean({ message: 'primeraVezDiagnostico2 debe ser un booleano' })
-  primeraVezDiagnostico2?: boolean;
+  @IsNumber(
+    { maxDecimalPlaces: 0 },
+    { message: 'primeraVezDiagnostico2 debe ser un número' },
+  )
+  @IsIn([0, 1], {
+    message: 'primeraVezDiagnostico2 debe ser 0 (No) o 1 (Sí)',
+  })
+  primeraVezDiagnostico2?: number; // 0=No, 1=Si
 
   @IsOptional()
   @IsString({ message: 'El código CIE-10 diagnóstico 2 debe ser un string' })
   codigoCIEDiagnostico2?: string; // Formato: "A30 - LEPRA [ENFERMEDAD DE HANSEN]" o "A30"
+
+  @IsOptional()
+  @IsBoolean({ message: 'confirmacionDiagnostica2 debe ser un booleano' })
+  confirmacionDiagnostica2?: boolean; // Flag para crónicos/cáncer <18 (diagnóstico 2)
 
   @IsOptional()
   @IsString({ message: 'La descripción complementaria debe ser un string' })

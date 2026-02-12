@@ -388,7 +388,9 @@ describe('ExpedientesService - Document Immutability Enforcement', () => {
       }));
 
       // Mock actualizarUpdatedAtTrabajador
-      service['actualizarUpdatedAtTrabajador'] = jest.fn().mockResolvedValue(undefined);
+      service['actualizarUpdatedAtTrabajador'] = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await service.createDocument('notaMedica', dto);
       expect(result).toBeDefined();
@@ -425,7 +427,9 @@ describe('ExpedientesService - Document Immutability Enforcement', () => {
       }));
 
       // Mock actualizarUpdatedAtTrabajador
-      service['actualizarUpdatedAtTrabajador'] = jest.fn().mockResolvedValue(undefined);
+      service['actualizarUpdatedAtTrabajador'] = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await service.createDocument('notaMedica', dto);
       expect(result).toBeDefined();
@@ -590,15 +594,15 @@ describe('ExpedientesService - Document Immutability Enforcement', () => {
       };
 
       // Mock findById
-      mockNotaMedicaModel.findById = jest
-        .fn()
-        .mockReturnValue({
-          exec: jest.fn().mockResolvedValue(existingDocument),
-        });
+      mockNotaMedicaModel.findById = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(existingDocument),
+      });
 
       // Mock findByIdAndUpdate
       mockNotaMedicaModel.findByIdAndUpdate = jest.fn().mockReturnValue({
-        exec: jest.fn().mockResolvedValue({ ...existingDocument, ...updateDto }),
+        exec: jest
+          .fn()
+          .mockResolvedValue({ ...existingDocument, ...updateDto }),
       });
 
       await expect(
@@ -606,7 +610,11 @@ describe('ExpedientesService - Document Immutability Enforcement', () => {
       ).rejects.toThrow(BadRequestException);
 
       try {
-        await service.updateOrCreateDocument('notaMedica', 'nota123', updateDto);
+        await service.updateOrCreateDocument(
+          'notaMedica',
+          'nota123',
+          updateDto,
+        );
       } catch (error: any) {
         expect(error.response.ruleId).toBe('B4');
         expect(error.response.details[0].duplicatedCode).toBe('A30');
@@ -633,11 +641,9 @@ describe('ExpedientesService - Document Immutability Enforcement', () => {
       };
 
       // Mock findById
-      mockNotaMedicaModel.findById = jest
-        .fn()
-        .mockReturnValue({
-          exec: jest.fn().mockResolvedValue(existingDocument),
-        });
+      mockNotaMedicaModel.findById = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(existingDocument),
+      });
 
       // Mock findByIdAndUpdate
       const updatedDocument = { ...existingDocument, ...updateDto };
@@ -913,15 +919,15 @@ describe('ExpedientesService - Document Immutability Enforcement', () => {
       });
 
       // Mock findById
-      mockNotaMedicaModel.findById = jest
-        .fn()
-        .mockReturnValue({
-          exec: jest.fn().mockResolvedValue(existingDocument),
-        });
+      mockNotaMedicaModel.findById = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(existingDocument),
+      });
 
       // Mock findByIdAndUpdate
       mockNotaMedicaModel.findByIdAndUpdate = jest.fn().mockReturnValue({
-        exec: jest.fn().mockResolvedValue({ ...existingDocument, ...updateDto }),
+        exec: jest
+          .fn()
+          .mockResolvedValue({ ...existingDocument, ...updateDto }),
       });
 
       await expect(
@@ -929,7 +935,11 @@ describe('ExpedientesService - Document Immutability Enforcement', () => {
       ).rejects.toThrow(BadRequestException);
 
       try {
-        await service.updateOrCreateDocument('notaMedica', 'nota123', updateDto);
+        await service.updateOrCreateDocument(
+          'notaMedica',
+          'nota123',
+          updateDto,
+        );
       } catch (error: any) {
         expect(error.response.code).toBe('VALIDATION_ERROR');
         expect(error.response.ruleId).toBe('C4');

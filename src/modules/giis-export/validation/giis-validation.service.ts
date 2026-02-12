@@ -5,13 +5,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Deteccion } from '../../expedientes/schemas/deteccion.schema';
+import { Types } from 'mongoose';
 import { NotaMedica } from '../../expedientes/schemas/nota-medica.schema';
+import { DocumentoEstado } from '../../expedientes/enums/documento-estado.enum';
+import { FirmanteHelper } from '../../expedientes/helpers/firmante-helper';
 import { Lesion } from '../../expedientes/schemas/lesion.schema';
 import { loadGiisSchema } from '../schema-loader';
-import { mapDeteccionToCdtRow } from '../transformers/cdt.mapper';
 import { mapNotaMedicaToCexRow } from '../transformers/cex.mapper';
-import { mapLesionToLesRow } from '../transformers/les.mapper';
+import { mapNotaMedicaToLesRows } from '../transformers/les.mapper';
 import { CatalogsService } from '../../catalogs/catalogs.service';
 import {
   ValidationError,
@@ -28,16 +29,17 @@ import { GiisSchema } from '../schema-loader';
 import { ProveedoresSaludService } from '../../proveedores-salud/proveedores-salud.service';
 import { formatCLUES } from '../formatters/field.formatter';
 
-type Guide = 'CDT' | 'CEX' | 'LES';
+type Guide = 'CEX' | 'LES';
 
 @Injectable()
 export class GiisValidationService {
   constructor(
-    @InjectModel(Deteccion.name) private readonly deteccionModel: Model<Deteccion>,
-    @InjectModel(NotaMedica.name) private readonly notaMedicaModel: Model<NotaMedica>,
+    @InjectModel(NotaMedica.name)
+    private readonly notaMedicaModel: Model<NotaMedica>,
     @InjectModel(Lesion.name) private readonly lesionModel: Model<Lesion>,
     private readonly catalogsService: CatalogsService,
     private readonly proveedoresSaludService: ProveedoresSaludService,
+    private readonly firmanteHelper: FirmanteHelper,
   ) {}
 
   private buildCatalogLookup(): CatalogLookup {
@@ -54,9 +56,13 @@ export class GiisValidationService {
         return this.catalogsService.validateCLUESInOperation(clues);
       },
       validateTipoPersonal: (code: string) =>
-        Promise.resolve(this.catalogsService.validateGIISTipoPersonal(code).valid),
+        Promise.resolve(
+          this.catalogsService.validateGIISTipoPersonal(code).valid,
+        ),
       validateAfiliacion: (code: string) =>
-        Promise.resolve(this.catalogsService.validateGIISAfiliacion(code).valid),
+        Promise.resolve(
+          this.catalogsService.validateGIISAfiliacion(code).valid,
+        ),
     };
   }
 
@@ -71,9 +77,13 @@ export class GiisValidationService {
   ): Promise<PreValidationResult> {
     let clues = establecimientoClues?.trim();
     if (clues === undefined || clues === '') {
-      const proveedor = await this.proveedoresSaludService.findOne(proveedorSaludId);
+      const proveedor =
+        await this.proveedoresSaludService.findOne(proveedorSaludId);
       const raw = proveedor?.clues?.trim() ?? '';
-      clues = formatCLUES(raw) || (raw.length === 11 ? raw.toUpperCase() : '') || '9998';
+      clues =
+        formatCLUES(raw) ||
+        (raw.length === 11 ? raw.toUpperCase() : '') ||
+        '9998';
     }
 
     const [year, month] = yearMonth.split('-').map(Number);
@@ -83,43 +93,93 @@ export class GiisValidationService {
     const allErrors: ValidationError[] = [];
     let totalRows = 0;
 
-    if (guides.includes('CDT')) {
-      const detecciones = await this.deteccionModel
-        .find({
-          fechaDeteccion: { $gte: startOfMonth, $lte: endOfMonth },
-        })
-        .lean()
-        .exec();
-      const schema = loadGiisSchema('CDT');
-      const rows = detecciones.map((doc: any) =>
-        mapDeteccionToCdtRow(doc, { clues }, null),
-      );
-      totalRows += rows.length;
-      for (let i = 0; i < rows.length; i++) {
-        const errs = await validateRowAgainstSchema(
-          'CDT',
-          schema,
-          rows[i],
-          i,
-          catalogLookup,
-        );
-        allErrors.push(...errs);
-      }
-    }
-
     if (guides.includes('CEX')) {
       const notas = await this.notaMedicaModel
         .find({
+          estado: DocumentoEstado.FINALIZADO,
           fechaNotaMedica: { $gte: startOfMonth, $lte: endOfMonth },
         })
         .populate('idTrabajador')
         .lean()
         .exec();
+      const trabajadorIdsUnicos = [
+        ...new Set(
+          (notas as any[])
+            .map((n) => n.idTrabajador)
+            .filter(Boolean)
+            .map((id) => (id && typeof id === 'object' && id._id ? id._id : id).toString()),
+        ),
+      ];
+      const startOfYear = new Date(year, 0, 1);
+      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);
+      const notasDelAnio =
+        trabajadorIdsUnicos.length > 0
+          ? await this.notaMedicaModel
+              .find({
+                estado: DocumentoEstado.FINALIZADO,
+                fechaNotaMedica: { $gte: startOfYear, $lte: endOfYear },
+                idTrabajador: { $in: trabajadorIdsUnicos },
+              })
+              .select('idTrabajador fechaNotaMedica _id')
+              .lean()
+              .exec()
+          : [];
+      const firstInYearIds = new Set<string>();
+      const byTrabajador = new Map<
+        string,
+        { fecha: Date; _id: Types.ObjectId }[]
+      >();
+      for (const n of notasDelAnio as any[]) {
+        const key =
+          n.idTrabajador && typeof n.idTrabajador === 'object' && (n.idTrabajador as any)._id
+            ? (n.idTrabajador as any)._id.toString()
+            : (n.idTrabajador ?? '').toString();
+        if (!key) continue;
+        if (!byTrabajador.has(key)) byTrabajador.set(key, []);
+        byTrabajador.get(key)!.push({
+          fecha: n.fechaNotaMedica,
+          _id: n._id,
+        });
+      }
+      for (const arr of byTrabajador.values()) {
+        arr.sort(
+          (a, b) =>
+            a.fecha.getTime() - b.fecha.getTime() ||
+            a._id.toString().localeCompare(b._id.toString()),
+        );
+        if (arr.length > 0) firstInYearIds.add(arr[0]._id.toString());
+      }
+
+      const cexContext = {
+        clues,
+        getPaisCatalogKeyFromNacionalidad: (clave: string) =>
+          this.catalogsService.getPaisCatalogKeyFromNacionalidad(clave),
+      };
       const schema = loadGiisSchema('CEX');
-      const rows = (notas as any[]).map((nota) => {
+      const rows: Record<string, string | number>[] = [];
+      for (const nota of notas as any[]) {
         const trabajador = nota.idTrabajador || null;
-        return mapNotaMedicaToCexRow(nota, { clues }, trabajador);
-      });
+        const rawUser = nota.finalizadoPor ?? nota.updatedBy;
+        const userId =
+          rawUser != null
+            ? typeof rawUser === 'string'
+              ? rawUser
+              : (rawUser as Types.ObjectId).toString()
+            : '';
+        const prestadorData = userId
+          ? await this.firmanteHelper.getPrestadorDataFromUser(userId)
+          : null;
+        const primeraVezAnio = firstInYearIds.has(nota._id.toString()) ? 1 : 0;
+        const consultaWithPrimera = { ...nota, primeraVezAnio };
+        rows.push(
+          mapNotaMedicaToCexRow(
+            consultaWithPrimera,
+            cexContext,
+            trabajador,
+            prestadorData ?? undefined,
+          ),
+        );
+      }
       totalRows += rows.length;
       for (let i = 0; i < rows.length; i++) {
         const errs = await validateRowAgainstSchema(
@@ -134,18 +194,41 @@ export class GiisValidationService {
     }
 
     if (guides.includes('LES')) {
-      const lesiones = await this.lesionModel
+      const notas = await this.notaMedicaModel
         .find({
-          fechaAtencion: { $gte: startOfMonth, $lte: endOfMonth },
+          estado: DocumentoEstado.FINALIZADO,
+          fechaNotaMedica: { $gte: startOfMonth, $lte: endOfMonth },
         })
         .populate('idTrabajador')
         .lean()
         .exec();
+      const lesContext = {
+        clues,
+        getPaisCatalogKeyFromNacionalidad: (clave: string) =>
+          this.catalogsService.getPaisCatalogKeyFromNacionalidad(clave),
+      };
       const schema = loadGiisSchema('LES');
-      const rows = (lesiones as any[]).map((lesion) => {
-        const trabajador = lesion.idTrabajador || null;
-        return mapLesionToLesRow(lesion, { clues }, trabajador);
-      });
+      const rows: Record<string, string | number>[] = [];
+      for (const doc of notas as any[]) {
+        const trabajador = doc.idTrabajador || null;
+        const rawUser = doc.finalizadoPor ?? doc.updatedBy;
+        const userId =
+          rawUser != null
+            ? typeof rawUser === 'string'
+              ? rawUser
+              : (rawUser as Types.ObjectId).toString()
+            : '';
+        const prestadorData = userId
+          ? await this.firmanteHelper.getPrestadorDataFromUser(userId)
+          : null;
+        const lesRows = mapNotaMedicaToLesRows(
+          doc,
+          lesContext,
+          trabajador,
+          prestadorData ?? undefined,
+        );
+        rows.push(...lesRows);
+      }
       totalRows += rows.length;
       for (let i = 0; i < rows.length; i++) {
         const errs = await validateRowAgainstSchema(
@@ -207,7 +290,9 @@ export class GiisValidationService {
       }
     }
 
-    const excludedRowsSet = new Set(excludedEntries.map((e) => `${e.guide}:${e.rowIndex}`));
+    const excludedRowsSet = new Set(
+      excludedEntries.map((e) => `${e.guide}:${e.rowIndex}`),
+    );
     const excludedReport: ExcludedRowReport = {
       entries: excludedEntries,
       totalExcluded: excludedRowsSet.size,

@@ -13,29 +13,29 @@ import { Empresa } from '../../modules/empresas/schemas/empresa.schema';
  */
 export function extractTrabajadorId(context: ExecutionContext): string | null {
   const request = context.switchToHttp().getRequest();
-  
+
   // 1. Parámetro de ruta (prioridad más alta)
   if (request.params?.trabajadorId) {
     return request.params.trabajadorId;
   }
-  
+
   // 2. Body del request
   if (request.body?.trabajadorId) {
     return request.body.trabajadorId;
   }
-  
+
   // 3. Query parameter
   if (request.query?.trabajadorId) {
     return request.query.trabajadorId;
   }
-  
+
   return null;
 }
 
 /**
  * Helper para obtener proveedorSaludId desde un trabajadorId
  * Trabajador -> CentroTrabajo -> Empresa -> ProveedorSalud
- * 
+ *
  * Esta función replica la lógica de ConsentimientoDiarioService.getProveedorSaludIdFromTrabajador
  * para evitar dependencias circulares
  */
@@ -58,9 +58,7 @@ export async function getProveedorSaludIdFromTrabajador(
       return null;
     }
 
-    const empresa = await empresaModel
-      .findById(centroTrabajo.idEmpresa)
-      .lean();
+    const empresa = await empresaModel.findById(centroTrabajo.idEmpresa).lean();
     if (!empresa || !empresa.idProveedorSalud) {
       return null;
     }

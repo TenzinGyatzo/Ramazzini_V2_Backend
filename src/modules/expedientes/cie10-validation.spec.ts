@@ -157,9 +157,9 @@ describe('CIE-10 Validation - MX vs Non-MX Providers', () => {
     });
 
     it('should validate Chapter XX codes for external causes (V01-Y98)', () => {
-      const chapterXXRegex = /^[V-Y][0-9]{2}(\.[0-9]{1,2})?$/;
+      const chapterXXRegex = /^[V-Y][0-9]{2,3}(\.[0-9]{1,2})?$/;
 
-      const validExternalCauses = ['V01.0', 'W00', 'X00.00', 'Y98'];
+      const validExternalCauses = ['V01.0', 'W00', 'W013', 'X00.00', 'Y98'];
       const invalidExternalCauses = ['A00', 'S72.0', 'Z99'];
 
       validExternalCauses.forEach((code) => {

@@ -4,11 +4,11 @@ import { RegulatoryPolicy } from './regulatory-policy.service';
 
 /**
  * Valida CURP según la política regulatoria del proveedor
- * 
+ *
  * Reglas:
  * - SIRES_NOM024: CURP es REQUERIDO y debe ser válido
  * - SIN_REGIMEN: CURP es OPCIONAL, pero si se proporciona debe ser válido
- * 
+ *
  * @param curp - CURP a validar (puede ser undefined)
  * @param policy - Política regulatoria del proveedor
  * @throws BadRequestException si la validación falla

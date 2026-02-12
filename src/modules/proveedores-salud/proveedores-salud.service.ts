@@ -66,7 +66,10 @@ export class ProveedoresSaludService {
     }
 
     // Regla 3: Si es México y régimen es SIN_REGIMEN, declaración es obligatoria
-    if (isMX && (regimen === 'SIN_REGIMEN' || dto.regimenRegulatorio === 'SIN_REGIMEN')) {
+    if (
+      isMX &&
+      (regimen === 'SIN_REGIMEN' || dto.regimenRegulatorio === 'SIN_REGIMEN')
+    ) {
       if (!dto.declaracionAceptada) {
         throw new BadRequestException(
           'La declaración de contexto operativo es obligatoria para continuar sin régimen regulatorio',
@@ -86,9 +89,8 @@ export class ProveedoresSaludService {
     clues: string | undefined,
     proveedorSaludId: string,
   ): Promise<void> {
-    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-      proveedorSaludId,
-    );
+    const policy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
 
     // CLUES is now optional in all cases. Only validate if provided.
     if (!clues || clues.trim() === '') {
@@ -141,7 +143,8 @@ export class ProveedoresSaludService {
 
     // Asignar timestamp de declaración si aplica
     if (
-      (normalizedDto.regimenRegulatorio === 'SIN_REGIMEN' || normalizedDto.regimenRegulatorio === 'NO_SUJETO_SIRES') &&
+      (normalizedDto.regimenRegulatorio === 'SIN_REGIMEN' ||
+        normalizedDto.regimenRegulatorio === 'NO_SUJETO_SIRES') &&
       normalizedDto.declaracionAceptada
     ) {
       normalizedDto.declaracionAceptadaAt = new Date();
@@ -249,13 +252,19 @@ export class ProveedoresSaludService {
         dtoToValidate.regimenRegulatorio = 'SIN_REGIMEN';
         normalizedDto.regimenRegulatorio = 'SIN_REGIMEN';
       }
-      if (proveedor.regimenRegulatorio === 'NO_SUJETO_SIRES' && !normalizedDto.regimenRegulatorio) {
+      if (
+        proveedor.regimenRegulatorio === 'NO_SUJETO_SIRES' &&
+        !normalizedDto.regimenRegulatorio
+      ) {
         // Si el proveedor tiene valor antiguo y no se está actualizando, normalizar
         normalizedDto.regimenRegulatorio = 'SIN_REGIMEN';
       }
 
       // Si se actualiza el régimen, actualizar también los campos relacionados
-      if (normalizedDto.regimenRegulatorio === 'SIN_REGIMEN' || normalizedDto.regimenRegulatorio === 'NO_SUJETO_SIRES') {
+      if (
+        normalizedDto.regimenRegulatorio === 'SIN_REGIMEN' ||
+        normalizedDto.regimenRegulatorio === 'NO_SUJETO_SIRES'
+      ) {
         if (normalizedDto.declaracionAceptada) {
           normalizedDto.declaracionAceptadaAt = new Date();
           if (!normalizedDto.declaracionVersion) {
@@ -278,7 +287,11 @@ export class ProveedoresSaludService {
     // Validar CLUES solo si:
     // 1. El campo debe ser visible según el régimen (SIRES_NOM024)
     // 2. Se proporciona un valor
-    if (policy.features.cluesFieldVisible && cluesToValidate && cluesToValidate.trim() !== '') {
+    if (
+      policy.features.cluesFieldVisible &&
+      cluesToValidate &&
+      cluesToValidate.trim() !== ''
+    ) {
       await this.validateCLUESForMX(cluesToValidate, id);
     }
 
@@ -761,9 +774,7 @@ export class ProveedoresSaludService {
       .exec();
 
     if (!updatedProveedor) {
-      throw new NotFoundException(
-        'Error al actualizar el proveedor de salud',
-      );
+      throw new NotFoundException('Error al actualizar el proveedor de salud');
     }
 
     // Limpiar cache NOM024 después del cambio

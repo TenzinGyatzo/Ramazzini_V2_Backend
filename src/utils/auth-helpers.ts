@@ -25,7 +25,9 @@ export function getUserIdFromRequest(req: Request): string {
     const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
 
     if (!decoded.id) {
-      throw new BadRequestException('Token inválido: ID de usuario no encontrado');
+      throw new BadRequestException(
+        'Token inválido: ID de usuario no encontrado',
+      );
     }
 
     return decoded.id;

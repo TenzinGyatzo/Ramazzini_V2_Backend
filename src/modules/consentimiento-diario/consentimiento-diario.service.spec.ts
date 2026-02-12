@@ -8,7 +8,10 @@ import { CentroTrabajo } from '../centros-trabajo/schemas/centro-trabajo.schema'
 import { Empresa } from '../empresas/schemas/empresa.schema';
 import { RegulatoryPolicyService } from '../../utils/regulatory-policy.service';
 import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.service';
-import { CreateConsentimientoDiarioDto, ConsentMethod } from './dto/create-consentimiento-diario.dto';
+import {
+  CreateConsentimientoDiarioDto,
+  ConsentMethod,
+} from './dto/create-consentimiento-diario.dto';
 import { RegulatoryErrorCode } from '../../utils/regulatory-error-codes';
 
 describe('ConsentimientoDiarioService', () => {
@@ -77,13 +80,21 @@ describe('ConsentimientoDiarioService', () => {
       ],
     }).compile();
 
-    service = module.get<ConsentimientoDiarioService>(ConsentimientoDiarioService);
+    service = module.get<ConsentimientoDiarioService>(
+      ConsentimientoDiarioService,
+    );
     consentimientoModel = module.get<Model<ConsentimientoDiario>>(
       getModelToken(ConsentimientoDiario.name),
     );
-    trabajadorModel = module.get<Model<Trabajador>>(getModelToken(Trabajador.name));
-    regulatoryPolicyService = module.get<RegulatoryPolicyService>(RegulatoryPolicyService);
-    proveedoresSaludService = module.get<ProveedoresSaludService>(ProveedoresSaludService);
+    trabajadorModel = module.get<Model<Trabajador>>(
+      getModelToken(Trabajador.name),
+    );
+    regulatoryPolicyService = module.get<RegulatoryPolicyService>(
+      RegulatoryPolicyService,
+    );
+    proveedoresSaludService = module.get<ProveedoresSaludService>(
+      ProveedoresSaludService,
+    );
   });
 
   afterEach(() => {
@@ -197,7 +208,9 @@ describe('ConsentimientoDiarioService', () => {
       });
 
       // Act & Assert
-      await expect(service.getStatus(trabajadorId, undefined, userId)).rejects.toThrow();
+      await expect(
+        service.getStatus(trabajadorId, undefined, userId),
+      ).rejects.toThrow();
     });
 
     it('debe lanzar 404 cuando trabajador no existe', async () => {
@@ -205,9 +218,9 @@ describe('ConsentimientoDiarioService', () => {
       mockTrabajadorModel.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.getStatus(trabajadorId, undefined, userId)).rejects.toThrow(
-        'Trabajador no encontrado',
-      );
+      await expect(
+        service.getStatus(trabajadorId, undefined, userId),
+      ).rejects.toThrow('Trabajador no encontrado');
     });
   });
 
@@ -259,7 +272,9 @@ describe('ConsentimientoDiarioService', () => {
         timezone: 'America/Mexico_City',
       });
       mockConsentimientoModel.findOne.mockResolvedValue(null);
-      mockConsentimientoModel.create = jest.fn().mockReturnValue(savedConsentimiento);
+      mockConsentimientoModel.create = jest
+        .fn()
+        .mockReturnValue(savedConsentimiento);
 
       // Act
       const result = await service.create(createDto, userId);

@@ -34,12 +34,20 @@ describe('NOM-024 GIIS Crypto (Phase 2B)', () => {
   });
 
   it('should reject key not 24 bytes', () => {
-    expect(() => service.encryptToCif(Buffer.from('x'), Buffer.alloc(16))).toThrow(/24 bytes/);
+    expect(() =>
+      service.encryptToCif(Buffer.from('x'), Buffer.alloc(16)),
+    ).toThrow(/24 bytes/);
   });
 
   it('should create ZIP containing only one .CIF entry', async () => {
-    const cifBuffer = service.encryptToCif(Buffer.from('content', 'utf-8'), key);
-    const zipBuffer = await service.createZipWithCif(cifBuffer, 'CDT-99SMP-2410');
+    const cifBuffer = service.encryptToCif(
+      Buffer.from('content', 'utf-8'),
+      key,
+    );
+    const zipBuffer = await service.createZipWithCif(
+      cifBuffer,
+      'CEX-99SMP-2410',
+    );
     expect(zipBuffer.length).toBeGreaterThan(0);
     expect(zipBuffer[0]).toBe(0x50);
     expect(zipBuffer[1]).toBe(0x4b);

@@ -17,7 +17,10 @@ import {
   calcularAntiguedad,
   convertirFechaADDMMAAAA,
 } from 'src/utils/dates';
-import { validateCURP, validateCURPCrossCheck } from 'src/utils/curp-validator.util';
+import {
+  validateCURP,
+  validateCURPCrossCheck,
+} from 'src/utils/curp-validator.util';
 import { NOM024ComplianceUtil } from 'src/utils/nom024-compliance.util';
 import { validateTrabajadorNames } from 'src/utils/name-validator.util';
 import { RegulatoryPolicyService } from 'src/utils/regulatory-policy.service';
@@ -146,12 +149,17 @@ export class TrabajadoresService {
       });
 
       if (!validationResult.valid) {
-        errors.push(...validationResult.errors.map((e) => ({
-          field: e.field === 'entidad' ? 'entidadResidencia' : 
-                e.field === 'municipio' ? 'municipioResidencia' : 
-                'localidadResidencia',
-          reason: e.reason,
-        })));
+        errors.push(
+          ...validationResult.errors.map((e) => ({
+            field:
+              e.field === 'entidad'
+                ? 'entidadResidencia'
+                : e.field === 'municipio'
+                  ? 'municipioResidencia'
+                  : 'localidadResidencia',
+            reason: e.reason,
+          })),
+        );
       }
     }
 
@@ -177,9 +185,8 @@ export class TrabajadoresService {
       return;
     }
 
-    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-      proveedorSaludId,
-    );
+    const policy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
 
     if (policy.validation.geoFields !== 'required') {
       // SIN_REGIMEN: fields are optional, no validation needed
@@ -349,9 +356,8 @@ export class TrabajadoresService {
       return;
     }
 
-    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-      proveedorSaludId,
-    );
+    const policy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
 
     const workerCurpPolicy = policy.validation.workerCurp;
 
@@ -376,7 +382,11 @@ export class TrabajadoresService {
       }
 
       // Validación cruzada A1 (solo si hay datos demográficos)
-      if (trabajadorData && trabajadorData.fechaNacimiento && trabajadorData.sexo) {
+      if (
+        trabajadorData &&
+        trabajadorData.fechaNacimiento &&
+        trabajadorData.sexo
+      ) {
         const crossCheck = validateCURPCrossCheck(normalizedCurp, {
           fechaNacimiento: trabajadorData.fechaNacimiento,
           sexo: trabajadorData.sexo,
@@ -388,7 +398,9 @@ export class TrabajadoresService {
 
         if (!crossCheck.isValid) {
           // Construir mensaje específico con campos que fallaron
-          const fieldsFailed = crossCheck.discrepancies.map((d) => d.field).join(', ');
+          const fieldsFailed = crossCheck.discrepancies
+            .map((d) => d.field)
+            .join(', ');
           throw new BadRequestException({
             code: 'VALIDATION_ERROR',
             ruleId: 'A1',

@@ -98,8 +98,8 @@ const stats = this.catalogsService.getCatalogStats();
 
 | Catálogo | Archivo | Fuente |
 |----------|---------|--------|
-| CIE-10 | diagnosticos.csv | CIE-10 |
-| CLUES | establecimientos_salud.csv | CLUES |
+| CIE-10 | diagnosticos_sis.csv | CIE-10 |
+| CLUES | establecimiento_de_salud_sis.csv | CLUES |
 | Entidades Federativas | enitades_federativas.csv | INEGI |
 | Municipios | municipios.csv | INEGI |
 | Localidades | localidades.csv | INEGI |

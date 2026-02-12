@@ -15,10 +15,10 @@ import { extractCIE10Code } from '../../../utils/cie10.util';
  * @returns Object with isValid flag and duplicated code if found
  *
  * @example
- * validateNoDuplicateCIE10PrincipalAndComplementary("A30", ["A30"]) 
+ * validateNoDuplicateCIE10PrincipalAndComplementary("A30", ["A30"])
  * => { isValid: false, duplicated: 'A30' }
  *
- * validateNoDuplicateCIE10PrincipalAndComplementary("A30", ["B20"]) 
+ * validateNoDuplicateCIE10PrincipalAndComplementary("A30", ["B20"])
  * => { isValid: true }
  */
 export function validateNoDuplicateCIE10PrincipalAndComplementary(
@@ -49,4 +49,3 @@ export function validateNoDuplicateCIE10PrincipalAndComplementary(
 
   return { isValid: true };
 }
-

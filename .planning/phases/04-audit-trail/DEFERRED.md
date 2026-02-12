@@ -25,6 +25,12 @@ Purgas, movimiento a frío o archivado por política de retención.
 
 ---
 
+## Versionado por document_versions (removido)
+
+El enfoque de guardar snapshots completos en document_versions (D2 original) fue removido. Resguardado = documentos finalizados/anulados inalterables + Notas Aclaratorias como documentos separados.
+
+---
+
 ## Versionado por delta
 
 Guardar solo campos modificados entre versiones en lugar de snapshot completo.  

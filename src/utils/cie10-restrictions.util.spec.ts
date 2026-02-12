@@ -76,7 +76,7 @@ describe('CIE10 Restrictions Utility', () => {
       expect(getCIE10Restriction('C56')?.sexoPermitido).toBe('MUJER');
       expect(getCIE10Restriction('C57')?.sexoPermitido).toBe('MUJER');
       expect(getCIE10Restriction('C58')?.sexoPermitido).toBe('MUJER');
-      
+
       // Verificar que C56 no tiene restricción de edad (como C50)
       expect(getCIE10Restriction('C56')?.edadMin).toBeUndefined();
       expect(getCIE10Restriction('C56')?.edadMax).toBeUndefined();
@@ -104,7 +104,7 @@ describe('CIE10 Restrictions Utility', () => {
       expect(getCIE10Restriction('C60')?.sexoPermitido).toBe('HOMBRE');
       expect(getCIE10Restriction('C62')?.sexoPermitido).toBe('HOMBRE');
       expect(getCIE10Restriction('C63')?.sexoPermitido).toBe('HOMBRE');
-      
+
       // Verificar que no tienen restricción de edad (excepto C61 que ya se probó)
       expect(getCIE10Restriction('C60')?.edadMin).toBeUndefined();
       expect(getCIE10Restriction('C62')?.edadMin).toBeUndefined();
@@ -148,7 +148,9 @@ describe('CIE10 Restrictions Utility', () => {
     });
 
     it('should handle code with description format', () => {
-      const restriction = getCIE10Restriction('C50 - Neoplasia maligna de mama');
+      const restriction = getCIE10Restriction(
+        'C50 - Neoplasia maligna de mama',
+      );
       expect(restriction).toBeDefined();
       expect(restriction?.sexoPermitido).toBe('MUJER');
     });
@@ -182,4 +184,3 @@ describe('CIE10 Restrictions Utility', () => {
     });
   });
 });
-

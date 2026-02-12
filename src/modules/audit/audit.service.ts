@@ -6,7 +6,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AuditEvent } from './schemas/audit-event.schema';
 import { AuditOutbox } from './schemas/audit-outbox.schema';
-import { DocumentVersion } from '../expedientes/schemas/document-version.schema';
 import { computeCanonicalHash } from './utils/canonical-hash.util';
 import type { AuditEventCanonicalPayload } from './interfaces/audit-event-canonical.interface';
 import type { RecordAuditParams } from './interfaces/audit-service.interface';
@@ -19,9 +18,10 @@ export class AuditService {
   private readonly logger = new Logger(AuditService.name);
 
   constructor(
-    @InjectModel(AuditEvent.name) private readonly auditEventModel: Model<AuditEvent>,
-    @InjectModel(AuditOutbox.name) private readonly auditOutboxModel: Model<AuditOutbox>,
-    @InjectModel(DocumentVersion.name) private readonly documentVersionModel: Model<DocumentVersion>,
+    @InjectModel(AuditEvent.name)
+    private readonly auditEventModel: Model<AuditEvent>,
+    @InjectModel(AuditOutbox.name)
+    private readonly auditOutboxModel: Model<AuditOutbox>,
     private readonly usersService: UsersService,
   ) {}
 
@@ -34,13 +34,18 @@ export class AuditService {
     };
     if (query.from || query.to) {
       filter.timestamp = {};
-      if (query.from) (filter.timestamp as Record<string, Date>).$gte = new Date(query.from);
-      if (query.to) (filter.timestamp as Record<string, Date>).$lte = new Date(query.to);
+      if (query.from)
+        (filter.timestamp as Record<string, Date>).$gte = new Date(query.from);
+      if (query.to)
+        (filter.timestamp as Record<string, Date>).$lte = new Date(query.to);
     }
-    if (query.actorId) filter.actorId = query.actorId;
-    if (query.resourceType) filter.resourceType = query.resourceType;
-    if (query.resourceId) filter.resourceId = query.resourceId;
-    if (query.actionType) filter.actionType = query.actionType;
+    if (query.actorId?.trim()) filter.actorId = query.actorId.trim();
+    if (query.resourceType?.trim())
+      filter.resourceType = query.resourceType.trim();
+    if (query.resourceId?.trim()) filter.resourceId = query.resourceId.trim();
+    const actionTypeVal =
+      typeof query.actionType === 'string' ? query.actionType.trim() : '';
+    if (actionTypeVal) filter.actionType = actionTypeVal;
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 50;
@@ -57,48 +62,6 @@ export class AuditService {
       this.auditEventModel.countDocuments(filter).exec(),
     ]);
     return { items: items as AuditEvent[], total };
-  }
-
-  async listDocumentVersions(
-    proveedorSaludId: string,
-    documentType: string,
-    documentId: string,
-  ): Promise<{ version: number; createdAt: Date; createdBy: string }[]> {
-    if (!Types.ObjectId.isValid(documentId)) return [];
-    const docs = await this.documentVersionModel
-      .find({
-        proveedorSaludId: new Types.ObjectId(proveedorSaludId),
-        documentType,
-        documentId: new Types.ObjectId(documentId),
-      })
-      .sort({ version: -1 })
-      .select('version createdAt createdBy')
-      .lean()
-      .exec();
-    return docs.map((d: any) => ({
-      version: d.version,
-      createdAt: d.createdAt,
-      createdBy: d.createdBy?.toString() ?? '',
-    }));
-  }
-
-  async getDocumentVersion(
-    proveedorSaludId: string,
-    documentType: string,
-    documentId: string,
-    version: number,
-  ): Promise<Record<string, unknown> | null> {
-    if (!Types.ObjectId.isValid(documentId)) return null;
-    const doc = await this.documentVersionModel
-      .findOne({
-        proveedorSaludId: new Types.ObjectId(proveedorSaludId),
-        documentType,
-        documentId: new Types.ObjectId(documentId),
-        version,
-      })
-      .lean()
-      .exec();
-    return doc?.snapshot ?? null;
   }
 
   async exportEvents(
@@ -125,7 +88,8 @@ export class AuditService {
         proveedorSaludId: e.proveedorSaludId?.toString() ?? null,
         actorId: e.actorId ?? null,
         actorSnapshot: e.actorSnapshot ?? null,
-        timestamp: e.timestamp instanceof Date ? e.timestamp.toISOString() : e.timestamp,
+        timestamp:
+          e.timestamp instanceof Date ? e.timestamp.toISOString() : e.timestamp,
         actionType: e.actionType,
         resourceType: e.resourceType ?? null,
         resourceId: e.resourceId ?? null,
@@ -136,10 +100,13 @@ export class AuditService {
       return Buffer.from(JSON.stringify(rows, null, 0), 'utf8');
     }
 
-    const header = 'timestamp,actorId,actorUsername,actorEmail,actorRole,actionType,resourceType,resourceId,hashEvento,hashEventoAnterior\n';
+    const header =
+      'timestamp,actorId,actorUsername,actorEmail,actorRole,actionType,resourceType,resourceId,hashEvento,hashEventoAnterior\n';
     const lines = events.map((e: any) => {
-      const ts = e.timestamp instanceof Date ? e.timestamp.toISOString() : e.timestamp;
-      const a = (v: unknown) => (v == null ? '' : String(v).replace(/"/g, '""'));
+      const ts =
+        e.timestamp instanceof Date ? e.timestamp.toISOString() : e.timestamp;
+      const a = (v: unknown) =>
+        v == null ? '' : String(v).replace(/"/g, '""');
       const snap = e.actorSnapshot ?? {};
       return `"${ts}","${a(e.actorId)}","${a(snap.username)}","${a(snap.email)}","${a(snap.role)}","${a(e.actionType)}","${a(e.resourceType)}","${a(e.resourceId)}","${a(e.hashEvento)}","${a(e.hashEventoAnterior)}"`;
     });
@@ -150,7 +117,10 @@ export class AuditService {
     proveedorSaludId: string,
     from: string,
     to: string,
-  ): Promise<{ valid: boolean; errors?: { index: number; expectedHash: string; actualHash: string }[] }> {
+  ): Promise<{
+    valid: boolean;
+    errors?: { index: number; expectedHash: string; actualHash: string }[];
+  }> {
     const filter: Record<string, unknown> = {
       proveedorSaludId: new Types.ObjectId(proveedorSaludId),
       timestamp: {},
@@ -164,7 +134,11 @@ export class AuditService {
       .lean()
       .exec();
 
-    const errors: { index: number; expectedHash: string; actualHash: string }[] = [];
+    const errors: {
+      index: number;
+      expectedHash: string;
+      actualHash: string;
+    }[] = [];
     let prevHash: string | null = null;
 
     for (let i = 0; i < events.length; i++) {
@@ -179,7 +153,10 @@ export class AuditService {
       const canonical: AuditEventCanonicalPayload = {
         proveedorSaludId: e.proveedorSaludId?.toString() ?? null,
         actorId: e.actorId ?? null,
-        timestamp: e.timestamp instanceof Date ? e.timestamp.toISOString() : String(e.timestamp),
+        timestamp:
+          e.timestamp instanceof Date
+            ? e.timestamp.toISOString()
+            : String(e.timestamp),
         actionType: e.actionType,
         resourceType: e.resourceType ?? null,
         resourceId: e.resourceId ?? null,
@@ -187,7 +164,11 @@ export class AuditService {
       };
       const { hashEvento } = computeCanonicalHash(canonical, null);
       if (hashEvento !== e.hashEvento) {
-        errors.push({ index: i, expectedHash: hashEvento, actualHash: e.hashEvento ?? '' });
+        errors.push({
+          index: i,
+          expectedHash: hashEvento,
+          actualHash: e.hashEvento ?? '',
+        });
       }
       prevHash = e.hashEvento ?? null;
     }
@@ -199,13 +180,17 @@ export class AuditService {
     const timestamp = new Date();
     const proveedorSaludIdStr =
       params.proveedorSaludId != null ? String(params.proveedorSaludId) : null;
-    const actorIdStr =
-      params.actorId != null ? String(params.actorId) : null;
+    const actorIdStr = params.actorId != null ? String(params.actorId) : null;
 
-    let actorSnapshot: { username: string; email: string; role: string } | null = null;
+    let actorSnapshot: {
+      username: string;
+      email: string;
+      role: string;
+    } | null = null;
     if (actorIdStr && actorIdStr !== 'SYSTEM') {
       try {
-        actorSnapshot = await this.usersService.getAuditActorSnapshot(actorIdStr);
+        actorSnapshot =
+          await this.usersService.getAuditActorSnapshot(actorIdStr);
       } catch {
         // Si falla la lectura del usuario, se guarda sin snapshot (actorId sigue siendo la referencia)
       }
@@ -241,7 +226,9 @@ export class AuditService {
     try {
       await this.auditEventModel.create({
         proveedorSaludId:
-          proveedorSaludIdStr != null ? new Types.ObjectId(proveedorSaludIdStr) : null,
+          proveedorSaludIdStr != null
+            ? new Types.ObjectId(proveedorSaludIdStr)
+            : null,
         actorId: actorIdStr,
         actorSnapshot,
         timestamp,
@@ -262,7 +249,9 @@ export class AuditService {
       );
       await this.auditOutboxModel.create({
         proveedorSaludId:
-          proveedorSaludIdStr != null ? new Types.ObjectId(proveedorSaludIdStr) : null,
+          proveedorSaludIdStr != null
+            ? new Types.ObjectId(proveedorSaludIdStr)
+            : null,
         actorId: actorIdStr,
         actorSnapshot,
         timestamp,

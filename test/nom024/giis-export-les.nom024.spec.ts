@@ -1,6 +1,6 @@
 /**
  * NOM-024 GIIS Export LES integration (Phase 1 — 1D)
- * Create batch, generate LES from 1 Lesion fixture, verify file and batch.
+ * Create batch, generate LES from NotaMedica with injury codes (S00-T98 / V01-Y98), verify file and batch.
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -13,41 +13,74 @@ import {
   startMongoMemoryServer,
   stopMongoMemoryServer,
 } from '../utils/mongodb-memory.util';
-import { GiisBatch, GiisBatchSchema } from '../../src/modules/giis-export/schemas/giis-batch.schema';
+import {
+  GiisBatch,
+  GiisBatchSchema,
+} from '../../src/modules/giis-export/schemas/giis-batch.schema';
 import { GiisBatchService } from '../../src/modules/giis-export/giis-batch.service';
 import { GiisSerializerService } from '../../src/modules/giis-export/giis-serializer.service';
-import { Deteccion, DeteccionSchema } from '../../src/modules/expedientes/schemas/deteccion.schema';
-import { NotaMedica, NotaMedicaSchema } from '../../src/modules/expedientes/schemas/nota-medica.schema';
-import { Lesion, LesionSchema } from '../../src/modules/expedientes/schemas/lesion.schema';
-import { Trabajador, TrabajadorSchema } from '../../src/modules/trabajadores/schemas/trabajador.schema';
+import {
+  Deteccion,
+  DeteccionSchema,
+} from '../../src/modules/expedientes/schemas/deteccion.schema';
+import {
+  NotaMedica,
+  NotaMedicaSchema,
+} from '../../src/modules/expedientes/schemas/nota-medica.schema';
+import { DocumentoEstado } from '../../src/modules/expedientes/enums/documento-estado.enum';
+import {
+  Lesion,
+  LesionSchema,
+} from '../../src/modules/expedientes/schemas/lesion.schema';
+import {
+  Trabajador,
+  TrabajadorSchema,
+} from '../../src/modules/trabajadores/schemas/trabajador.schema';
+import {
+  CentroTrabajo,
+  CentroTrabajoSchema,
+} from '../../src/modules/centros-trabajo/schemas/centro-trabajo.schema';
+import {
+  Empresa,
+  EmpresaSchema,
+} from '../../src/modules/empresas/schemas/empresa.schema';
 import { RegulatoryPolicyService } from '../../src/utils/regulatory-policy.service';
+import { AuditService } from '../../src/modules/audit/audit.service';
 import { ProveedoresSaludService } from '../../src/modules/proveedores-salud/proveedores-salud.service';
 import { GiisValidationService } from '../../src/modules/giis-export/validation/giis-validation.service';
 import { GiisCryptoService } from '../../src/modules/giis-export/crypto/giis-crypto.service';
 import { GiisExportAuditService } from '../../src/modules/giis-export/giis-export-audit.service';
-import { validLesionAccidental } from '../fixtures/lesion.fixtures';
+import { FirmanteHelper } from '../../src/modules/expedientes/helpers/firmante-helper';
+import { CatalogsService } from '../../src/modules/catalogs/catalogs.service';
 
 const mockGiisValidationService = {
-  validateAndFilterRows: jest.fn().mockImplementation(async (_g: string, rows: any[]) => ({
-    validRows: rows,
-    excludedReport: { entries: [], totalExcluded: 0 },
-    warnings: [],
-  })),
+  validateAndFilterRows: jest
+    .fn()
+    .mockImplementation(async (_g: string, rows: any[]) => ({
+      validRows: rows,
+      excludedReport: { entries: [], totalExcluded: 0 },
+      warnings: [],
+    })),
 };
 import { validMXTrabajador } from '../fixtures/trabajador.fixtures';
-import { mapLesionToLesRow, getLesSchema } from '../../src/modules/giis-export/transformers/les.mapper';
+import {
+  mapLesionToLesRow,
+  mapNotaMedicaToLesRows,
+  getLesSchema,
+} from '../../src/modules/giis-export/transformers/les.mapper';
 
 describe('NOM-024 GIIS Export LES (Phase 1D)', () => {
   let service: GiisBatchService;
-  let lesionModel: any;
+  let notaMedicaModel: any;
   let trabajadorModel: any;
+  let testingModule: TestingModule;
   let mongoUri: string;
   const proveedorId = new Types.ObjectId().toString();
   const yearMonth = '2025-01';
 
   beforeAll(async () => {
     mongoUri = await startMongoMemoryServer();
-    const module: TestingModule = await Test.createTestingModule({
+    testingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         MongooseModule.forRoot(mongoUri),
@@ -57,28 +90,71 @@ describe('NOM-024 GIIS Export LES (Phase 1D)', () => {
           { name: NotaMedica.name, schema: NotaMedicaSchema },
           { name: Lesion.name, schema: LesionSchema },
           { name: Trabajador.name, schema: TrabajadorSchema },
+          { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
+          { name: Empresa.name, schema: EmpresaSchema },
         ]),
       ],
       providers: [
         GiisBatchService,
         GiisSerializerService,
-        { provide: RegulatoryPolicyService, useValue: { getRegulatoryPolicy: jest.fn() } },
+        {
+          provide: RegulatoryPolicyService,
+          useValue: { getRegulatoryPolicy: jest.fn() },
+        },
         { provide: ProveedoresSaludService, useValue: { findOne: jest.fn() } },
         { provide: GiisValidationService, useValue: mockGiisValidationService },
         { provide: GiisCryptoService, useValue: {} },
-        { provide: GiisExportAuditService, useValue: { recordGenerationAudit: jest.fn().mockResolvedValue({}) } },
+        {
+          provide: GiisExportAuditService,
+          useValue: { recordGenerationAudit: jest.fn().mockResolvedValue({}) },
+        },
+        {
+          provide: AuditService,
+          useValue: { record: jest.fn().mockResolvedValue({}) },
+        },
+        {
+          provide: FirmanteHelper,
+          useValue: {
+            getPrestadorDataFromUser: jest.fn().mockResolvedValue(null),
+          },
+        },
+        {
+          provide: CatalogsService,
+          useValue: {
+            getPaisCatalogKeyFromNacionalidad: jest.fn().mockReturnValue(142),
+          },
+        },
       ],
     }).compile();
-    service = module.get<GiisBatchService>(GiisBatchService);
-    lesionModel = module.get('LesionModel');
-    trabajadorModel = module.get('TrabajadorModel');
+    service = testingModule.get<GiisBatchService>(GiisBatchService);
+    notaMedicaModel = testingModule.get('NotaMedicaModel');
+    trabajadorModel = testingModule.get('TrabajadorModel');
   }, 30000);
 
   afterAll(async () => {
     await stopMongoMemoryServer();
   }, 10000);
 
-  it('should create batch, generate LES with 1 lesión, and produce valid TXT', async () => {
+  it('should create batch, generate LES from NotaMedica with injury code, and produce valid TXT', async () => {
+    const empresaModel = testingModule.get('EmpresaModel');
+    const centroTrabajoModel = testingModule.get('CentroTrabajoModel');
+    const createdBy = new Types.ObjectId();
+
+    const empresa = await empresaModel.create({
+      nombreComercial: 'Test SA',
+      razonSocial: 'Test SA',
+      RFC: 'TST123456ABC',
+      idProveedorSalud: proveedorId,
+      createdBy,
+      updatedBy: createdBy,
+    });
+    const centro = await centroTrabajoModel.create({
+      nombreCentro: 'Centro 1',
+      idEmpresa: empresa._id,
+      createdBy,
+      updatedBy: createdBy,
+    });
+
     const batch = await service.createBatch(proveedorId, yearMonth);
     const batchId = batch._id.toString();
 
@@ -89,19 +165,23 @@ describe('NOM-024 GIIS Export LES (Phase 1D)', () => {
       puesto: 'OPERADOR',
       estadoCivil: 'Soltero/a',
       estadoLaboral: 'Activo',
-      idCentroTrabajo: new Types.ObjectId(),
-      createdBy: new Types.ObjectId(),
-      updatedBy: new Types.ObjectId(),
+      idCentroTrabajo: centro._id,
+      createdBy,
+      updatedBy: createdBy,
     });
 
-    await lesionModel.create({
-      ...validLesionAccidental,
-      _id: new Types.ObjectId(),
-      fechaEvento: new Date('2025-01-10'),
-      fechaAtencion: new Date('2025-01-10'),
+    await notaMedicaModel.create({
+      tipoNota: 'Inicial',
+      fechaNotaMedica: new Date('2025-01-10'),
+      motivoConsulta: 'Traumatismo',
+      codigoCIE10Principal: 'S00 - TRAUMATISMO SUPERFICIAL DE LA CABEZA',
+      codigoCIECausaExterna: 'W01',
+      causaExterna: 'Caída',
       idTrabajador: trabajador._id,
-      createdBy: new Types.ObjectId(),
-      updatedBy: new Types.ObjectId(),
+      rutaPDF: '/path/to/pdf',
+      estado: DocumentoEstado.FINALIZADO,
+      createdBy,
+      updatedBy: createdBy,
     });
 
     const updated = await service.generateBatchLes(batchId);
@@ -129,7 +209,7 @@ describe('NOM-024 GIIS Export LES (Phase 1D)', () => {
 });
 
 describe('LES mapper unit', () => {
-  it('should output 82 keys from schema and include clues and required fields', () => {
+  it('should output 82 keys from schema and include clues and required fields (mapLesionToLesRow)', () => {
     const schema = getLesSchema();
     expect(schema.fields.length).toBe(82);
 
@@ -163,5 +243,71 @@ describe('LES mapper unit', () => {
     expect(row.fechaEvento).toBe('10/01/2025');
     expect(row.codigoCIEAfeccionPrincipal).toBe('S01.0');
     expect(row.codigoCIECausaExterna).toBe('W01');
+  });
+
+  it('mapNotaMedicaToLesRows: nota with injury code S00 generates 1 row', () => {
+    const nota = {
+      _id: new Types.ObjectId(),
+      fechaNotaMedica: new Date('2025-01-15'),
+      codigoCIE10Principal: 'S00',
+      codigoCIECausaExterna: 'W01',
+    };
+    const trabajador = {
+      curp: 'PEGJ850102HDFRNN08',
+      nombre: 'Juan',
+      primerApellido: 'Perez',
+      segundoApellido: 'Gomez',
+      fechaNacimiento: new Date('1985-01-02'),
+      sexo: 'H',
+      entidadNacimiento: '14',
+    };
+    const rows = mapNotaMedicaToLesRows(
+      nota,
+      { clues: 'DFSSA001234' },
+      trabajador,
+      null,
+    );
+    expect(rows.length).toBe(1);
+    expect(rows[0].codigoCIEAfeccionPrincipal).toBe('S00');
+    expect(rows[0].codigoCIECausaExterna).toBe('W01');
+    expect(rows[0].curpPaciente).toBe('PEGJ850102HDFRNN08');
+    expect(rows[0].nombre).toBe('JUAN');
+    expect(rows[0].primerApellido).toBe('PEREZ');
+    expect(Object.keys(rows[0]).length).toBe(82);
+  });
+
+  it('mapNotaMedicaToLesRows: nota with only A04 (no injury) returns 0 rows', () => {
+    const nota = {
+      _id: new Types.ObjectId(),
+      fechaNotaMedica: new Date('2025-01-15'),
+      codigoCIE10Principal: 'A04',
+    };
+    const rows = mapNotaMedicaToLesRows(
+      nota,
+      { clues: 'DFSSA001234' },
+      null,
+      null,
+    );
+    expect(rows.length).toBe(0);
+  });
+
+  it('mapNotaMedicaToLesRows: nota with S00 + codigoCIECausaExterna W17 has both codes', () => {
+    const nota = {
+      _id: new Types.ObjectId(),
+      fechaNotaMedica: new Date('2025-01-10'),
+      codigoCIE10Principal: 'S00 - TRAUMATISMO',
+      codigoCIECausaExterna: 'W17',
+      causaExterna: 'Caída',
+    };
+    const rows = mapNotaMedicaToLesRows(
+      nota,
+      { clues: 'ASSCT000014' },
+      null,
+      null,
+    );
+    expect(rows.length).toBe(1);
+    expect(rows[0].codigoCIEAfeccionPrincipal).toBe('S00');
+    expect(rows[0].codigoCIECausaExterna).toBe('W17');
+    expect(rows[0].causaExterna).toBe('Caída');
   });
 });

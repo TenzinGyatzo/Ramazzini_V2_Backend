@@ -1,5 +1,5 @@
 ---
-status: testing
+status: complete
 phase: 05-audit-trail-eventos-usuarios-firmantes
 source: 05-01-SUMMARY.md, 05-02-SUMMARY.md, 05-03-SUMMARY.md, 05-04-SUMMARY.md
 started: "2026-02-09"
@@ -8,11 +8,7 @@ updated: "2026-02-09"
 
 ## Current Test
 
-number: 8
-name: Evento al crear perfil de firmante
-expected: |
-  Tras crear un perfil de médico, enfermera o técnico firmante (desde la vista correspondiente), en el trail aparece un evento SIGNER_PROFILE_CREATED con resourceType medicoFirmante, enfermeraFirmante o tecnicoFirmante según corresponda.
-awaiting: user response
+[testing complete]
 
 ## Tests
 
@@ -48,22 +44,23 @@ result: pass
 
 ### 8. Evento al crear perfil de firmante
 expected: Tras crear un perfil de médico, enfermera o técnico firmante (desde la vista correspondiente), en el trail aparece un evento SIGNER_PROFILE_CREATED con resourceType medicoFirmante, enfermeraFirmante o tecnicoFirmante según corresponda.
-result: [pending]
+result: pass
 
 ### 9. Evento al actualizar perfil de firmante
 expected: Tras actualizar un perfil de firmante existente, en el trail aparece un evento SIGNER_PROFILE_UPDATED; el payload o detalle debe reflejar que hubo un cambio (antes/después o equivalente).
-result: [pending]
+result: pass
 
 ### 10. Filtro por tipo reduce la lista
 expected: En la vista de Auditoría, al seleccionar un tipo concreto (ej. "Cuenta suspendida" o "Perfil firmante creado") y pulsar Buscar, la lista muestra solo eventos de ese tipo (o vacía si no hay ninguno en el rango de fechas).
-result: [pending]
+result: pass
+reported: "funciona perfecto con los tipos de evento nuevos, pero no hay opción para seleccionar tipos de evento de la phase 4, agregarlos estaría genial"
 
 ## Summary
 
 total: 10
-passed: 6
+passed: 9
 issues: 1
-pending: 3
+pending: 0
 skipped: 0
 
 ## Gaps
@@ -73,8 +70,22 @@ skipped: 0
   reason: "User reported: está tomando como actor al usuario a quien se le envia la invitación, en realidad deberia tomar como actor al usuario quien ENVIA la invitación. El payload debe de quedar igual"
   severity: major
   test: 2
-  root_cause: ""
-  artifacts: []
+  root_cause: "register() usaba actorId = user._id siempre. Fix: @Req() req en register(); si hay Bearer token usar getUserIdFromRequest(req) como actorId, si no (autoregistro) mantener user._id."
+  artifacts:
+    - path: backend/src/modules/users/users.controller.ts
+      issue: "actorId en USER_INVITATION_SENT"
+  missing: []
+  debug_session: ""
+
+- truth: "Filtro Tipo de evento incluye también los tipos de la Phase 4 (documentos, login, GIIS, etc.)"
+  status: failed
+  reason: "User reported: funciona perfecto con los tipos nuevos, pero no hay opción para seleccionar tipos de evento de la phase 4, agregarlos estaría genial"
+  severity: minor
+  test: 10
+  root_cause: "Filtro solo tenía opciones Phase 5. Fix: añadidos optgroups Documentos, Accesos, Admin/asignaciones, GIIS/sistema con todos los actionType de Phase 4."
+  artifacts:
+    - path: frontend/src/views/AuditoriaView.vue
+      issue: "opciones filtro tipo evento"
   missing: []
   debug_session: ""
 

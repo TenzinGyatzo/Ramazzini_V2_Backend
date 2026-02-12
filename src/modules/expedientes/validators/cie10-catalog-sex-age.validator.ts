@@ -1,6 +1,6 @@
 /**
  * CIE-10 Catalog-Based Sex and Age Validator
- * 
+ *
  * Validador que verifica que los diagnósticos CIE-10 en Nota Médica
  * cumplan con las restricciones de sexo (LSEX) y edad (LINF/LSUP)
  * usando el catálogo oficial de diagnósticos.
@@ -239,10 +239,10 @@ async function validateSingleCIE10Code(
 /**
  * Validates that all CIE-10 diagnoses in a Nota Médica comply
  * with sex and age restrictions from the official catalog.
- * 
+ *
  * @param params - Validation parameters
  * @returns Validation result with list of issues found
- * 
+ *
  * @example
  * const result = await validateCie10SexAgeAgainstCatalog({
  *   trabajadorSexo: 'MUJER',
@@ -314,4 +314,3 @@ export async function validateCie10SexAgeAgainstCatalog(
     issues,
   };
 }
-

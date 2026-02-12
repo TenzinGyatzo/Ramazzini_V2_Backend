@@ -1,15 +1,22 @@
 /**
  * CEX (GIIS-B015 Consulta externa) mapper — schema-driven.
  * Output keys and order come only from docs/nom-024/giis_schemas/CEX.schema.json.
- * Source: NotaMedica (consulta externa) + Trabajador (paciente).
+ * Source: NotaMedica (consulta externa) + Trabajador (paciente) + optional Prestador (firmante).
  */
 
 import { loadGiisSchema, GiisSchema } from '../schema-loader';
 import { toDDMMAAAA } from '../formatters/date.formatter';
-import { formatCURP } from '../formatters/field.formatter';
+import {
+  formatCURP,
+  normalizeNameForGiis,
+} from '../formatters/field.formatter';
+import { parseNombreCompleto } from '../../../utils/parseNombreCompleto';
+import { TIPO_PERSONAL_MEDICO_GENERAL } from '../constants/tipo-personal';
 
 export interface CexMapperContext {
   clues: string;
+  /** Resolve cat_pais CATALOG_KEY from nacionalidad clave (3-letter). If not provided (e.g. tests), 142 is used for paisNacPaciente. */
+  getPaisCatalogKeyFromNacionalidad?: (clave: string) => number | null;
 }
 
 /** NotaMedica-like: consulta externa document */
@@ -24,9 +31,12 @@ export interface ConsultaExternaLike {
   codigoCIE10Principal?: string;
   codigosCIE10Complementarios?: string[];
   relacionTemporal?: number;
-  primeraVezDiagnostico2?: boolean;
+  primeraVezDiagnostico2?: number; // 0=No, 1=Si
   codigoCIEDiagnostico2?: string;
   confirmacionDiagnostica?: boolean;
+  confirmacionDiagnostica2?: boolean;
+  /** 1 = primera consulta del trabajador en el año, 0 = ya existía otra (solo NotaMedica). */
+  primeraVezAnio?: number;
   [key: string]: unknown;
 }
 
@@ -42,10 +52,19 @@ export interface TrabajadorLike {
   [key: string]: unknown;
 }
 
+/** Prestador-like: firmante (médico/enfermera) data for CEX prestador fields */
+export interface PrestadorLike {
+  curp?: string;
+  nombre?: string;
+  tipoPersonal?: number;
+}
+
 const CEX_SCHEMA = loadGiisSchema('CEX');
 
 const DEFAULT_XX = 'XX';
 const DEFAULT_PAIS_MEXICO = 142;
+/** cat_pais "NO ESPECIFICADO" when nacionalidad has no mapping */
+const PAIS_NO_ESPECIFICADO = 248;
 const CURP_GENERICA = 'XXXX999999XXXXXX99';
 const DEFAULT_PROGRAMA_SMYMG = 0;
 const DEFAULT_NA = 'NA';
@@ -61,13 +80,15 @@ export function extractCieCode(value: string | null | undefined): string {
 }
 
 /**
- * Map one Consulta externa (NotaMedica) + optional Trabajador to a flat record with keys = CEX schema field names.
+ * Map one Consulta externa (NotaMedica) + optional Trabajador + optional Prestador to a flat record with keys = CEX schema field names.
  * All 106 columns are present; required ones get value or default. No hardcoded field list — iterate schema.fields.
+ * If prestador is provided, curpPrestador, nombrePrestador, primerApellidoPrestador, segundoApellidoPrestador and tipoPersonal come from it (nombre parsed via parseNombreCompleto).
  */
 export function mapNotaMedicaToCexRow(
   consulta: ConsultaExternaLike,
   context: CexMapperContext,
   trabajador?: TrabajadorLike | null,
+  prestador?: PrestadorLike | null,
 ): Record<string, string | number> {
   const schema = CEX_SCHEMA;
   const row: Record<string, string | number> = {};
@@ -77,42 +98,78 @@ export function mapNotaMedicaToCexRow(
     ? formatCURP(trabajador.curp) || CURP_GENERICA
     : CURP_GENERICA;
   const sexo = (trabajador?.sexo as string) || '';
-  const sexoCURP = sexo.toLowerCase().startsWith('f') ? 2 : sexo.toLowerCase().startsWith('m') ? 1 : 1;
+  const sexoCURP = sexo.toLowerCase().startsWith('f')
+    ? 2
+    : sexo.toLowerCase().startsWith('m')
+      ? 1
+      : 1;
   const sexoBiologico = sexoCURP;
+  const genero = sexoCURP;
 
   const codigo1 = extractCieCode(consulta.codigoCIE10Principal);
   const comp = consulta.codigosCIE10Complementarios || [];
-  const codigo2Raw = comp[0] ? extractCieCode(comp[0]) : (consulta.codigoCIEDiagnostico2 ? extractCieCode(consulta.codigoCIEDiagnostico2 as string) : '');
-  const codigo3Raw = comp[1] ? extractCieCode(comp[1]) : '';
+  const codigo2Raw = comp[0]
+    ? extractCieCode(comp[0])
+    : consulta.codigoCIEDiagnostico2
+      ? extractCieCode(consulta.codigoCIEDiagnostico2 as string)
+      : '';
   const codigo2 = codigo2Raw || 'R69X';
-  const codigo3 = codigo3Raw || 'R69X';
+
+  const nombreCompletoPrestador = (prestador?.nombre ?? '').trim();
+  const parsed = nombreCompletoPrestador
+    ? parseNombreCompleto(nombreCompletoPrestador)
+    : null;
+  const curpPrestador = prestador?.curp
+    ? formatCURP(prestador.curp) || CURP_GENERICA
+    : CURP_GENERICA;
+  const nombrePrestador =
+    normalizeNameForGiis(parsed?.nombrePrestador) || DEFAULT_NA;
+  const primerApellidoPrestador =
+    normalizeNameForGiis(parsed?.primerApellidoPrestador) || DEFAULT_NA;
+  const segundoApellidoPrestador =
+    normalizeNameForGiis(parsed?.segundoApellidoPrestador) || DEFAULT_XX;
+  const tipoPersonal = prestador?.tipoPersonal ?? TIPO_PERSONAL_MEDICO_GENERAL;
+
+  const nacionalidadClave = (trabajador?.nacionalidad as string)?.trim?.();
+  const getPais = context.getPaisCatalogKeyFromNacionalidad;
+  const paisNacPaciente =
+    nacionalidadClave && getPais
+      ? (getPais(nacionalidadClave) ?? PAIS_NO_ESPECIFICADO)
+      : getPais
+        ? PAIS_NO_ESPECIFICADO
+        : DEFAULT_PAIS_MEXICO;
 
   const valueByField: Record<string, string | number> = {
     clues,
     paisNacimiento: DEFAULT_PAIS_MEXICO,
-    curpPrestador: CURP_GENERICA,
-    nombrePrestador: DEFAULT_NA,
-    primerApellidoPrestador: DEFAULT_NA,
-    segundoApellidoPrestador: DEFAULT_XX,
-    tipoPersonal: 2,
+    curpPrestador,
+    nombrePrestador,
+    primerApellidoPrestador,
+    segundoApellidoPrestador,
+    tipoPersonal,
     programaSMyMG: DEFAULT_PROGRAMA_SMYMG,
     curpPaciente,
-    nombre: (trabajador?.nombre as string) || DEFAULT_XX,
-    primerApellido: (trabajador?.primerApellido as string) || DEFAULT_XX,
-    segundoApellido: (trabajador?.segundoApellido as string) || DEFAULT_XX,
+    nombre: normalizeNameForGiis(trabajador?.nombre as string) || DEFAULT_XX,
+    primerApellido:
+      normalizeNameForGiis(trabajador?.primerApellido as string) || DEFAULT_XX,
+    segundoApellido:
+      normalizeNameForGiis(trabajador?.segundoApellido as string) || DEFAULT_XX,
     fechaNacimiento: toDDMMAAAA(trabajador?.fechaNacimiento) || '01/01/1900',
-    paisNacPaciente: DEFAULT_PAIS_MEXICO,
-    entidadNacimiento: (trabajador?.entidadNacimiento as string) || '99',
+    paisNacPaciente,
+    entidadNacimiento:
+      paisNacPaciente !== DEFAULT_PAIS_MEXICO
+        ? '88'
+        : (trabajador?.entidadNacimiento as string) || '99',
     sexoCURP,
     sexoBiologico,
     seAutodenominaAfromexicano: -1,
     seConsideraIndigena: -1,
     migrante: -1,
     paisProcedencia: -1,
-    genero: 0,
-    derechohabiencia: '1',
+    genero: genero ?? 0,
+    derechohabiencia: '99',
     fechaConsulta: toDDMMAAAA(consulta.fechaNotaMedica) || '',
-    servicioAtencion: 1,
+    servicioAtencion: 4, // 4 = Consulta Externa General
     peso: 999,
     talla: 999,
     circunferenciaCintura: 0,
@@ -127,16 +184,26 @@ export function mapNotaMedicaToCexRow(
     resultadoObtenidoaTravesde: -1,
     embarazadaSinDiabetes: 0,
     sintomaticoRespiratorioTb: -1,
-    primeraVezAnio: 0,
+    primeraVezAnio: consulta.primeraVezAnio ?? 0,
     primeraVezUneme: -1,
     relacionTemporal: consulta.relacionTemporal ?? 0,
     codigoCIEDiagnostico1: codigo1 || 'R69X',
     confirmacionDiagnostica1: consulta.confirmacionDiagnostica ? 1 : 0,
-    primeraVezDiagnostico2: consulta.primeraVezDiagnostico2 ? 1 : 0,
+    primeraVezDiagnostico2:
+      consulta.primeraVezDiagnostico2 === 1
+        ? 1
+        : consulta.primeraVezDiagnostico2 === 0
+          ? 0
+          : -1,
     codigoCIEDiagnostico2: codigo2,
-    confirmacionDiagnostica2: -1,
-    primeraVezDiagnostico3: consulta.primeraVezDiagnostico2 === false ? 0 : -1,
-    codigoCIEDiagnostico3: codigo3,
+    confirmacionDiagnostica2:
+      consulta.confirmacionDiagnostica2 === true
+        ? 1
+        : consulta.confirmacionDiagnostica2 === false
+          ? 0
+          : -1,
+    primeraVezDiagnostico3: -1,
+    codigoCIEDiagnostico3: '',
     confirmacionDiagnostica3: -1,
     intervencionesSMyA: -1,
     atencionPregestacionalRT: -1,

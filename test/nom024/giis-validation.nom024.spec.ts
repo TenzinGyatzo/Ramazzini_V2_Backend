@@ -12,7 +12,7 @@ import type { ValidationError } from '../../src/modules/giis-export/validation/v
 
 describe('NOM-024 GIIS Validation (Phase 2A)', () => {
   describe('schema-based-validator', () => {
-    const schema = loadGiisSchema('CDT');
+    const schema = loadGiisSchema('CEX');
 
     it('should report blocker when required field is empty', async () => {
       const row: Record<string, string | number> = {
@@ -34,17 +34,21 @@ describe('NOM-024 GIIS Validation (Phase 2A)', () => {
         sexoCURP: 2,
         sexoBiologico: 2,
       };
-      const errors = await validateRowAgainstSchema('CDT', schema, row, 0);
-      const cluesError = errors.find((e) => e.field === 'clues' && e.severity === 'blocker');
+      const errors = await validateRowAgainstSchema('CEX', schema, row, 0);
+      const cluesError = errors.find(
+        (e) => e.field === 'clues' && e.severity === 'blocker',
+      );
       expect(cluesError).toBeDefined();
       expect(cluesError?.cause).toContain('obligatorio');
     });
 
     it('should return sync errors only for required and maxLength', () => {
       const row: Record<string, string | number> = { clues: '' };
-      const errors = validateRowSync('CDT', schema, row, 0);
+      const errors = validateRowSync('CEX', schema, row, 0);
       expect(Array.isArray(errors)).toBe(true);
-      expect(errors.some((e) => e.field === 'clues' && e.severity === 'blocker')).toBe(true);
+      expect(
+        errors.some((e) => e.field === 'clues' && e.severity === 'blocker'),
+      ).toBe(true);
     });
 
     it('should classify CURP format error as blocker', async () => {
@@ -67,9 +71,11 @@ describe('NOM-024 GIIS Validation (Phase 2A)', () => {
         sexoCURP: 2,
         sexoBiologico: 2,
       };
-      const errors = await validateRowAgainstSchema('CDT', schema, row, 0);
+      const errors = await validateRowAgainstSchema('CEX', schema, row, 0);
       const curpError = errors.find(
-        (e) => (e.field === 'curpPrestador' || e.field === 'curpPaciente') && e.severity === 'blocker',
+        (e) =>
+          (e.field === 'curpPrestador' || e.field === 'curpPaciente') &&
+          e.severity === 'blocker',
       );
       expect(curpError).toBeDefined();
     });

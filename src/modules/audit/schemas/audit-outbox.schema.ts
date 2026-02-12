@@ -14,7 +14,11 @@ export class AuditOutbox extends Document {
   @Prop({ type: String, default: null })
   actorId: string | null;
 
-  @Prop({ type: { username: String, email: String, role: String }, required: false, default: null })
+  @Prop({
+    type: { username: String, email: String, role: String },
+    required: false,
+    default: null,
+  })
   actorSnapshot: { username?: string; email?: string; role?: string } | null;
 
   @Prop({ required: true })

@@ -11,6 +11,7 @@ import {
   BadRequestException,
   NotFoundException,
   Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { MedicosFirmantesService } from './medicos-firmantes.service';
@@ -39,23 +40,19 @@ export class MedicosFirmantesController {
   @UseInterceptors(
     FileInterceptor('firma', {
       storage: diskStorage({
-        destination: path.resolve(
-          __dirname,
-          `../../../../${process.env.SIGNATORIES_UPLOADS_DIR}`,
+        destination: path.join(
+          process.cwd(),
+          process.env.SIGNATORIES_UPLOADS_DIR || 'assets/signatories',
         ),
         filename: (req, file, callback) => {
-          // Genera un nombre de archivo único basado en el nombre del médico firmante
           const sanitizedDoctorName = req.body.nombre
-            .replace(/\s+/g, '-') // Reemplaza espacios por guiones
-            .replace(/[^a-zA-Z0-9\-]/g, '') // Elimina caracteres especiales
-            .toLowerCase(); // Convierte a minúsculas
-
-          // Forma el nombre del archivo dependiendo del campo enviado
+            .replace(/\s+/g, '-')
+            .replace(/[^a-zA-Z0-9\-]/g, '')
+            .toLowerCase();
           let uniqueFilename = `${sanitizedDoctorName}-firma${path.extname(file.originalname)}`;
           if (file.fieldname === 'firmaConAntefirma') {
             uniqueFilename = `${sanitizedDoctorName}-firma-con-antefirma${path.extname(file.originalname)}`;
           }
-
           callback(null, uniqueFilename);
         },
       }),
@@ -93,10 +90,18 @@ export class MedicosFirmantesController {
         eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
       });
       return { message: 'Creado exitosamente', data: medico };
-    } catch (error) {
-      throw new BadRequestException(
-        'Error al crear al registrar datos del médico firmante',
-      );
+    } catch (error: any) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof UnauthorizedException
+      ) {
+        throw error;
+      }
+      const message =
+        error?.response?.message ??
+        error?.message ??
+        'Error al registrar datos del médico firmante';
+      throw new BadRequestException(message);
     }
   }
 
@@ -150,23 +155,19 @@ export class MedicosFirmantesController {
   @UseInterceptors(
     FileInterceptor('firma', {
       storage: diskStorage({
-        destination: path.resolve(
-          __dirname,
-          `../../../../${process.env.SIGNATORIES_UPLOADS_DIR}`,
+        destination: path.join(
+          process.cwd(),
+          process.env.SIGNATORIES_UPLOADS_DIR || 'assets/signatories',
         ),
         filename: (req, file, callback) => {
-          // Genera un nombre de archivo único basado en el nombre del médico firmante
           const sanitizedDoctorName = req.body.nombre
-            .replace(/\s+/g, '-') // Reemplaza espacios por guiones
-            .replace(/[^a-zA-Z0-9\-]/g, '') // Elimina caracteres especiales
-            .toLowerCase(); // Convierte a minúsculas
-
-          // Forma el nombre del archivo dependiendo del campo enviado
+            .replace(/\s+/g, '-')
+            .replace(/[^a-zA-Z0-9\-]/g, '')
+            .toLowerCase();
           let uniqueFilename = `${sanitizedDoctorName}-firma${path.extname(file.originalname)}`;
           if (file.fieldname === 'firmaConAntefirma') {
             uniqueFilename = `${sanitizedDoctorName}-firma-con-antefirma${path.extname(file.originalname)}`;
           }
-
           callback(null, uniqueFilename);
         },
       }),

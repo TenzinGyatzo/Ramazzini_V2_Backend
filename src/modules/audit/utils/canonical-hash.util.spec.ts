@@ -1,7 +1,4 @@
-import {
-  computeCanonicalHash,
-  toCanonicalJson,
-} from './canonical-hash.util';
+import { computeCanonicalHash, toCanonicalJson } from './canonical-hash.util';
 import type { AuditEventCanonicalPayload } from '../interfaces/audit-event-canonical.interface';
 
 describe('canonical-hash.util', () => {

@@ -6,7 +6,10 @@
 
 import { GiisSchema, GiisSchemaField } from '../schema-loader';
 import { ValidationError, ValidationSeverity } from './validation.types';
-import { validateCURPFormat, isGenericCURP } from '../../../utils/curp-validator.util';
+import {
+  validateCURPFormat,
+  isGenericCURP,
+} from '../../../utils/curp-validator.util';
 
 const GENERIC_CURP = 'XXXX999999XXXXXX99';
 
@@ -19,13 +22,19 @@ export interface CatalogLookup {
   validateAfiliacion?(code: string): Promise<boolean>;
 }
 
-function getStr(row: Record<string, string | number>, fieldName: string): string {
+function getStr(
+  row: Record<string, string | number>,
+  fieldName: string,
+): string {
   const v = row[fieldName];
   if (v === undefined || v === null) return '';
   return String(v).trim();
 }
 
-function getNum(row: Record<string, string | number>, fieldName: string): number | null {
+function getNum(
+  row: Record<string, string | number>,
+  fieldName: string,
+): number | null {
   const v = row[fieldName];
   if (v === undefined || v === null) return null;
   const n = typeof v === 'number' ? v : parseInt(String(v).trim(), 10);
@@ -47,7 +56,9 @@ function hasConsecutiveSpecial(s: string): boolean {
 /** dd/mm/aaaa, 8 digits + 2 slashes */
 const DATE_REGEX = /^(\d{2})\/(\d{2})\/(\d{4})$/;
 
-function parseDateDDMMYYYY(value: string): { d: number; m: number; y: number } | null {
+function parseDateDDMMYYYY(
+  value: string,
+): { d: number; m: number; y: number } | null {
   const m = value.match(DATE_REGEX);
   if (!m) return null;
   const d = parseInt(m[1], 10);
@@ -76,15 +87,19 @@ export async function validateRowAgainstSchema(
     const raw = getStr(row, field.name);
     const isEmpty = raw === '';
 
-    // Required
+    // Required (con excepción GIIS: codigoCIEDiagnostico3 en CEX puede quedar vacío según circunstancia)
     if (field.requiredColumn && isEmpty) {
-      errors.push({
-        guide,
-        rowIndex,
-        field: field.name,
-        cause: 'Campo obligatorio vacío',
-        severity: 'blocker',
-      });
+      const allowEmptyCie3 =
+        guide === 'CEX' && field.name === 'codigoCIEDiagnostico3';
+      if (!allowEmptyCie3) {
+        errors.push({
+          guide,
+          rowIndex,
+          field: field.name,
+          cause: 'Campo obligatorio vacío',
+          severity: 'blocker',
+        });
+      }
       continue;
     }
 
@@ -185,7 +200,9 @@ async function validateFieldByRule(
     'segundoApellidoPrestador',
   ];
   if (nameFields.includes(name)) {
-    const curpKey = name.includes('Prestador') ? 'curpPrestador' : 'curpPaciente';
+    const curpKey = name.includes('Prestador')
+      ? 'curpPrestador'
+      : 'curpPaciente';
     const curpVal = getStr(row, curpKey);
     if (curpVal && isGenericCURP(curpVal)) return errors;
     if (raw !== 'XX' && raw.length < 2) {
@@ -202,7 +219,7 @@ async function validateFieldByRule(
         guide,
         rowIndex,
         field: name,
-        cause: 'Solo caracteres A-Z, Ñ y especiales permitidos (- , . / \' ¨)',
+        cause: "Solo caracteres A-Z, Ñ y especiales permitidos (- , . / ' ¨)",
         severity: 'blocker',
       });
     }
@@ -219,7 +236,13 @@ async function validateFieldByRule(
   }
 
   // fechaNacimiento: dd/mm/aaaa
-  if (name === 'fechaNacimiento' || name === 'fechaConsulta' || name === 'fechaNotaMedica' || name === 'fechaAtencion' || name === 'fechaDeteccion') {
+  if (
+    name === 'fechaNacimiento' ||
+    name === 'fechaConsulta' ||
+    name === 'fechaNotaMedica' ||
+    name === 'fechaAtencion' ||
+    name === 'fechaDeteccion'
+  ) {
     if (raw.length !== 10 || !DATE_REGEX.test(raw)) {
       errors.push({
         guide,
@@ -244,7 +267,11 @@ async function validateFieldByRule(
   }
 
   // PAIS (numeric catalog)
-  if (name === 'paisNacimiento' || name === 'paisNacPaciente' || name === 'paisProcedencia') {
+  if (
+    name === 'paisNacimiento' ||
+    name === 'paisNacPaciente' ||
+    name === 'paisProcedencia'
+  ) {
     if (catalogLookup?.validatePais) {
       const code = String(getNum(row, name) ?? raw).trim();
       if (code !== '' && code !== '-1') {
@@ -263,9 +290,24 @@ async function validateFieldByRule(
     return errors;
   }
 
-  // ENTIDAD FEDERATIVA (99, 00, 88 allowed besides catalog)
+  // ENTIDAD FEDERATIVA: si paisNacPaciente !== 142 (extranjero) debe ser 88 (NO APLICA)
   if (name === 'entidadNacimiento') {
     const code = getStr(row, name);
+    const paisNac = getNum(row, 'paisNacPaciente');
+    const esExtranjero = paisNac !== null && paisNac !== 142;
+    if (esExtranjero) {
+      if (code !== '88') {
+        errors.push({
+          guide,
+          rowIndex,
+          field: name,
+          cause:
+            'Para paciente extranjero (paisNacPaciente ≠ 142) debe ser 88 (NO APLICA)',
+          severity: 'blocker',
+        });
+      }
+      return errors;
+    }
     if (['99', '00', '88'].includes(code)) return errors;
     if (catalogLookup?.validateEntidadFederativa) {
       const valid = await catalogLookup.validateEntidadFederativa(code);

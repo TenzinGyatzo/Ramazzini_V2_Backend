@@ -26,7 +26,10 @@ function calcularEdadDesdeFecha(fechaNacimiento: Date): number {
   const hoy = new Date();
   let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
   const mesDiff = hoy.getMonth() - fechaNacimiento.getMonth();
-  if (mesDiff < 0 || (mesDiff === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
+  if (
+    mesDiff < 0 ||
+    (mesDiff === 0 && hoy.getDate() < fechaNacimiento.getDate())
+  ) {
     edad--;
   }
   return edad;
@@ -102,4 +105,3 @@ export function validateFechaDocumento(
     }
   }
 }
-

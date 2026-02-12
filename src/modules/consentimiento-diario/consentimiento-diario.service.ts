@@ -94,9 +94,8 @@ export class ConsentimientoDiarioService {
     }
 
     // 3. Obtener proveedorSaludId desde trabajador
-    const proveedorSaludId = await this.getProveedorSaludIdFromTrabajador(
-      trabajadorId,
-    );
+    const proveedorSaludId =
+      await this.getProveedorSaludIdFromTrabajador(trabajadorId);
     if (!proveedorSaludId) {
       throw new ForbiddenException(
         'No se pudo determinar el proveedor de salud del trabajador',
@@ -104,9 +103,8 @@ export class ConsentimientoDiarioService {
     }
 
     // 4. Obtener policy
-    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-      proveedorSaludId,
-    );
+    const policy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
 
     // 5. Gate SIRES-only: Si dailyConsentEnabled es false → throw CONSENT_NOT_ENABLED
     if (!policy.features.dailyConsentEnabled) {
@@ -128,10 +126,9 @@ export class ConsentimientoDiarioService {
       finalDateKey = dateKey;
     } else {
       // Obtener proveedor para calcular dateKey con timezone
-      const proveedor = await this.proveedoresSaludService.findOne(
-        proveedorSaludId,
-      );
-      finalDateKey = calculateDateKey(proveedor as any || null);
+      const proveedor =
+        await this.proveedoresSaludService.findOne(proveedorSaludId);
+      finalDateKey = calculateDateKey((proveedor as any) || null);
     }
 
     // 7. Buscar consentimiento existente
@@ -194,9 +191,8 @@ export class ConsentimientoDiarioService {
     }
 
     // 4. Obtener policy y validar dailyConsentEnabled
-    const policy = await this.regulatoryPolicyService.getRegulatoryPolicy(
-      proveedorSaludId,
-    );
+    const policy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
     if (!policy.features.dailyConsentEnabled) {
       throw createRegulatoryError({
         errorCode: RegulatoryErrorCode.CONSENT_NOT_ENABLED,
@@ -216,10 +212,9 @@ export class ConsentimientoDiarioService {
       finalDateKey = dto.dateKey;
     } else {
       // Calcular "hoy" usando calculateDateKey
-      const proveedor = await this.proveedoresSaludService.findOne(
-        proveedorSaludId,
-      );
-      finalDateKey = calculateDateKey(proveedor as any || null);
+      const proveedor =
+        await this.proveedoresSaludService.findOne(proveedorSaludId);
+      finalDateKey = calculateDateKey((proveedor as any) || null);
     }
 
     // 6. Validar unicidad: Buscar consentimiento existente

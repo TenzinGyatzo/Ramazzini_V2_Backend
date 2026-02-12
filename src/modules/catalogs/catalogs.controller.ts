@@ -29,8 +29,10 @@ export class CatalogsController {
 
     // If sexo or edad are provided, use filtered search
     if (sexo !== undefined || edad !== undefined) {
-      const sexoNum = sexo !== undefined ? parseInt(sexo.toString()) : undefined;
-      const edadNum = edad !== undefined ? parseInt(edad.toString()) : undefined;
+      const sexoNum =
+        sexo !== undefined ? parseInt(sexo.toString()) : undefined;
+      const edadNum =
+        edad !== undefined ? parseInt(edad.toString()) : undefined;
       return this.catalogsService.searchCIE10WithFilters(
         query.trim(),
         searchLimit,

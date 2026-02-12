@@ -125,10 +125,13 @@ export class ProveedoresSaludController {
     }
 
     // Obtener política regulatoria basada en régimen
-    const regulatoryPolicy = await this.regulatoryPolicyService.getRegulatoryPolicy(id);
+    const regulatoryPolicy =
+      await this.regulatoryPolicyService.getRegulatoryPolicy(id);
 
     // Convertir Document de Mongoose a objeto plano si es necesario
-    const proveedorSaludObj = proveedorSalud.toObject ? proveedorSalud.toObject() : proveedorSalud;
+    const proveedorSaludObj = proveedorSalud.toObject
+      ? proveedorSalud.toObject()
+      : proveedorSalud;
 
     // Incluir policy en la respuesta
     return {
@@ -439,12 +442,11 @@ export class ProveedoresSaludController {
     const userId = getUserIdFromRequest(req);
 
     // Cambiar régimen regulatorio
-    const result =
-      await this.proveedoresSaludService.changeRegimenRegulatorio(
-        id,
-        userId,
-        dto,
-      );
+    const result = await this.proveedoresSaludService.changeRegimenRegulatorio(
+      id,
+      userId,
+      dto,
+    );
 
     // Convertir Document de Mongoose a objeto plano si es necesario
     const proveedorSaludObj = result.proveedorSalud.toObject

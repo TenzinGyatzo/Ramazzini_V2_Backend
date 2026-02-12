@@ -1,9 +1,9 @@
 /**
  * Regulatory Error Codes
- * 
+ *
  * Códigos estándar para errores relacionados con políticas regulatorias.
  * Estos códigos permiten al frontend mapear errores a mensajes UX apropiados según el régimen.
- * 
+ *
  * @see docs/regulatory-policy.md para más información sobre el sistema regulatorio
  */
 

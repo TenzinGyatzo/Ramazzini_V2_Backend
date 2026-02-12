@@ -51,10 +51,6 @@ import { Receta, RecetaSchema } from './schemas/receta.schema';
 import { Lesion, LesionSchema } from './schemas/lesion.schema';
 import { Deteccion, DeteccionSchema } from './schemas/deteccion.schema';
 import {
-  DocumentVersion,
-  DocumentVersionSchema,
-} from './schemas/document-version.schema';
-import {
   Trabajador,
   TrabajadorSchema,
 } from '../trabajadores/schemas/trabajador.schema';
@@ -81,7 +77,12 @@ import { UsersModule } from '../users/users.module';
 
 @Module({
   controllers: [ExpedientesController],
-  providers: [ExpedientesService, PdfCleanerService, Cie10CatalogLookupService, DailyConsentGuard],
+  providers: [
+    ExpedientesService,
+    PdfCleanerService,
+    Cie10CatalogLookupService,
+    DailyConsentGuard,
+  ],
   imports: [
     MongooseModule.forFeature([
       { name: Antidoping.name, schema: AntidopingSchema },
@@ -106,7 +107,6 @@ import { UsersModule } from '../users/users.module';
       { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
       { name: Empresa.name, schema: EmpresaSchema },
       { name: ConsentimientoDiario.name, schema: ConsentimientoDiarioSchema },
-      { name: DocumentVersion.name, schema: DocumentVersionSchema },
     ]),
     forwardRef(() => InformesModule),
     FilesModule,

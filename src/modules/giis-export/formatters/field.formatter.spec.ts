@@ -7,6 +7,7 @@ import {
   formatCLUES,
   formatCIE10,
   formatResultEnum,
+  normalizeNameForGiis,
 } from './field.formatter';
 
 describe('Field Formatter', () => {
@@ -223,6 +224,41 @@ describe('Field Formatter', () => {
 
     it('should return empty string for undefined', () => {
       expect(formatResultEnum(undefined)).toBe('');
+    });
+  });
+
+  describe('normalizeNameForGiis', () => {
+    it('should remove accents and uppercase', () => {
+      expect(normalizeNameForGiis('María')).toBe('MARIA');
+      expect(normalizeNameForGiis('José')).toBe('JOSE');
+      expect(normalizeNameForGiis('Ángel')).toBe('ANGEL');
+    });
+
+    it('should preserve Ñ as Ñ', () => {
+      expect(normalizeNameForGiis('Muñoz')).toBe('MUÑOZ');
+      expect(normalizeNameForGiis('Niño')).toBe('NIÑO');
+    });
+
+    it('should allow permitted special chars and collapse consecutive same special', () => {
+      expect(normalizeNameForGiis("O'Brien")).toBe("O'BRIEN");
+      expect(normalizeNameForGiis('Del Río')).toBe('DEL RIO');
+      expect(normalizeNameForGiis('Pérez--Gómez')).toBe('PEREZ-GOMEZ');
+    });
+
+    it('should strip invalid characters', () => {
+      expect(normalizeNameForGiis('María@')).toBe('MARIA');
+      expect(normalizeNameForGiis('Test#1')).toBe('TEST');
+    });
+
+    it('should return empty string for null/undefined/empty', () => {
+      expect(normalizeNameForGiis(null)).toBe('');
+      expect(normalizeNameForGiis(undefined)).toBe('');
+      expect(normalizeNameForGiis('')).toBe('');
+      expect(normalizeNameForGiis('   ')).toBe('');
+    });
+
+    it('should trim and collapse multiple spaces', () => {
+      expect(normalizeNameForGiis('  Juan   Carlos  ')).toBe('JUAN CARLOS');
     });
   });
 });

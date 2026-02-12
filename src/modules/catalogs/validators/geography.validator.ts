@@ -29,11 +29,11 @@ export interface GeographyValidationResult {
 
 /**
  * Geography Validator Service
- * 
+ *
  * Validates hierarchical geographic consistency:
  * - Entidad → Municipio → Localidad
  * Uses INEGI catalogs available in the server.
- * 
+ *
  * This is the "last guardian" for:
  * - Direct payloads (Postman, scripts)
  * - Future imports
@@ -86,7 +86,7 @@ export class GeographyValidator {
    */
   async validateEntidad(entidadClave: string): Promise<boolean> {
     if (!entidadClave) return false;
-    
+
     const normalized = this.normalizeEntidad(entidadClave);
     if (!normalized) return false;
 
@@ -189,7 +189,7 @@ export class GeographyValidator {
 
   /**
    * Validate complete geography hierarchy
-   * 
+   *
    * Rules:
    * 1. If entity is provided, it must exist in catalog
    * 2. If municipality is provided:
@@ -277,4 +277,3 @@ export class GeographyValidator {
     };
   }
 }
-

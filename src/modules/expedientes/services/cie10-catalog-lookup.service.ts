@@ -16,7 +16,7 @@ export interface DiagnosisRule {
 
 /**
  * CIE-10 Catalog Lookup Service
- * 
+ *
  * Provides lookup functionality for CIE-10 diagnosis rules from the catalog
  * with fallback strategy: exact match → 3-char prefix → null
  */
@@ -28,16 +28,18 @@ export class Cie10CatalogLookupService {
 
   /**
    * Finds a diagnosis rule for a given CIE-10 code
-   * 
+   *
    * Strategy:
    * 1. Try exact match by CATALOG_KEY
    * 2. If not found, try 3-character prefix
    * 3. If still not found, return null (no blocking, but log warning)
-   * 
+   *
    * @param code - CIE-10 code (can be in format "C530" or "C530 - DESCRIPTION")
    * @returns Diagnosis rule or null if not found
    */
-  async findDiagnosisRule(code: string | null | undefined): Promise<DiagnosisRule | null> {
+  async findDiagnosisRule(
+    code: string | null | undefined,
+  ): Promise<DiagnosisRule | null> {
     if (!code) {
       return null;
     }
@@ -107,11 +109,15 @@ export class Cie10CatalogLookupService {
     }
 
     // Fallback to parsed number (format as "XXXA" assuming years)
-    if (parsedValue !== null && parsedValue !== undefined && !isNaN(parsedValue) && parsedValue >= 0) {
+    if (
+      parsedValue !== null &&
+      parsedValue !== undefined &&
+      !isNaN(parsedValue) &&
+      parsedValue >= 0
+    ) {
       return `${String(Math.floor(parsedValue)).padStart(3, '0')}A`;
     }
 
     return null;
   }
 }
-

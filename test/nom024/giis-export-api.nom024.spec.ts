@@ -17,25 +17,46 @@ import {
 import { GiisExportController } from '../../src/modules/giis-export/giis-export.controller';
 import { GiisBatchService } from '../../src/modules/giis-export/giis-batch.service';
 import { GiisSerializerService } from '../../src/modules/giis-export/giis-serializer.service';
-import { GiisBatch, GiisBatchSchema } from '../../src/modules/giis-export/schemas/giis-batch.schema';
-import { Deteccion, DeteccionSchema } from '../../src/modules/expedientes/schemas/deteccion.schema';
-import { NotaMedica, NotaMedicaSchema } from '../../src/modules/expedientes/schemas/nota-medica.schema';
-import { Lesion, LesionSchema } from '../../src/modules/expedientes/schemas/lesion.schema';
-import { Trabajador, TrabajadorSchema } from '../../src/modules/trabajadores/schemas/trabajador.schema';
+import {
+  GiisBatch,
+  GiisBatchSchema,
+} from '../../src/modules/giis-export/schemas/giis-batch.schema';
+import {
+  NotaMedica,
+  NotaMedicaSchema,
+} from '../../src/modules/expedientes/schemas/nota-medica.schema';
+import {
+  Lesion,
+  LesionSchema,
+} from '../../src/modules/expedientes/schemas/lesion.schema';
+import {
+  Trabajador,
+  TrabajadorSchema,
+} from '../../src/modules/trabajadores/schemas/trabajador.schema';
+import {
+  CentroTrabajo,
+  CentroTrabajoSchema,
+} from '../../src/modules/centros-trabajo/schemas/centro-trabajo.schema';
+import {
+  Empresa,
+  EmpresaSchema,
+} from '../../src/modules/empresas/schemas/empresa.schema';
 import { RegulatoryPolicyService } from '../../src/utils/regulatory-policy.service';
+import { AuditService } from '../../src/modules/audit/audit.service';
 import { ProveedoresSaludService } from '../../src/modules/proveedores-salud/proveedores-salud.service';
 import { UsersService } from '../../src/modules/users/users.service';
 import { GiisValidationService } from '../../src/modules/giis-export/validation/giis-validation.service';
 import { GiisCryptoService } from '../../src/modules/giis-export/crypto/giis-crypto.service';
 import { GiisExportAuditService } from '../../src/modules/giis-export/giis-export-audit.service';
-import { validDeteccionAdult } from '../fixtures/deteccion.fixtures';
 
 const mockGiisValidationService = {
-  validateAndFilterRows: jest.fn().mockImplementation(async (_g: string, rows: any[]) => ({
-    validRows: rows,
-    excludedReport: { entries: [], totalExcluded: 0 },
-    warnings: [],
-  })),
+  validateAndFilterRows: jest
+    .fn()
+    .mockImplementation(async (_g: string, rows: any[]) => ({
+      validRows: rows,
+      excludedReport: { entries: [], totalExcluded: 0 },
+      warnings: [],
+    })),
   preValidate: jest.fn().mockResolvedValue({ errors: [], totalRows: 0 }),
 };
 
@@ -45,7 +66,7 @@ describe('NOM-024 GIIS Export API (Phase 1E)', () => {
   let usersService: UsersService;
   let proveedorSaludModel: any;
   let userModel: any;
-  let deteccionModel: any;
+  let testingModule: TestingModule;
   let mongoUri: string;
   const proveedorId = new Types.ObjectId().toString();
   const userId = new Types.ObjectId().toString();
@@ -55,22 +76,27 @@ describe('NOM-024 GIIS Export API (Phase 1E)', () => {
     process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
 
     const policySires = {
-      getRegulatoryPolicy: jest.fn().mockResolvedValue({ regime: 'SIRES_NOM024' }),
+      getRegulatoryPolicy: jest
+        .fn()
+        .mockResolvedValue({ regime: 'SIRES_NOM024' }),
     };
     const policySinRegimen = {
-      getRegulatoryPolicy: jest.fn().mockResolvedValue({ regime: 'SIN_REGIMEN' }),
+      getRegulatoryPolicy: jest
+        .fn()
+        .mockResolvedValue({ regime: 'SIN_REGIMEN' }),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    testingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         MongooseModule.forRoot(mongoUri),
         MongooseModule.forFeature([
           { name: GiisBatch.name, schema: GiisBatchSchema },
-          { name: Deteccion.name, schema: DeteccionSchema },
           { name: NotaMedica.name, schema: NotaMedicaSchema },
           { name: Lesion.name, schema: LesionSchema },
           { name: Trabajador.name, schema: TrabajadorSchema },
+          { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
+          { name: Empresa.name, schema: EmpresaSchema },
         ]),
       ],
       controllers: [GiisExportController],
@@ -78,28 +104,39 @@ describe('NOM-024 GIIS Export API (Phase 1E)', () => {
         GiisBatchService,
         GiisSerializerService,
         { provide: RegulatoryPolicyService, useValue: policySires },
-        { provide: ProveedoresSaludService, useValue: { findOne: jest.fn().mockResolvedValue({ clues: 'DFSSA001234' }) } },
+        {
+          provide: ProveedoresSaludService,
+          useValue: {
+            findOne: jest.fn().mockResolvedValue({ clues: 'DFSSA001234' }),
+          },
+        },
         { provide: GiisValidationService, useValue: mockGiisValidationService },
         { provide: GiisCryptoService, useValue: {} },
-        { provide: GiisExportAuditService, useValue: { recordGenerationAudit: jest.fn().mockResolvedValue({}) } },
+        {
+          provide: GiisExportAuditService,
+          useValue: { recordGenerationAudit: jest.fn().mockResolvedValue({}) },
+        },
+        {
+          provide: AuditService,
+          useValue: { record: jest.fn().mockResolvedValue({}) },
+        },
         {
           provide: UsersService,
           useValue: {
             findById: jest.fn().mockImplementation((id: string) => {
-              if (id === userId) return Promise.resolve({ idProveedorSalud: proveedorId });
+              if (id === userId)
+                return Promise.resolve({ idProveedorSalud: proveedorId });
               return Promise.resolve(null);
             }),
           },
         },
       ],
-    })
-      .compile();
+    }).compile();
 
-    app = module.createNestApplication();
+    app = testingModule.createNestApplication();
     await app.init();
 
-    giisBatchService = module.get<GiisBatchService>(GiisBatchService);
-    deteccionModel = module.get('DeteccionModel');
+    giisBatchService = testingModule.get<GiisBatchService>(GiisBatchService);
   }, 30000);
 
   afterAll(async () => {
@@ -111,9 +148,9 @@ describe('NOM-024 GIIS Export API (Phase 1E)', () => {
     return jwt.sign({ id: uid }, process.env.JWT_SECRET!);
   }
 
-  it('POST /giis-export/batches with SIRES → 201 and batchId', async () => {
+  it('POST /api/giis-export/batches with SIRES → 201 and batchId', async () => {
     const res = await request(app.getHttpServer())
-      .post('/giis-export/batches')
+      .post('/api/giis-export/batches')
       .set('Authorization', `Bearer ${tokenForUser(userId)}`)
       .send({ yearMonth: '2025-01' })
       .expect(201);
@@ -128,38 +165,31 @@ describe('NOM-024 GIIS Export API (Phase 1E)', () => {
       proveedorId,
       '2025-01',
     );
-    await deteccionModel.create({
-      ...validDeteccionAdult,
-      _id: new Types.ObjectId(),
-      fechaDeteccion: new Date('2025-01-15'),
-    });
-    await giisBatchService.generateBatchCdt(batch._id.toString());
+    await giisBatchService.generateBatchCex(batch._id.toString());
+    await giisBatchService.generateBatchLes(batch._id.toString());
 
     const res = await request(app.getHttpServer())
-      .get(`/giis-export/batches/${batch._id.toString()}`)
+      .get(`/api/giis-export/batches/${batch._id.toString()}`)
       .set('Authorization', `Bearer ${tokenForUser(userId)}`)
       .expect(200);
 
     expect(res.body.status).toBe('completed');
     expect(Array.isArray(res.body.artifacts)).toBe(true);
-    const cdt = res.body.artifacts.find((a: any) => a.guide === 'CDT');
-    expect(cdt).toBeDefined();
+    const cex = res.body.artifacts.find((a: any) => a.guide === 'CEX');
+    const les = res.body.artifacts.find((a: any) => a.guide === 'LES');
+    expect(cex).toBeDefined();
+    expect(les).toBeDefined();
   });
 
-  it('GET /giis-export/batches/:batchId/download/CDT → 200 and header line', async () => {
+  it('GET /giis-export/batches/:batchId/download/CEX → 200 and header line', async () => {
     const batch = await giisBatchService.createBatchForExport(
       proveedorId,
       '2025-01',
     );
-    await deteccionModel.create({
-      ...validDeteccionAdult,
-      _id: new Types.ObjectId(),
-      fechaDeteccion: new Date('2025-01-15'),
-    });
-    await giisBatchService.generateBatchCdt(batch._id.toString());
+    await giisBatchService.generateBatchCex(batch._id.toString());
 
     const res = await request(app.getHttpServer())
-      .get(`/giis-export/batches/${batch._id.toString()}/download/CDT`)
+      .get(`/api/giis-export/batches/${batch._id.toString()}/download/CEX`)
       .set('Authorization', `Bearer ${tokenForUser(userId)}`)
       .expect(200);
 
@@ -181,9 +211,11 @@ describe('GIIS Export gate SIRES', () => {
         MongooseModule.forRoot(mongoUri),
         MongooseModule.forFeature([
           { name: GiisBatch.name, schema: GiisBatchSchema },
-          { name: Deteccion.name, schema: DeteccionSchema },
           { name: NotaMedica.name, schema: NotaMedicaSchema },
           { name: Lesion.name, schema: LesionSchema },
+          { name: Trabajador.name, schema: TrabajadorSchema },
+          { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
+          { name: Empresa.name, schema: EmpresaSchema },
         ]),
       ],
       providers: [
@@ -191,12 +223,23 @@ describe('GIIS Export gate SIRES', () => {
         GiisSerializerService,
         {
           provide: RegulatoryPolicyService,
-          useValue: { getRegulatoryPolicy: jest.fn().mockResolvedValue({ regime: 'SIN_REGIMEN' }) },
+          useValue: {
+            getRegulatoryPolicy: jest
+              .fn()
+              .mockResolvedValue({ regime: 'SIN_REGIMEN' }),
+          },
         },
         { provide: ProveedoresSaludService, useValue: { findOne: jest.fn() } },
         { provide: GiisValidationService, useValue: mockGiisValidationService },
         { provide: GiisCryptoService, useValue: {} },
-        { provide: GiisExportAuditService, useValue: { recordGenerationAudit: jest.fn().mockResolvedValue({}) } },
+        {
+          provide: GiisExportAuditService,
+          useValue: { recordGenerationAudit: jest.fn().mockResolvedValue({}) },
+        },
+        {
+          provide: AuditService,
+          useValue: { record: jest.fn().mockResolvedValue({}) },
+        },
       ],
     }).compile();
     service = module.get<GiisBatchService>(GiisBatchService);

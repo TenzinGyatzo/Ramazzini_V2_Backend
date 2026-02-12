@@ -8,7 +8,10 @@ import { Trabajador } from '../trabajadores/schemas/trabajador.schema';
 import { CentroTrabajo } from '../centros-trabajo/schemas/centro-trabajo.schema';
 import { Empresa } from '../empresas/schemas/empresa.schema';
 import { DocumentoEstado } from './enums/documento-estado.enum';
-import { RegulatoryPolicyService, RegulatoryPolicy } from '../../utils/regulatory-policy.service';
+import {
+  RegulatoryPolicyService,
+  RegulatoryPolicy,
+} from '../../utils/regulatory-policy.service';
 import { NOM024ComplianceUtil } from '../../utils/nom024-compliance.util';
 import { FilesService } from '../files/files.service';
 import { CatalogsService } from '../catalogs/catalogs.service';
@@ -271,10 +274,12 @@ describe('ExpedientesService - Regulatory Policy Enforcement', () => {
         _id: 'new-id',
         save: mockSave,
       });
-      mockNotaAclaratoriaModel.constructor = jest.fn().mockImplementation((dto) => ({
-        ...dto,
-        save: mockSave,
-      }));
+      mockNotaAclaratoriaModel.constructor = jest
+        .fn()
+        .mockImplementation((dto) => ({
+          ...dto,
+          save: mockSave,
+        }));
     });
 
     it('should allow nota aclaratoria creation for SIRES_NOM024 with FINALIZADO documento origen', async () => {
@@ -288,9 +293,9 @@ describe('ExpedientesService - Regulatory Policy Enforcement', () => {
       );
 
       expect(result).toBeDefined();
-      expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
-        proveedorSaludId,
-      );
+      expect(
+        mockRegulatoryPolicyService.getRegulatoryPolicy,
+      ).toHaveBeenCalledWith(proveedorSaludId);
     });
 
     it('should allow nota aclaratoria creation for SIRES_NOM024 with ANULADO documento origen', async () => {
@@ -323,9 +328,9 @@ describe('ExpedientesService - Regulatory Policy Enforcement', () => {
         service.createDocument('notaAclaratoria', createNotaAclaratoriaDto),
       ).rejects.toThrow(ForbiddenException);
 
-      expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
-        proveedorSaludId,
-      );
+      expect(
+        mockRegulatoryPolicyService.getRegulatoryPolicy,
+      ).toHaveBeenCalledWith(proveedorSaludId);
     });
 
     it('should throw BadRequestException when documento origen is not FINALIZADO or ANULADO', async () => {
@@ -371,9 +376,9 @@ describe('ExpedientesService - Regulatory Policy Enforcement', () => {
       });
 
       // Mock getProveedorSaludIdFromDocument
-      jest.spyOn(service as any, 'getProveedorSaludIdFromDocument').mockResolvedValue(
-        proveedorSaludId,
-      );
+      jest
+        .spyOn(service as any, 'getProveedorSaludIdFromDocument')
+        .mockResolvedValue(proveedorSaludId);
     });
 
     it('should throw ForbiddenException when updating FINALIZADO document for SIRES_NOM024', async () => {
@@ -398,9 +403,9 @@ describe('ExpedientesService - Regulatory Policy Enforcement', () => {
         service.updateOrCreateDocument('notaMedica', documentoId, updateDto),
       ).rejects.toThrow(ForbiddenException);
 
-      expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
-        proveedorSaludId,
-      );
+      expect(
+        mockRegulatoryPolicyService.getRegulatoryPolicy,
+      ).toHaveBeenCalledWith(proveedorSaludId);
     });
 
     it('should throw ForbiddenException when updating ANULADO document for SIRES_NOM024', async () => {
@@ -541,8 +546,10 @@ describe('ExpedientesService - Regulatory Policy Enforcement', () => {
       await expect(
         service.createDocument('notaMedica', createDto),
       ).rejects.toThrow();
-      
-      expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalled();
+
+      expect(
+        mockRegulatoryPolicyService.getRegulatoryPolicy,
+      ).toHaveBeenCalled();
     });
   });
 });

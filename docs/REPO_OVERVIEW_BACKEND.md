@@ -218,12 +218,12 @@ Los schemas incluyen índices para optimizar consultas frecuentes:
 **Ubicación:** `backend/catalogs/`
 
 El sistema incluye catálogos normalizados en formato CSV en `catalogs/normalized/`:
-- `diagnosticos.csv` - CIE-10
+- `diagnosticos_sis.csv` - CIE-10
 - `codigos_postales.csv` - Códigos postales
 - `enitades_federativas.csv` - Entidades federativas (INEGI)
 - `municipios.csv` - Municipios (INEGI)
 - `localidades.csv` - Localidades (INEGI)
-- `establecimientos_salud.csv` - CLUES
+- `establecimiento_de_salud_sis.csv` - CLUES
 - `cat_nacionalidades.csv` - Nacionalidades (RENAPO)
 - `cat_religiones.csv` - Religiones
 - `formacion_academica.csv` - Formación académica

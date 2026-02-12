@@ -11,6 +11,7 @@ import {
   BadRequestException,
   NotFoundException,
   Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { EnfermerasFirmantesService } from './enfermeras-firmantes.service';
@@ -93,10 +94,18 @@ export class EnfermerasFirmantesController {
         eventClass: AuditEventClass.CLASS_1_HARD_FAIL,
       });
       return { message: 'Creado exitosamente', data: enfermera };
-    } catch (error) {
-      throw new BadRequestException(
-        'Error al crear al registrar datos del enfermera firmante',
-      );
+    } catch (error: any) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof UnauthorizedException
+      ) {
+        throw error;
+      }
+      const message =
+        error?.response?.message ??
+        error?.message ??
+        'Error al registrar datos de la enfermera firmante';
+      throw new BadRequestException(message);
     }
   }
 

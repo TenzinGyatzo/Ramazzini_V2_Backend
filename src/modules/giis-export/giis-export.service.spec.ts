@@ -1,14 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { ForbiddenException } from '@nestjs/common';
+import { Model } from 'mongoose';
 import { GIISExportService } from './giis-export.service';
 import { Lesion } from '../expedientes/schemas/lesion.schema';
-import { Deteccion } from '../expedientes/schemas/deteccion.schema';
 import { Trabajador } from '../trabajadores/schemas/trabajador.schema';
 import { ProveedorSalud } from '../proveedores-salud/schemas/proveedor-salud.schema';
 import { CentroTrabajo } from '../centros-trabajo/schemas/centro-trabajo.schema';
 import { Empresa } from '../empresas/schemas/empresa.schema';
-import { RegulatoryPolicyService, RegulatoryPolicy } from '../../utils/regulatory-policy.service';
+import {
+  RegulatoryPolicyService,
+  RegulatoryPolicy,
+} from '../../utils/regulatory-policy.service';
 
 describe('GIISExportService - Regulatory Policy Enforcement', () => {
   let service: GIISExportService;
@@ -25,6 +28,7 @@ describe('GIISExportService - Regulatory Policy Enforcement', () => {
       giisExportEnabled: true,
       notaAclaratoriaEnabled: true,
       cluesFieldVisible: true,
+      dailyConsentEnabled: false,
     },
     validation: {
       curpFirmantes: 'required',
@@ -44,6 +48,7 @@ describe('GIISExportService - Regulatory Policy Enforcement', () => {
       giisExportEnabled: false,
       notaAclaratoriaEnabled: false,
       cluesFieldVisible: false,
+      dailyConsentEnabled: false,
     },
     validation: {
       curpFirmantes: 'optional',
@@ -74,10 +79,6 @@ describe('GIISExportService - Regulatory Policy Enforcement', () => {
         GIISExportService,
         {
           provide: getModelToken(Lesion.name),
-          useValue: createMockModel(),
-        },
-        {
-          provide: getModelToken(Deteccion.name),
           useValue: createMockModel(),
         },
         {
@@ -118,9 +119,9 @@ describe('GIISExportService - Regulatory Policy Enforcement', () => {
         service.exportLesionesGIIS({ proveedorSaludId }),
       ).rejects.toThrow(ForbiddenException);
 
-      expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
-        proveedorSaludId,
-      );
+      expect(
+        mockRegulatoryPolicyService.getRegulatoryPolicy,
+      ).toHaveBeenCalledWith(proveedorSaludId);
     });
 
     it('should allow export for SIRES_NOM024', async () => {
@@ -129,18 +130,18 @@ describe('GIISExportService - Regulatory Policy Enforcement', () => {
       );
 
       // Mock empty results to avoid data processing errors
-      const mockLesionModel = service['lesionModel'];
+      const mockLesionModel = service['lesionModel'] as jest.Mocked<Model<Lesion>>;
       mockLesionModel.find.mockReturnValue({
         lean: jest.fn().mockResolvedValue([]),
-      });
+      } as any);
 
       const result = await service.exportLesionesGIIS({ proveedorSaludId });
 
       expect(result).toBeDefined();
       expect(result.records).toEqual([]);
-      expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
-        proveedorSaludId,
-      );
+      expect(
+        mockRegulatoryPolicyService.getRegulatoryPolicy,
+      ).toHaveBeenCalledWith(proveedorSaludId);
     });
 
     it('should throw ForbiddenException when proveedorSaludId is not provided', async () => {
@@ -150,47 +151,4 @@ describe('GIISExportService - Regulatory Policy Enforcement', () => {
     });
   });
 
-  describe('exportDeteccionesGIIS - Regulatory Policy', () => {
-    const proveedorSaludId = '507f1f77bcf86cd799439014';
-
-    it('should throw ForbiddenException for SIN_REGIMEN', async () => {
-      mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
-        createSinRegimenPolicy(),
-      );
-
-      await expect(
-        service.exportDeteccionesGIIS({ proveedorSaludId }),
-      ).rejects.toThrow(ForbiddenException);
-
-      expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
-        proveedorSaludId,
-      );
-    });
-
-    it('should allow export for SIRES_NOM024', async () => {
-      mockRegulatoryPolicyService.getRegulatoryPolicy.mockResolvedValue(
-        createSiresPolicy(),
-      );
-
-      // Mock empty results to avoid data processing errors
-      const mockDeteccionModel = service['deteccionModel'];
-      mockDeteccionModel.find.mockReturnValue({
-        lean: jest.fn().mockResolvedValue([]),
-      });
-
-      const result = await service.exportDeteccionesGIIS({ proveedorSaludId });
-
-      expect(result).toBeDefined();
-      expect(result.records).toEqual([]);
-      expect(mockRegulatoryPolicyService.getRegulatoryPolicy).toHaveBeenCalledWith(
-        proveedorSaludId,
-      );
-    });
-
-    it('should throw ForbiddenException when proveedorSaludId is not provided', async () => {
-      await expect(service.exportDeteccionesGIIS({})).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-  });
 });

@@ -1,6 +1,6 @@
 /**
  * NOM-024 GIIS Serializer Tests (Phase 1 — 1B)
- * Schema-driven: header and column order from CDT.schema.json only.
+ * Schema-driven: header and column order from schema only.
  */
 
 import { loadGiisSchema } from '../../src/modules/giis-export/schema-loader';
@@ -14,8 +14,8 @@ describe('NOM-024 GIIS Serializer (Phase 1B)', () => {
   });
 
   describe('schema-driven serialize', () => {
-    it('should load CDT schema and serialize 0 rows to header line only', () => {
-      const schema = loadGiisSchema('CDT');
+    it('should load CEX schema and serialize 0 rows to header line only', () => {
+      const schema = loadGiisSchema('CEX');
       const out = serializer.serialize(schema, []);
       const lines = out.split('\n');
       expect(lines.length).toBe(1);
@@ -26,10 +26,14 @@ describe('NOM-024 GIIS Serializer (Phase 1B)', () => {
     });
 
     it('should serialize 1 row with same column count as schema', () => {
-      const schema = loadGiisSchema('CDT');
+      const schema = loadGiisSchema('CEX');
       const row: Record<string, string | number> = {};
       schema.fields.forEach((f) => {
-        row[f.name] = f.requiredColumn ? (f.type?.kind === 'numeric' ? 0 : 'XX') : '';
+        row[f.name] = f.requiredColumn
+          ? f.type?.kind === 'numeric'
+            ? 0
+            : 'XX'
+          : '';
       });
       const out = serializer.serialize(schema, [row]);
       const lines = out.split('\n');

@@ -13,41 +13,74 @@ import {
   startMongoMemoryServer,
   stopMongoMemoryServer,
 } from '../utils/mongodb-memory.util';
-import { GiisBatch, GiisBatchSchema } from '../../src/modules/giis-export/schemas/giis-batch.schema';
+import {
+  GiisBatch,
+  GiisBatchSchema,
+} from '../../src/modules/giis-export/schemas/giis-batch.schema';
 import { GiisBatchService } from '../../src/modules/giis-export/giis-batch.service';
 import { GiisSerializerService } from '../../src/modules/giis-export/giis-serializer.service';
-import { Deteccion, DeteccionSchema } from '../../src/modules/expedientes/schemas/deteccion.schema';
-import { NotaMedica, NotaMedicaSchema } from '../../src/modules/expedientes/schemas/nota-medica.schema';
-import { Lesion, LesionSchema } from '../../src/modules/expedientes/schemas/lesion.schema';
-import { Trabajador, TrabajadorSchema } from '../../src/modules/trabajadores/schemas/trabajador.schema';
+import {
+  Deteccion,
+  DeteccionSchema,
+} from '../../src/modules/expedientes/schemas/deteccion.schema';
+import {
+  NotaMedica,
+  NotaMedicaSchema,
+} from '../../src/modules/expedientes/schemas/nota-medica.schema';
+import { DocumentoEstado } from '../../src/modules/expedientes/enums/documento-estado.enum';
+import {
+  Lesion,
+  LesionSchema,
+} from '../../src/modules/expedientes/schemas/lesion.schema';
+import {
+  Trabajador,
+  TrabajadorSchema,
+} from '../../src/modules/trabajadores/schemas/trabajador.schema';
+import {
+  CentroTrabajo,
+  CentroTrabajoSchema,
+} from '../../src/modules/centros-trabajo/schemas/centro-trabajo.schema';
+import {
+  Empresa,
+  EmpresaSchema,
+} from '../../src/modules/empresas/schemas/empresa.schema';
 import { RegulatoryPolicyService } from '../../src/utils/regulatory-policy.service';
+import { AuditService } from '../../src/modules/audit/audit.service';
 import { ProveedoresSaludService } from '../../src/modules/proveedores-salud/proveedores-salud.service';
 import { GiisValidationService } from '../../src/modules/giis-export/validation/giis-validation.service';
 import { GiisCryptoService } from '../../src/modules/giis-export/crypto/giis-crypto.service';
 import { GiisExportAuditService } from '../../src/modules/giis-export/giis-export-audit.service';
+import { FirmanteHelper } from '../../src/modules/expedientes/helpers/firmante-helper';
 import { validNotaMedicaCex } from '../fixtures/nota-medica.fixtures';
 
 const mockGiisValidationService = {
-  validateAndFilterRows: jest.fn().mockImplementation(async (_g: string, rows: any[]) => ({
-    validRows: rows,
-    excludedReport: { entries: [], totalExcluded: 0 },
-    warnings: [],
-  })),
+  validateAndFilterRows: jest
+    .fn()
+    .mockImplementation(async (_g: string, rows: any[]) => ({
+      validRows: rows,
+      excludedReport: { entries: [], totalExcluded: 0 },
+      warnings: [],
+    })),
 };
 import { validMXTrabajador } from '../fixtures/trabajador.fixtures';
-import { mapNotaMedicaToCexRow, getCexSchema, extractCieCode } from '../../src/modules/giis-export/transformers/cex.mapper';
+import {
+  mapNotaMedicaToCexRow,
+  getCexSchema,
+  extractCieCode,
+} from '../../src/modules/giis-export/transformers/cex.mapper';
 
 describe('NOM-024 GIIS Export CEX (Phase 1C)', () => {
   let service: GiisBatchService;
   let notaMedicaModel: any;
   let trabajadorModel: any;
+  let testingModule: TestingModule;
   let mongoUri: string;
   const proveedorId = new Types.ObjectId().toString();
   const yearMonth = '2025-01';
 
   beforeAll(async () => {
     mongoUri = await startMongoMemoryServer();
-    const module: TestingModule = await Test.createTestingModule({
+    testingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         MongooseModule.forRoot(mongoUri),
@@ -57,21 +90,39 @@ describe('NOM-024 GIIS Export CEX (Phase 1C)', () => {
           { name: NotaMedica.name, schema: NotaMedicaSchema },
           { name: Lesion.name, schema: LesionSchema },
           { name: Trabajador.name, schema: TrabajadorSchema },
+          { name: CentroTrabajo.name, schema: CentroTrabajoSchema },
+          { name: Empresa.name, schema: EmpresaSchema },
         ]),
       ],
       providers: [
         GiisBatchService,
         GiisSerializerService,
-        { provide: RegulatoryPolicyService, useValue: { getRegulatoryPolicy: jest.fn() } },
+        {
+          provide: RegulatoryPolicyService,
+          useValue: { getRegulatoryPolicy: jest.fn() },
+        },
         { provide: ProveedoresSaludService, useValue: { findOne: jest.fn() } },
         { provide: GiisValidationService, useValue: mockGiisValidationService },
         { provide: GiisCryptoService, useValue: {} },
-        { provide: GiisExportAuditService, useValue: { recordGenerationAudit: jest.fn().mockResolvedValue({}) } },
+        {
+          provide: GiisExportAuditService,
+          useValue: { recordGenerationAudit: jest.fn().mockResolvedValue({}) },
+        },
+        {
+          provide: AuditService,
+          useValue: { record: jest.fn().mockResolvedValue({}) },
+        },
+        {
+          provide: FirmanteHelper,
+          useValue: {
+            getPrestadorDataFromUser: jest.fn().mockResolvedValue(null),
+          },
+        },
       ],
     }).compile();
-    service = module.get<GiisBatchService>(GiisBatchService);
-    notaMedicaModel = module.get('NotaMedicaModel');
-    trabajadorModel = module.get('TrabajadorModel');
+    service = testingModule.get<GiisBatchService>(GiisBatchService);
+    notaMedicaModel = testingModule.get('NotaMedicaModel');
+    trabajadorModel = testingModule.get('TrabajadorModel');
   }, 30000);
 
   afterAll(async () => {
@@ -79,6 +130,25 @@ describe('NOM-024 GIIS Export CEX (Phase 1C)', () => {
   }, 10000);
 
   it('should create batch, generate CEX with 1 consulta externa, and produce valid TXT', async () => {
+    const empresaModel = testingModule.get('EmpresaModel');
+    const centroTrabajoModel = testingModule.get('CentroTrabajoModel');
+    const createdBy = new Types.ObjectId();
+
+    const empresa = await empresaModel.create({
+      nombreComercial: 'Test SA',
+      razonSocial: 'Test SA',
+      RFC: 'TST123456ABC',
+      idProveedorSalud: proveedorId,
+      createdBy,
+      updatedBy: createdBy,
+    });
+    const centro = await centroTrabajoModel.create({
+      nombreCentro: 'Centro 1',
+      idEmpresa: empresa._id,
+      createdBy,
+      updatedBy: createdBy,
+    });
+
     const batch = await service.createBatch(proveedorId, yearMonth);
     const batchId = batch._id.toString();
 
@@ -89,9 +159,9 @@ describe('NOM-024 GIIS Export CEX (Phase 1C)', () => {
       puesto: 'OPERADOR',
       estadoCivil: 'Soltero/a',
       estadoLaboral: 'Activo',
-      idCentroTrabajo: new Types.ObjectId(),
-      createdBy: new Types.ObjectId(),
-      updatedBy: new Types.ObjectId(),
+      idCentroTrabajo: centro._id,
+      createdBy,
+      updatedBy: createdBy,
     });
 
     await notaMedicaModel.create({
@@ -99,6 +169,7 @@ describe('NOM-024 GIIS Export CEX (Phase 1C)', () => {
       _id: new Types.ObjectId(),
       fechaNotaMedica: new Date('2025-01-15'),
       idTrabajador: trabajador._id,
+      estado: DocumentoEstado.FINALIZADO,
     });
 
     const updated = await service.generateBatchCex(batchId);
@@ -144,7 +215,11 @@ describe('CEX mapper unit', () => {
       sexo: 'Masculino',
       entidadNacimiento: '09',
     };
-    const row = mapNotaMedicaToCexRow(consulta, { clues: 'DFSSA001234' }, trabajador);
+    const row = mapNotaMedicaToCexRow(
+      consulta,
+      { clues: 'DFSSA001234' },
+      trabajador,
+    );
 
     expect(Object.keys(row).length).toBe(106);
     expect(row.clues).toBe('DFSSA001234');

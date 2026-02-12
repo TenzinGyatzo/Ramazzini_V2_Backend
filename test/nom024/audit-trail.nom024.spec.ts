@@ -11,14 +11,17 @@ import {
   clearDatabase,
 } from '../utils/mongodb-memory.util';
 import { AuditService } from '../../src/modules/audit/audit.service';
-import { AuditEvent, AuditEventSchema } from '../../src/modules/audit/schemas/audit-event.schema';
-import { AuditOutbox, AuditOutboxSchema } from '../../src/modules/audit/schemas/audit-outbox.schema';
 import {
-  DocumentVersion,
-  DocumentVersionSchema,
-} from '../../src/modules/expedientes/schemas/document-version.schema';
+  AuditEvent,
+  AuditEventSchema,
+} from '../../src/modules/audit/schemas/audit-event.schema';
+import {
+  AuditOutbox,
+  AuditOutboxSchema,
+} from '../../src/modules/audit/schemas/audit-outbox.schema';
 import { AuditActionType } from '../../src/modules/audit/constants/audit-action-type';
 import { AuditEventClass } from '../../src/modules/audit/constants/audit-event-class';
+import { UsersService } from '../../src/modules/users/users.service';
 
 describe('NOM-024 Audit Trail (04-06)', () => {
   let uri: string;
@@ -41,10 +44,17 @@ describe('NOM-024 Audit Trail (04-06)', () => {
         MongooseModule.forFeature([
           { name: AuditEvent.name, schema: AuditEventSchema },
           { name: AuditOutbox.name, schema: AuditOutboxSchema },
-          { name: DocumentVersion.name, schema: DocumentVersionSchema },
         ]),
       ],
-      providers: [AuditService],
+      providers: [
+        AuditService,
+        {
+          provide: UsersService,
+          useValue: {
+            getAuditActorSnapshot: jest.fn().mockResolvedValue(null),
+          },
+        },
+      ],
     }).compile();
 
     auditService = module.get<AuditService>(AuditService);
@@ -103,9 +113,15 @@ describe('NOM-024 Audit Trail (04-06)', () => {
       expect(AuditActionType.LOGIN_FAIL).toBe('LOGIN_FAIL');
       expect(AuditActionType.DOC_FINALIZE).toBe('DOC_FINALIZE');
       expect(AuditActionType.GIIS_EXPORT_STARTED).toBe('GIIS_EXPORT_STARTED');
-      expect(AuditActionType.GIIS_EXPORT_FILE_GENERATED).toBe('GIIS_EXPORT_FILE_GENERATED');
-      expect(AuditActionType.GIIS_EXPORT_DOWNLOADED).toBe('GIIS_EXPORT_DOWNLOADED');
-      expect(AuditActionType.AUDIT_EXPORT_DOWNLOAD).toBe('AUDIT_EXPORT_DOWNLOAD');
+      expect(AuditActionType.GIIS_EXPORT_FILE_GENERATED).toBe(
+        'GIIS_EXPORT_FILE_GENERATED',
+      );
+      expect(AuditActionType.GIIS_EXPORT_DOWNLOADED).toBe(
+        'GIIS_EXPORT_DOWNLOADED',
+      );
+      expect(AuditActionType.AUDIT_EXPORT_DOWNLOAD).toBe(
+        'AUDIT_EXPORT_DOWNLOAD',
+      );
     });
 
     it('each audit event has single actor (actorId or SYSTEM)', async () => {

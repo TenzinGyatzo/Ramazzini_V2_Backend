@@ -19,7 +19,10 @@ import { CreateBatchDto } from './dto/create-batch.dto';
 import { getUserIdFromRequest } from '../../utils/auth-helpers';
 import { UsersService } from '../users/users.service';
 import { RegulatoryPolicyService } from '../../utils/regulatory-policy.service';
-import { getOfficialBaseName, getOfficialFileName } from './naming/giis-official-naming';
+import {
+  getOfficialBaseName,
+  getOfficialFileName,
+} from './naming/giis-official-naming';
 import * as fs from 'fs';
 import * as path from 'path';
 import { AuditService } from '../audit/audit.service';
@@ -27,7 +30,7 @@ import { AuditActionType } from '../audit/constants/audit-action-type';
 import { AuditEventClass } from '../audit/constants/audit-event-class';
 
 const EXPORTS_BASE = 'exports/giis';
-const VALID_GUIDES = ['CDT', 'CEX', 'LES'] as const;
+const VALID_GUIDES = ['CEX', 'LES'] as const;
 const GIIS_ENCRYPTION_VALIDATED_MSG =
   'Cifrado pendiente de validación DGIS; ver docs/nom-024/giis_encryption_spec.md';
 const DELIVERY_WARNING_9998 =
@@ -82,9 +85,8 @@ export class GiisExportController {
         'La exportación GIIS solo está disponible para proveedores con régimen SIRES_NOM024.',
       );
     }
-    const list = await this.giisBatchService.listBatchesForProveedor(
-      proveedorSaludId,
-    );
+    const list =
+      await this.giisBatchService.listBatchesForProveedor(proveedorSaludId);
     return list;
   }
 
@@ -99,7 +101,6 @@ export class GiisExportController {
       { onlyFinalized: dto.onlyFinalized, createdByUserId: userId },
     );
 
-    await this.giisBatchService.generateBatchCdt(batch._id.toString());
     await this.giisBatchService.generateBatchCex(batch._id.toString());
     await this.giisBatchService.generateBatchLes(batch._id.toString());
 
@@ -139,7 +140,10 @@ export class GiisExportController {
   }
 
   @Post('prevalidate')
-  async prevalidate(@Body() body: { yearMonth: string; guides?: string[] }, @Req() req: Request) {
+  async prevalidate(
+    @Body() body: { yearMonth: string; guides?: string[] },
+    @Req() req: Request,
+  ) {
     const proveedorSaludId = await this.getProveedorSaludIdFromRequest(req);
     const policy =
       await this.regulatoryPolicyService.getRegulatoryPolicy(proveedorSaludId);
@@ -148,11 +152,13 @@ export class GiisExportController {
         'La exportación GIIS solo está disponible para proveedores con régimen SIRES_NOM024.',
       );
     }
-    const guides = (body.guides ?? ['CDT', 'CEX', 'LES']).filter((g) =>
+    const guides = (body.guides ?? ['CEX', 'LES']).filter((g) =>
       VALID_GUIDES.includes(g as (typeof VALID_GUIDES)[number]),
     ) as (typeof VALID_GUIDES)[number][];
     if (guides.length === 0) {
-      throw new ForbiddenException('Debe indicar al menos una guía: CDT, CEX o LES.');
+      throw new ForbiddenException(
+        'Debe indicar al menos una guía: CEX o LES.',
+      );
     }
     const result = await this.giisValidationService.preValidate(
       proveedorSaludId,
@@ -222,7 +228,8 @@ export class GiisExportController {
     @Body() body: { confirmWarnings?: boolean },
     @Req() req: Request,
   ) {
-    const validated = process.env.GIIS_ENCRYPTION_VALIDATED?.toLowerCase() === 'true';
+    const validated =
+      process.env.GIIS_ENCRYPTION_VALIDATED?.toLowerCase() === 'true';
     if (!validated) {
       throw new ConflictException(GIIS_ENCRYPTION_VALIDATED_MSG);
     }
@@ -337,9 +344,7 @@ export class GiisExportController {
       );
     }
 
-    const artifact = batch.artifacts?.find(
-      (a) => a.guide === guideUpper,
-    );
+    const artifact = batch.artifacts?.find((a) => a.guide === guideUpper);
     if (!artifact) {
       throw new NotFoundException(
         `No existe archivo generado para la guía ${guideUpper} en este batch`,
@@ -353,20 +358,14 @@ export class GiisExportController {
 
     const [year, month] = batch.yearMonth.split('-').map(Number);
     const baseName = getOfficialBaseName(
-      guideUpper as 'CDT' | 'CEX' | 'LES',
+      guideUpper as 'CEX' | 'LES',
       batch.establecimientoClues ?? '',
       year,
       month,
     );
     const filename = getOfficialFileName(baseName, 'TXT');
-    res.setHeader(
-      'Content-Type',
-      'text/plain; charset=windows-1252',
-    );
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${filename}"`,
-    );
+    res.setHeader('Content-Type', 'text/plain; charset=windows-1252');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     await this.auditService.record({
       proveedorSaludId: batch.proveedorSaludId.toString(),
       actorId: getUserIdFromRequest(req) ?? 'SYSTEM',

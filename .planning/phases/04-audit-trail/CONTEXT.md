@@ -1,5 +1,7 @@
 # Phase 4: AuditTrail — Contexto y decisiones
 
+**Nota (remoción document_versions):** El enfoque de versionado por snapshots completos (document_versions / DocumentVersion) fue removido del alcance. El resguardado se cumple con: documentos finalizados y anulados inalterables; correcciones/aclaraciones vía Notas Aclaratorias como documentos separados. No se usa la colección documentversions ni endpoints de versiones.
+
 **Objetivo NOM-024 (no negociable):** registro cronológico, trazabilidad/autoría inequívoca, capacidad de reconstrucción fiel a estados anteriores, inalterabilidad post-resguardo, soporte a no repudio.
 
 **Alcance acordado:** documentos clínicos resguardados + accesos (login/fail) + acciones admin/config + acciones de sistema/dispositivo autenticado. Export/validación GIIS deben generar eventos.
@@ -34,8 +36,8 @@ Referencia única para implementación. Detalle y justificación en las seccione
 - **Lecturas sensibles (sí auditar):** descarga/export de GIIS (ZIP/TXT); descarga/export del Audit Trail.
 
 ### D2 — Reconstrucción fiel
-- **Elegido:** Documento completo por versión.
-- Corrección = nueva versión (snapshot completo). Comparación before/after por versiones.
+- **Descartado:** Documento completo por versión (document_versions). Ese enfoque fue removido.
+- **Vigente:** Documentos finalizados y anulados son inalterables; las Notas Aclaratorias son documentos separados que aclaran otros. No se requiere versionado del mismo documento.
 
 ### D3 — “Resguardado” e inalterabilidad
 - **Elegido:** Resguardado = estado FINALIZADO en proveedor NOM-024.

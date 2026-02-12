@@ -27,7 +27,7 @@ export interface GIISValidationResult {
  * Provides validation and search methods for catalog entries.
  *
  * Supports two categories of catalogs:
- * - BASE (10): Required catalogs that MUST be present for full functionality
+ * - BASE (11): Required catalogs that MUST be present for full functionality
  * - GIIS (8): Optional catalogs (GIIS-B013 + GIIS-B019) that are not publicly available from DGIS
  *
  * GIIS catalogs are loaded opportunistically. If missing, validation methods return
@@ -50,9 +50,9 @@ export class CatalogsService implements OnModuleInit {
 
   // Catalog file mappings
   private readonly catalogFiles: Partial<Record<CatalogType, string>> = {
-    // Base catalogs (10)
-    [CatalogType.CIE10]: 'diagnosticos.csv',
-    [CatalogType.CLUES]: 'establecimientos_salud.csv',
+    // Base catalogs (11)
+    [CatalogType.CIE10]: 'diagnosticos_sis.csv',
+    [CatalogType.CLUES]: 'establecimiento_de_salud_sis.csv',
     [CatalogType.ENTIDADES_FEDERATIVAS]: 'enitades_federativas.csv',
     [CatalogType.MUNICIPIOS]: 'municipios.csv',
     [CatalogType.LOCALIDADES]: 'localidades.csv',
@@ -61,6 +61,7 @@ export class CatalogsService implements OnModuleInit {
     [CatalogType.RELIGIONES]: 'cat_religiones.csv',
     [CatalogType.LENGUAS_INDIGENAS]: 'lenguas_indigenas.csv',
     [CatalogType.FORMACION_ACADEMICA]: 'formacion_academica.csv',
+    [CatalogType.ESCOLARIDAD]: 'escolaridad.csv',
     // GIIS-B013 Catalogs (4) - Optional
     [CatalogType.SITIO_OCURRENCIA]: 'cat_sitio_ocurrencia.csv',
     [CatalogType.AGENTE_LESION]: 'cat_agente_lesion.csv',
@@ -99,6 +100,7 @@ export class CatalogsService implements OnModuleInit {
     CatalogType.RELIGIONES,
     CatalogType.LENGUAS_INDIGENAS,
     CatalogType.FORMACION_ACADEMICA,
+    CatalogType.ESCOLARIDAD,
   ];
 
   async onModuleInit() {
@@ -251,13 +253,17 @@ export class CatalogsService implements OnModuleInit {
 
         case CatalogType.CIE10:
           // Store raw values for LINF/LSUP (format: "010A", "028D", "NO", etc.)
-          const linfRaw = record.LINF ? String(record.LINF).trim().toUpperCase() : undefined;
-          const lsupRaw = record.LSUP ? String(record.LSUP).trim().toUpperCase() : undefined;
-          
+          const linfRaw = record.LINF
+            ? String(record.LINF).trim().toUpperCase()
+            : undefined;
+          const lsupRaw = record.LSUP
+            ? String(record.LSUP).trim().toUpperCase()
+            : undefined;
+
           // Try to parse as number if it's a plain number, otherwise leave undefined
           let linf: number | undefined;
           let lsup: number | undefined;
-          
+
           if (linfRaw && linfRaw !== 'NO') {
             const linfNum = parseInt(linfRaw, 10);
             if (!isNaN(linfNum) && linfRaw.match(/^\d+$/)) {
@@ -265,7 +271,7 @@ export class CatalogsService implements OnModuleInit {
               linf = linfNum;
             }
           }
-          
+
           if (lsupRaw && lsupRaw !== 'NO') {
             const lsupNum = parseInt(lsupRaw, 10);
             if (!isNaN(lsupNum) && lsupRaw.match(/^\d+$/)) {
@@ -273,7 +279,7 @@ export class CatalogsService implements OnModuleInit {
               lsup = lsupNum;
             }
           }
-          
+
           return {
             code: record.CATALOG_KEY || record.codigo || record.code,
             description:
@@ -289,23 +295,47 @@ export class CatalogsService implements OnModuleInit {
             lsupRaw,
           } as CIE10Entry;
 
-        case CatalogType.CLUES:
+        case CatalogType.CLUES: {
+          const rawClues =
+            record.clues ||
+            record.CLUES ||
+            record.codigo ||
+            record.code;
+          const code = rawClues
+            ? String(rawClues).trim().toUpperCase()
+            : '';
+          const description =
+            record.nombre_unidad ||
+            record['NOMBRE DE LA INSTITUCION'] ||
+            record.nombre ||
+            record.descripcion ||
+            record.description;
+          let estatus: string | undefined;
+          if (record.en_operacion !== undefined && record.en_operacion !== null) {
+            estatus =
+              record.en_operacion == 1 || record.en_operacion === '1'
+                ? 'EN OPERACION'
+                : 'NO EN OPERACION';
+          } else {
+            estatus = record['ESTATUS DE OPERACION'];
+          }
           return {
-            code: record.CLUES || record.clues || record.codigo || record.code,
-            description:
-              record['NOMBRE DE LA INSTITUCION'] ||
-              record.nombre ||
-              record.descripcion ||
-              record.description,
+            code,
+            description,
             source: 'CLUES',
             version: record.version,
-            clues: record.CLUES,
-            nombreInstitucion: record['NOMBRE DE LA INSTITUCION'],
-            entidad: record.ENTIDAD,
+            clues: code,
+            nombreInstitucion:
+              record.nombre_unidad || record['NOMBRE DE LA INSTITUCION'],
+            entidad:
+              record.id_entidad_federativa ||
+              record.ENTIDAD ||
+              record['CLAVE DE LA ENTIDAD'],
             municipio: record.MUNICIPIO,
             localidad: record.LOCALIDAD,
-            estatus: record['ESTATUS DE OPERACION'],
+            estatus,
           } as CLUESEntry;
+        }
 
         case CatalogType.MUNICIPIOS:
           const efeKey =
@@ -396,6 +426,14 @@ export class CatalogsService implements OnModuleInit {
             renapoCode = 'NND';
           }
 
+          const catalogKeyPaisRaw =
+            record['catalog_key_pais'] ??
+            record.catalogKeyPais;
+          const catalogKeyPais =
+            catalogKeyPaisRaw != null
+              ? parseInt(String(catalogKeyPaisRaw), 10)
+              : undefined;
+
           return {
             code: renapoCode,
             description:
@@ -403,7 +441,8 @@ export class CatalogsService implements OnModuleInit {
             source: 'RENAPO',
             version: record.version,
             claveNacionalidad: claveNacionalidad,
-            codigoPais: codigoPais, // Mantener el código numérico para referencia
+            codigoPais: codigoPais,
+            catalogKeyPais: Number.isNaN(catalogKeyPais) ? undefined : catalogKeyPais,
           };
 
         case CatalogType.CODIGOS_POSTALES:
@@ -418,6 +457,15 @@ export class CatalogsService implements OnModuleInit {
             source: 'SEPOMEX',
             version: record.version,
           } as CPEntry;
+
+        case CatalogType.ESCOLARIDAD:
+          return {
+            code: String(record.CATALOG_KEY ?? record.codigo ?? record.code ?? ''),
+            description:
+              record.ESCOLARIDAD || record.descripcion || record.description,
+            source: 'ESCOLARIDAD',
+            version: record.version,
+          };
 
         default:
           // Generic mapping for other catalogs (including GIIS catalogs)
@@ -538,7 +586,7 @@ export class CatalogsService implements OnModuleInit {
     }
 
     this.logger.log('=== Catalog Cache Statistics ===');
-    this.logger.log(`Base catalogs loaded: ${baseLoaded}/10`);
+    this.logger.log(`Base catalogs loaded: ${baseLoaded}/11`);
     this.logger.log(`GIIS optional catalogs loaded: ${giisLoaded}/8`);
     this.logger.log('--- Detailed counts ---');
 
@@ -855,6 +903,33 @@ export class CatalogsService implements OnModuleInit {
     return this.validateGIISCatalog(CatalogType.PAIS, code, 'País');
   }
 
+  /** CATALOG_KEY for "NO ESPECIFICADO" in cat_pais (fallback when nacionalidad has no mapping). */
+  static readonly PAIS_NO_ESPECIFICADO = 248;
+
+  /**
+   * Get cat_pais CATALOG_KEY from nacionalidad clave (3-letter, e.g. MEX, USA).
+   * Used for paisNacPaciente in CEX. Returns 248 (NO ESPECIFICADO) if not found.
+   */
+  getPaisCatalogKeyFromNacionalidad(clave: string): number {
+    if (!clave || typeof clave !== 'string') {
+      return CatalogsService.PAIS_NO_ESPECIFICADO;
+    }
+    const cache = this.catalogCaches.get(CatalogType.NACIONALIDADES);
+    if (!cache) {
+      return CatalogsService.PAIS_NO_ESPECIFICADO;
+    }
+    const code = clave.trim().toUpperCase();
+    const entry = cache.get(code);
+    const key =
+      entry && (entry as any).catalogKeyPais != null
+        ? Number((entry as any).catalogKeyPais)
+        : null;
+    if (key != null && !Number.isNaN(key)) {
+      return key;
+    }
+    return CatalogsService.PAIS_NO_ESPECIFICADO;
+  }
+
   // ===========================================================================
   // GENERIC GIIS VALIDATION HELPER
   // ===========================================================================
@@ -945,7 +1020,7 @@ export class CatalogsService implements OnModuleInit {
 
     return {
       baseLoaded,
-      baseTotal: 10,
+      baseTotal: 11,
       giisLoaded,
       giisTotal: 8,
       loadedCatalogs,
@@ -1032,7 +1107,12 @@ export class CatalogsService implements OnModuleInit {
       }
 
       // Filter by sex (LSEX) if provided
-      if (sexo !== undefined && sexo !== null && cie10Entry.lsex && cie10Entry.lsex !== 'NO') {
+      if (
+        sexo !== undefined &&
+        sexo !== null &&
+        cie10Entry.lsex &&
+        cie10Entry.lsex !== 'NO'
+      ) {
         // LSEX = "SI" typically means male-only, validate accordingly
         // For now, we do basic filtering - more complex logic can be added
         if (cie10Entry.lsex === 'SI' && sexo === 2) {

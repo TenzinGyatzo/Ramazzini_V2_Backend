@@ -18,11 +18,20 @@ export function mapSexoToNumeric(sexo: string): 1 | 2 | null {
 
   const normalizedSexo = sexo.trim().toLowerCase();
 
-  if (normalizedSexo === 'masculino' || normalizedSexo === 'hombre' || normalizedSexo === 'm' || normalizedSexo === 'h') {
+  if (
+    normalizedSexo === 'masculino' ||
+    normalizedSexo === 'hombre' ||
+    normalizedSexo === 'm' ||
+    normalizedSexo === 'h'
+  ) {
     return 1;
   }
 
-  if (normalizedSexo === 'femenino' || normalizedSexo === 'mujer' || normalizedSexo === 'f') {
+  if (
+    normalizedSexo === 'femenino' ||
+    normalizedSexo === 'mujer' ||
+    normalizedSexo === 'f'
+  ) {
     return 2;
   }
 
@@ -49,4 +58,3 @@ export function mapNumericToSexo(codigo: number): string | null {
       return null;
   }
 }
-

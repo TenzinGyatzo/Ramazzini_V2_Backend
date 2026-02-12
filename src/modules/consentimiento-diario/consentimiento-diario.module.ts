@@ -8,8 +8,14 @@ import {
 } from './schemas/consentimiento-diario.schema';
 import { TrabajadoresModule } from '../trabajadores/trabajadores.module';
 import { ProveedoresSaludModule } from '../proveedores-salud/proveedores-salud.module';
-import { Trabajador, TrabajadorSchema } from '../trabajadores/schemas/trabajador.schema';
-import { CentroTrabajo, CentroTrabajoSchema } from '../centros-trabajo/schemas/centro-trabajo.schema';
+import {
+  Trabajador,
+  TrabajadorSchema,
+} from '../trabajadores/schemas/trabajador.schema';
+import {
+  CentroTrabajo,
+  CentroTrabajoSchema,
+} from '../centros-trabajo/schemas/centro-trabajo.schema';
 import { Empresa, EmpresaSchema } from '../empresas/schemas/empresa.schema';
 
 @Module({

@@ -3,11 +3,8 @@ import {
   Get,
   Query,
   Req,
-  Param,
   Res,
   UnauthorizedException,
-  NotFoundException,
-  ParseIntPipe,
   BadRequestException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
@@ -46,42 +43,6 @@ export class AuditController {
     const page = query.page ?? 1;
     const limit = query.limit ?? 50;
     return { items, total, page, limit };
-  }
-
-  @Get('document-versions/:documentType/:documentId')
-  async listVersions(
-    @Param('documentType') documentType: string,
-    @Param('documentId') documentId: string,
-    @Req() req: Request,
-  ) {
-    const proveedorSaludId = await this.getProveedorSaludIdFromRequest(req);
-    return this.auditService.listDocumentVersions(
-      proveedorSaludId,
-      documentType,
-      documentId,
-    );
-  }
-
-  @Get('document-versions/:documentType/:documentId/:version')
-  async getVersion(
-    @Param('documentType') documentType: string,
-    @Param('documentId') documentId: string,
-    @Param('version', ParseIntPipe) version: number,
-    @Req() req: Request,
-  ) {
-    const proveedorSaludId = await this.getProveedorSaludIdFromRequest(req);
-    const snapshot = await this.auditService.getDocumentVersion(
-      proveedorSaludId,
-      documentType,
-      documentId,
-      version,
-    );
-    if (!snapshot) {
-      throw new NotFoundException(
-        `Versión ${version} no encontrada para ${documentType}/${documentId}`,
-      );
-    }
-    return snapshot;
   }
 
   @Get('export')

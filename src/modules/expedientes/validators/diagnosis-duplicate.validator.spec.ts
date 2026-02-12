@@ -121,4 +121,3 @@ describe('validateNoDuplicateCIE10PrincipalAndComplementary', () => {
     expect(result.duplicated).toBe('A30');
   });
 });
-

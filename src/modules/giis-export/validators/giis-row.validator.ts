@@ -10,7 +10,10 @@ export interface GiisRowValidationResult {
  * - Column count must match schema.fields.length.
  * - For each field with requiredColumn === true, value (trimmed) must not be empty.
  */
-export function validateRow(schema: GiisSchema, row: string[]): GiisRowValidationResult {
+export function validateRow(
+  schema: GiisSchema,
+  row: string[],
+): GiisRowValidationResult {
   const errors: string[] = [];
   if (row.length !== schema.fields.length) {
     errors.push(
@@ -22,7 +25,9 @@ export function validateRow(schema: GiisSchema, row: string[]): GiisRowValidatio
     if (schema.fields[i].requiredColumn) {
       const val = String(row[i] ?? '').trim();
       if (val === '') {
-        errors.push(`Required column ${schema.fields[i].name} (index ${i}) is empty`);
+        errors.push(
+          `Required column ${schema.fields[i].name} (index ${i}) is empty`,
+        );
       }
     }
   }

@@ -7,7 +7,10 @@ import { NOM024ComplianceUtil } from '../../utils/nom024-compliance.util';
 import { CatalogsService } from '../catalogs/catalogs.service';
 import { FilesService } from '../files/files.service';
 import { GeographyValidator } from '../catalogs/validators/geography.validator';
-import { RegulatoryPolicyService, RegulatoryPolicy } from '../../utils/regulatory-policy.service';
+import {
+  RegulatoryPolicyService,
+  RegulatoryPolicy,
+} from '../../utils/regulatory-policy.service';
 
 describe('TrabajadoresService - NOM-024 Person Identification Fields', () => {
   let service: TrabajadoresService;
