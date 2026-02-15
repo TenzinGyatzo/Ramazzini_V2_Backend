@@ -393,6 +393,10 @@ export class InformesService {
     const datosExamenVista = nearestExamenVista
       ? {
           fechaExamenVista: nearestExamenVista.fechaExamenVista,
+          ojoIzquierdoCegueraTotal: nearestExamenVista.ojoIzquierdoCegueraTotal,
+          ojoDerechoCegueraTotal: nearestExamenVista.ojoDerechoCegueraTotal,
+          ojoIzquierdoLejanaCegueraTotal: nearestExamenVista.ojoIzquierdoLejanaCegueraTotal,
+          ojoDerechoLejanaCegueraTotal: nearestExamenVista.ojoDerechoLejanaCegueraTotal,
           ojoIzquierdoLejanaSinCorreccion:
             nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
           ojoDerechoLejanaSinCorreccion:
@@ -1026,6 +1030,12 @@ export class InformesService {
     const datosExamenVista = nearestExamenVista
       ? {
           fechaExamenVista: nearestExamenVista.fechaExamenVista,
+          ojoIzquierdoCegueraTotal: nearestExamenVista.ojoIzquierdoCegueraTotal,
+          ojoDerechoCegueraTotal: nearestExamenVista.ojoDerechoCegueraTotal,
+          ojoIzquierdoLejanaCegueraTotal: nearestExamenVista.ojoIzquierdoLejanaCegueraTotal,
+          ojoDerechoLejanaCegueraTotal: nearestExamenVista.ojoDerechoLejanaCegueraTotal,
+          ojoIzquierdoCercanaCegueraTotal: nearestExamenVista.ojoIzquierdoCercanaCegueraTotal,
+          ojoDerechoCercanaCegueraTotal: nearestExamenVista.ojoDerechoCercanaCegueraTotal,
           ojoIzquierdoLejanaSinCorreccion:
             nearestExamenVista.ojoIzquierdoLejanaSinCorreccion,
           ojoDerechoLejanaSinCorreccion: nearestExamenVista.ojoDerechoLejanaSinCorreccion,
@@ -1297,6 +1307,12 @@ export class InformesService {
 
     const datosExamenVista = {
       fechaExamenVista: examenVista.fechaExamenVista,
+      ojoIzquierdoCegueraTotal: examenVista.ojoIzquierdoCegueraTotal,
+      ojoDerechoCegueraTotal: examenVista.ojoDerechoCegueraTotal,
+      ojoIzquierdoLejanaCegueraTotal: examenVista.ojoIzquierdoLejanaCegueraTotal,
+      ojoDerechoLejanaCegueraTotal: examenVista.ojoDerechoLejanaCegueraTotal,
+      ojoIzquierdoCercanaCegueraTotal: examenVista.ojoIzquierdoCercanaCegueraTotal,
+      ojoDerechoCercanaCegueraTotal: examenVista.ojoDerechoCercanaCegueraTotal,
       ojoIzquierdoLejanaSinCorreccion:
         examenVista.ojoIzquierdoLejanaSinCorreccion,
       ojoDerechoLejanaSinCorreccion: examenVista.ojoDerechoLejanaSinCorreccion,

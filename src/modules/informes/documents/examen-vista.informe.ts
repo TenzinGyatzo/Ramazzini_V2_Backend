@@ -63,6 +63,12 @@ const headerText: Content = {
 };
 
 // ==================== FUNCIONES REUSABLES ====================
+function formatearAgudezaVisual(valor: number | null | undefined, cegueraTotal: boolean | undefined): string {
+  if (cegueraTotal) return 'Ceguera Total';
+  if (valor == null) return 'NA';
+  return `20/${valor}`;
+}
+
 const createTableCell = (text: string, style: string): Content => ({
   text,
   style,
@@ -154,14 +160,20 @@ interface Trabajador {
   antiguedad: string;
 }
 
-interface ExamenVista {
+interface ExamenVistaInforme {
   fechaExamenVista: Date;
-  ojoIzquierdoLejanaSinCorreccion: number;
-  ojoDerechoLejanaSinCorreccion: number;
+  ojoIzquierdoCegueraTotal?: boolean;
+  ojoDerechoCegueraTotal?: boolean;
+  ojoIzquierdoLejanaCegueraTotal?: boolean;
+  ojoDerechoLejanaCegueraTotal?: boolean;
+  ojoIzquierdoCercanaCegueraTotal?: boolean;
+  ojoDerechoCercanaCegueraTotal?: boolean;
+  ojoIzquierdoLejanaSinCorreccion: number | null;
+  ojoDerechoLejanaSinCorreccion: number | null;
   sinCorreccionLejanaInterpretacion: string;
   requiereLentesUsoGeneral: string;
-  ojoIzquierdoCercanaSinCorreccion: number;
-  ojoDerechoCercanaSinCorreccion: number;
+  ojoIzquierdoCercanaSinCorreccion: number | null;
+  ojoDerechoCercanaSinCorreccion: number | null;
   sinCorreccionCercanaInterpretacion: string;
   requiereLentesParaLectura: string;
   ojoIzquierdoLejanaConCorreccion?: number;
@@ -183,6 +195,13 @@ interface ExamenVista {
   cilindroOjoDerecho?: string;
   adicionOjoDerecho?: string;
   diagnosticoRecomendaciones?: string;
+}
+
+function getCiegaOI(ev: ExamenVistaInforme): boolean {
+  return ev?.ojoIzquierdoCegueraTotal ?? ev?.ojoIzquierdoLejanaCegueraTotal ?? ev?.ojoIzquierdoCercanaCegueraTotal ?? false;
+}
+function getCiegaOD(ev: ExamenVistaInforme): boolean {
+  return ev?.ojoDerechoCegueraTotal ?? ev?.ojoDerechoLejanaCegueraTotal ?? ev?.ojoDerechoCercanaCegueraTotal ?? false;
 }
 
 interface MedicoFirmante {
@@ -247,7 +266,7 @@ interface ProveedorSalud {
 export const examenVistaInforme = (
   nombreEmpresa: string,
   trabajador: Trabajador,
-  examenVista: ExamenVista,
+  examenVista: ExamenVistaInforme,
   medicoFirmante: MedicoFirmante | null,
   enfermeraFirmante: EnfermeraFirmante | null,
   tecnicoFirmante: TecnicoFirmante | null,
@@ -382,14 +401,14 @@ export const examenVistaInforme = (
             ...[
               [
                 'LEJANA',
-                `20/${examenVista.ojoIzquierdoLejanaSinCorreccion}`,
-                `20/${examenVista.ojoDerechoLejanaSinCorreccion}`,
+                formatearAgudezaVisual(examenVista.ojoIzquierdoLejanaSinCorreccion, getCiegaOI(examenVista)),
+                formatearAgudezaVisual(examenVista.ojoDerechoLejanaSinCorreccion, getCiegaOD(examenVista)),
                 examenVista.sinCorreccionLejanaInterpretacion,
               ],
               [
                 'CERCANA',
-                `20/${examenVista.ojoIzquierdoCercanaSinCorreccion}`,
-                `20/${examenVista.ojoDerechoCercanaSinCorreccion}`,
+                formatearAgudezaVisual(examenVista.ojoIzquierdoCercanaSinCorreccion, getCiegaOI(examenVista)),
+                formatearAgudezaVisual(examenVista.ojoDerechoCercanaSinCorreccion, getCiegaOD(examenVista)),
                 examenVista.sinCorreccionCercanaInterpretacion,
               ],
             ].map((row) =>
@@ -463,26 +482,18 @@ export const examenVistaInforme = (
               { text: 'OJO DERECHO', style: 'tableHeader', alignment: 'center' },
               { text: 'INTERPRETACIÓN', style: 'tableHeader', alignment: 'center' },
             ],
-            // Filas de datos
+            // Filas de datos (con corrección: ojos con ceguera total muestran "Ceguera Total")
             ...[
               [
                 'LEJANA',
-                examenVista.ojoIzquierdoLejanaConCorreccion
-                  ? `20/${examenVista.ojoIzquierdoLejanaConCorreccion}`
-                  : 'NA',
-                examenVista.ojoDerechoLejanaConCorreccion
-                  ? `20/${examenVista.ojoDerechoLejanaConCorreccion}`
-                  : 'NA',
+                formatearAgudezaVisual(examenVista.ojoIzquierdoLejanaConCorreccion, getCiegaOI(examenVista)),
+                formatearAgudezaVisual(examenVista.ojoDerechoLejanaConCorreccion, getCiegaOD(examenVista)),
                 examenVista.conCorreccionLejanaInterpretacion ?? 'NA',
               ],
               [
                 'CERCANA',
-                examenVista.ojoIzquierdoCercanaConCorreccion
-                  ? `20/${examenVista.ojoIzquierdoCercanaConCorreccion}`
-                  : 'NA',
-                examenVista.ojoDerechoCercanaConCorreccion
-                  ? `20/${examenVista.ojoDerechoCercanaConCorreccion}`
-                  : 'NA',
+                formatearAgudezaVisual(examenVista.ojoIzquierdoCercanaConCorreccion, getCiegaOI(examenVista)),
+                formatearAgudezaVisual(examenVista.ojoDerechoCercanaConCorreccion, getCiegaOD(examenVista)),
                 examenVista.conCorreccionCercanaInterpretacion ?? 'NA',
               ],
             ].map((row) =>

@@ -105,6 +105,12 @@ function generarTextoExploracionFisica(exploracionFisica: ExploracionFisica): st
 }
 
 // ==================== FUNCIONES REUSABLES ====================
+function formatearAgudezaVisual(valor: number | null | undefined, cegueraTotal: boolean | undefined): string {
+  if (cegueraTotal) return 'Ceguera Total';
+  if (valor == null) return 'NA';
+  return `20/${valor}`;
+}
+
 const createTableCell = (text: string, style: string): Content => ({
   text,
   style,
@@ -249,10 +255,23 @@ interface ExploracionFisica {
   resumenExploracionFisica?: string;
 }
 
+function getCiegaOI(ev: ExamenVista | null): boolean {
+  if (!ev) return false;
+  return (ev as any).ojoIzquierdoCegueraTotal ?? (ev as any).ojoIzquierdoLejanaCegueraTotal ?? (ev as any).ojoIzquierdoCercanaCegueraTotal ?? false;
+}
+function getCiegaOD(ev: ExamenVista | null): boolean {
+  if (!ev) return false;
+  return (ev as any).ojoDerechoCegueraTotal ?? (ev as any).ojoDerechoLejanaCegueraTotal ?? (ev as any).ojoDerechoCercanaCegueraTotal ?? false;
+}
+
 interface ExamenVista {
   fechaExamenVista: Date;
-  ojoIzquierdoLejanaSinCorreccion: number;
-  ojoDerechoLejanaSinCorreccion: number;
+  ojoIzquierdoCegueraTotal?: boolean;
+  ojoDerechoCegueraTotal?: boolean;
+  ojoIzquierdoLejanaCegueraTotal?: boolean;
+  ojoDerechoLejanaCegueraTotal?: boolean;
+  ojoIzquierdoLejanaSinCorreccion: number | null;
+  ojoDerechoLejanaSinCorreccion: number | null;
   sinCorreccionLejanaInterpretacion: string;
   requiereLentesUsoGeneral: string;
   ojoIzquierdoCercanaSinCorreccion: number;
@@ -483,7 +502,7 @@ export const certificadoInforme = (
                 { text: `Saturación de oxígeno del ${exploracionFisica.saturacionOxigeno}% (${exploracionFisica.categoriaSaturacionOxigeno}). ` },
                 { text: `Tensión arterial ${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg (${exploracionFisica.categoriaTensionArterial || 'no especificada'}). ` },
 
-                { text: `Examen visual con agudeza lejana sin corrección: OI 20/${examenVista.ojoIzquierdoLejanaSinCorreccion} y OD 20/${examenVista.ojoDerechoLejanaSinCorreccion} ` },
+                { text: `Examen visual con agudeza lejana sin corrección: OI ${formatearAgudezaVisual(examenVista.ojoIzquierdoLejanaSinCorreccion, getCiegaOI(examenVista))} y OD ${formatearAgudezaVisual(examenVista.ojoDerechoLejanaSinCorreccion, getCiegaOD(examenVista))} ` },
                 { text: `(${examenVista.sinCorreccionLejanaInterpretacion || 'categoría no disponible'}). ` },
 
                 ...(examenVista.interpretacionIshihara === 'Daltonismo'

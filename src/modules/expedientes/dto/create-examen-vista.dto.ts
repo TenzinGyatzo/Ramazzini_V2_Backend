@@ -1,18 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsBoolean, IsDate, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, ValidateIf } from "class-validator";
 
 const siONo = ["Si", "No"];
-
-const agudezaVisualInterpretaciones = [
-  "Visión excepcional",
-  "Visión normal",
-  "Visión ligeramente reducida",
-  "Visión moderadamente reducida",
-  "Visión significativamente reducida",
-  "Visión muy reducida",
-];
-
 const ishiharaInterpretaciones = ["Normal", "Daltonismo"];
 
 export class CreateExamenVistaDto {
@@ -28,35 +18,48 @@ export class CreateExamenVistaDto {
 
     // Agudeza Visual
 
+    // Ceguera total por ojo (afecta lejana, cercana, sin y con corrección)
+    @ApiProperty({ description: 'Ojo izquierdo con ceguera total', required: false })
+    @IsBoolean()
+    @IsOptional()
+    ojoIzquierdoCegueraTotal?: boolean
+
+    @ApiProperty({ description: 'Ojo derecho con ceguera total', required: false })
+    @IsBoolean()
+    @IsOptional()
+    ojoDerechoCegueraTotal?: boolean
+
     // Sin corrección vista lejana
     @ApiProperty({
-        description: 'Agudeza visual lejana de ojo izquierdo sin corrección',
-        example: 20
+        description: 'Agudeza visual lejana de ojo izquierdo sin corrección (null si ceguera total)',
+        example: 20,
+        nullable: true
     })
+    @ValidateIf(o => !o.ojoIzquierdoCegueraTotal)
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(10)
-    @Max(200)
+    @Min(5)
+    @Max(400)
     @IsNotEmpty({ message: 'La agudeza visual lejana de ojo izquierdo sin corrección no puede estar vacía' })
-    ojoIzquierdoLejanaSinCorreccion: number
+    ojoIzquierdoLejanaSinCorreccion: number | null
 
     @ApiProperty({
-        description: 'Agudeza visual lejana de ojo derecho sin corrección',
-        example: 20
+        description: 'Agudeza visual lejana de ojo derecho sin corrección (null si ceguera total)',
+        example: 20,
+        nullable: true
     })
+    @ValidateIf(o => !o.ojoDerechoCegueraTotal)
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(10)
-    @Max(200)
+    @Min(5)
+    @Max(400)
     @IsNotEmpty({ message: 'La agudeza visual lejana de ojo derecho sin corrección no puede estar vacía' })
-    ojoDerechoLejanaSinCorreccion: number
+    ojoDerechoLejanaSinCorreccion: number | null
 
     @ApiProperty({
-        description: 'Interpretación de la agudeza visual lejana sin corrección',
-        enum: agudezaVisualInterpretaciones,
+        description: 'Interpretación de la agudeza visual lejana sin corrección (puede ser valor simple o formato OI: X. OD: Y)',
         example: 'Visión ligeramente reducida'
     })
     @IsString({ message: 'La interpretación de la agudeza visual lejana sin corrección debe ser un string' })
     @IsNotEmpty({ message: 'La interpretación de la agudeza visual lejana sin corrección no puede estar vacía' })
-    @IsEnum(agudezaVisualInterpretaciones, { message: 'La interpretación de la agudeza visual lejana sin corrección debe ser uno de los siguientes: ' + agudezaVisualInterpretaciones })
     sinCorreccionLejanaInterpretacion: string
     
     @ApiProperty({
@@ -71,33 +74,35 @@ export class CreateExamenVistaDto {
 
     // Sin corrección vista cercana
     @ApiProperty({
-        description: 'Agudeza visual cercana de ojo izquierdo sin corrección',
-        example: 20
+        description: 'Agudeza visual cercana de ojo izquierdo sin corrección (null si ceguera total)',
+        example: 20,
+        nullable: true
     })
+    @ValidateIf(o => !o.ojoIzquierdoCegueraTotal)
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(10)
-    @Max(200)
+    @Min(5)
+    @Max(400)
     @IsNotEmpty({ message: 'La agudeza visual cercana de ojo izquierdo sin corrección no puede estar vacía' })
-    ojoIzquierdoCercanaSinCorreccion: number
+    ojoIzquierdoCercanaSinCorreccion: number | null
 
     @ApiProperty({
-        description: 'Agudeza visual cercana de ojo derecho sin corrección',
-        example: 20
+        description: 'Agudeza visual cercana de ojo derecho sin corrección (null si ceguera total)',
+        example: 20,
+        nullable: true
     })
+    @ValidateIf(o => !o.ojoDerechoCegueraTotal)
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(10)
-    @Max(200)
+    @Min(5)
+    @Max(400)
     @IsNotEmpty({ message: 'La agudeza visual cercana de ojo derecho sin corrección no puede estar vacía' })
-    ojoDerechoCercanaSinCorreccion: number
+    ojoDerechoCercanaSinCorreccion: number | null
 
     @ApiProperty({
-        description: 'Interpretación de la agudeza visual cercana sin corrección',
-        enum: agudezaVisualInterpretaciones,
+        description: 'Interpretación de la agudeza visual cercana sin corrección (puede ser valor simple o formato OI: X. OD: Y)',
         example: 'Visión ligeramente reducida'
     })
     @IsString({ message: 'La interpretación de la agudeza visual cercana sin corrección debe ser un string' })
     @IsNotEmpty({ message: 'La interpretación de la agudeza visual cercana sin corrección no puede estar vacía' })
-    @IsEnum(agudezaVisualInterpretaciones, { message: 'La interpretación de la agudeza visual cercana sin corrección debe ser uno de los siguientes: ' + agudezaVisualInterpretaciones })
     sinCorreccionCercanaInterpretacion: string
 
     @ApiProperty({
@@ -113,64 +118,64 @@ export class CreateExamenVistaDto {
     // Con corrección vista lejana
     @ApiProperty({
         description: 'Agudeza visual lejana de ojo izquierdo con corrección',
-        example: 20
+        example: 20,
+        required: false
     })
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(0)
-    @Max(200)
+    @Min(5)
+    @Max(400)
     @IsOptional()
-    ojoIzquierdoLejanaConCorreccion: number
+    ojoIzquierdoLejanaConCorreccion?: number
 
     @ApiProperty({
         description: 'Agudeza visual lejana de ojo derecho con corrección',
-        example: 20
+        example: 20,
+        required: false
     })
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(0)
-    @Max(200)
+    @Min(5)
+    @Max(400)
     @IsOptional()
-    ojoDerechoLejanaConCorreccion: number
+    ojoDerechoLejanaConCorreccion?: number
 
     @ApiProperty({
-        description: 'Interpretación de la agudeza visual lejana con corrección',
-        enum: agudezaVisualInterpretaciones,
+        description: 'Interpretación de la agudeza visual lejana con corrección (puede ser valor simple o formato OI: X. OD: Y)',
         example: 'Visión ligeramente reducida'
     })
     @IsString({ message: 'La interpretación de la agudeza visual lejana con corrección debe ser un string' })
     @IsOptional()
-    @IsEnum(agudezaVisualInterpretaciones, { message: 'La interpretación de la agudeza visual lejana con corrección debe ser uno de los siguientes: ' + agudezaVisualInterpretaciones })
-    conCorreccionLejanaInterpretacion: string
+    conCorreccionLejanaInterpretacion?: string
     
     // Con corrección vista cercana
     @ApiProperty({
         description: 'Agudeza visual cercana de ojo izquierdo con corrección',
-        example: 20
+        example: 20,
+        required: false
     })
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(10)
-    @Max(200)
+    @Min(5)
+    @Max(400)
     @IsOptional()
-    ojoIzquierdoCercanaConCorreccion: number
+    ojoIzquierdoCercanaConCorreccion?: number
 
     @ApiProperty({
         description: 'Agudeza visual cercana de ojo derecho con corrección',
-        example: 20
+        example: 20,
+        required: false
     })
     @IsNumber({ maxDecimalPlaces: 0 })
-    @Min(10)
-    @Max(200)
+    @Min(5)
+    @Max(400)
     @IsOptional()
-    ojoDerechoCercanaConCorreccion: number
+    ojoDerechoCercanaConCorreccion?: number
 
     @ApiProperty({
-        description: 'Interpretación de la agudeza visual cercana con corrección',
-        enum: agudezaVisualInterpretaciones,
+        description: 'Interpretación de la agudeza visual cercana con corrección (puede ser valor simple o formato OI: X. OD: Y)',
         example: 'Visión ligeramente reducida'
     })
     @IsString({ message: 'La interpretación de la agudeza visual cercana con corrección debe ser un string' })
     @IsOptional()
-    @IsEnum(agudezaVisualInterpretaciones, { message: 'La interpretación de la agudeza visual cercana con corrección debe ser uno de los siguientes: ' + agudezaVisualInterpretaciones })
-    conCorreccionCercanaInterpretacion: string
+    conCorreccionCercanaInterpretacion?: string
 
     // Ishihara
     @ApiProperty({

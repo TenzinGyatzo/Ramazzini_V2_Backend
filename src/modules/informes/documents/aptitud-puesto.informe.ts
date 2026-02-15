@@ -397,14 +397,35 @@ interface ExploracionFisica {
 
 interface ExamenVista {
   fechaExamenVista: Date;
-  ojoIzquierdoLejanaSinCorreccion: number;
-  ojoDerechoLejanaSinCorreccion: number;
+  ojoIzquierdoCegueraTotal?: boolean;
+  ojoDerechoCegueraTotal?: boolean;
+  ojoIzquierdoLejanaCegueraTotal?: boolean;
+  ojoDerechoLejanaCegueraTotal?: boolean;
+  ojoIzquierdoCercanaCegueraTotal?: boolean;
+  ojoDerechoCercanaCegueraTotal?: boolean;
+  ojoIzquierdoLejanaSinCorreccion: number | null;
+  ojoDerechoLejanaSinCorreccion: number | null;
   sinCorreccionLejanaInterpretacion: string;
   ojoIzquierdoLejanaConCorreccion?: number;
   ojoDerechoLejanaConCorreccion?: number;
   conCorreccionLejanaInterpretacion?: string;
   porcentajeIshihara: number;
   interpretacionIshihara: string;
+}
+
+function formatearAgudezaVisual(valor: number | null | undefined, cegueraTotal: boolean | undefined): string {
+  if (cegueraTotal) return 'Ceguera Total';
+  if (valor == null) return 'NA';
+  return `20/${valor}`;
+}
+
+function getCiegaOI(ev: ExamenVista | null): boolean {
+  if (!ev) return false;
+  return (ev as any).ojoIzquierdoCegueraTotal ?? (ev as any).ojoIzquierdoLejanaCegueraTotal ?? (ev as any).ojoIzquierdoCercanaCegueraTotal ?? false;
+}
+function getCiegaOD(ev: ExamenVista | null): boolean {
+  if (!ev) return false;
+  return (ev as any).ojoDerechoCegueraTotal ?? (ev as any).ojoDerechoLejanaCegueraTotal ?? (ev as any).ojoDerechoCercanaCegueraTotal ?? false;
 }
 
 interface Audiometria {
@@ -534,8 +555,8 @@ export const aptitudPuestoInforme = (
         examenVista.ojoIzquierdoLejanaConCorreccion == null) &&
       (examenVista.ojoDerechoLejanaConCorreccion === 0 ||
         examenVista.ojoDerechoLejanaConCorreccion == null)
-      ? `OI: 20/${examenVista.ojoIzquierdoLejanaSinCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaSinCorreccion} - ${examenVista.sinCorreccionLejanaInterpretacion}, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
-      : `OI: 20/${examenVista.ojoIzquierdoLejanaConCorreccion}, OD: 20/${examenVista.ojoDerechoLejanaConCorreccion} - ${examenVista.conCorreccionLejanaInterpretacion} Corregida, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
+      ? `OI: ${formatearAgudezaVisual(examenVista.ojoIzquierdoLejanaSinCorreccion, getCiegaOI(examenVista))}, OD: ${formatearAgudezaVisual(examenVista.ojoDerechoLejanaSinCorreccion, getCiegaOD(examenVista))} - ${examenVista.sinCorreccionLejanaInterpretacion}, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
+      : `OI: ${formatearAgudezaVisual(examenVista.ojoIzquierdoLejanaConCorreccion, getCiegaOI(examenVista))}, OD: ${formatearAgudezaVisual(examenVista.ojoDerechoLejanaConCorreccion, getCiegaOD(examenVista))} - ${examenVista.conCorreccionLejanaInterpretacion} Corregida, Ishihara: ${examenVista.porcentajeIshihara}% - ${examenVista.interpretacionIshihara}`
     : 'No se cuenta con examen visual';
 
   const tipoSangreResumen = obtenerResumenTipoSangre(resultadoTipoSangre);
