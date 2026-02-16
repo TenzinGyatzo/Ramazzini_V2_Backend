@@ -195,6 +195,9 @@ interface ExamenVistaInforme {
   cilindroOjoDerecho?: string;
   adicionOjoDerecho?: string;
   diagnosticoRecomendaciones?: string;
+  antecedentes?: string;
+  anamnesis?: string;
+  utilizaAnteojos?: string;
 }
 
 function getCiegaOI(ev: ExamenVistaInforme): boolean {
@@ -289,6 +292,23 @@ export const examenVistaInforme = (
     fillColor: proveedorSalud.colorInforme || '#343A40',
   };
 
+  // Guatemala: fuentes y espaciado más compactos
+  const esGT = proveedorSalud.pais === 'GT';
+  const marginBottom = esGT ? 8 : 10;
+  const marginBottomSmall = esGT ? 10 : 12;
+  const paddingCell = esGT ? 1 : 2;
+  const pageMarginsV = esGT ? [55, 65] as [number, number] : [70, 80] as [number, number];
+
+  if (esGT) {
+    updatedStyles.tableHeader = { ...updatedStyles.tableHeader, fontSize: 10 };
+    updatedStyles.tableCell = { ...updatedStyles.tableCell, fontSize: 9 };
+    updatedStyles.tableCellBold = { ...updatedStyles.tableCellBold, fontSize: 9 };
+    updatedStyles.label = { fontSize: 9 };
+    updatedStyles.value = { bold: true, fontSize: 9, margin: [0, 0, 0, 0] };
+    updatedStyles.nombreEmpresa = { ...updatedStyles.nombreEmpresa, fontSize: 13 };
+    updatedStyles.fecha = { ...updatedStyles.fecha, fontSize: 10 };
+  }
+
   const firma: Content = firmanteActivo?.firma?.data
   ? { image: `assets/signatories/${firmanteActivo.firma.data}`, width: 65 }
   : { text: '' };
@@ -297,9 +317,66 @@ export const examenVistaInforme = (
   ? { image: `assets/providers-logos/${proveedorSalud.logotipoEmpresa.data}`, width: 55, margin: [40, 20, 0, 0] }
   : { image: 'assets/RamazziniBrand600x600.png', width: 55, margin: [40, 20, 0, 0] };
 
+  // Secciones Guatemala (solo si pais es GT) - Antecedentes y Anamnesis en misma fila, dos columnas
+  const seccionesGTInicio: Content[] = proveedorSalud.pais === 'GT'
+    ? [
+        ...(examenVista.antecedentes?.trim() || examenVista.anamnesis?.trim()
+          ? [{
+              style: 'table',
+              table: {
+                widths: ['50%', '50%'],
+                body: [
+                  [
+                    { text: 'ANTECEDENTES', style: 'tableHeader', alignment: 'center' },
+                    { text: 'ANAMNESIS', style: 'tableHeader', alignment: 'center' },
+                  ],
+                  [
+                    {
+                      text: examenVista.antecedentes?.trim() || ' ',
+                      style: 'tableCell',
+                      alignment: 'left',
+                    },
+                    {
+                      text: examenVista.anamnesis?.trim() || ' ',
+                      style: 'tableCell',
+                      alignment: 'left',
+                    },
+                  ],
+                ],
+              },
+              layout: {
+                hLineWidth: () => 0.5,
+                vLineWidth: () => 0.5,
+                hLineColor: '#e5e7eb',
+                vLineColor: '#e5e7eb',
+                paddingTop: () => paddingCell,
+                paddingBottom: () => paddingCell,
+                paddingLeft: () => 2,
+                paddingRight: () => 2,
+              },
+              margin: [0, 0, 0, marginBottom],
+            } as Content]
+          : []),
+        ...(examenVista.utilizaAnteojos
+          ? [{
+              columns: [
+                {
+                  text: [
+                    { text: 'Utiliza Lentes: ' },
+                    { text: `(${examenVista.utilizaAnteojos})`, bold: true },
+                  ],
+                },
+              ],
+              fontSize: 10,
+              margin: [0, 0, 0, marginBottomSmall],
+            } as Content]
+          : []),
+      ]
+    : [];
+
   return {
     pageSize: 'LETTER',
-    pageMargins: [40, 70, 40, 80],
+    pageMargins: [40, pageMarginsV[0], 40, pageMarginsV[1]],
     header: {
       columns: [logo, headerText],
     },
@@ -368,11 +445,12 @@ export const examenVistaInforme = (
           vLineWidth: () => 1,
           paddingTop: (i: number, node: any) => 0, // Reducir el espacio superior
           paddingBottom: (i: number, node: any) => 0, // Reducir el espacio inferior
-          paddingLeft: (i: number, node: any) => 2, // Reducir el espacio izquierdo
-          paddingRight: (i: number, node: any) => 2, // Reducir el espacio derecho
+          paddingLeft: (i: number, node: any) => 2,
+          paddingRight: (i: number, node: any) => 2,
         },
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, marginBottom],
       },
+      ...seccionesGTInicio,
       // Agudeza Visual Sin Corrección
       {
         style: 'table',
@@ -430,7 +508,7 @@ export const examenVistaInforme = (
           paddingLeft: (i: number, node: any) => 2,
           paddingRight: (i: number, node: any) => 2,
         },
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, marginBottom],
       },
       // Requiere Lentes
       {
@@ -456,7 +534,8 @@ export const examenVistaInforme = (
             ]
           }
         ],
-        margin: [0, 0, 0, 12],
+        ...(esGT && { fontSize: 10 }),
+        margin: [0, 0, 0, marginBottomSmall],
       },
       // Agudeza Visual Con Corrección
       {
@@ -515,7 +594,7 @@ export const examenVistaInforme = (
           paddingLeft: (i: number, node: any) => 2,
           paddingRight: (i: number, node: any) => 2,
         },
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, marginBottom],
       },
       // Prueba de Ishihara
       {
@@ -565,7 +644,7 @@ export const examenVistaInforme = (
           paddingLeft: (i: number, node: any) => 2,
           paddingRight: (i: number, node: any) => 2,
         },
-        margin: [0, 0, 0, 10],
+        margin: [0, 0, 0, marginBottom],
       },
       // Secciones adicionales solo para Guatemala
       ...(proveedorSalud.pais === 'GT' ? [
@@ -613,7 +692,7 @@ export const examenVistaInforme = (
             paddingLeft: (i: number, node: any) => 2,
             paddingRight: (i: number, node: any) => 2,
           },
-        margin: [0, 0, 0, 10] as [number, number, number, number],
+        margin: [0, 0, 0, marginBottom] as [number, number, number, number],
       },
       // Receta Final
         {
@@ -673,7 +752,7 @@ export const examenVistaInforme = (
             paddingLeft: (i: number, node: any) => 2,
             paddingRight: (i: number, node: any) => 2,
           },
-          margin: [0, 0, 0, 10] as [number, number, number, number],
+          margin: [0, 0, 0, marginBottom] as [number, number, number, number],
         },
         // Diagnóstico y recomendaciones
         {
@@ -709,7 +788,7 @@ export const examenVistaInforme = (
             paddingLeft: (i: number, node: any) => 2,
             paddingRight: (i: number, node: any) => 2,
           },
-          margin: [0, 0, 0, 10] as [number, number, number, number],
+          margin: [0, 0, 0, marginBottom] as [number, number, number, number],
         },
       ] : []),
     ],

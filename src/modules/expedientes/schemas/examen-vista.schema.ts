@@ -122,6 +122,16 @@ export class ExamenVista extends Document {
     @Prop()
     diagnosticoRecomendaciones: string
 
+    // Campos exclusivos Guatemala
+    @Prop()
+    antecedentes?: string
+
+    @Prop()
+    anamnesis?: string
+
+    @Prop({ enum: siONo })
+    utilizaAnteojos?: string
+
     // Trabajador, ruta al archivo e info de creador y actualizador
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Trabajador', required: true })
     idTrabajador: Trabajador;

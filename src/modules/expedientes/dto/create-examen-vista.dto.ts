@@ -301,6 +301,33 @@ export class CreateExamenVistaDto {
     @IsOptional()
     diagnosticoRecomendaciones: string
 
+    // Campos exclusivos Guatemala
+    @ApiProperty({
+        description: 'Antecedentes (solo Guatemala)',
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    antecedentes?: string
+
+    @ApiProperty({
+        description: 'Anamnesis (solo Guatemala)',
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    anamnesis?: string
+
+    @ApiProperty({
+        description: 'Indica si utiliza anteojos (solo Guatemala)',
+        enum: siONo,
+        required: false
+    })
+    @IsString()
+    @IsEnum(siONo)
+    @IsOptional()
+    utilizaAnteojos?: string
+
     // RESTO
     @ApiProperty({
         description: 'El ID del trabajador',

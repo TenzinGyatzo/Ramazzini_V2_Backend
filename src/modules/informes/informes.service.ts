@@ -1350,6 +1350,9 @@ export class InformesService {
       cilindroOjoDerecho: examenVista.cilindroOjoDerecho,
       adicionOjoDerecho: examenVista.adicionOjoDerecho,
       diagnosticoRecomendaciones: examenVista.diagnosticoRecomendaciones,
+      antecedentes: examenVista.antecedentes,
+      anamnesis: examenVista.anamnesis,
+      utilizaAnteojos: examenVista.utilizaAnteojos,
     };
 
     const medicoFirmante = await this.medicosFirmantesService.findOneByUserId(userId);
