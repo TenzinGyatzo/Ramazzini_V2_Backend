@@ -5,145 +5,215 @@ import { User } from 'src/modules/users/entities/user.entity';
 import { DocumentoEstado } from '../enums/documento-estado.enum';
 
 /**
- * GIIS-B013 Lesion/Injury Schema
+ * GIIS-B013 Lesion/Injury Schema (Reporte de Lesión y/o Violencia)
  *
  * Represents injury and violence reporting per GIIS-B013 specification.
  * Only enabled for MX providers (proveedorSalud.pais === 'MX').
+ * CLUES se obtiene de ProveedorSalud cuando se requiere (export, etc.).
  */
 @Schema()
 export class Lesion extends Document {
-  // Identificación del Establecimiento
-  @Prop({
-    required: true,
-    match: /^[A-Z0-9]{11}$/,
-  })
-  clues: string; // CLUES del establecimiento (11 caracteres)
-
   @Prop({
     required: true,
     match: /^[0-9]{8}$/,
   })
-  folio: string; // Identificador interno único por CLUES+fechaAtencion (8 dígitos)
+  folio: string; // Identificador interno único por proveedor + fechaAtencion (8 dígitos)
 
-  // Identificación del Paciente
-  @Prop({
-    required: true,
-    match: /^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/,
-  })
-  curpPaciente: string; // CURP del paciente (18 caracteres)
+  // ========== STEP 0: Fecha del reporte ==========
+  @Prop({ required: false })
+  fechaReporteLesion?: Date; // Fecha en que se capturó/llenó el formulario del reporte
 
-  @Prop({ required: true })
-  fechaNacimiento: Date; // Fecha de nacimiento
-
-  @Prop({
-    required: true,
-    enum: [1, 2, 3], // 1=Hombre, 2=Mujer, 3=Intersexual
-  })
-  sexo: number; // Sexo según GIIS
-
-  // Información del Evento
+  // ========== STEP 1: ¿Cuándo ocurrió el evento? ==========
   @Prop({ required: true })
   fechaEvento: Date; // Fecha del evento/lesión
 
   @Prop()
   horaEvento?: string; // Hora del evento (HH:mm)
 
+  @Prop({ required: false })
+  diaFestivo?: number; // 1=SI, 2=NO - ¿El día se considera festivo?
+
+  @Prop({ required: false })
+  eventoRepetido?: number; // 1=Única vez, 2=Repetido
+
+  // ========== STEP 2: ¿Dónde ocurrió? (Lugar) ==========
   @Prop({
     required: true,
-    // Note: Official DGIS catalog (SITIO_OCURRENCIA) not publicly available
-    // Validated only for type (integer) and basic bounds (>= 1)
+    // Cat SITIO_OCURRENCIA_LESION
   })
   sitioOcurrencia: number; // Lugar donde ocurrió el evento
 
+  @Prop({ required: false })
+  entidadOcurrencia?: string; // Cat ENTIDAD_FEDERATIVA - 99=SE IGNORA
+
+  @Prop({ required: false })
+  municipioOcurrencia?: string; // Cat MUNICIPIO - 998=SE IGNORA, 999=NO ESPECIFICADO
+
+  @Prop({ required: false })
+  localidadOcurrencia?: string; // Cat LOCALIDAD - 9998=SE IGNORA, 9999=NO ESPECIFICADO
+
+  @Prop({ required: false })
+  otraLocalidad?: string; // Especificación cuando localidad no está en catálogo
+
+  @Prop({ required: false })
+  codigoPostal?: string; // 99999=SE IGNORA, 00000=NO ESPECIFICADO
+
+  @Prop({ required: false })
+  tipoVialidad?: number; // Cat TIPO_VIALIDAD
+
+  @Prop({ required: false })
+  nombreVialidad?: string;
+
+  @Prop({ required: false })
+  numeroExterior?: string;
+
+  @Prop({ required: false })
+  tipoAsentamiento?: number; // Cat TIPO_ASENTAMIENTO
+
+  @Prop({ required: false })
+  nombreAsentamiento?: string;
+
+  // ========== STEP 3: ¿Cómo ocurrió? (Circunstancias / Intencionalidad) ==========
   @Prop({
     required: true,
     enum: [1, 2, 3, 4], // 1=Accidental, 2=Violencia Familiar, 3=Violencia No Familiar, 4=Autoinfligido
   })
-  intencionalidad: number; // Intención del evento
+  intencionalidad: number;
 
-  // Condicional: Obligatorio si intencionalidad = 1, 4 o Violencia Física/Sexual
-  @Prop({
-    required: false,
-    // Note: Official DGIS catalog (AGENTE_LESION) not publicly available
-    // Validated only for type (integer) and basic bounds (>= 1)
-  })
-  agenteLesion?: number; // Objeto/mecanismo de lesión
+  @Prop({ required: false })
+  agenteLesion?: number; // Cat AGENTE_LESION - obligatorio si 1,4 o violencia física/sexual
 
-  // Condicional: Obligatorio si intencionalidad = 2 o 3 (Violencia)
-  @Prop({
-    type: [Number],
-    required: false,
-    // Catálogo interno: 6-10
-  })
-  tipoViolencia?: number[]; // Tipología de violencia (multivalor)
+  @Prop({ required: false })
+  especifique?: string; // Especificar agente si agenteLesion=25 (OTRA)
 
-  // Información de Atención
+  @Prop({ type: [Number], required: false })
+  tipoViolencia?: number[]; // Obligatorio si intencionalidad 2 o 3 - multivalor
+
+  @Prop({ required: false })
+  numeroAgresores?: number; // Violencia: 1=Único, 2=Más de uno, 3=No especificado
+
+  @Prop({ required: false })
+  parentescoAfectado?: number; // Cat PARENTESCO con agresor
+
+  @Prop({ required: false })
+  sexoAgresor?: number; // Cat SEXO del agresor
+
+  @Prop({ required: false })
+  edadAgresor?: number; // Edad en años (0 si no aplica)
+
+  @Prop({ required: false })
+  agresorBajoEfectos?: string; // Multivalor "&": 1=Alcohol, 2=Droga médica, 3=Drogas ilegales, 4=SE IGNORA, 5=Ninguna
+
+  @Prop({ required: false })
+  lesionadoVehiculoMotor?: number; // Si agente=20: 1=Conductor, 2=Ocupante, 3=Peatón, 4=SE IGNORA
+
+  @Prop({ required: false })
+  usoEquipoSeguridad?: number; // Si conductor/ocupante: 1=SI, 2=NO, 9=SE IGNORA
+
+  @Prop({ required: false })
+  equipoUtilizado?: number; // 1=Cinturón, 2=Casco, 3=Silla infantil, 4=Otro
+
+  @Prop({ required: false })
+  especifiqueEquipo?: string; // Si equipoUtilizado=4
+
+  @Prop({ required: false })
+  sospechaBajoEfectosDe?: string; // Multivalor "&" - ¿Lesionado bajo efectos?
+
+  @Prop({ required: false })
+  atencionPreHospitalaria?: number; // 1=SI, 2=NO
+
+  @Prop({ required: false })
+  tiempoTrasladoUH?: string; // HH:mm - condicional a atencionPreHospitalaria=1
+
+  // ========== STEP 4: Atención recibida ==========
   @Prop({ required: true })
   fechaAtencion: Date; // Fecha de registro clínico
 
   @Prop()
   horaAtencion?: string; // Hora de atención (HH:mm)
 
+  @Prop({ required: false })
+  servicioAtencion?: number; // 1=Consulta Externa, 2=Hospitalización, 3=Urgencias, 4=Servicio Violencia, 5=Otro
+
+  @Prop({ required: false })
+  especifiqueServicio?: string; // Si servicioAtencion=5
+
   @Prop({
     type: [Number],
     required: true,
-    // Catálogo interno: 1-9, máximo 5 valores
+    // Cat 1-9, máximo 5 valores
   })
   tipoAtencion: number[]; // Tipos de tratamiento otorgado (multivalor, max 5)
 
+  // ========== STEP 5: Evaluación clínica / Diagnóstico ==========
   @Prop({
     required: true,
-    // Note: Official DGIS catalog (AREA_ANATOMICA) not publicly available
-    // Validated only for type (integer) and basic bounds (>= 1)
+    // Cat AREA_ANATOMICA
   })
-  areaAnatomica: number; // Zona corporal más grave (15 = múltiples áreas)
+  areaAnatomica: number;
 
-  @Prop({
-    required: true,
-    // Note: Official DGIS catalog (CONSECUENCIA) not publicly available
-    // Validated only for type (integer) and basic bounds (>= 1)
-  })
-  consecuenciaGravedad: number; // Resultado físico de la lesión
-
-  // Diagnósticos CIE-10
-  @Prop({
-    required: true,
-    match: /^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/, // CIE-10 format
-  })
-  codigoCIEAfeccionPrincipal: string; // Diagnóstico principal (Capítulos V, XIX, obstétricos)
+  @Prop({ required: false })
+  especifiqueArea?: string; // Si areaAnatomica=16 (OTROS)
 
   @Prop({
     required: true,
-    match: /^V[0-9]{2}|^W[0-9]{2}|^X[0-9]{2}|^Y[0-9]{2}$/, // CIE-10 Chapter XX (V01-Y98)
+    // Cat CONSECUENCIA_LESION
   })
-  codigoCIECausaExterna: string; // Código CIE-10 causa externa (Chapter XX: V01-Y98)
+  consecuenciaGravedad: number;
 
-  @Prop({
-    type: [String],
-    required: false,
-  })
-  afeccionesTratadas?: string[]; // Comorbilidades/diagnósticos secundarios (formato: Num#Desc#CIE)
-
-  // Profesional Responsable
-  @Prop({
-    required: true,
-    enum: [1, 2, 3], // 1=Médico, 2=Psicólogo, 3=Trabajador Social
-  })
-  responsableAtencion: number; // Rol del profesional
+  @Prop({ required: false })
+  especifiqueConsecuencia?: string; // Si consecuenciaGravedad=22 (OTRA)
 
   @Prop({
     required: true,
-    match: /^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/,
+    match: /^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/,
   })
-  curpResponsable: string; // CURP del profesional de salud
+  codigoCIEAfeccionPrincipal: string; // Diagnóstico principal (Cap. V, XIX, obstétricos)
 
-  // Referencias
+  @Prop({ required: false })
+  descripcionAfeccionPrincipal?: string; // Descripción texto libre
+
+  @Prop({
+    required: true,
+    match: /^V[0-9]{2}|^W[0-9]{2}|^X[0-9]{2}|^Y[0-9]{2}$/,
+  })
+  codigoCIECausaExterna: string; // CIE-10 Capítulo XX (V01-Y98)
+
+  @Prop({ required: false })
+  causaExterna?: string; // Descripción texto libre causa externa
+
+  @Prop({ type: [String], required: false })
+  afeccionesTratadas?: string[]; // Formato: Num#Desc#CIE
+
+  @Prop({ required: false })
+  descripcionAfeccion?: string;
+
+  @Prop({ required: false })
+  afeccionPrincipalReseleccionada?: string; // CIE reseleccionado si difiere
+
+  // ========== STEP 6: Destino y seguimiento ==========
+  @Prop({ required: false })
+  despuesAtencion?: number; // 1=Domicilio, 2=Traslado, 3=Serv. Violencia, 4=Consulta Ext, 5=Defunción, 6=Refugio, 7=DIF, 8=Hosp, 9=MP, 10=Ayuda mutua, 11=Otro
+
+  @Prop({ required: false })
+  especifiqueDestino?: string; // Si despuesAtencion=11
+
+  @Prop({ required: false })
+  ministerioPublico?: number; // 1=SI, 2=NO - ¿Dio aviso al MP?
+
+  @Prop({ required: false })
+  folioCertificadoDefuncion?: string; // Si despuesAtencion=5 y ministerioPublico=2
+
+  // ========== Referencias ==========
   @Prop({
     type: MongooseSchema.Types.ObjectId,
     ref: 'Trabajador',
     required: true,
   })
-  idTrabajador: Trabajador; // Referencia al trabajador/paciente
+  idTrabajador: Trabajador;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
+  idProveedorSalud: MongooseSchema.Types.ObjectId; // Para unicidad folio y obtener CLUES desde ProveedorSalud
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   createdBy: User;
@@ -151,7 +221,7 @@ export class Lesion extends Document {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   updatedBy: User;
 
-  // Document State Management (NOM-024) - Task 6
+  // Document State Management (NOM-024)
   @Prop({
     type: String,
     enum: Object.values(DocumentoEstado),
@@ -178,13 +248,13 @@ export class Lesion extends Document {
 
 export const LesionSchema = SchemaFactory.createForClass(Lesion);
 
-// Compound index for folio uniqueness per CLUES + fechaAtencion
-LesionSchema.index({ clues: 1, fechaAtencion: 1, folio: 1 }, { unique: true });
+// Unicidad folio por proveedor + fechaAtencion (CLUES se obtiene de ProveedorSalud)
+LesionSchema.index(
+  { idProveedorSalud: 1, fechaAtencion: 1, folio: 1 },
+  { unique: true },
+);
 
-// Index for Trabajador lookup
 LesionSchema.index({ idTrabajador: 1 });
-
-// Index for date range queries
 LesionSchema.index({ fechaAtencion: 1 });
 LesionSchema.index({ fechaEvento: 1 });
 

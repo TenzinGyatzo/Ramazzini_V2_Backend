@@ -19,14 +19,7 @@ import {
  * Only enabled for MX providers
  */
 export class CreateLesionDto {
-  // Identificación del Establecimiento
-  @IsString({ message: 'CLUES debe ser un string' })
-  @IsNotEmpty({ message: 'CLUES es requerido' })
-  @Matches(/^[A-Z0-9]{11}$/, {
-    message: 'CLUES debe tener exactamente 11 caracteres alfanuméricos',
-  })
-  clues: string;
-
+  // Folio - unicidad por ProveedorSalud + fechaAtencion (CLUES se obtiene del ProveedorSalud del trabajador)
   @IsString({ message: 'Folio debe ser un string' })
   @IsNotEmpty({ message: 'Folio es requerido' })
   @Matches(/^[0-9]{8}$/, {
@@ -66,6 +59,10 @@ export class CreateLesionDto {
     message: 'Hora del evento debe estar en formato HH:mm',
   })
   horaEvento?: string;
+
+  @IsOptional()
+  @IsEnum([1, 2], { message: 'diaFestivo debe ser 1 (SI) o 2 (NO)' })
+  diaFestivo?: number;
 
   @IsNumber({}, { message: 'Sitio de ocurrencia debe ser un número entero' })
   @IsNotEmpty({ message: 'Sitio de ocurrencia es requerido' })
@@ -109,6 +106,147 @@ export class CreateLesionDto {
   @IsNotEmpty({ message: 'Tipo de violencia es requerido para violencia' })
   tipoViolencia?: number[];
 
+  // Lugar de ocurrencia (opcionales)
+  @IsOptional()
+  @IsString()
+  entidadOcurrencia?: string;
+
+  @IsOptional()
+  @IsString()
+  municipioOcurrencia?: string;
+
+  @IsOptional()
+  @IsString()
+  localidadOcurrencia?: string;
+
+  @IsOptional()
+  @IsString()
+  otraLocalidad?: string;
+
+  @IsOptional()
+  @IsString()
+  codigoPostal?: string;
+
+  @IsOptional()
+  @IsNumber()
+  tipoVialidad?: number;
+
+  @IsOptional()
+  @IsString()
+  nombreVialidad?: string;
+
+  @IsOptional()
+  @IsString()
+  numeroExterior?: string;
+
+  @IsOptional()
+  @IsNumber()
+  tipoAsentamiento?: number;
+
+  @IsOptional()
+  @IsString()
+  nombreAsentamiento?: string;
+
+  // Atención prehospitalaria
+  @IsOptional()
+  @IsEnum([1, 2], {
+    message: 'atencionPreHospitalaria debe ser 1 (SI) o 2 (NO)',
+  })
+  atencionPreHospitalaria?: number;
+
+  @ValidateIf((o) => o.atencionPreHospitalaria === 1)
+  @IsOptional()
+  @IsString()
+  @Matches(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/, {
+    message: 'tiempoTrasladoUH debe estar en formato HH:mm',
+  })
+  tiempoTrasladoUH?: string;
+
+  @IsOptional()
+  @IsString()
+  sospechaBajoEfectosDe?: string;
+
+  // Características del evento
+  @IsOptional()
+  @IsEnum([1, 2], {
+    message: 'eventoRepetido debe ser 1 (Única vez) o 2 (Repetido)',
+  })
+  eventoRepetido?: number;
+
+  @IsOptional()
+  @IsString()
+  especifique?: string;
+
+  @ValidateIf((o) => o.agenteLesion === 20)
+  @IsOptional()
+  @IsEnum([1, 2, 3, 4], {
+    message:
+      'lesionadoVehiculoMotor debe ser 1 (Conductor), 2 (Ocupante), 3 (Peatón) o 4 (SE IGNORA)',
+  })
+  lesionadoVehiculoMotor?: number;
+
+  @ValidateIf(
+    (o) => o.lesionadoVehiculoMotor === 1 || o.lesionadoVehiculoMotor === 2,
+  )
+  @IsOptional()
+  @IsEnum([1, 2, 9], {
+    message: 'usoEquipoSeguridad debe ser 1 (SI), 2 (NO) o 9 (SE IGNORA)',
+  })
+  usoEquipoSeguridad?: number;
+
+  @ValidateIf((o) => o.usoEquipoSeguridad === 1)
+  @IsOptional()
+  @IsEnum([1, 2, 3, 4], {
+    message:
+      'equipoUtilizado debe ser 1 (Cinturón), 2 (Casco), 3 (Silla infantil) o 4 (Otro)',
+  })
+  equipoUtilizado?: number;
+
+  @ValidateIf((o) => o.equipoUtilizado === 4)
+  @IsOptional()
+  @IsString()
+  especifiqueEquipo?: string;
+
+  @ValidateIf((o) => o.intencionalidad === 2 || o.intencionalidad === 3)
+  @IsOptional()
+  @IsEnum([1, 2, 3], {
+    message:
+      'numeroAgresores debe ser 1 (Único), 2 (Más de uno) o 3 (No especificado)',
+  })
+  numeroAgresores?: number;
+
+  @ValidateIf(
+    (o) =>
+      (o.intencionalidad === 2 || o.intencionalidad === 3) &&
+      o.numeroAgresores === 1,
+  )
+  @IsOptional()
+  @IsNumber()
+  parentescoAfectado?: number;
+
+  @ValidateIf(
+    (o) =>
+      (o.intencionalidad === 2 || o.intencionalidad === 3) &&
+      o.numeroAgresores === 1,
+  )
+  @IsOptional()
+  @IsNumber()
+  sexoAgresor?: number;
+
+  @ValidateIf(
+    (o) =>
+      (o.intencionalidad === 2 || o.intencionalidad === 3) &&
+      o.numeroAgresores === 1,
+  )
+  @IsOptional()
+  @IsNumber()
+  edadAgresor?: number;
+
+  @ValidateIf((o) => o.intencionalidad === 2 || o.intencionalidad === 3)
+  @IsOptional()
+  @IsString()
+  agresorBajoEfectos?: string;
+
   // Información de Atención
   @IsDate({ message: 'Fecha de atención debe ser una fecha' })
   @Type(() => Date)
@@ -130,6 +268,18 @@ export class CreateLesionDto {
   @ArrayMaxSize(5, { message: 'Tipo de atención puede tener máximo 5 valores' })
   @IsNotEmpty({ message: 'Tipo de atención es requerido' })
   tipoAtencion: number[];
+
+  @IsOptional()
+  @IsEnum([1, 2, 3, 4, 5], {
+    message:
+      'servicioAtencion debe ser 1 (Consulta Externa), 2 (Hospitalización), 3 (Urgencias), 4 (Servicio Violencia) o 5 (Otro)',
+  })
+  servicioAtencion?: number;
+
+  @ValidateIf((o) => o.servicioAtencion === 5)
+  @IsOptional()
+  @IsString()
+  especifiqueServicio?: string;
 
   @IsNumber({}, { message: 'Área anatómica debe ser un número entero' })
   @IsNotEmpty({ message: 'Área anatómica es requerida' })
@@ -161,6 +311,56 @@ export class CreateLesionDto {
   @IsArray({ message: 'Afecciones tratadas debe ser un array' })
   @IsString({ each: true, message: 'Cada afección tratada debe ser un string' })
   afeccionesTratadas?: string[];
+
+  @IsOptional()
+  @IsString()
+  especifiqueArea?: string;
+
+  @IsOptional()
+  @IsString()
+  especifiqueConsecuencia?: string;
+
+  @IsOptional()
+  @IsString()
+  descripcionAfeccionPrincipal?: string;
+
+  @IsOptional()
+  @IsString()
+  descripcionAfeccion?: string;
+
+  @IsOptional()
+  @IsString()
+  afeccionPrincipalReseleccionada?: string;
+
+  @IsOptional()
+  @IsString()
+  causaExterna?: string;
+
+  @IsOptional()
+  @IsEnum([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], {
+    message:
+      'despuesAtencion debe ser 1-11 (Domicilio, Traslado, Serv. Violencia, etc.)',
+  })
+  despuesAtencion?: number;
+
+  @ValidateIf((o) => o.despuesAtencion === 11)
+  @IsOptional()
+  @IsString()
+  especifiqueDestino?: string;
+
+  @IsOptional()
+  @IsEnum([1, 2], { message: 'ministerioPublico debe ser 1 (SI) o 2 (NO)' })
+  ministerioPublico?: number;
+
+  @ValidateIf((o) => o.despuesAtencion === 5 && o.ministerioPublico === 2)
+  @IsOptional()
+  @IsString()
+  folioCertificadoDefuncion?: string;
+
+  @IsOptional()
+  @IsDate({ message: 'Fecha del reporte debe ser una fecha' })
+  @Type(() => Date)
+  fechaReporteLesion?: Date; // Fecha en que se capturó el formulario del reporte
 
   // Profesional Responsable
   @IsNumber({}, { message: 'Responsable de atención debe ser un número' })

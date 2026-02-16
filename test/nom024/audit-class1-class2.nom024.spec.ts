@@ -24,13 +24,11 @@ describe('NOM-024 Audit Class 1 / Class 2 (04-06)', () => {
   beforeEach(async () => {
     auditEventModelMock = {
       findOne: jest.fn().mockReturnValue({
-        sort: jest
-          .fn()
-          .mockReturnValue({
-            lean: jest
-              .fn()
-              .mockReturnValue({ exec: jest.fn().mockResolvedValue(null) }),
-          }),
+        sort: jest.fn().mockReturnValue({
+          lean: jest
+            .fn()
+            .mockReturnValue({ exec: jest.fn().mockResolvedValue(null) }),
+        }),
       }),
       create: jest.fn().mockResolvedValue({}),
     };

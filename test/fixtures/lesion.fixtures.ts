@@ -12,9 +12,8 @@ import { DocumentoEstado } from '../../src/modules/expedientes/enums/documento-e
  */
 export const validLesionAccidental = {
   _id: new Types.ObjectId(),
-  // Establishment
-  clues: 'DFSSA001234',
   folio: '00000001',
+  idProveedorSalud: new Types.ObjectId(), // CLUES se obtiene de ProveedorSalud
   // Patient
   curpPaciente: 'PEGJ850102HDFRNN08',
   fechaNacimiento: new Date('1985-01-02'),
@@ -50,8 +49,8 @@ export const validLesionAccidental = {
  */
 export const validLesionViolenciaFamiliar = {
   _id: new Types.ObjectId(),
-  clues: 'DFSSA001234',
   folio: '00000002',
+  idProveedorSalud: new Types.ObjectId(),
   curpPaciente: 'GOLM900515MDFNZR02',
   fechaNacimiento: new Date('1990-05-15'),
   sexo: 2, // Mujer

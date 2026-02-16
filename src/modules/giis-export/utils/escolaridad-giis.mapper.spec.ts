@@ -41,7 +41,9 @@ describe('escolaridad-giis.mapper', () => {
       expect(appEscolaridadToCatalogKey('Doctorado')).toBe(101);
       // With accent (í): app schema uses "Maestría"; mapper normalizes to maestria
       expect(
-        appEscolaridadToCatalogKey('Maestr' + String.fromCharCode(0x00ed) + 'a'),
+        appEscolaridadToCatalogKey(
+          'Maestr' + String.fromCharCode(0x00ed) + 'a',
+        ),
       ).toBe(101);
     });
 

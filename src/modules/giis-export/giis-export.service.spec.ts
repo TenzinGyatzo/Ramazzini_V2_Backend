@@ -130,7 +130,9 @@ describe('GIISExportService - Regulatory Policy Enforcement', () => {
       );
 
       // Mock empty results to avoid data processing errors
-      const mockLesionModel = service['lesionModel'] as jest.Mocked<Model<Lesion>>;
+      const mockLesionModel = service['lesionModel'] as jest.Mocked<
+        Model<Lesion>
+      >;
       mockLesionModel.find.mockReturnValue({
         lean: jest.fn().mockResolvedValue([]),
       } as any);
@@ -150,5 +152,4 @@ describe('GIISExportService - Regulatory Policy Enforcement', () => {
       );
     });
   });
-
 });

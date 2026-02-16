@@ -214,7 +214,6 @@ describe('LES mapper unit', () => {
     expect(schema.fields.length).toBe(82);
 
     const lesion = {
-      clues: 'DFSSA001234',
       folio: '00000001',
       curpPaciente: 'PEGJ850102HDFRNN08',
       fechaNacimiento: new Date('1985-01-02'),

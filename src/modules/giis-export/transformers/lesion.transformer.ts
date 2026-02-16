@@ -36,7 +36,6 @@ import {
  * Lesion document interface (from internal schema)
  */
 interface LesionDoc {
-  clues?: string;
   folio?: string;
   curpPaciente?: string;
   fechaNacimiento?: Date;
@@ -105,8 +104,8 @@ export function transformLesionToGIIS(
   const fields: (string | number | null | undefined)[] = [];
 
   // ===== SECCIÓN 1: IDENTIFICACIÓN DEL ESTABLECIMIENTO (1-10) =====
-  // 1. CLUES del establecimiento
-  fields.push(formatCLUES(lesionDoc.clues || proveedorDoc?.clues));
+  // 1. CLUES del establecimiento (desde ProveedorSalud)
+  fields.push(formatCLUES(proveedorDoc?.clues));
   // 2. Folio del registro
   fields.push(padNumber(lesionDoc.folio, 8));
   // 3. Entidad federativa (derivado de CLUES)
@@ -124,7 +123,7 @@ export function transformLesionToGIIS(
   // 9. Nombre del establecimiento
   fields.push(proveedorDoc?.nombre || '');
   // 10. Clave del establecimiento (redundante con CLUES)
-  fields.push(formatCLUES(lesionDoc.clues || proveedorDoc?.clues));
+  fields.push(formatCLUES(proveedorDoc?.clues));
 
   // ===== SECCIÓN 2: IDENTIFICACIÓN DEL PACIENTE (11-30) =====
   // 11. CURP del paciente

@@ -1501,11 +1501,20 @@ export class ExpedientesService {
 
   /**
    * GIIS-B013: Create Lesion record
+   * CLUES se obtiene de ProveedorSalud cuando se requiere; unicidad por idProveedorSalud + fechaAtencion + folio
    */
   async createLesion(createDto: any): Promise<any> {
     await this.validateLesionRules(createDto, createDto.idTrabajador);
 
-    // Check folio uniqueness per CLUES + fechaAtencion
+    const proveedorSaludId = await this.getProveedorSaludIdFromTrabajador(
+      createDto.idTrabajador,
+    );
+    if (!proveedorSaludId) {
+      throw new BadRequestException(
+        'No se pudo determinar el proveedor de salud del trabajador',
+      );
+    }
+
     const fechaAtencion = new Date(createDto.fechaAtencion);
     const fechaAtencionOnly = new Date(
       fechaAtencion.getFullYear(),
@@ -1515,7 +1524,7 @@ export class ExpedientesService {
 
     const existingLesion = await this.lesionModel
       .findOne({
-        clues: createDto.clues,
+        idProveedorSalud: proveedorSaludId,
         fechaAtencion: {
           $gte: fechaAtencionOnly,
           $lt: new Date(fechaAtencionOnly.getTime() + 24 * 60 * 60 * 1000),
@@ -1525,12 +1534,19 @@ export class ExpedientesService {
       .exec();
 
     if (existingLesion) {
+      const clues =
+        (await this.getCluesFromProveedorSalud(createDto.idTrabajador)) ||
+        'N/A';
       throw new BadRequestException(
-        `Ya existe un registro de lesión con el folio ${createDto.folio} para el CLUES ${createDto.clues} en la fecha ${fechaAtencionOnly.toISOString().split('T')[0]}`,
+        `Ya existe un registro de lesión con el folio ${createDto.folio} para el establecimiento (CLUES ${clues}) en la fecha ${fechaAtencionOnly.toISOString().split('T')[0]}`,
       );
     }
 
-    const createdLesion = new this.lesionModel(createDto);
+    const lesionData = {
+      ...createDto,
+      idProveedorSalud: proveedorSaludId,
+    };
+    const createdLesion = new this.lesionModel(lesionData);
     const savedLesion = await createdLesion.save();
 
     if (createDto.idTrabajador) {
@@ -1584,36 +1600,46 @@ export class ExpedientesService {
       mergedDto.idTrabajador.toString(),
     );
 
-    // Check folio uniqueness if changed
-    if (updateDto.folio || updateDto.clues || updateDto.fechaAtencion) {
-      const finalClues = updateDto.clues || existingLesion.clues;
+    // Check folio uniqueness if changed (por idProveedorSalud + fechaAtencion + folio)
+    if (updateDto.folio || updateDto.fechaAtencion) {
+      const finalProveedorId =
+        existingLesion.idProveedorSalud?.toString() ||
+        (await this.getProveedorSaludIdFromTrabajador(
+          (existingLesion.idTrabajador as any)?.toString(),
+        ));
       const finalFechaAtencion = updateDto.fechaAtencion
         ? new Date(updateDto.fechaAtencion)
         : existingLesion.fechaAtencion;
       const finalFolio = updateDto.folio || existingLesion.folio;
 
-      const fechaAtencionOnly = new Date(
-        finalFechaAtencion.getFullYear(),
-        finalFechaAtencion.getMonth(),
-        finalFechaAtencion.getDate(),
-      );
-
-      const existingLesionWithFolio = await this.lesionModel
-        .findOne({
-          _id: { $ne: id },
-          clues: finalClues,
-          fechaAtencion: {
-            $gte: fechaAtencionOnly,
-            $lt: new Date(fechaAtencionOnly.getTime() + 24 * 60 * 60 * 1000),
-          },
-          folio: finalFolio,
-        })
-        .exec();
-
-      if (existingLesionWithFolio) {
-        throw new BadRequestException(
-          `Ya existe otro registro de lesión con el folio ${finalFolio} para el CLUES ${finalClues} en la fecha ${fechaAtencionOnly.toISOString().split('T')[0]}`,
+      if (finalProveedorId) {
+        const fechaAtencionOnly = new Date(
+          finalFechaAtencion.getFullYear(),
+          finalFechaAtencion.getMonth(),
+          finalFechaAtencion.getDate(),
         );
+
+        const existingLesionWithFolio = await this.lesionModel
+          .findOne({
+            _id: { $ne: id },
+            idProveedorSalud: finalProveedorId,
+            fechaAtencion: {
+              $gte: fechaAtencionOnly,
+              $lt: new Date(fechaAtencionOnly.getTime() + 24 * 60 * 60 * 1000),
+            },
+            folio: finalFolio,
+          })
+          .exec();
+
+        if (existingLesionWithFolio) {
+          const clues =
+            (await this.getCluesFromProveedorSalud(
+              (existingLesion.idTrabajador as any)?.toString(),
+            )) || 'N/A';
+          throw new BadRequestException(
+            `Ya existe otro registro de lesión con el folio ${finalFolio} para el establecimiento (CLUES ${clues}) en la fecha ${fechaAtencionOnly.toISOString().split('T')[0]}`,
+          );
+        }
       }
     }
 

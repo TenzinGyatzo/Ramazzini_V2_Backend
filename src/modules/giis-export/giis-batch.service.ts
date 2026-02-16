@@ -284,7 +284,10 @@ export class GiisBatchService {
             .exec()
         : [];
     const firstInYearIds = new Set<string>();
-    const byTrabajador = new Map<string, { fecha: Date; _id: Types.ObjectId }[]>();
+    const byTrabajador = new Map<
+      string,
+      { fecha: Date; _id: Types.ObjectId }[]
+    >();
     for (const n of notasDelAnio as any[]) {
       const key = n.idTrabajador?.toString?.() ?? n.idTrabajador;
       if (!key) continue;

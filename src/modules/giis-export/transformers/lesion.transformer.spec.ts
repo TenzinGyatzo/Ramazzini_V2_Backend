@@ -25,7 +25,6 @@ describe('Lesion Transformer (GIIS-B013)', () => {
   };
 
   const mockLesion = {
-    clues: 'ASCIJ000012',
     folio: '00000001',
     curpPaciente: 'ROAJ850102HDFLRN08',
     fechaNacimiento: new Date('1985-01-02T00:00:00Z'),
@@ -202,18 +201,22 @@ describe('Lesion Transformer (GIIS-B013)', () => {
       const fields = result.split('|');
 
       expect(fields.length).toBe(getGIISB013FieldCount());
-      // Should use lesion CLUES
-      expect(fields[0]).toBe('ASCIJ000012');
+      // CLUES se obtiene de ProveedorSalud; sin proveedor queda vacío
+      expect(fields[0]).toBe('');
     });
 
     it('should handle minimal lesion data', () => {
       const minimalLesion = {
-        clues: 'ASCIJ000012',
         fechaEvento: new Date('2024-03-15'),
         fechaAtencion: new Date('2024-03-15'),
       };
+      const minimalProveedor = { clues: 'ASCIJ000012' };
 
-      const result = transformLesionToGIIS(minimalLesion, null, null);
+      const result = transformLesionToGIIS(
+        minimalLesion,
+        null,
+        minimalProveedor,
+      );
       const fields = result.split('|');
 
       expect(fields.length).toBe(getGIISB013FieldCount());

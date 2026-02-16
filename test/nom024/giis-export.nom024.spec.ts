@@ -321,6 +321,5 @@ describe('NOM-024 GIIS Export Transformation (Task 16)', () => {
 
       expect(output1).toBe(output2);
     });
-
   });
 });

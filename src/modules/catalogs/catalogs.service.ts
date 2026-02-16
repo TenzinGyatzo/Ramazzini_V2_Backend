@@ -297,13 +297,8 @@ export class CatalogsService implements OnModuleInit {
 
         case CatalogType.CLUES: {
           const rawClues =
-            record.clues ||
-            record.CLUES ||
-            record.codigo ||
-            record.code;
-          const code = rawClues
-            ? String(rawClues).trim().toUpperCase()
-            : '';
+            record.clues || record.CLUES || record.codigo || record.code;
+          const code = rawClues ? String(rawClues).trim().toUpperCase() : '';
           const description =
             record.nombre_unidad ||
             record['NOMBRE DE LA INSTITUCION'] ||
@@ -311,7 +306,10 @@ export class CatalogsService implements OnModuleInit {
             record.descripcion ||
             record.description;
           let estatus: string | undefined;
-          if (record.en_operacion !== undefined && record.en_operacion !== null) {
+          if (
+            record.en_operacion !== undefined &&
+            record.en_operacion !== null
+          ) {
             estatus =
               record.en_operacion == 1 || record.en_operacion === '1'
                 ? 'EN OPERACION'
@@ -427,8 +425,7 @@ export class CatalogsService implements OnModuleInit {
           }
 
           const catalogKeyPaisRaw =
-            record['catalog_key_pais'] ??
-            record.catalogKeyPais;
+            record['catalog_key_pais'] ?? record.catalogKeyPais;
           const catalogKeyPais =
             catalogKeyPaisRaw != null
               ? parseInt(String(catalogKeyPaisRaw), 10)
@@ -442,7 +439,9 @@ export class CatalogsService implements OnModuleInit {
             version: record.version,
             claveNacionalidad: claveNacionalidad,
             codigoPais: codigoPais,
-            catalogKeyPais: Number.isNaN(catalogKeyPais) ? undefined : catalogKeyPais,
+            catalogKeyPais: Number.isNaN(catalogKeyPais)
+              ? undefined
+              : catalogKeyPais,
           };
 
         case CatalogType.CODIGOS_POSTALES:
@@ -460,7 +459,9 @@ export class CatalogsService implements OnModuleInit {
 
         case CatalogType.ESCOLARIDAD:
           return {
-            code: String(record.CATALOG_KEY ?? record.codigo ?? record.code ?? ''),
+            code: String(
+              record.CATALOG_KEY ?? record.codigo ?? record.code ?? '',
+            ),
             description:
               record.ESCOLARIDAD || record.descripcion || record.description,
             source: 'ESCOLARIDAD',

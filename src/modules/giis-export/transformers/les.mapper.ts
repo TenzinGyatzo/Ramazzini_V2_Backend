@@ -44,27 +44,64 @@ export interface PrestadorLike {
   tipoPersonal?: number;
 }
 
-/** Lesion document-like (GIIS-B013) */
+/** Lesion document-like (Reporte de Lesión y/o Violencia — GIIS-B013). CLUES se obtiene de ProveedorSalud en el context. */
 export interface LesionLike {
-  clues?: string;
   folio?: string;
   curpPaciente?: string;
   fechaNacimiento?: Date;
   sexo?: number;
   fechaEvento?: Date;
   horaEvento?: string;
+  diaFestivo?: number;
   sitioOcurrencia?: number;
+  entidadOcurrencia?: string;
+  municipioOcurrencia?: string;
+  localidadOcurrencia?: string;
+  otraLocalidad?: string;
+  codigoPostal?: string;
+  tipoVialidad?: number;
+  nombreVialidad?: string;
+  numeroExterior?: string;
+  tipoAsentamiento?: number;
+  nombreAsentamiento?: string;
+  atencionPreHospitalaria?: number;
+  tiempoTrasladoUH?: string;
+  sospechaBajoEfectosDe?: string;
   intencionalidad?: number;
+  eventoRepetido?: number;
   agenteLesion?: number;
+  especifique?: string;
+  lesionadoVehiculoMotor?: number;
+  usoEquipoSeguridad?: number;
+  equipoUtilizado?: number;
+  especifiqueEquipo?: string;
   tipoViolencia?: number[];
+  numeroAgresores?: number;
+  parentescoAfectado?: number;
+  sexoAgresor?: number;
+  edadAgresor?: number;
+  agresorBajoEfectos?: string;
   fechaAtencion?: Date;
   horaAtencion?: string;
+  servicioAtencion?: number;
+  especifiqueServicio?: string;
   tipoAtencion?: number[];
   areaAnatomica?: number;
+  especifiqueArea?: string;
   consecuenciaGravedad?: number;
+  especifiqueConsecuencia?: string;
+  descripcionAfeccionPrincipal?: string;
   codigoCIEAfeccionPrincipal?: string;
   codigoCIECausaExterna?: string;
   afeccionesTratadas?: string[];
+  descripcionAfeccion?: string;
+  afeccionPrincipalReseleccionada?: string;
+  causaExterna?: string;
+  despuesAtencion?: number;
+  especifiqueDestino?: string;
+  ministerioPublico?: number;
+  folioCertificadoDefuncion?: string;
+  fechaReporteLesion?: Date;
   responsableAtencion?: number;
   curpResponsable?: string;
   [key: string]: unknown;
@@ -296,7 +333,7 @@ export function mapLesionToLesRow(
   const schema = LES_SCHEMA;
   const row: Record<string, string | number> = {};
 
-  const clues = (context.clues || lesion.clues || '').trim() || '9998';
+  const clues = (context.clues || '').trim() || '9998';
   const curpPaciente = lesion.curpPaciente
     ? formatCURP(lesion.curpPaciente as string) ||
       (trabajador?.curp ? formatCURP(trabajador.curp) : '') ||
@@ -352,54 +389,55 @@ export function mapLesionToLesRow(
       lesion.horaEvento && /^\d{1,2}:\d{2}$/.test(lesion.horaEvento)
         ? lesion.horaEvento
         : HORA_IGNORADA,
-    diaFestivo: 2,
+    diaFestivo: lesion.diaFestivo ?? 2,
     sitioOcurrencia: lesion.sitioOcurrencia ?? 0,
-    entidadOcurrencia: '99',
-    municipioOcurrencia: '998',
-    localidadOcurrencia: '9998',
-    otraLocalidad: '',
-    codigoPostal: '00000',
-    tipoVialidad: 99,
-    nombreVialidad: 'NO ESPECIFICADO',
-    numeroExterior: '0',
-    tipoAsentamiento: 46,
-    nombreAsentamiento: 'NO ESPECIFICADO',
-    atencionPreHospitalaria: 2,
-    tiempoTrasladoUH: '',
-    sospechaBajoEfectosDe: '5',
+    entidadOcurrencia: lesion.entidadOcurrencia ?? '99',
+    municipioOcurrencia: lesion.municipioOcurrencia ?? '998',
+    localidadOcurrencia: lesion.localidadOcurrencia ?? '9998',
+    otraLocalidad: lesion.otraLocalidad ?? '',
+    codigoPostal: lesion.codigoPostal ?? '00000',
+    tipoVialidad: lesion.tipoVialidad ?? 99,
+    nombreVialidad: lesion.nombreVialidad ?? 'NO ESPECIFICADO',
+    numeroExterior: lesion.numeroExterior ?? '0',
+    tipoAsentamiento: lesion.tipoAsentamiento ?? 46,
+    nombreAsentamiento: lesion.nombreAsentamiento ?? 'NO ESPECIFICADO',
+    atencionPreHospitalaria: lesion.atencionPreHospitalaria ?? 2,
+    tiempoTrasladoUH: lesion.tiempoTrasladoUH ?? '',
+    sospechaBajoEfectosDe: lesion.sospechaBajoEfectosDe ?? '5',
     intencionalidad: lesion.intencionalidad ?? 1,
-    eventoRepetido: 1,
+    eventoRepetido: lesion.eventoRepetido ?? 1,
     agenteLesion:
       lesion.agenteLesion ??
       (lesion.intencionalidad === 1 || lesion.intencionalidad === 4 ? 26 : 27),
-    especifique: '',
-    lesionadoVehiculoMotor: -1,
-    usoEquipoSeguridad: -1,
-    equipoUtilizado: -1,
-    especifiqueEquipo: '',
+    especifique: lesion.especifique ?? '',
+    lesionadoVehiculoMotor: lesion.lesionadoVehiculoMotor ?? -1,
+    usoEquipoSeguridad: lesion.usoEquipoSeguridad ?? -1,
+    equipoUtilizado: lesion.equipoUtilizado ?? -1,
+    especifiqueEquipo: lesion.especifiqueEquipo ?? '',
     tipoViolencia: tipoViolenciaStr,
-    numeroAgresores: -1,
-    parentescoAfectado: -1,
-    sexoAgresor: -1,
-    edadAgresor: 0,
-    agresorBajoEfectos: '-1',
+    numeroAgresores: lesion.numeroAgresores ?? -1,
+    parentescoAfectado: lesion.parentescoAfectado ?? -1,
+    sexoAgresor: lesion.sexoAgresor ?? -1,
+    edadAgresor: lesion.edadAgresor ?? 0,
+    agresorBajoEfectos: lesion.agresorBajoEfectos ?? '-1',
     fechaAtencion: toDDMMAAAA(lesion.fechaAtencion) || '01/01/2020',
     horaAtencion:
       lesion.horaAtencion && /^\d{1,2}:\d{2}$/.test(lesion.horaAtencion)
         ? lesion.horaAtencion
         : HORA_IGNORADA,
-    servicioAtencion: 1,
-    especifiqueServicio: '',
+    servicioAtencion: lesion.servicioAtencion ?? 1,
+    especifiqueServicio: lesion.especifiqueServicio ?? '',
     tipoAtencion: tipoAtencionStr,
     areaAnatomica: lesion.areaAnatomica ?? 0,
-    especifiqueArea: '',
+    especifiqueArea: lesion.especifiqueArea ?? '',
     consecuenciaGravedad: lesion.consecuenciaGravedad ?? 0,
-    especifiqueConsecuencia: '',
-    descripcionAfeccionPrincipal: 'AFECCION PRINCIPAL',
+    especifiqueConsecuencia: lesion.especifiqueConsecuencia ?? '',
+    descripcionAfeccionPrincipal:
+      lesion.descripcionAfeccionPrincipal ?? 'AFECCION PRINCIPAL',
     codigoCIEAfeccionPrincipal:
       (lesion.codigoCIEAfeccionPrincipal as string)?.trim() || 'S00',
     numeroAfeccion: 1,
-    descripcionAfeccion: 'AFECCION TRATADA',
+    descripcionAfeccion: lesion.descripcionAfeccion ?? 'AFECCION TRATADA',
     codigoCIEAfeccion:
       (
         lesion.afeccionesTratadas?.[0]?.split('#').pop() ||
@@ -408,14 +446,16 @@ export function mapLesionToLesRow(
       lesion.codigoCIEAfeccionPrincipal ||
       'S00',
     afeccionPrincipalReseleccionada:
-      (lesion.codigoCIEAfeccionPrincipal as string)?.trim() || 'S00',
-    causaExterna: 'CAUSA EXTERNA',
+      (lesion.afeccionPrincipalReseleccionada as string)?.trim() ||
+      (lesion.codigoCIEAfeccionPrincipal as string)?.trim() ||
+      'S00',
+    causaExterna: (lesion.causaExterna as string)?.trim() || 'CAUSA EXTERNA',
     codigoCIECausaExterna:
       (lesion.codigoCIECausaExterna as string)?.trim() || 'V99',
-    despuesAtencion: 1,
-    especifiqueDestino: '',
-    ministerioPublico: 2,
-    folioCertificadoDefuncion: '',
+    despuesAtencion: lesion.despuesAtencion ?? 1,
+    especifiqueDestino: lesion.especifiqueDestino ?? '',
+    ministerioPublico: lesion.ministerioPublico ?? 2,
+    folioCertificadoDefuncion: lesion.folioCertificadoDefuncion ?? '',
     responsableAtencion: lesion.responsableAtencion ?? 1,
     paisNacimiento: DEFAULT_PAIS_MEXICO,
     curpResponsable:

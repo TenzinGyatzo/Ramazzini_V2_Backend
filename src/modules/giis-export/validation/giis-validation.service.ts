@@ -107,7 +107,9 @@ export class GiisValidationService {
           (notas as any[])
             .map((n) => n.idTrabajador)
             .filter(Boolean)
-            .map((id) => (id && typeof id === 'object' && id._id ? id._id : id).toString()),
+            .map((id) =>
+              (id && typeof id === 'object' && id._id ? id._id : id).toString(),
+            ),
         ),
       ];
       const startOfYear = new Date(year, 0, 1);
@@ -131,7 +133,9 @@ export class GiisValidationService {
       >();
       for (const n of notasDelAnio as any[]) {
         const key =
-          n.idTrabajador && typeof n.idTrabajador === 'object' && (n.idTrabajador as any)._id
+          n.idTrabajador &&
+          typeof n.idTrabajador === 'object' &&
+          (n.idTrabajador as any)._id
             ? (n.idTrabajador as any)._id.toString()
             : (n.idTrabajador ?? '').toString();
         if (!key) continue;

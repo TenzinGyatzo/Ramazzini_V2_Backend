@@ -34,9 +34,7 @@ function normalize(s: string): string {
     .replace(/\u00F3/g, 'o')
     .replace(/\u00FA/g, 'u')
     .replace(/\u00F1/g, 'n');
-  return unaccented
-    .normalize('NFD')
-    .replace(/\u0300-\u036f/g, '');
+  return unaccented.normalize('NFD').replace(/\u0300-\u036f/g, '');
 }
 
 /**
@@ -51,7 +49,6 @@ export function appEscolaridadToCatalogKey(
   const raw = String(escolaridadApp).trim();
   if (raw === '') return DEFAULT_CATALOG_KEY;
   const key = normalize(raw);
-  if (APP_TO_CATALOG_KEY[key] !== undefined)
-    return APP_TO_CATALOG_KEY[key];
+  if (APP_TO_CATALOG_KEY[key] !== undefined) return APP_TO_CATALOG_KEY[key];
   return DEFAULT_CATALOG_KEY;
 }
