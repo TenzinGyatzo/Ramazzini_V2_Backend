@@ -1,5 +1,5 @@
 // Servicios para la generación de informes en PDF
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrinterService } from '../printer/printer.service';
 import { antidopingInforme } from './documents/antidoping.informe';
 import { certificadoInforme } from './documents/certificado.informe';
@@ -1121,6 +1121,12 @@ export class InformesService {
       .replace(/\//g, '-')
       .replace(/\\/g, '-');
     const nombreArchivo = `Certificado ${fecha}.pdf`;
+
+    if (!datosExploracionFisica) {
+      throw new BadRequestException(
+        'No se puede generar el certificado sin datos de exploración física.',
+      );
+    }
 
     const rutaDirectorio = path.resolve(certificado.rutaPDF);
     if (!fs.existsSync(rutaDirectorio)) {

@@ -502,20 +502,23 @@ export const certificadoInforme = (
                 { text: `Saturación de oxígeno del ${exploracionFisica.saturacionOxigeno}% (${exploracionFisica.categoriaSaturacionOxigeno}). ` },
                 { text: `Tensión arterial ${exploracionFisica.tensionArterialSistolica}/${exploracionFisica.tensionArterialDiastolica} mmHg (${exploracionFisica.categoriaTensionArterial || 'no especificada'}). ` },
 
-                { text: `Examen visual con agudeza lejana sin corrección: OI ${formatearAgudezaVisual(examenVista.ojoIzquierdoLejanaSinCorreccion, getCiegaOI(examenVista))} y OD ${formatearAgudezaVisual(examenVista.ojoDerechoLejanaSinCorreccion, getCiegaOD(examenVista))} ` },
-                { text: `(${examenVista.sinCorreccionLejanaInterpretacion || 'categoría no disponible'}). ` },
-
-                ...(examenVista.interpretacionIshihara === 'Daltonismo'
-                  ? [{ text: 'Se detecta alteración en la percepción cromática (Daltonismo). ' }]
-                  : examenVista.interpretacionIshihara === 'Normal'
-                    ? [{ text: 'No se detectan alteraciones en la percepción cromática. ' }]
-                    : [{ text: 'No se cuenta con resultado de prueba de percepción cromática. ' }]),
+                ...(examenVista
+                  ? [
+                      { text: `Examen visual con agudeza lejana sin corrección: OI ${formatearAgudezaVisual(examenVista.ojoIzquierdoLejanaSinCorreccion, getCiegaOI(examenVista))} y OD ${formatearAgudezaVisual(examenVista.ojoDerechoLejanaSinCorreccion, getCiegaOD(examenVista))} ` },
+                      { text: `(${examenVista.sinCorreccionLejanaInterpretacion || 'categoría no disponible'}). ` },
+                      ...(examenVista.interpretacionIshihara === 'Daltonismo'
+                        ? [{ text: 'Se detecta alteración en la percepción cromática (Daltonismo). ' }]
+                        : examenVista.interpretacionIshihara === 'Normal'
+                          ? [{ text: 'No se detectan alteraciones en la percepción cromática. ' }]
+                          : [{ text: 'No se cuenta con resultado de prueba de percepción cromática. ' }]),
+                    ]
+                  : [{ text: ' ' }]),
 
                 { text: generarTextoExploracionFisica(exploracionFisica) },
                 
                 ...(exploracionFisica.resumenExploracionFisica === 'Se encuentra clínicamente sano' ||
                   exploracionFisica.resumenExploracionFisica === 'Se encuentra clínicamente sana'
-                  ? [{ text: `${exploracionFisica.resumenExploracionFisica}.` }]
+                  ? [{ text: ` ${exploracionFisica.resumenExploracionFisica}.` }]
                   : [])
               ])
         ],
