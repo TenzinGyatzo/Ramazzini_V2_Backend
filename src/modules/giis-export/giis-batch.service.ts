@@ -18,7 +18,7 @@ import { Empresa } from '../empresas/schemas/empresa.schema';
 import { loadGiisSchema } from './schema-loader';
 import { GiisSerializerService } from './giis-serializer.service';
 import { mapNotaMedicaToCexRow } from './transformers/cex.mapper';
-import { mapNotaMedicaToLesRows } from './transformers/les.mapper';
+import { mapLesionToLesRow } from './transformers/les.mapper';
 import { RegulatoryPolicyService } from '../../utils/regulatory-policy.service';
 import { ProveedoresSaludService } from '../proveedores-salud/proveedores-salud.service';
 import { formatCLUES } from './formatters/field.formatter';
@@ -416,8 +416,7 @@ export class GiisBatchService {
 
   /**
    * Generate LES (B013 Lesiones) artifact for a batch and write TXT file.
-   * Derives from NotaMedica (finalizadas) that contain injury codes (S00-T98) or external cause (V01-Y98).
-   * Can be called after createBatch or after other artifacts; appends artifact to batch.
+   * Uses Lesion documents (finalizadas) for the batch month and proveedor.
    */
   async generateBatchLes(batchId: string): Promise<GiisBatch | null> {
     const batch = await this.getBatch(batchId);
@@ -428,16 +427,13 @@ export class GiisBatchService {
     const startOfMonth = new Date(year, month - 1, 1);
     const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
     const clues = batch.establecimientoClues || '9998';
+    const proveedorOid = new Types.ObjectId(batch.proveedorSaludId.toString());
 
-    const trabajadorIds = await this.getTrabajadorIdsForProveedor(
-      batch.proveedorSaludId.toString(),
-    );
-    const notas = await this.notaMedicaModel
+    const lesiones = await this.lesionModel
       .find({
         estado: DocumentoEstado.FINALIZADO,
-        fechaNotaMedica: { $gte: startOfMonth, $lte: endOfMonth },
-        idTrabajador:
-          trabajadorIds.length > 0 ? { $in: trabajadorIds } : { $in: [] },
+        fechaAtencion: { $gte: startOfMonth, $lte: endOfMonth },
+        idProveedorSalud: proveedorOid,
       })
       .populate('idTrabajador')
       .lean()
@@ -450,26 +446,27 @@ export class GiisBatchService {
     };
     const schema = loadGiisSchema('LES');
     const rows: Record<string, string | number>[] = [];
-    for (const doc of notas) {
-      const nota = doc as any;
-      const trabajador = nota.idTrabajador ? (nota.idTrabajador as any) : null;
-      const rawUser = nota.finalizadoPor ?? nota.updatedBy;
-      const userId =
-        rawUser != null
-          ? typeof rawUser === 'string'
-            ? rawUser
-            : (rawUser as Types.ObjectId).toString()
-          : '';
-      const prestadorData = userId
-        ? await this.firmanteHelper.getPrestadorDataFromUser(userId)
+    for (const doc of lesiones) {
+      const lesion = doc as any;
+      const trabajador = lesion.idTrabajador
+        ? (lesion.idTrabajador as any)
         : null;
-      const lesRows = mapNotaMedicaToLesRows(
-        nota,
+      const firmanteUserId = (
+        lesion.finalizadoPor?._id ||
+        lesion.finalizadoPor ||
+        lesion.createdBy?._id ||
+        lesion.createdBy
+      )?.toString();
+      const firmanteData = firmanteUserId
+        ? await this.firmanteHelper.getFirmanteDataForLes(firmanteUserId)
+        : null;
+      const row = mapLesionToLesRow(
+        lesion,
         lesContext,
         trabajador,
-        prestadorData ?? undefined,
+        firmanteData,
       );
-      rows.push(...lesRows);
+      rows.push(row);
     }
 
     const { validRows, excludedReport, warnings } =
@@ -505,11 +502,11 @@ export class GiisBatchService {
             : (currentBatch?.validationStatus ?? 'validated');
 
     const content = this.serializer.serialize(schema, validRows);
-    const proveedorId = batch.proveedorSaludId.toString();
+    const proveedorIdStr = batch.proveedorSaludId.toString();
     const dir = path.join(
       process.cwd(),
       EXPORTS_BASE,
-      proveedorId,
+      proveedorIdStr,
       batch.yearMonth,
     );
     fs.mkdirSync(dir, { recursive: true });
@@ -518,7 +515,7 @@ export class GiisBatchService {
 
     const relativePath = path.join(
       EXPORTS_BASE,
-      proveedorId,
+      proveedorIdStr,
       batch.yearMonth,
       'LES.txt',
     );

@@ -270,7 +270,7 @@ describe('NOM-024 GIIS Export Transformation (Task 16)', () => {
 
       const output = transformLesionToGIIS(lesion, trabajador, proveedor);
 
-      expect(output.includes(lesion.clues)).toBe(true);
+      expect(output.includes(proveedor.clues)).toBe(true);
     });
 
     it('should include CURP paciente in output', () => {

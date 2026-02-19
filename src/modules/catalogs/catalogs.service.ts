@@ -72,6 +72,11 @@ export class CatalogsService implements OnModuleInit {
     [CatalogType.SERVICIOS_DET]: 'cat_servicios_det.csv',
     [CatalogType.AFILIACION]: 'cat_afiliacion.csv',
     [CatalogType.PAIS]: 'cat_pais.csv',
+    // GIIS Lesión catalogs (2) - Optional
+    [CatalogType.TIPO_VIALIDAD]: 'cat_tipo_vialidad.csv',
+    [CatalogType.TIPO_ASENTAMIENTO]: 'cat_tipo_asentamiento.csv',
+    // CIE-10 GIIS para lesión/violencia (incluye V01-Y98)
+    [CatalogType.CIE10_GIIS_LESION]: 'diagnosticos.csv',
   };
 
   // Define which catalogs are optional (GIIS)
@@ -86,6 +91,10 @@ export class CatalogsService implements OnModuleInit {
     CatalogType.SERVICIOS_DET,
     CatalogType.AFILIACION,
     CatalogType.PAIS,
+    // GIIS Lesión catalogs
+    CatalogType.TIPO_VIALIDAD,
+    CatalogType.TIPO_ASENTAMIENTO,
+    CatalogType.CIE10_GIIS_LESION,
   ];
 
   // Base catalogs (required)
@@ -295,6 +304,61 @@ export class CatalogsService implements OnModuleInit {
             lsupRaw,
           } as CIE10Entry;
 
+        case CatalogType.CIE10_GIIS_LESION: {
+          const code = record.CATALOG_KEY || record.codigo || record.code;
+          const numCaracteres = record['NO. CARACTERES']
+            ? parseInt(String(record['NO. CARACTERES']), 10)
+            : code?.length;
+
+          const linfRaw = record.LINF
+            ? String(record.LINF).trim().toUpperCase()
+            : undefined;
+          const lsupRaw = record.LSUP
+            ? String(record.LSUP).trim().toUpperCase()
+            : undefined;
+          let linf: number | undefined;
+          let lsup: number | undefined;
+          if (linfRaw && linfRaw !== 'NO') {
+            const linfNum = parseInt(linfRaw, 10);
+            if (!isNaN(linfNum) && linfRaw.match(/^\d+$/)) linf = linfNum;
+          }
+          if (lsupRaw && lsupRaw !== 'NO') {
+            const lsupNum = parseInt(lsupRaw, 10);
+            if (!isNaN(lsupNum) && lsupRaw.match(/^\d+$/)) lsup = lsupNum;
+          }
+
+          const rubricaType = record.RUBRICA_TYPE
+            ? String(record.RUBRICA_TYPE).trim().toUpperCase()
+            : undefined;
+          const afPrin = record.AF_PRIN
+            ? String(record.AF_PRIN).trim().toUpperCase()
+            : undefined;
+
+          return {
+            code,
+            description:
+              record.NOMBRE || record.descripcion || record.description,
+            source: 'CIE-10-GIIS',
+            version: record.version,
+            catalogKey: record.CATALOG_KEY,
+            nombre: record.NOMBRE,
+            lsex: record.LSEX,
+            linf,
+            lsup,
+            linfRaw,
+            lsupRaw,
+            numCaracteres: !Number.isNaN(numCaracteres)
+              ? numCaracteres
+              : undefined,
+            rubricaType,
+            afPrin,
+          } as CIE10Entry & {
+            numCaracteres?: number;
+            rubricaType?: string;
+            afPrin?: string;
+          };
+        }
+
         case CatalogType.CLUES: {
           const rawClues =
             record.clues || record.CLUES || record.codigo || record.code;
@@ -444,7 +508,13 @@ export class CatalogsService implements OnModuleInit {
               : catalogKeyPais,
           };
 
-        case CatalogType.CODIGOS_POSTALES:
+        case CatalogType.CODIGOS_POSTALES: {
+          const cEstado = record.c_estado
+            ? String(record.c_estado).padStart(2, '0')
+            : undefined;
+          const cMunicipio = record.c_mnpio
+            ? String(record.c_mnpio).padStart(3, '0')
+            : undefined;
           return {
             // Usamos una combinación de CP y asentamiento para asegurar unicidad
             code: `${record.d_codigo}-${record.id_asenta_cpcons}`,
@@ -453,9 +523,26 @@ export class CatalogsService implements OnModuleInit {
             asentamiento: record.d_asenta,
             municipio: record.D_mnpio?.toUpperCase() || '',
             estado: record.d_estado?.toUpperCase() || '',
+            ciudad: record.d_ciudad || undefined,
+            tipoAsentamiento: record.d_tipo_asenta || undefined,
+            cEstado,
+            cMunicipio,
             source: 'SEPOMEX',
             version: record.version,
           } as CPEntry;
+        }
+
+        case CatalogType.SITIO_OCURRENCIA:
+          return {
+            code: String(record.CATALOG_KEY ?? record.codigo ?? record.code),
+            description:
+              record['DESCRIPCIÓN CORTA'] ||
+              record.descripcion ||
+              record.description ||
+              '',
+            source: 'GIIS',
+            version: record.version,
+          };
 
         case CatalogType.ESCOLARIDAD:
           return {
@@ -468,6 +555,37 @@ export class CatalogsService implements OnModuleInit {
             version: record.version,
           };
 
+        case CatalogType.TIPO_VIALIDAD:
+          return {
+            code: String(record.CATALOG_KEY ?? record.codigo ?? record.code),
+            description:
+              record.TIPO_VIALIDAD || record.descripcion || record.description,
+            source: 'GIIS',
+            version: record.version,
+          };
+
+        case CatalogType.TIPO_ASENTAMIENTO:
+          return {
+            code: String(record.CATALOG_KEY ?? record.codigo ?? record.code),
+            description:
+              record.TIPO_ASENTAMIENTO ||
+              record.descripcion ||
+              record.description,
+            source: 'GIIS',
+            version: record.version,
+          };
+
+        case CatalogType.TIPO_PERSONAL:
+          return {
+            code: String(record.CATALOG_KEY ?? record.codigo ?? record.code),
+            description:
+              record.TIPO_PERSONAL ||
+              record.descripcion ||
+              record.description,
+            source: 'GIIS',
+            version: record.version,
+          };
+
         default:
           // Generic mapping for other catalogs (including GIIS catalogs)
           const code =
@@ -476,7 +594,8 @@ export class CatalogsService implements OnModuleInit {
             record.descripcion ||
             record.description ||
             record.DESCRIPCION ||
-            record.NOMBRE;
+            record.NOMBRE ||
+            record['DESCRIPCIÓN CORTA'];
 
           if (!code || !description) {
             return null;
@@ -1079,6 +1198,25 @@ export class CatalogsService implements OnModuleInit {
   }
 
   /**
+   * List all entries from a GIIS catalog (for populating selectors)
+   */
+  listCatalog(catalog: CatalogType, limit: number = 500): CatalogEntry[] {
+    const cache = this.catalogCaches.get(catalog);
+    if (!cache) {
+      return [];
+    }
+    const entries = Array.from(cache.values());
+    return entries.slice(0, limit).sort((a, b) => {
+      const numA = Number(a.code);
+      const numB = Number(b.code);
+      if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
+        return numA - numB;
+      }
+      return (a.description || '').localeCompare(b.description || '');
+    });
+  }
+
+  /**
    * Search CIE-10 catalog entries with optional sex and age filters
    * NOM-024 GIIS-B015: Pre-filter results based on patient data
    */
@@ -1140,6 +1278,172 @@ export class CatalogsService implements OnModuleInit {
     }
 
     return results;
+  }
+
+  /**
+   * Check if CIE-10 code is valid for LES afección principal.
+   * Cap V: F00-F99, Cap XIX: S00-T98, O04-O07, O20, O267, O429, O468-O469, O68, O710-O719.
+   */
+  private isCIE10AfeccionPrincipalValid(code: string): boolean {
+    if (!code || code.length < 3) return false;
+    const c = code.replace(/\./g, '').toUpperCase();
+    const letter = c[0];
+    const num = c.slice(1);
+    const numVal = parseInt(num, 10);
+    if (isNaN(numVal)) return false;
+    if (letter === 'F') return numVal >= 0 && numVal <= 999;
+    if (letter === 'S') return numVal >= 0 && numVal <= 999;
+    if (letter === 'T') {
+      const base = numVal < 100 ? numVal : Math.floor(numVal / 10);
+      return base >= 0 && base <= 98;
+    }
+    if (letter === 'O') {
+      if (
+        num.startsWith('04') ||
+        num.startsWith('05') ||
+        num.startsWith('06') ||
+        num.startsWith('07')
+      )
+        return true;
+      if (num.startsWith('20')) return true;
+      if (num === '267' || num === '429' || num === '468' || num === '469')
+        return true;
+      if (num.startsWith('68')) return true;
+      if (numVal >= 710 && numVal <= 719) return true;
+      return false;
+    }
+    return false;
+  }
+
+  /**
+   * Check if CIE-10 code is valid for LES causa externa (Cap XX: V01-Y98).
+   */
+  private isCIE10CausaExternaValid(code: string): boolean {
+    if (!code || code.length < 3) return false;
+    const c = code.replace(/\./g, '').toUpperCase();
+    const letter = c[0];
+    if (letter !== 'V' && letter !== 'W' && letter !== 'X' && letter !== 'Y')
+      return false;
+    const numVal = parseInt(c.slice(1), 10);
+    if (isNaN(numVal)) return false;
+    const base = numVal < 100 ? numVal : Math.floor(numVal / 10);
+    return base >= 1 && base <= 98;
+  }
+
+  /**
+   * Search CIE-10 GIIS catalog (diagnosticos.csv) for lesion/violence reports.
+   * Includes V01-Y98 (external causes). Optionally filter to 4-character codes only.
+   * filterVariant: 'afeccion' = Cap V, XIX, O específicos; 'causaExterna' = V01-Y98.
+   */
+  async searchCIE10GIIS(
+    query: string,
+    limit: number = 50,
+    sexo?: number,
+    edad?: number,
+    solo4Caracteres: boolean = false,
+    filterVariant?: 'afeccion' | 'causaExterna',
+  ): Promise<CIE10Entry[]> {
+    const cache = this.catalogCaches.get(CatalogType.CIE10_GIIS_LESION);
+    if (!cache) {
+      return [];
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const results: CIE10Entry[] = [];
+
+    for (const entry of cache.values()) {
+      const cieEntry = entry as CIE10Entry & { numCaracteres?: number };
+
+      if (
+        !cieEntry.code.toLowerCase().includes(lowerQuery) &&
+        !(cieEntry.description || '').toLowerCase().includes(lowerQuery)
+      ) {
+        continue;
+      }
+
+      if (filterVariant === 'afeccion') {
+        if (!this.isCIE10AfeccionPrincipalValid(cieEntry.code)) continue;
+        const entryExt = cieEntry as CIE10Entry & { rubricaType?: string; afPrin?: string };
+        if (entryExt.rubricaType === 'B') continue;
+        if (entryExt.afPrin !== undefined && entryExt.afPrin !== 'SI') continue;
+      }
+      if (
+        filterVariant === 'causaExterna' &&
+        !this.isCIE10CausaExternaValid(cieEntry.code)
+      ) {
+        continue;
+      }
+
+      if (solo4Caracteres) {
+        const numChars =
+          cieEntry.numCaracteres ?? cieEntry.code.replace('.', '').length;
+        if (numChars !== 4) continue;
+      }
+
+      if (
+        sexo !== undefined &&
+        sexo !== null &&
+        cieEntry.lsex &&
+        cieEntry.lsex !== 'NO'
+      ) {
+        if (cieEntry.lsex === 'SI' && sexo === 2) continue;
+      }
+
+      if (edad !== undefined && edad !== null) {
+        if (cieEntry.linf !== undefined && edad < cieEntry.linf) continue;
+        if (cieEntry.lsup !== undefined && edad > cieEntry.lsup) continue;
+      }
+
+      results.push(cieEntry);
+      if (results.length >= limit) break;
+    }
+
+    return results;
+  }
+
+  /**
+   * Get CIE-10 GIIS entry by code (from diagnosticos.csv).
+   * Tries exact match and normalized (no-dot) match.
+   */
+  async getCIE10GIISByCode(code: string): Promise<CIE10Entry | null> {
+    const cache = this.catalogCaches.get(CatalogType.CIE10_GIIS_LESION);
+    if (!cache || !code) return null;
+    const trimmed = code.trim();
+    const upper = trimmed.toUpperCase();
+    const withoutDot = upper.replace(/\./g, '');
+    let entry = cache.get(upper) ?? cache.get(trimmed) ?? cache.get(withoutDot);
+    if (!entry) {
+      for (const [k, v] of cache) {
+        if (
+          k.toUpperCase() === upper ||
+          k.replace(/\./g, '').toUpperCase() === withoutDot
+        ) {
+          entry = v;
+          break;
+        }
+      }
+    }
+    return (entry as CIE10Entry) || null;
+  }
+
+  /**
+   * Validate CIE-10 code against GIIS lesion catalog.
+   * Handles format variations: S00.0 vs S000.
+   */
+  async validateCIE10GIIS(code: string): Promise<boolean> {
+    const cache = this.catalogCaches.get(CatalogType.CIE10_GIIS_LESION);
+    if (!cache || !code) return false;
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) return false;
+    const withoutDot = trimmed.replace(/\./g, '');
+    if (cache.has(trimmed)) return true;
+    if (cache.has(withoutDot)) return true;
+    for (const k of cache.keys()) {
+      const kNorm = k.replace(/\./g, '');
+      if (k.toUpperCase() === trimmed || kNorm.toUpperCase() === withoutDot)
+        return true;
+    }
+    return false;
   }
 
   /**

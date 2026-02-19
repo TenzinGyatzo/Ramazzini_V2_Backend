@@ -15,13 +15,19 @@ import { DocumentoEstado } from '../enums/documento-estado.enum';
 export class Lesion extends Document {
   @Prop({
     required: true,
-    match: /^[0-9]{8}$/,
+    match: /^[0-9]{1,8}$/,
   })
-  folio: string; // Identificador interno único por proveedor + fechaAtencion (8 dígitos)
+  folio: string; // 1-8 caracteres numéricos, único por CLUES + fechaAtencion
+
+  @Prop({ required: true })
+  folioScopeId: string; // CLUES o idProveedorSalud (fallback cuando ProveedorSalud no tiene CLUES)
+
+  @Prop({ required: false })
+  rutaPDF?: string; // Ruta del directorio donde se guarda el PDF
 
   // ========== STEP 0: Fecha del reporte ==========
-  @Prop({ required: false })
-  fechaReporteLesion?: Date; // Fecha en que se capturó/llenó el formulario del reporte
+  @Prop({ required: true })
+  fechaReporteLesion: Date; // Fecha en que se capturó/llenó el formulario del reporte
 
   // ========== STEP 1: ¿Cuándo ocurrió el evento? ==========
   @Prop({ required: true })
@@ -166,7 +172,8 @@ export class Lesion extends Document {
 
   @Prop({
     required: true,
-    match: /^[A-Z][0-9]{2}(\.[0-9]{1,2})?$/,
+    // Acepta formato estándar (S09, S09.7) y 4 chars del catálogo DGIS (S097, S000)
+    match: /^[A-Z][0-9]{2,3}(\.[0-9]{1,2})?$/,
   })
   codigoCIEAfeccionPrincipal: string; // Diagnóstico principal (Cap. V, XIX, obstétricos)
 
@@ -221,6 +228,14 @@ export class Lesion extends Document {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   updatedBy: User;
 
+  // Consentimiento Diario (NOM-024) - Requerido cuando dailyConsentEnabled
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'ConsentimientoDiario',
+    required: false,
+  })
+  consentimientoDiarioId?: MongooseSchema.Types.ObjectId;
+
   // Document State Management (NOM-024)
   @Prop({
     type: String,
@@ -248,9 +263,9 @@ export class Lesion extends Document {
 
 export const LesionSchema = SchemaFactory.createForClass(Lesion);
 
-// Unicidad folio por proveedor + fechaAtencion (CLUES se obtiene de ProveedorSalud)
+// Unicidad folio por CLUES (o idProveedorSalud) + fechaAtencion
 LesionSchema.index(
-  { idProveedorSalud: 1, fechaAtencion: 1, folio: 1 },
+  { folioScopeId: 1, fechaAtencion: 1, folio: 1 },
   { unique: true },
 );
 

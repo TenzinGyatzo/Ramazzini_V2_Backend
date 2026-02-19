@@ -67,6 +67,7 @@ import {
   mapNotaMedicaToCexRow,
   getCexSchema,
   extractCieCode,
+  isCodigoTuberculosisPulmonar,
 } from '../../src/modules/giis-export/transformers/cex.mapper';
 
 describe('NOM-024 GIIS Export CEX (Phase 1C)', () => {
@@ -233,5 +234,110 @@ describe('CEX mapper unit', () => {
     expect(extractCieCode('R69X')).toBe('R69X');
     expect(extractCieCode('')).toBe('');
     expect(extractCieCode(undefined)).toBe('');
+  });
+
+  describe('isCodigoTuberculosisPulmonar', () => {
+    it('should return true for pulmonary TB codes with or without dot', () => {
+      expect(isCodigoTuberculosisPulmonar('A15.0')).toBe(true);
+      expect(isCodigoTuberculosisPulmonar('A150')).toBe(true);
+      expect(isCodigoTuberculosisPulmonar('A162')).toBe(true);
+      expect(isCodigoTuberculosisPulmonar('A16.2')).toBe(true);
+      expect(isCodigoTuberculosisPulmonar('a15.1')).toBe(true);
+    });
+    it('should return false for non-TB or other TB codes', () => {
+      expect(isCodigoTuberculosisPulmonar('A15')).toBe(false);
+      expect(isCodigoTuberculosisPulmonar('A169')).toBe(false);
+      expect(isCodigoTuberculosisPulmonar('J00')).toBe(false);
+      expect(isCodigoTuberculosisPulmonar('')).toBe(false);
+      expect(isCodigoTuberculosisPulmonar(undefined)).toBe(false);
+    });
+  });
+
+  describe('sintomaticoRespiratorioTb', () => {
+    const context = { clues: 'DFSSA001234' };
+    const trabajador = {
+      curp: 'PEGJ850102HDFRNN08',
+      nombre: 'JUAN',
+      primerApellido: 'PEREZ',
+      segundoApellido: 'GONZALEZ',
+      fechaNacimiento: new Date('1985-01-02'),
+      sexo: 'Masculino',
+      entidadNacimiento: '09',
+    };
+    const prestadorTipo2 = { curp: 'X', nombre: 'Dr X', tipoPersonal: 2 };
+    const prestadorTipo15 = { curp: 'X', nombre: 'Psic X', tipoPersonal: 15 };
+    const prestadorTipo16 = { curp: 'X', nombre: 'Psic X', tipoPersonal: 16 };
+
+    it('should be 1 when tipoPersonal 2 and principal code is pulmonary TB (A150)', () => {
+      const consulta = {
+        fechaNotaMedica: new Date('2025-01-15'),
+        codigoCIE10Principal: 'A150',
+        relacionTemporal: 0,
+      };
+      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo2);
+      expect(row.sintomaticoRespiratorioTb).toBe(1);
+    });
+
+    it('should be 1 when tipoPersonal 2 and principal code is A15.0 format', () => {
+      const consulta = {
+        fechaNotaMedica: new Date('2025-01-15'),
+        codigoCIE10Principal: 'A15.0 - Tuberculosis respiratoria',
+        relacionTemporal: 0,
+      };
+      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo2);
+      expect(row.sintomaticoRespiratorioTb).toBe(1);
+    });
+
+    it('should be 1 when tipoPersonal 2 and TB code is in complementarios only', () => {
+      const consulta = {
+        fechaNotaMedica: new Date('2025-01-15'),
+        codigoCIE10Principal: 'Z00',
+        codigosCIE10Complementarios: ['J00', 'A161 - TB pulmonar'],
+        relacionTemporal: 0,
+      };
+      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo2);
+      expect(row.sintomaticoRespiratorioTb).toBe(1);
+    });
+
+    it('should be 1 when tipoPersonal 2 and TB code is in codigoCIEDiagnostico2', () => {
+      const consulta = {
+        fechaNotaMedica: new Date('2025-01-15'),
+        codigoCIE10Principal: 'J00',
+        codigoCIEDiagnostico2: 'A161',
+        relacionTemporal: 0,
+      };
+      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo2);
+      expect(row.sintomaticoRespiratorioTb).toBe(1);
+    });
+
+    it('should be 0 when tipoPersonal 2 and no TB code', () => {
+      const consulta = {
+        fechaNotaMedica: new Date('2025-01-15'),
+        codigoCIE10Principal: 'J00',
+        relacionTemporal: 0,
+      };
+      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo2);
+      expect(row.sintomaticoRespiratorioTb).toBe(0);
+    });
+
+    it('should be -1 when tipoPersonal 15 even with TB code', () => {
+      const consulta = {
+        fechaNotaMedica: new Date('2025-01-15'),
+        codigoCIE10Principal: 'A150',
+        relacionTemporal: 0,
+      };
+      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo15);
+      expect(row.sintomaticoRespiratorioTb).toBe(-1);
+    });
+
+    it('should be -1 when tipoPersonal 16 even with TB code', () => {
+      const consulta = {
+        fechaNotaMedica: new Date('2025-01-15'),
+        codigoCIE10Principal: 'A150',
+        relacionTemporal: 0,
+      };
+      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo16);
+      expect(row.sintomaticoRespiratorioTb).toBe(-1);
+    });
   });
 });

@@ -198,11 +198,17 @@ async function validateFieldByRule(
     'primerApellidoPrestador',
     'segundoApellido',
     'segundoApellidoPrestador',
+    // LES (GIIS-B013): responsable de la atención
+    'nombreResponsable',
+    'primerApellidoResponsable',
+    'segundoApellidoResponsable',
   ];
   if (nameFields.includes(name)) {
     const curpKey = name.includes('Prestador')
       ? 'curpPrestador'
-      : 'curpPaciente';
+      : name.includes('Responsable')
+        ? 'curpResponsable'
+        : 'curpPaciente';
     const curpVal = getStr(row, curpKey);
     if (curpVal && isGenericCURP(curpVal)) return errors;
     if (raw !== 'XX' && raw.length < 2) {

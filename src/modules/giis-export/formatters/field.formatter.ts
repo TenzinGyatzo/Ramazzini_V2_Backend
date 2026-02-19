@@ -148,6 +148,22 @@ export function formatCIE10(code: string | null | undefined): string {
 }
 
 /**
+ * Normalize CIE-10 code to 4 characters for GIIS LES export.
+ * Removes dot (e.g. S00.0 -> S000), pads or truncates to 4 chars.
+ *
+ * @param code - CIE-10 code (e.g. S00.0, V01, W17)
+ * @returns 4-char code (e.g. S000, V010, W170)
+ */
+export function normalizeCIE10To4Chars(
+  code: string | null | undefined,
+): string {
+  if (!code || typeof code !== 'string') return '';
+  const cleaned = code.trim().toUpperCase().replace(/\./g, '');
+  if (!cleaned) return '';
+  return cleaned.padEnd(4, '0').slice(0, 4);
+}
+
+/**
  * Convert a result enum (0=Positivo, 1=Negativo, -1=NA) to GIIS format
  *
  * @param value - Result value
@@ -219,7 +235,7 @@ const GIIS_NAME_ALLOWED = /^[A-ZÑ\s\-,\.\/'¨]$/u;
  */
 export function normalizeNameForGiis(value: string | null | undefined): string {
   if (value == null || typeof value !== 'string') return '';
-  let s = value.trim();
+  const s = value.trim();
   if (!s) return '';
 
   // 1) Quitar acentos y normalizar ñ → Ñ

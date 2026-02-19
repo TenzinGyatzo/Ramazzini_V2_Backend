@@ -5,7 +5,7 @@
  */
 import { parseNombreCompleto } from './parseNombreCompleto';
 
-const ENTRADA = 'Juan Pedro Sanchez Moreno';
+const ENTRADA = 'Jesús Manuel Coronel Valenzuela';
 
 console.log('--- Entrada ---');
 console.log(ENTRADA);

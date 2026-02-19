@@ -34,6 +34,12 @@ export interface CIE10Entry extends CatalogEntry {
   lsupRaw?: string; // Raw upper age limit from catalog (e.g., "120A", "NO")
 }
 
+/** Extended CIE10 for GIIS lesion catalog (diagnosticos.csv) with AF_PRIN, RUBRICA_TYPE */
+export interface CIE10GIISLesionEntry extends CIE10Entry {
+  rubricaType?: string; // "B" = encabezado rúbrica (no seleccionable), otros = sí
+  afPrin?: string; // "SI" = apto como afección principal, "NO" = no
+}
+
 /**
  * Interface for CLUES establishment entries
  */
@@ -54,6 +60,7 @@ export interface CPEntry extends CatalogEntry {
   asentamiento: string;
   municipio: string;
   estado: string;
+  ciudad?: string;
   tipoAsentamiento?: string;
   cEstado?: string;
   cMunicipio?: string;
@@ -88,4 +95,11 @@ export enum CatalogType {
   SERVICIOS_DET = 'cat_servicios_det',
   AFILIACION = 'cat_afiliacion',
   PAIS = 'cat_pais',
+
+  // GIIS Lesión catalogs (2) - Optional
+  TIPO_VIALIDAD = 'cat_tipo_vialidad',
+  TIPO_ASENTAMIENTO = 'cat_tipo_asentamiento',
+
+  // CIE-10 GIIS para reportes de lesión/violencia (incluye V01-Y98)
+  CIE10_GIIS_LESION = 'diagnosticos_giis',
 }

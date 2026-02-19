@@ -21,7 +21,10 @@ import { Receta } from './schemas/receta.schema';
 import { Lesion } from './schemas/lesion.schema';
 import { Deteccion } from './schemas/deteccion.schema';
 import { FilesService } from '../files/files.service';
-import { convertirFechaISOaDDMMYYYY } from 'src/utils/dates';
+import {
+  convertirFechaISOaDDMMYYYY,
+  convertirFechaADDMMAAAA,
+} from 'src/utils/dates';
 import path from 'path';
 import { parseISO } from 'date-fns';
 import * as fs from 'fs/promises';
@@ -57,6 +60,8 @@ import { AuditService } from '../audit/audit.service';
 import { AuditActionType } from '../audit/constants/audit-action-type';
 import { AuditEventClass } from '../audit/constants/audit-event-class';
 import { UsersService } from '../users/users.service';
+import { hasCIE10Min4Chars } from '../../utils/cie10.util';
+import { isCieAfeccionLesionAllowedRanges } from '../giis-export/utils/cie-lesion.utils';
 
 @Injectable()
 export class ExpedientesService {
@@ -126,6 +131,7 @@ export class ExpedientesService {
       previoEspirometria: this.previoEspirometriaModel,
       receta: this.recetaModel,
       constanciaAptitud: this.constanciaAptitudModel,
+      lesion: this.lesionModel,
     };
 
     this.dateFields = {
@@ -145,6 +151,7 @@ export class ExpedientesService {
       previoEspirometria: 'fechaPrevioEspirometria',
       receta: 'fechaReceta',
       constanciaAptitud: 'fechaConstanciaAptitud',
+      lesion: 'fechaReporteLesion',
     };
   }
 
@@ -574,6 +581,19 @@ export class ExpedientesService {
           'Solo se pueden crear notas aclaratorias para documentos finalizados o anulados',
         );
       }
+    }
+
+    // Lesion requiere lógica específica (idProveedorSalud, unicidad folio, validateLesionRules)
+    if (documentType === 'lesion') {
+      const savedLesion = await this.createLesion(createDto);
+      await this.recordDocDraftCreated({
+        documentType: 'lesion',
+        documentId: savedLesion._id.toString(),
+        trabajadorId: createDto.idTrabajador ?? null,
+        actorId: createDto.createdBy,
+        source: 'createDocument',
+      });
+      return savedLesion;
     }
 
     // Vincular Consentimiento Diario (NOM-024)
@@ -1271,12 +1291,28 @@ export class ExpedientesService {
     // NUEVO: Regenerar PDF con datos de elaborador y finalizador
     try {
       const creadorId = document.createdBy?.toString() || userId;
-      await this.informesService.regenerarInformeAlFinalizar(
-        documentType,
-        id,
-        creadorId,
-        userId, // finalizador
-      );
+      const rutaPdfGenerado =
+        await this.informesService.regenerarInformeAlFinalizar(
+          documentType,
+          id,
+          creadorId,
+          userId, // finalizador
+        );
+      // Para lesión: guardar rutaPDF (directorio) si no existía
+      if (
+        documentType === 'lesion' &&
+        rutaPdfGenerado &&
+        !(document as any).rutaPDF
+      ) {
+        const rutaBase = path.dirname(rutaPdfGenerado);
+        const base = path.resolve('.');
+        const rutaRelativa = rutaBase.startsWith(base)
+          ? path.relative(base, rutaBase).replace(/\\/g, '/')
+          : rutaBase.replace(/\\/g, '/');
+        await this.lesionModel.findByIdAndUpdate(id, {
+          rutaPDF: rutaRelativa,
+        });
+      }
     } catch (error) {
       console.error('Error al regenerar PDF al finalizar documento:', error);
       // No lanzamos excepción para no bloquear la finalización del documento
@@ -1325,12 +1361,21 @@ export class ExpedientesService {
     }
 
     // 2. Validate temporal sequence: fechaNacimiento <= fechaEvento <= fechaAtencion <= fechaActual
-    const fechaNacimiento = new Date(lesionDto.fechaNacimiento);
+    const trabajador = await this.trabajadorModel
+      .findById(trabajadorId)
+      .select('fechaNacimiento sexo')
+      .lean();
+    if (!trabajador?.fechaNacimiento) {
+      errors.push('No se encontró la fecha de nacimiento del trabajador');
+    }
+    const fechaNacimiento = trabajador?.fechaNacimiento
+      ? new Date(trabajador.fechaNacimiento)
+      : null;
     const fechaEvento = new Date(lesionDto.fechaEvento);
     const fechaAtencion = new Date(lesionDto.fechaAtencion);
     const fechaActual = new Date();
 
-    if (fechaEvento < fechaNacimiento) {
+    if (fechaNacimiento && fechaEvento < fechaNacimiento) {
       errors.push(
         'La fecha del evento no puede ser anterior a la fecha de nacimiento',
       );
@@ -1346,10 +1391,13 @@ export class ExpedientesService {
       errors.push('La fecha de atención no puede ser futura');
     }
 
-    // If same day, validate hour sequence
+    // If same day, validate hour sequence (only when both are real times, not 99:99 SE DESCONOCE)
+    const esSeDesconoce = (h: string) => h === '99:99' || !h?.trim();
     if (
       lesionDto.horaEvento &&
       lesionDto.horaAtencion &&
+      !esSeDesconoce(lesionDto.horaEvento) &&
+      !esSeDesconoce(lesionDto.horaAtencion) &&
       fechaEvento.toDateString() === fechaAtencion.toDateString()
     ) {
       const horaEvento = lesionDto.horaEvento.split(':').map(Number);
@@ -1365,21 +1413,24 @@ export class ExpedientesService {
     }
 
     // 3. Validate age (should be < 100 years)
-    const edad = fechaActual.getFullYear() - fechaNacimiento.getFullYear();
-    if (edad >= 100) {
-      errors.push('La edad calculada debe ser menor a 100 años');
+    if (fechaNacimiento) {
+      const edad = fechaActual.getFullYear() - fechaNacimiento.getFullYear();
+      if (edad >= 100) {
+        errors.push('La edad calculada debe ser menor a 100 años');
+      }
     }
 
     // 4. Basic numeric validation for catalog fields (without strict catalog enumeration)
     // Official DGIS catalogs not publicly available - validate only type and basic bounds
+    // cat_sitio_ocurrencia includes 0=VIVIENDA, so sitioOcurrencia >= 0
     if (lesionDto.sitioOcurrencia !== undefined) {
-      if (
-        !Number.isInteger(lesionDto.sitioOcurrencia) ||
-        lesionDto.sitioOcurrencia < 1
-      ) {
+      const val = Number(lesionDto.sitioOcurrencia);
+      if (!Number.isInteger(val) || val < 0) {
         errors.push(
-          'Sitio de ocurrencia debe ser un número entero mayor o igual a 1',
+          'Sitio de ocurrencia debe ser un número entero mayor o igual a 0',
         );
+      } else {
+        lesionDto.sitioOcurrencia = val;
       }
     }
 
@@ -1453,30 +1504,39 @@ export class ExpedientesService {
       }
     }
 
-    // 6. Validate CIE-10 codes (these catalogs ARE available)
+    // 6. Validate CIE-10 codes (use GIIS catalog for lesion)
+    // Siempre requiere 4+ caracteres (solo4Caracteres en selector). Rangos permitidos sin catálogo: F00-F99, Cap XIX (S00-T98), O04-O07, O20, O26.7, O42.9, O46.8-O46.9, O68, O71.0-O71.9
     if (lesionDto.codigoCIEAfeccionPrincipal) {
-      const isValidPrincipal = await this.catalogsService.validateCIE10(
-        lesionDto.codigoCIEAfeccionPrincipal,
-      );
-      if (!isValidPrincipal) {
+      const codePrincipal = lesionDto.codigoCIEAfeccionPrincipal.trim();
+      if (!hasCIE10Min4Chars(codePrincipal)) {
         errors.push(
-          `Código CIE-10 afección principal inválido: ${lesionDto.codigoCIEAfeccionPrincipal}`,
+          'Código CIE-10 afección principal debe tener al menos 4 caracteres (ej. S00.0, F41.9, S097)',
         );
+      } else {
+        const inAllowedRanges = isCieAfeccionLesionAllowedRanges(codePrincipal);
+        if (!inAllowedRanges) {
+          const isValidPrincipal =
+            await this.catalogsService.validateCIE10GIIS(codePrincipal);
+          if (!isValidPrincipal) {
+            errors.push(
+              `Código CIE-10 afección principal inválido: ${codePrincipal}`,
+            );
+          }
+        }
       }
     }
 
     if (lesionDto.codigoCIECausaExterna) {
-      // Validate that it's a Chapter XX code (V01-Y98, 2 o 3 dígitos)
       if (
-        !/^[V-Y][0-9]{2,3}(\.[0-9]{1,2})?$/.test(
-          lesionDto.codigoCIECausaExterna.trim().toUpperCase(),
+        !/^[V-Y][0-9]{2,3}(\.[0-9]{1,2})?$/i.test(
+          lesionDto.codigoCIECausaExterna.trim(),
         )
       ) {
         errors.push(
           'Código CIE-10 causa externa debe ser del Capítulo XX (V01-Y98)',
         );
       } else {
-        const isValidExterna = await this.catalogsService.validateCIE10(
+        const isValidExterna = await this.catalogsService.validateCIE10GIIS(
           lesionDto.codigoCIECausaExterna,
         );
         if (!isValidExterna) {
@@ -1487,11 +1547,107 @@ export class ExpedientesService {
       }
     }
 
-    // 7. Validate curpResponsable != curpPaciente
-    if (lesionDto.curpPaciente === lesionDto.curpResponsable) {
-      errors.push(
-        'El CURP del responsable debe ser diferente al CURP del paciente',
-      );
+    if (lesionDto.afeccionPrincipalReseleccionada) {
+      const codeReselect = lesionDto.afeccionPrincipalReseleccionada.trim();
+      if (!hasCIE10Min4Chars(codeReselect)) {
+        errors.push(
+          'Código CIE-10 afección reseleccionada debe tener al menos 4 caracteres',
+        );
+      } else {
+        const inAllowedReselect =
+          isCieAfeccionLesionAllowedRanges(codeReselect);
+        if (!inAllowedReselect) {
+          const isValidReselect =
+            await this.catalogsService.validateCIE10GIIS(codeReselect);
+          if (!isValidReselect) {
+            errors.push(
+              `Código CIE-10 afección reseleccionada inválido: ${codeReselect}`,
+            );
+          }
+        }
+      }
+    }
+
+    if (
+      lesionDto.afeccionesTratadas &&
+      Array.isArray(lesionDto.afeccionesTratadas)
+    ) {
+      for (let i = 0; i < lesionDto.afeccionesTratadas.length; i++) {
+        const item = lesionDto.afeccionesTratadas[i];
+        if (typeof item !== 'string' || !item) continue;
+        const parts = item.split('#');
+        const cieCode = parts.length >= 3 ? parts[2]?.trim() : undefined;
+        if (cieCode) {
+          if (!hasCIE10Min4Chars(cieCode)) {
+            errors.push(
+              `Código CIE en afección tratada ${i + 1} debe tener al menos 4 caracteres`,
+            );
+          } else {
+            const inAllowed = isCieAfeccionLesionAllowedRanges(cieCode);
+            if (!inAllowed) {
+              const isValid =
+                await this.catalogsService.validateCIE10GIIS(cieCode);
+              if (!isValid) {
+                errors.push(
+                  `Código CIE inválido en afección tratada ${i + 1}: ${cieCode}`,
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 7. Validate LSEX/LINF/LSUP (sex and age) against GIIS catalog for CIE codes
+    if (trabajador?.fechaNacimiento && trabajador?.sexo) {
+      const cie10Fields: Array<{ field: string; value: string | string[] }> = [];
+      if (lesionDto.codigoCIEAfeccionPrincipal) {
+        cie10Fields.push({
+          field: 'codigoCIEAfeccionPrincipal',
+          value: lesionDto.codigoCIEAfeccionPrincipal.trim(),
+        });
+      }
+      if (lesionDto.afeccionPrincipalReseleccionada) {
+        cie10Fields.push({
+          field: 'afeccionPrincipalReseleccionada',
+          value: lesionDto.afeccionPrincipalReseleccionada.trim(),
+        });
+      }
+      if (lesionDto.afeccionesTratadas && Array.isArray(lesionDto.afeccionesTratadas)) {
+        const codes: string[] = [];
+        for (const item of lesionDto.afeccionesTratadas) {
+          if (typeof item === 'string' && item) {
+            const parts = item.split('#');
+            const cieCode = parts.length >= 3 ? parts[2]?.trim() : undefined;
+            if (cieCode) codes.push(cieCode);
+          }
+        }
+        if (codes.length > 0) {
+          cie10Fields.push({ field: 'afeccionesTratadas', value: codes });
+        }
+      }
+      if (cie10Fields.length > 0) {
+        const validationResult = await validateCie10SexAgeAgainstCatalog({
+          trabajadorSexo: trabajador.sexo,
+          trabajadorFechaNacimiento: new Date(trabajador.fechaNacimiento),
+          fechaNotaMedica: fechaAtencion,
+          cie10Fields,
+          lookup: this.cie10CatalogLookupService.findDiagnosisRuleGIIS.bind(
+            this.cie10CatalogLookupService,
+          ),
+        });
+        if (!validationResult.ok && validationResult.issues.length > 0) {
+          for (const issue of validationResult.issues) {
+            const reason =
+              issue.reason === 'Sexo no permitido'
+                ? `sexo del trabajador (${issue.sexoTrabajador}) no permitido por catálogo (LSEX: ${issue.lsex})`
+                : `edad (${issue.edadTrabajador} años) fuera de rango del catálogo (LINF: ${issue.linf ?? 'NO'}, LSUP: ${issue.lsup ?? 'NO'})`;
+            errors.push(
+              `CIE-10 ${issue.cie10} en ${issue.field}: ${reason}`,
+            );
+          }
+        }
+      }
     }
 
     if (errors.length > 0) {
@@ -1515,36 +1671,74 @@ export class ExpedientesService {
       );
     }
 
+    // Vincular Consentimiento Diario (NOM-024) cuando dailyConsentEnabled
+    let consentimientoDiarioId: Types.ObjectId | undefined;
+    try {
+      const policy =
+        await this.regulatoryPolicyService.getRegulatoryPolicy(
+          proveedorSaludId,
+        );
+      if (policy.features.dailyConsentEnabled) {
+        const proveedor =
+          await this.proveedoresSaludService.findOne(proveedorSaludId);
+        const dateKey = calculateDateKey(proveedor || null);
+        const consentimiento = await this.consentimientoDiarioModel
+          .findOne({
+            proveedorSaludId: new Types.ObjectId(proveedorSaludId),
+            trabajadorId: new Types.ObjectId(createDto.idTrabajador),
+            dateKey,
+          })
+          .lean();
+        if (consentimiento)
+          consentimientoDiarioId = new Types.ObjectId(
+            consentimiento._id.toString(),
+          );
+      }
+    } catch (error) {
+      console.warn(
+        'Error al obtener consentimiento diario para lesión:',
+        error,
+      );
+    }
+
     const fechaAtencion = new Date(createDto.fechaAtencion);
     const fechaAtencionOnly = new Date(
       fechaAtencion.getFullYear(),
       fechaAtencion.getMonth(),
       fechaAtencion.getDate(),
     );
+    const endOfDay = new Date(
+      fechaAtencionOnly.getTime() + 24 * 60 * 60 * 1000,
+    );
 
-    const existingLesion = await this.lesionModel
-      .findOne({
-        idProveedorSalud: proveedorSaludId,
+    const clues = await this.getCluesFromProveedorSalud(createDto.idTrabajador);
+    const folioScopeId = clues ?? proveedorSaludId;
+
+    const count = await this.lesionModel
+      .countDocuments({
+        folioScopeId,
         fechaAtencion: {
           $gte: fechaAtencionOnly,
-          $lt: new Date(fechaAtencionOnly.getTime() + 24 * 60 * 60 * 1000),
+          $lt: endOfDay,
         },
-        folio: createDto.folio,
       })
       .exec();
 
-    if (existingLesion) {
-      const clues =
-        (await this.getCluesFromProveedorSalud(createDto.idTrabajador)) ||
-        'N/A';
+    const nextNum = count + 1;
+    if (nextNum > 99999999) {
       throw new BadRequestException(
-        `Ya existe un registro de lesión con el folio ${createDto.folio} para el establecimiento (CLUES ${clues}) en la fecha ${fechaAtencionOnly.toISOString().split('T')[0]}`,
+        'Límite de folios alcanzado para esta CLUES en la fecha indicada',
       );
     }
+    const folio = String(nextNum).padStart(8, '0').slice(-8);
 
+    const { folio: _folio, ...restDto } = createDto;
     const lesionData = {
-      ...createDto,
+      ...restDto,
       idProveedorSalud: proveedorSaludId,
+      folioScopeId,
+      folio,
+      ...(consentimientoDiarioId && { consentimientoDiarioId }),
     };
     const createdLesion = new this.lesionModel(lesionData);
     const savedLesion = await createdLesion.save();
@@ -1600,19 +1794,28 @@ export class ExpedientesService {
       mergedDto.idTrabajador.toString(),
     );
 
-    // Check folio uniqueness if changed (por idProveedorSalud + fechaAtencion + folio)
+    // Check folio uniqueness if changed (por folioScopeId + fechaAtencion + folio)
     if (updateDto.folio || updateDto.fechaAtencion) {
-      const finalProveedorId =
-        existingLesion.idProveedorSalud?.toString() ||
-        (await this.getProveedorSaludIdFromTrabajador(
-          (existingLesion.idTrabajador as any)?.toString(),
-        ));
+      const finalFolioScopeId =
+        (existingLesion as any).folioScopeId ||
+        (await (async () => {
+          const psId =
+            existingLesion.idProveedorSalud?.toString() ||
+            (await this.getProveedorSaludIdFromTrabajador(
+              (existingLesion.idTrabajador as any)?.toString(),
+            ));
+          if (!psId) return null;
+          const c = await this.getCluesFromProveedorSalud(
+            (existingLesion.idTrabajador as any)?.toString(),
+          );
+          return c ?? psId;
+        })());
       const finalFechaAtencion = updateDto.fechaAtencion
         ? new Date(updateDto.fechaAtencion)
         : existingLesion.fechaAtencion;
       const finalFolio = updateDto.folio || existingLesion.folio;
 
-      if (finalProveedorId) {
+      if (finalFolioScopeId) {
         const fechaAtencionOnly = new Date(
           finalFechaAtencion.getFullYear(),
           finalFechaAtencion.getMonth(),
@@ -1622,7 +1825,7 @@ export class ExpedientesService {
         const existingLesionWithFolio = await this.lesionModel
           .findOne({
             _id: { $ne: id },
-            idProveedorSalud: finalProveedorId,
+            folioScopeId: finalFolioScopeId,
             fechaAtencion: {
               $gte: fechaAtencionOnly,
               $lt: new Date(fechaAtencionOnly.getTime() + 24 * 60 * 60 * 1000),
@@ -1632,19 +1835,19 @@ export class ExpedientesService {
           .exec();
 
         if (existingLesionWithFolio) {
-          const clues =
-            (await this.getCluesFromProveedorSalud(
-              (existingLesion.idTrabajador as any)?.toString(),
-            )) || 'N/A';
+          const cluesLabel = /^[A-Z0-9]{11}$/.test(finalFolioScopeId)
+            ? finalFolioScopeId
+            : 'N/A';
           throw new BadRequestException(
-            `Ya existe otro registro de lesión con el folio ${finalFolio} para el establecimiento (CLUES ${clues}) en la fecha ${fechaAtencionOnly.toISOString().split('T')[0]}`,
+            `Ya existe otro registro de lesión con el folio ${finalFolio} para el establecimiento (CLUES ${cluesLabel}) en la fecha ${fechaAtencionOnly.toISOString().split('T')[0]}`,
           );
         }
       }
     }
 
+    const { folioScopeId: _skip, ...updatePayload } = updateDto as any;
     const updatedLesion = await this.lesionModel
-      .findByIdAndUpdate(id, updateDto, { new: true })
+      .findByIdAndUpdate(id, updatePayload, { new: true })
       .exec();
 
     if (updateDto.idTrabajador || existingLesion.idTrabajador) {
@@ -1804,7 +2007,7 @@ export class ExpedientesService {
         `Tipo de documento ${documentType} no soportado`,
       );
     }
-    return model
+    const docs = await model
       .find({ idTrabajador: trabajadorId })
       .populate('createdBy', '_id username role')
       .populate('finalizadoPor', 'username')
@@ -1818,6 +2021,69 @@ export class ExpedientesService {
         },
       })
       .exec();
+
+    // Enriquecer lesiones con rutaPDF cuando falte (para vincular con PDFs existentes)
+    if (documentType === 'lesion') {
+      return this.enriquecerLesionesConRutaPDF(docs, trabajadorId);
+    }
+
+    return docs;
+  }
+
+  /**
+   * Añade rutaPDF a lesiones que no lo tienen, usando la misma lógica que getInformeLesion.
+   * Permite que DocumentoItem visualice PDFs ya generados en disco.
+   */
+  private async enriquecerLesionesConRutaPDF(
+    lesiones: any[],
+    trabajadorId: string,
+  ): Promise<any[]> {
+    const needEnrichment = lesiones.some((l) => !l.rutaPDF);
+    if (!needEnrichment || lesiones.length === 0) return lesiones;
+
+    try {
+      const trabajador = await this.trabajadorModel
+        .findById(trabajadorId)
+        .populate('idCentroTrabajo')
+        .lean()
+        .exec();
+      if (!trabajador) return lesiones;
+
+      const centro = (trabajador as any).idCentroTrabajo;
+      const centroId = centro?._id ?? centro;
+      const centroDoc = centroId
+        ? await this.centroTrabajoModel.findById(centroId).lean().exec()
+        : null;
+      const empresaId = centroDoc?.idEmpresa ?? (centro as any)?.idEmpresa;
+      const empresa = empresaId
+        ? await this.empresaModel.findById(empresaId).lean().exec()
+        : null;
+
+      const nombreEmpresa = (empresa as any)?.nombreComercial ?? 'SinEmpresa';
+      const nombreCentro =
+        (centroDoc as any)?.nombreCentro ??
+        (centro as any)?.nombreCentro ??
+        'SinCentro';
+      const trabajadorNombre = [
+        (trabajador as any).primerApellido ?? '',
+        (trabajador as any).segundoApellido ?? '',
+        (trabajador as any).nombre ?? '',
+      ]
+        .join(' ')
+        .trim();
+      const rutaBase = `expedientes-medicos/${nombreEmpresa}/${nombreCentro}/${trabajadorNombre}_${trabajadorId}`;
+
+      return lesiones.map((lesion) => {
+        const plain = lesion.toObject ? lesion.toObject() : { ...lesion };
+        if (!plain.rutaPDF) {
+          plain.rutaPDF = rutaBase;
+        }
+        return plain;
+      });
+    } catch (err) {
+      console.warn('Error al enriquecer lesiones con rutaPDF:', err);
+      return lesiones.map((l) => (l.toObject ? l.toObject() : l));
+    }
   }
 
   async findDocument(documentType: string, id: string): Promise<any> {

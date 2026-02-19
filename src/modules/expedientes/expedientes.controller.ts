@@ -95,6 +95,7 @@ export class ExpedientesController {
     previoEspirometria: CreatePrevioEspirometriaDto,
     receta: CreateRecetaDto,
     constanciaAptitud: CreateConstanciaAptitudDto,
+    lesion: CreateLesionDto,
   };
 
   private updateDtos = {
@@ -114,6 +115,7 @@ export class ExpedientesController {
     previoEspirometria: UpdatePrevioEspirometriaDto,
     receta: UpdateRecetaDto,
     constanciaAptitud: UpdateConstanciaAptitudDto,
+    lesion: UpdateLesionDto,
   };
 
   // Método privado para autenticar usuario desde el JWT

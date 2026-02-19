@@ -22,6 +22,17 @@ export interface PrestadorDataForCex {
   tipoPersonal: number;
 }
 
+/** Datos del firmante (médico o enfermera) para exportación LES (responsable de atención). */
+export interface FirmanteDataForLes {
+  curp?: string;
+  nombre: string;
+  primerApellido?: string;
+  segundoApellido?: string;
+  cedula?: string;
+  /** 1=Médico, 2=Enfermera (código responsableAtencion GIIS) */
+  responsableAtencion: number;
+}
+
 @Injectable()
 export class FirmanteHelper {
   constructor(
@@ -208,5 +219,110 @@ export class FirmanteHelper {
       console.error('Error getting prestador data from firmante:', error);
       return null;
     }
+  }
+
+  /**
+   * Gets firmante data (curp, nombre, apellidos, cedula) for LES export.
+   * Supports both MedicoFirmante and EnfermeraFirmante (enfermeras pueden redactar reportes de lesión).
+   * responsableAtencion: 1=Médico, 2=Enfermera.
+   *
+   * @param userId - User ID (finalizadoPor or createdBy of Lesion)
+   * @returns FirmanteDataForLes or null if user has no medico/enfermera firmante
+   */
+  async getFirmanteDataForLes(
+    userId: string,
+  ): Promise<FirmanteDataForLes | null> {
+    try {
+      const user = await this.userModel.findById(userId).lean();
+      if (!user) return null;
+
+      if (user.firmanteTipo && user.firmanteId) {
+        return this.getFirmanteDataForLesFromFirmante(
+          user.firmanteTipo,
+          user.firmanteId.toString(),
+        );
+      }
+
+      const [medico, enfermera] = await Promise.all([
+        this.medicoFirmanteModel.findOne({ idUser: userId }).lean(),
+        this.enfermeraFirmanteModel.findOne({ idUser: userId }).lean(),
+      ]);
+      if (medico) {
+        return this.buildFirmanteDataFromDoc(medico as any, 1);
+      }
+      if (enfermera) {
+        return this.buildFirmanteDataFromDoc(enfermera as any, 2);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting firmante data for LES:', error);
+      return null;
+    }
+  }
+
+  private async getFirmanteDataForLesFromFirmante(
+    firmanteTipo: string,
+    firmanteId: string,
+  ): Promise<FirmanteDataForLes | null> {
+    try {
+      if (firmanteTipo === 'TecnicoFirmante') return null;
+
+      if (firmanteTipo === 'MedicoFirmante') {
+        const firmante = await this.medicoFirmanteModel
+          .findById(firmanteId)
+          .lean();
+        return firmante
+          ? this.buildFirmanteDataFromDoc(firmante as any, 1)
+          : null;
+      }
+
+      if (firmanteTipo === 'EnfermeraFirmante') {
+        const firmante = await this.enfermeraFirmanteModel
+          .findById(firmanteId)
+          .lean();
+        return firmante
+          ? this.buildFirmanteDataFromDoc(firmante as any, 2)
+          : null;
+      }
+
+      return null;
+    } catch (error) {
+      console.error(
+        'Error getting firmante data for LES from firmante:',
+        error,
+      );
+      return null;
+    }
+  }
+
+  private buildFirmanteDataFromDoc(
+    doc: {
+      nombre?: string;
+      curp?: string;
+      numeroCedulaProfesional?: string;
+    },
+    responsableAtencion: number,
+  ): FirmanteDataForLes {
+    const nombre = (doc.nombre ?? '').trim();
+    const parts = nombre ? nombre.split(/\s+/).filter((p) => p) : [];
+    let primerApellido = 'NA';
+    let segundoApellido = 'XX';
+    let nombreOnly = nombre;
+    if (parts.length >= 3) {
+      nombreOnly = parts[0];
+      primerApellido = parts[1];
+      segundoApellido = parts[parts.length - 1];
+    } else if (parts.length === 2) {
+      nombreOnly = parts[0];
+      primerApellido = parts[1];
+    }
+    return {
+      curp: doc.curp?.trim(),
+      nombre: nombreOnly || 'NA',
+      primerApellido,
+      segundoApellido,
+      cedula: doc.numeroCedulaProfesional?.trim() || '0',
+      responsableAtencion,
+    };
   }
 }

@@ -12,7 +12,7 @@ import { FirmanteHelper } from '../../expedientes/helpers/firmante-helper';
 import { Lesion } from '../../expedientes/schemas/lesion.schema';
 import { loadGiisSchema } from '../schema-loader';
 import { mapNotaMedicaToCexRow } from '../transformers/cex.mapper';
-import { mapNotaMedicaToLesRows } from '../transformers/les.mapper';
+import { mapLesionToLesRow } from '../transformers/les.mapper';
 import { CatalogsService } from '../../catalogs/catalogs.service';
 import {
   ValidationError,
@@ -198,10 +198,12 @@ export class GiisValidationService {
     }
 
     if (guides.includes('LES')) {
-      const notas = await this.notaMedicaModel
+      const proveedorId = new Types.ObjectId(proveedorSaludId);
+      const lesiones = await this.lesionModel
         .find({
           estado: DocumentoEstado.FINALIZADO,
-          fechaNotaMedica: { $gte: startOfMonth, $lte: endOfMonth },
+          fechaAtencion: { $gte: startOfMonth, $lte: endOfMonth },
+          idProveedorSalud: proveedorId,
         })
         .populate('idTrabajador')
         .lean()
@@ -213,25 +215,24 @@ export class GiisValidationService {
       };
       const schema = loadGiisSchema('LES');
       const rows: Record<string, string | number>[] = [];
-      for (const doc of notas as any[]) {
+      for (const doc of lesiones as any[]) {
         const trabajador = doc.idTrabajador || null;
-        const rawUser = doc.finalizadoPor ?? doc.updatedBy;
-        const userId =
-          rawUser != null
-            ? typeof rawUser === 'string'
-              ? rawUser
-              : (rawUser as Types.ObjectId).toString()
-            : '';
-        const prestadorData = userId
-          ? await this.firmanteHelper.getPrestadorDataFromUser(userId)
+        const firmanteUserId = (
+          doc.finalizadoPor?._id ||
+          doc.finalizadoPor ||
+          doc.createdBy?._id ||
+          doc.createdBy
+        )?.toString();
+        const firmanteData = firmanteUserId
+          ? await this.firmanteHelper.getFirmanteDataForLes(firmanteUserId)
           : null;
-        const lesRows = mapNotaMedicaToLesRows(
+        const row = mapLesionToLesRow(
           doc,
           lesContext,
           trabajador,
-          prestadorData ?? undefined,
+          firmanteData,
         );
-        rows.push(...lesRows);
+        rows.push(row);
       }
       totalRows += rows.length;
       for (let i = 0; i < rows.length; i++) {

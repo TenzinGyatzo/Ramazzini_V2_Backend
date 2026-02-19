@@ -5,6 +5,7 @@
 import {
   extractCieCode,
   isCieAfeccionLesion,
+  isCieAfeccionLesionAllowedRanges,
   isCieCausaExterna,
 } from './cie-lesion.utils';
 
@@ -42,6 +43,39 @@ describe('cie-lesion.utils', () => {
     it('returns false for empty/null', () => {
       expect(isCieAfeccionLesion('')).toBe(false);
       expect(isCieAfeccionLesion(null)).toBe(false);
+    });
+  });
+
+  describe('isCieAfeccionLesionAllowedRanges', () => {
+    it('returns true for F00-F99', () => {
+      expect(isCieAfeccionLesionAllowedRanges('F00')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('F41')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('F99')).toBe(true);
+    });
+    it('returns true for Cap XIX S00-T98', () => {
+      expect(isCieAfeccionLesionAllowedRanges('S00')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('S097')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('T98')).toBe(true);
+    });
+    it('returns true for O04-O07, O20, O68', () => {
+      expect(isCieAfeccionLesionAllowedRanges('O04')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('O07')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('O20')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('O68')).toBe(true);
+    });
+    it('returns true for O26.7, O42.9, O46.8-O46.9, O71.0-O71.9', () => {
+      expect(isCieAfeccionLesionAllowedRanges('O26.7')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('O267')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('O42.9')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('O429')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('O46.8')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('O468')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('O71.0')).toBe(true);
+      expect(isCieAfeccionLesionAllowedRanges('O719')).toBe(true);
+    });
+    it('returns false for codes outside ranges', () => {
+      expect(isCieAfeccionLesionAllowedRanges('A00')).toBe(false);
+      expect(isCieAfeccionLesionAllowedRanges('Z00')).toBe(false);
     });
   });
 

@@ -15,7 +15,6 @@ describe('NOM-024 Lesion GIIS-B013 (Task 12, 13)', () => {
   describe('Lesion Schema Validation', () => {
     describe('Required Fields', () => {
       const requiredFields = [
-        'clues',
         'folio',
         'curpPaciente',
         'fechaNacimiento',
@@ -42,13 +41,13 @@ describe('NOM-024 Lesion GIIS-B013 (Task 12, 13)', () => {
       });
     });
 
-    describe('CLUES Format', () => {
-      it('should validate CLUES format (11 alphanumeric)', () => {
-        const clues = lesionFixtures.validLesionAccidental.clues;
-        expect(clues).toMatch(/^[A-Z0-9]{11}$/);
+    describe('CLUES (from ProveedorSalud)', () => {
+      it('should have idProveedorSalud to resolve CLUES', () => {
+        const lesion = lesionFixtures.validLesionAccidental;
+        expect(lesion.idProveedorSalud).toBeDefined();
       });
 
-      it('should reject invalid CLUES format', () => {
+      it('should reject invalid CLUES format when validating', () => {
         const invalidCLUES = ['INVALID', '12345', 'DFSSA00123', ''];
         invalidCLUES.forEach((clues) => {
           expect(clues).not.toMatch(/^[A-Z0-9]{11}$/);
@@ -251,8 +250,9 @@ describe('NOM-024 Lesion GIIS-B013 (Task 12, 13)', () => {
       // because DGIS has not published these catalogs publicly
       const lesion = lesionFixtures.validLesionAccidental;
 
-      // Any positive integer should be accepted
-      expect(lesion.sitioOcurrencia).toBeGreaterThanOrEqual(1);
+      // sitioOcurrencia: cat_sitio_ocurrencia includes 0=VIVIENDA, so >= 0
+      expect(lesion.sitioOcurrencia).toBeGreaterThanOrEqual(0);
+      // areaAnatomica, consecuenciaGravedad: catalogs start at 1
       expect(lesion.areaAnatomica).toBeGreaterThanOrEqual(1);
       expect(lesion.consecuenciaGravedad).toBeGreaterThanOrEqual(1);
     });
@@ -269,7 +269,7 @@ describe('NOM-024 Lesion GIIS-B013 (Task 12, 13)', () => {
     it('should have valid accidental lesion fixture', () => {
       const lesion = lesionFixtures.validLesionAccidental;
       expect(lesion._id).toBeDefined();
-      expect(lesion.clues).toBeDefined();
+      expect(lesion.idProveedorSalud).toBeDefined();
       expect(lesion.idTrabajador).toBeDefined();
     });
 

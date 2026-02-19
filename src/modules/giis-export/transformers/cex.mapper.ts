@@ -69,6 +69,36 @@ const CURP_GENERICA = 'XXXX999999XXXXXX99';
 const DEFAULT_PROGRAMA_SMYMG = 0;
 const DEFAULT_NA = 'NA';
 
+/** CIE-10 codes for pulmonary tuberculosis (TB pulmonar). Normalized without dot for lookup. */
+export const CIE10_TB_PULMONAR = new Set([
+  'A150',
+  'A151',
+  'A152',
+  'A153',
+  'A160',
+  'A161',
+  'A162',
+]);
+
+/**
+ * Normalize CIE-10 code for comparison: uppercase, trim, remove dot (e.g. A15.0 → A150).
+ */
+function normalizeCieCodeForTb(code: string): string {
+  if (!code) return '';
+  return code.trim().toUpperCase().replace(/\./g, '');
+}
+
+/**
+ * Returns true if the given CIE-10 code (with or without dot) is a pulmonary TB code.
+ * Used to derive sintomaticoRespiratorioTb in CEX.
+ */
+export function isCodigoTuberculosisPulmonar(
+  code: string | null | undefined,
+): boolean {
+  const normalized = normalizeCieCodeForTb(code ?? '');
+  return normalized.length > 0 && CIE10_TB_PULMONAR.has(normalized);
+}
+
 /**
  * Extract CIE-10 code from "CODE - DESCRIPTION" or return as-is if no dash.
  */
@@ -77,6 +107,23 @@ export function extractCieCode(value: string | null | undefined): string {
   const s = value.trim();
   const dash = s.indexOf(' - ');
   return dash >= 0 ? s.slice(0, dash).trim() : s;
+}
+
+/**
+ * Collect all CIE-10 codes from a consulta (principal, all complementarios, codigoCIEDiagnostico2).
+ */
+function getAllCieCodesFromConsulta(consulta: ConsultaExternaLike): string[] {
+  const codes: string[] = [];
+  const principal = extractCieCode(consulta.codigoCIE10Principal);
+  if (principal) codes.push(principal);
+  const comp = consulta.codigosCIE10Complementarios || [];
+  for (const item of comp) {
+    const c = extractCieCode(item);
+    if (c) codes.push(c);
+  }
+  const diag2 = extractCieCode(consulta.codigoCIEDiagnostico2);
+  if (diag2) codes.push(diag2);
+  return codes;
 }
 
 /**
@@ -129,6 +176,17 @@ export function mapNotaMedicaToCexRow(
   const segundoApellidoPrestador =
     normalizeNameForGiis(parsed?.segundoApellidoPrestador) || DEFAULT_XX;
   const tipoPersonal = prestador?.tipoPersonal ?? TIPO_PERSONAL_MEDICO_GENERAL;
+
+  const allCieCodes = getAllCieCodesFromConsulta(consulta);
+  const hasTuberculosisPulmonar = allCieCodes.some(
+    isCodigoTuberculosisPulmonar,
+  );
+  const sintomaticoRespiratorioTb =
+    tipoPersonal === 15 || tipoPersonal === 16
+      ? -1
+      : hasTuberculosisPulmonar
+        ? 1
+        : 0;
 
   const nacionalidadClave = (trabajador?.nacionalidad as string)?.trim?.();
   const getPais = context.getPaisCatalogKeyFromNacionalidad;
@@ -183,7 +241,7 @@ export function mapNotaMedicaToCexRow(
     tipoMedicion: -1,
     resultadoObtenidoaTravesde: -1,
     embarazadaSinDiabetes: 0,
-    sintomaticoRespiratorioTb: -1,
+    sintomaticoRespiratorioTb,
     primeraVezAnio: consulta.primeraVezAnio ?? 0,
     primeraVezUneme: -1,
     relacionTemporal: consulta.relacionTemporal ?? 0,

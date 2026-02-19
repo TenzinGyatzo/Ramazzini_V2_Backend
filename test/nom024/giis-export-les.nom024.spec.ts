@@ -1,6 +1,6 @@
 /**
  * NOM-024 GIIS Export LES integration (Phase 1 — 1D)
- * Create batch, generate LES from NotaMedica with injury codes (S00-T98 / V01-Y98), verify file and batch.
+ * Create batch, generate LES from Lesion documents (GIIS-B013), verify file and batch.
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -65,13 +65,12 @@ const mockGiisValidationService = {
 import { validMXTrabajador } from '../fixtures/trabajador.fixtures';
 import {
   mapLesionToLesRow,
-  mapNotaMedicaToLesRows,
   getLesSchema,
 } from '../../src/modules/giis-export/transformers/les.mapper';
 
 describe('NOM-024 GIIS Export LES (Phase 1D)', () => {
   let service: GiisBatchService;
-  let notaMedicaModel: any;
+  let lesionModel: any;
   let trabajadorModel: any;
   let testingModule: TestingModule;
   let mongoUri: string;
@@ -116,6 +115,7 @@ describe('NOM-024 GIIS Export LES (Phase 1D)', () => {
           provide: FirmanteHelper,
           useValue: {
             getPrestadorDataFromUser: jest.fn().mockResolvedValue(null),
+            getFirmanteDataForLes: jest.fn().mockResolvedValue(null),
           },
         },
         {
@@ -127,7 +127,7 @@ describe('NOM-024 GIIS Export LES (Phase 1D)', () => {
       ],
     }).compile();
     service = testingModule.get<GiisBatchService>(GiisBatchService);
-    notaMedicaModel = testingModule.get('NotaMedicaModel');
+    lesionModel = testingModule.get('LesionModel');
     trabajadorModel = testingModule.get('TrabajadorModel');
   }, 30000);
 
@@ -135,7 +135,7 @@ describe('NOM-024 GIIS Export LES (Phase 1D)', () => {
     await stopMongoMemoryServer();
   }, 10000);
 
-  it('should create batch, generate LES from NotaMedica with injury code, and produce valid TXT', async () => {
+  it('should create batch, generate LES from Lesion with injury code, and produce valid TXT', async () => {
     const empresaModel = testingModule.get('EmpresaModel');
     const centroTrabajoModel = testingModule.get('CentroTrabajoModel');
     const createdBy = new Types.ObjectId();
@@ -170,18 +170,28 @@ describe('NOM-024 GIIS Export LES (Phase 1D)', () => {
       updatedBy: createdBy,
     });
 
-    await notaMedicaModel.create({
-      tipoNota: 'Inicial',
-      fechaNotaMedica: new Date('2025-01-10'),
-      motivoConsulta: 'Traumatismo',
-      codigoCIE10Principal: 'S00 - TRAUMATISMO SUPERFICIAL DE LA CABEZA',
+    await lesionModel.create({
+      folio: '00000001',
+      folioScopeId: proveedorId,
+      idProveedorSalud: new Types.ObjectId(proveedorId),
+      fechaReporteLesion: new Date('2025-01-10'),
+      fechaEvento: new Date('2025-01-10'),
+      horaEvento: '14:30',
+      sitioOcurrencia: 1,
+      intencionalidad: 1,
+      agenteLesion: 5,
+      areaAnatomica: 3,
+      consecuenciaGravedad: 2,
+      fechaAtencion: new Date('2025-01-10'),
+      horaAtencion: '15:00',
+      codigoCIEAfeccionPrincipal: 'S00',
       codigoCIECausaExterna: 'W01',
       causaExterna: 'Caída',
       idTrabajador: trabajador._id,
-      rutaPDF: '/path/to/pdf',
       estado: DocumentoEstado.FINALIZADO,
       createdBy,
       updatedBy: createdBy,
+      finalizadoPor: createdBy,
     });
 
     const updated = await service.generateBatchLes(batchId);
@@ -240,16 +250,18 @@ describe('LES mapper unit', () => {
     expect(row.folio).toBeDefined();
     expect(row.curpPaciente).toBe('PEGJ850102HDFRNN08');
     expect(row.fechaEvento).toBe('10/01/2025');
-    expect(row.codigoCIEAfeccionPrincipal).toBe('S01.0');
-    expect(row.codigoCIECausaExterna).toBe('W01');
+    expect(row.codigoCIEAfeccionPrincipal).toBe('S010');
+    expect(row.codigoCIECausaExterna).toBe('W010');
   });
 
-  it('mapNotaMedicaToLesRows: nota with injury code S00 generates 1 row', () => {
-    const nota = {
-      _id: new Types.ObjectId(),
-      fechaNotaMedica: new Date('2025-01-15'),
-      codigoCIE10Principal: 'S00',
+  it('mapLesionToLesRow: lesion with trabajador populates nombre, apellidos y sexo derivado', () => {
+    const lesion = {
+      folio: '00000001',
+      curpPaciente: 'PEGJ850102HDFRNN08',
+      fechaNacimiento: new Date('1985-01-02'),
+      codigoCIEAfeccionPrincipal: 'S00',
       codigoCIECausaExterna: 'W01',
+      causaExterna: 'Caída',
     };
     const trabajador = {
       curp: 'PEGJ850102HDFRNN08',
@@ -257,56 +269,122 @@ describe('LES mapper unit', () => {
       primerApellido: 'Perez',
       segundoApellido: 'Gomez',
       fechaNacimiento: new Date('1985-01-02'),
-      sexo: 'H',
+      sexo: 'Masculino',
       entidadNacimiento: '14',
     };
-    const rows = mapNotaMedicaToLesRows(
-      nota,
-      { clues: 'DFSSA001234' },
-      trabajador,
-      null,
-    );
-    expect(rows.length).toBe(1);
-    expect(rows[0].codigoCIEAfeccionPrincipal).toBe('S00');
-    expect(rows[0].codigoCIECausaExterna).toBe('W01');
-    expect(rows[0].curpPaciente).toBe('PEGJ850102HDFRNN08');
-    expect(rows[0].nombre).toBe('JUAN');
-    expect(rows[0].primerApellido).toBe('PEREZ');
-    expect(Object.keys(rows[0]).length).toBe(82);
+    const row = mapLesionToLesRow(lesion, { clues: 'DFSSA001234' }, trabajador);
+    expect(row.sexo).toBe(1);
+    expect(row.codigoCIEAfeccionPrincipal).toBe('S000');
+    expect(row.codigoCIECausaExterna).toBe('W010');
+    expect(row.curpPaciente).toBe('PEGJ850102HDFRNN08');
+    expect(row.nombre).toBe('JUAN');
+    expect(row.primerApellido).toBe('PEREZ');
+    expect(row.segundoApellido).toBe('GOMEZ');
+    expect(Object.keys(row).length).toBe(82);
   });
 
-  it('mapNotaMedicaToLesRows: nota with only A04 (no injury) returns 0 rows', () => {
-    const nota = {
-      _id: new Types.ObjectId(),
-      fechaNotaMedica: new Date('2025-01-15'),
-      codigoCIE10Principal: 'A04',
-    };
-    const rows = mapNotaMedicaToLesRows(
-      nota,
-      { clues: 'DFSSA001234' },
-      null,
-      null,
-    );
-    expect(rows.length).toBe(0);
-  });
-
-  it('mapNotaMedicaToLesRows: nota with S00 + codigoCIECausaExterna W17 has both codes', () => {
-    const nota = {
-      _id: new Types.ObjectId(),
-      fechaNotaMedica: new Date('2025-01-10'),
-      codigoCIE10Principal: 'S00 - TRAUMATISMO',
+  it('mapLesionToLesRow: lesion with causaExterna W17 normalizes CIE to 4 chars', () => {
+    const lesion = {
+      folio: '00000002',
+      codigoCIEAfeccionPrincipal: 'S00.1',
       codigoCIECausaExterna: 'W17',
       causaExterna: 'Caída',
+      fechaAtencion: new Date('2025-01-10'),
     };
-    const rows = mapNotaMedicaToLesRows(
-      nota,
-      { clues: 'ASSCT000014' },
-      null,
-      null,
+    const row = mapLesionToLesRow(lesion, { clues: 'ASSCT000014' }, null);
+    expect(row.codigoCIEAfeccionPrincipal).toBe('S001');
+    expect(row.codigoCIECausaExterna).toBe('W170');
+    expect(row.causaExterna).toBe('Caída');
+  });
+
+  it('mapLesionToLesRow: afeccionesTratadas multivalor (Num#Desc#CIE con &)', () => {
+    const lesion = {
+      folio: '00000004',
+      codigoCIEAfeccionPrincipal: 'S00',
+      codigoCIECausaExterna: 'W01',
+      fechaAtencion: new Date('2025-01-10'),
+      afeccionesTratadas: [
+        '1#LESION EN MEJILLA#S014',
+        '2#FRACTURA COLUMNA#S127',
+        '3#CONTUSION RODILLA#S800',
+      ],
+    };
+    const row = mapLesionToLesRow(lesion, { clues: 'DFSSA001234' }, null);
+    expect(row.numeroAfeccion).toBe('1&2&3');
+    expect(row.descripcionAfeccion).toBe(
+      'LESION EN MEJILLA&FRACTURA COLUMNA&CONTUSION RODILLA',
     );
-    expect(rows.length).toBe(1);
-    expect(rows[0].codigoCIEAfeccionPrincipal).toBe('S00');
-    expect(rows[0].codigoCIECausaExterna).toBe('W17');
-    expect(rows[0].causaExterna).toBe('Caída');
+    expect(row.codigoCIEAfeccion).toBe('S014&S127&S800');
+  });
+
+  it('mapLesionToLesRow: sin afeccionesTratadas usa afeccion principal como unica', () => {
+    const lesion = {
+      folio: '00000005',
+      codigoCIEAfeccionPrincipal: 'S00',
+      descripcionAfeccionPrincipal: 'TRAUMATISMO CABEZA',
+      codigoCIECausaExterna: 'W01',
+      fechaAtencion: new Date('2025-01-10'),
+    };
+    const row = mapLesionToLesRow(lesion, { clues: 'DFSSA001234' }, null);
+    expect(row.numeroAfeccion).toBe('1');
+    expect(row.descripcionAfeccion).toBe('TRAUMATISMO CABEZA');
+    expect(row.codigoCIEAfeccion).toBe('S000');
+  });
+
+  it('mapLesionToLesRow: municipioOcurrencia y localidadOcurrencia extraen solo CATALOG_KEY del formato compuesto', () => {
+    const lesion = {
+      folio: '00000006',
+      codigoCIEAfeccionPrincipal: 'S00',
+      codigoCIECausaExterna: 'W01',
+      fechaAtencion: new Date('2025-01-10'),
+      municipioOcurrencia: '25-001',
+      localidadOcurrencia: '25-001-0001',
+    };
+    const row = mapLesionToLesRow(lesion, { clues: 'DFSSA001234' }, null);
+    expect(row.municipioOcurrencia).toBe('001');
+    expect(row.localidadOcurrencia).toBe('0001');
+    expect(String(row.municipioOcurrencia).length).toBe(3);
+    expect(String(row.localidadOcurrencia).length).toBe(4);
+  });
+
+  it('mapLesionToLesRow: municipio/localidad sin valor usa defaults 998/9998', () => {
+    const lesion = {
+      folio: '00000007',
+      codigoCIEAfeccionPrincipal: 'S00',
+      codigoCIECausaExterna: 'W01',
+      fechaAtencion: new Date('2025-01-10'),
+    };
+    const row = mapLesionToLesRow(lesion, { clues: 'DFSSA001234' }, null);
+    expect(row.municipioOcurrencia).toBe('998');
+    expect(row.localidadOcurrencia).toBe('9998');
+  });
+
+  it('mapLesionToLesRow: firmanteData (enfermera) deriva curpResponsable y responsableAtencion', () => {
+    const lesion = {
+      folio: '00000003',
+      codigoCIEAfeccionPrincipal: 'S00',
+      codigoCIECausaExterna: 'W01',
+      fechaAtencion: new Date('2025-01-10'),
+    };
+    const firmanteData = {
+      curp: 'LOMG900315MDFRRN09',
+      nombre: 'Maria',
+      primerApellido: 'Lopez',
+      segundoApellido: 'Garcia',
+      cedula: '12345678',
+      responsableAtencion: 2,
+    };
+    const row = mapLesionToLesRow(
+      lesion,
+      { clues: 'DFSSA001234' },
+      null,
+      firmanteData,
+    );
+    expect(row.curpResponsable).toBe('LOMG900315MDFRRN09');
+    expect(row.nombreResponsable).toBe('MARIA');
+    expect(row.primerApellidoResponsable).toBe('LOPEZ');
+    expect(row.segundoApellidoResponsable).toBe('GARCIA');
+    expect(row.cedulaResponsable).toBe('12345678');
+    expect(row.responsableAtencion).toBe(2);
   });
 });
