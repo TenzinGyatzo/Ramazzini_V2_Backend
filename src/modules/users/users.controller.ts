@@ -13,6 +13,8 @@ import {
   Delete,
   Query,
   Patch,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -29,6 +31,7 @@ import { AuditService } from '../audit/audit.service';
 import { AuditActionType } from '../audit/constants/audit-action-type';
 import { AuditEventClass } from '../audit/constants/audit-event-class';
 import { getUserIdFromRequest } from '../../utils/auth-helpers';
+import { LoginLockoutService } from './login-lockout.service';
 
 interface JwtPayload {
   id: string;
@@ -39,6 +42,7 @@ const LOGIN_FAIL_REASON = {
   USER_NOT_VERIFIED: 'USER_NOT_VERIFIED',
   USER_LOCKED: 'USER_LOCKED',
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  LOCKOUT: 'LOCKOUT',
   UNKNOWN: 'UNKNOWN',
 } as const;
 
@@ -89,6 +93,7 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly emailsService: EmailsService,
     private readonly auditService: AuditService,
+    private readonly loginLockoutService: LoginLockoutService,
   ) {}
 
   private getRequestContext(req: Request) {
@@ -303,10 +308,57 @@ export class UsersController {
       throw new BadRequestException('El email ingresado no es válido');
     }
 
+    // Bloqueo temporal tras 5 intentos fallidos
+    const lockoutStatus = await this.loginLockoutService.getLockoutStatus(email);
+    if (lockoutStatus.locked && lockoutStatus.retryAfterSeconds != null) {
+      const minutes = Math.ceil(lockoutStatus.retryAfterSeconds / 60);
+      // Resolver usuario para auditoría (mismo actorId/proveedorSaludId que en el resto del login)
+      const userForAudit = await this.usersService.findByEmail(email);
+      const proveedorSaludIdForAudit = userForAudit
+        ? await this.usersService.getIdProveedorSaludByUserId(
+            String((userForAudit as any)._id),
+          )
+        : null;
+      const actorIdForAudit = userForAudit
+        ? (userForAudit as any)._id.toString()
+        : 'ANONYMOUS';
+      await this.auditService
+        .record({
+          proveedorSaludId: proveedorSaludIdForAudit,
+          actorId: actorIdForAudit,
+          actionType: AuditActionType.LOGIN_BLOCKED,
+          resourceType: 'AUTH',
+          resourceId: userForAudit ? (userForAudit as any)._id.toString() : null,
+          payload: this.buildLoginFailPayload(
+            email,
+            LOGIN_FAIL_REASON.LOCKOUT,
+            req,
+            {
+              loginContext: resolvedContext,
+              sid: sid ?? null,
+              inactivityTimeoutMinutes,
+              lockedAt,
+              unlockedAt,
+            },
+          ),
+          eventClass: AuditEventClass.CLASS_2_SOFT_FAIL,
+        })
+        .catch(() => {});
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          message: `Demasiados intentos fallidos. Intente de nuevo en ${minutes} minuto${minutes !== 1 ? 's' : ''}.`,
+          retryAfterSeconds: lockoutStatus.retryAfterSeconds,
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     // Revisar que el usuario exista
     const user: UserDocument | null =
       await this.usersService.findByEmail(email);
     if (!user) {
+      await this.loginLockoutService.recordFailedAttempt(email);
       await this.auditService
         .record({
           proveedorSaludId: null,
@@ -340,6 +392,7 @@ export class UsersController {
 
     // Revisar si el usuario confirmo su cuenta
     if (!user.verified) {
+      await this.loginLockoutService.recordFailedAttempt(email);
       await this.auditService
         .record({
           proveedorSaludId,
@@ -369,6 +422,7 @@ export class UsersController {
 
     // Revisar si la cuenta está activa
     if (!user.cuentaActiva) {
+      await this.loginLockoutService.recordFailedAttempt(email);
       await this.auditService
         .record({
           proveedorSaludId,
@@ -399,6 +453,7 @@ export class UsersController {
     // Comprobar el password utilizando el método definido en el esquema
     const isPasswordValid = await user.checkPassword(password);
     if (!isPasswordValid) {
+      await this.loginLockoutService.recordFailedAttempt(email);
       await this.auditService
         .record({
           proveedorSaludId,
@@ -423,6 +478,7 @@ export class UsersController {
         .catch(() => {});
       throw new UnauthorizedException('Contraseña incorrecta');
     }
+    await this.loginLockoutService.clearLockout(email);
     const token = generateJWT(user._id);
     const sidToReturn =
       resolvedContext === 'PRIMARY_LOGIN' ? randomUUID() : (sid ?? null);

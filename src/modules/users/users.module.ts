@@ -4,6 +4,11 @@ import { UsersController } from './users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User } from './entities/user.entity';
 import { UserSchema } from './schemas/user.schema';
+import {
+  LoginLockout,
+  LoginLockoutSchema,
+} from './schemas/login-lockout.schema';
+import { LoginLockoutService } from './login-lockout.service';
 import { EmailsModule } from '../emails/emails.module';
 import { ProveedorSaludSchema } from '../proveedores-salud/schemas/proveedor-salud.schema';
 // Importar esquemas de expedientes
@@ -23,6 +28,7 @@ import { AuditModule } from '../audit/audit.module';
     forwardRef(() => AuditModule),
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
+      { name: LoginLockout.name, schema: LoginLockoutSchema },
       { name: 'ProveedorSalud', schema: ProveedorSaludSchema },
       { name: 'HistoriaClinica', schema: HistoriaClinicaSchema },
       { name: 'AptitudPuesto', schema: AptitudPuestoSchema },
@@ -37,7 +43,7 @@ import { AuditModule } from '../audit/audit.module';
     forwardRef(() => CentrosTrabajoModule),
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, LoginLockoutService],
   exports: [UsersService],
 })
 export class UsersModule {}

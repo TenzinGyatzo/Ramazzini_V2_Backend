@@ -140,56 +140,44 @@ function extractCatalogKeyForLes(
 }
 
 /**
- * GIIS-B013: Construye numeroAfeccion, descripcionAfeccion, codigoCIEAfeccion
- * a partir de afeccionesTratadas (formato Num#Desc#CIE por ítem).
- * Mínimo 1, máximo 6 afecciones; separador & entre ellas.
- * Si no aplican afecciones → vacío (en archivo: ||).
+ * GIIS-B013: Construye la variable compleja AFECCIONES TRATADAS.
+ * Formato: Num#Desc#CodigoCIE por afección; múltiples separadas por &.
+ * Mínimo 1, máximo 6 afecciones; si no aplican → vacío (en archivo: ||).
  */
 function buildAfeccionesTratadasForLes(
   afeccionesTratadas: string[] | null | undefined,
   codigoCIEAfeccionPrincipal: string,
-  _descripcionAfeccionPrincipal: string,
-): {
-  numeroAfeccion: string;
-  descripcionAfeccion: string;
-  codigoCIEAfeccion: string;
-} {
+  descripcionAfeccionPrincipal: string,
+): string {
   const valid = (afeccionesTratadas || [])
     .filter((s) => typeof s === 'string' && s.trim())
     .map((s) => {
       const parts = s.trim().split('#');
       const num = parseInt(parts[0], 10) || 1;
-      const desc = (parts[1] || '').trim();
-      const cie = normalizeCIE10To4Chars((parts[2] || '').trim());
+      const desc = (parts[1] || '').trim() || 'AFECCION TRATADA';
+      const cie =
+        normalizeCIE10To4Chars((parts[2] || '').trim()) ||
+        normalizeCIE10To4Chars(codigoCIEAfeccionPrincipal) ||
+        'S000';
       return { num, desc, cie };
     })
     .filter((x) => x.desc || x.cie);
 
   if (valid.length === 0) {
-    return {
-      numeroAfeccion: '',
-      descripcionAfeccion: '',
-      codigoCIEAfeccion: '',
-    };
+    const principalCie =
+      normalizeCIE10To4Chars(codigoCIEAfeccionPrincipal) || 'S000';
+    const principalDesc =
+      (descripcionAfeccionPrincipal as string)?.trim() || 'AFECCION PRINCIPAL';
+    return `1#${principalDesc}#${principalCie}`;
   }
 
-  return {
-    numeroAfeccion: valid.map((x) => String(x.num)).join('&'),
-    descripcionAfeccion: valid
-      .map((x) => x.desc || 'AFECCION TRATADA')
-      .join('&'),
-    codigoCIEAfeccion: valid
-      .map(
-        (x) =>
-          x.cie || normalizeCIE10To4Chars(codigoCIEAfeccionPrincipal) || 'S000',
-      )
-      .join('&'),
-  };
+  const items = valid.map((x) => `${x.num}#${x.desc}#${x.cie}`);
+  return items.join('&');
 }
 
 /**
  * Map one Lesion + optional Trabajador + optional FirmanteData to a flat record with keys = LES schema field names.
- * All 82 columns present; required ones get value or default.
+ * All 80 columns present (variable compleja afeccionesTratadas); required ones get value or default.
  * Sexo se deriva de trabajador.sexo; códigos CIE se normalizan a 4 caracteres; responsable desde médico/enfermera firmante.
  */
 export function mapLesionToLesRow(
@@ -318,30 +306,15 @@ export function mapLesionToLesRow(
     codigoCIEAfeccionPrincipal:
       normalizeCIE10To4Chars(lesion.codigoCIEAfeccionPrincipal as string) ||
       'S000',
-    ...(() => {
-      const principalCie =
-        normalizeCIE10To4Chars(lesion.codigoCIEAfeccionPrincipal as string) ||
-        'S000';
+    afeccionesTratadas: (() => {
       const principalDesc =
         (lesion.descripcionAfeccionPrincipal as string)?.trim() ||
         'AFECCION PRINCIPAL';
-      const built = buildAfeccionesTratadasForLes(
+      return buildAfeccionesTratadasForLes(
         lesion.afeccionesTratadas,
         lesion.codigoCIEAfeccionPrincipal as string,
         principalDesc,
       );
-      if (
-        built.numeroAfeccion ||
-        built.descripcionAfeccion ||
-        built.codigoCIEAfeccion
-      ) {
-        return built;
-      }
-      return {
-        numeroAfeccion: '1',
-        descripcionAfeccion: principalDesc,
-        codigoCIEAfeccion: principalCie,
-      };
     })(),
     afeccionPrincipalReseleccionada:
       normalizeCIE10To4Chars(lesion.afeccionPrincipalReseleccionada) ||
