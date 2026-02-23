@@ -378,14 +378,18 @@ export class GiisBatchService {
       batch.yearMonth,
     );
     fs.mkdirSync(dir, { recursive: true });
-    const filePath = path.join(dir, 'CEX.txt');
+    const cexFileName = getOfficialFileName(
+      getOfficialBaseName('CEX', clues, year, month),
+      'TXT',
+    );
+    const filePath = path.join(dir, cexFileName);
     fs.writeFileSync(filePath, content, 'utf-8');
 
     const relativePath = path.join(
       EXPORTS_BASE,
       proveedorId,
       batch.yearMonth,
-      'CEX.txt',
+      cexFileName,
     );
     const setPayload: Record<string, unknown> = {
       excludedReport: {
@@ -510,14 +514,18 @@ export class GiisBatchService {
       batch.yearMonth,
     );
     fs.mkdirSync(dir, { recursive: true });
-    const filePath = path.join(dir, 'LES.txt');
+    const lesFileName = getOfficialFileName(
+      getOfficialBaseName('LES', clues, year, month),
+      'TXT',
+    );
+    const filePath = path.join(dir, lesFileName);
     fs.writeFileSync(filePath, content, 'utf-8');
 
     const relativePath = path.join(
       EXPORTS_BASE,
       proveedorIdStr,
       batch.yearMonth,
-      'LES.txt',
+      lesFileName,
     );
     await this.giisBatchModel.updateOne(
       { _id: batch._id },

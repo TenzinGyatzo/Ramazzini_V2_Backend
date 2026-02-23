@@ -202,6 +202,11 @@ export function mapLesionToLesRow(
       ? joinWithAmp(lesion.tipoViolencia) || '-1'
       : '-1';
 
+  const escolaridadCatalogKey =
+    trabajador?.escolaridad != null
+      ? appEscolaridadToCatalogKey(trabajador.escolaridad as string)
+      : 88;
+
   const valueByField: Record<string, string | number> = {
     clues: formatCLUES(clues) || clues,
     folio:
@@ -221,11 +226,8 @@ export function mapLesionToLesRow(
     entidadNacimiento:
       (trabajador?.entidadNacimiento as string) ||
       (lesion.curpPaciente ? '99' : '99'),
-    escolaridad:
-      trabajador?.escolaridad != null
-        ? appEscolaridadToCatalogKey(trabajador.escolaridad as string)
-        : 88,
-    sabeLeerEscribir: 9,
+    escolaridad: escolaridadCatalogKey,
+    sabeLeerEscribir: escolaridadCatalogKey === 1 ? 9 : 1,
     sexo: trabajador?.sexo
       ? Number(toGIISNumeric(trabajador.sexo as string) || '1')
       : lesion.sexo != null

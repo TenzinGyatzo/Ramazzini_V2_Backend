@@ -10,6 +10,7 @@ import { User } from '../../../modules/users/schemas/user.schema';
 import { MedicoFirmante } from '../../../modules/medicos-firmantes/schemas/medico-firmante.schema';
 import { EnfermeraFirmante } from '../../../modules/enfermeras-firmantes/schemas/enfermera-firmante.schema';
 import { TecnicoFirmante } from '../../../modules/tecnicos-firmantes/schemas/tecnico-firmante.schema';
+import { parseNombreCompleto } from '../../../utils/parseNombreCompleto';
 
 /** Códigos DGIS tipo personal (CEX): 2 = Médico general, 4 = Médico especialista, 6 = Enfermera */
 export const TIPO_PERSONAL_CEX_MEDICO_GENERAL = 2;
@@ -303,24 +304,15 @@ export class FirmanteHelper {
     },
     responsableAtencion: number,
   ): FirmanteDataForLes {
-    const nombre = (doc.nombre ?? '').trim();
-    const parts = nombre ? nombre.split(/\s+/).filter((p) => p) : [];
-    let primerApellido = 'NA';
-    let segundoApellido = 'XX';
-    let nombreOnly = nombre;
-    if (parts.length >= 3) {
-      nombreOnly = parts[0];
-      primerApellido = parts[1];
-      segundoApellido = parts[parts.length - 1];
-    } else if (parts.length === 2) {
-      nombreOnly = parts[0];
-      primerApellido = parts[1];
-    }
+    const nombreCompleto = (doc.nombre ?? '').trim();
+    const parsed = nombreCompleto
+      ? parseNombreCompleto(nombreCompleto)
+      : { nombrePrestador: '', primerApellidoPrestador: '', segundoApellidoPrestador: '' };
     return {
       curp: doc.curp?.trim(),
-      nombre: nombreOnly || 'NA',
-      primerApellido,
-      segundoApellido,
+      nombre: parsed.nombrePrestador?.trim() || 'NA',
+      primerApellido: parsed.primerApellidoPrestador?.trim() || 'NA',
+      segundoApellido: parsed.segundoApellidoPrestador?.trim() || 'XX',
       cedula: doc.numeroCedulaProfesional?.trim() || '0',
       responsableAtencion,
     };
