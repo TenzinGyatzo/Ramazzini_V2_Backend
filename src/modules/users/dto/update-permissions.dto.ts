@@ -27,7 +27,7 @@ export class UpdatePermissionsDto {
 
   @IsBoolean()
   @IsOptional()
-  gestionarCuestionariosAdicionales?: boolean;
+  gestionarOtrosDocumentos?: boolean;
 
   @IsBoolean()
   @IsOptional()

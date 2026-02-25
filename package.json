@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:nom024": "jest --config ./test/jest-nom024.json --verbose"
+    "test:nom024": "jest --config ./test/jest-nom024.json --verbose",
+    "migration:permisos-otros-documentos": "ts-node -r tsconfig-paths/register scripts/migration/migrate-permission-gestionar-otros-documentos.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

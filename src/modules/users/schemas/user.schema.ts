@@ -59,7 +59,7 @@ export class User {
       gestionarDocumentosDiagnostico: { type: Boolean, default: false },
       gestionarDocumentosEvaluacion: { type: Boolean, default: false },
       gestionarDocumentosExternos: { type: Boolean, default: false },
-      gestionarCuestionariosAdicionales: { type: Boolean, default: false },
+      gestionarOtrosDocumentos: { type: Boolean, default: false },
       accesoCompletoEmpresasCentros: { type: Boolean, default: false },
       accesoDashboardSalud: { type: Boolean, default: false },
       accesoRiesgosTrabajo: { type: Boolean, default: false },
@@ -74,7 +74,7 @@ export class User {
           gestionarDocumentosDiagnostico: true,
           gestionarDocumentosEvaluacion: true,
           gestionarDocumentosExternos: true,
-          gestionarCuestionariosAdicionales: true,
+          gestionarOtrosDocumentos: true,
           accesoCompletoEmpresasCentros: true,
           accesoDashboardSalud: true,
           accesoRiesgosTrabajo: true,
@@ -87,7 +87,7 @@ export class User {
           gestionarDocumentosDiagnostico: true,
           gestionarDocumentosEvaluacion: true,
           gestionarDocumentosExternos: true,
-          gestionarCuestionariosAdicionales: true,
+          gestionarOtrosDocumentos: true,
           accesoCompletoEmpresasCentros: false,
           accesoDashboardSalud: true,
           accesoRiesgosTrabajo: true,
@@ -100,7 +100,7 @@ export class User {
           gestionarDocumentosDiagnostico: false,
           gestionarDocumentosEvaluacion: true,
           gestionarDocumentosExternos: true,
-          gestionarCuestionariosAdicionales: true,
+          gestionarOtrosDocumentos: true,
           accesoCompletoEmpresasCentros: false,
           accesoDashboardSalud: true,
           accesoRiesgosTrabajo: true,
@@ -113,7 +113,7 @@ export class User {
           gestionarDocumentosDiagnostico: false,
           gestionarDocumentosEvaluacion: false,
           gestionarDocumentosExternos: true,
-          gestionarCuestionariosAdicionales: false,
+          gestionarOtrosDocumentos: false,
           accesoCompletoEmpresasCentros: true,
           accesoDashboardSalud: true,
           accesoRiesgosTrabajo: true,
@@ -126,7 +126,7 @@ export class User {
           gestionarDocumentosDiagnostico: false,
           gestionarDocumentosEvaluacion: true,
           gestionarDocumentosExternos: true,
-          gestionarCuestionariosAdicionales: true,
+          gestionarOtrosDocumentos: true,
           accesoCompletoEmpresasCentros: false,
           accesoDashboardSalud: true,
           accesoRiesgosTrabajo: false,
@@ -142,7 +142,7 @@ export class User {
     gestionarDocumentosDiagnostico: boolean;
     gestionarDocumentosEvaluacion: boolean;
     gestionarDocumentosExternos: boolean;
-    gestionarCuestionariosAdicionales: boolean;
+    gestionarOtrosDocumentos: boolean;
     accesoCompletoEmpresasCentros: boolean;
     accesoDashboardSalud: boolean;
     accesoRiesgosTrabajo: boolean;
@@ -177,6 +177,19 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Migración: copiar gestionarCuestionariosAdicionales a gestionarOtrosDocumentos al serializar
+UserSchema.set('toJSON', {
+  transform(_doc, ret) {
+    if (ret.permisos && ret.permisos.gestionarOtrosDocumentos === undefined) {
+      const legacy = (ret.permisos as any).gestionarCuestionariosAdicionales;
+      if (legacy !== undefined) {
+        ret.permisos.gestionarOtrosDocumentos = legacy;
+      }
+    }
+    return ret;
+  },
+});
 
 // Middleware pre-save para hashear el password
 UserSchema.pre<UserDocument>('save', async function (next) {

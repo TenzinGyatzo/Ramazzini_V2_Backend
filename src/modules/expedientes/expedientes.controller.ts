@@ -218,8 +218,6 @@ export class ExpedientesController {
       }),
     }),
   )
-  @UseGuards(DailyConsentGuard)
-  @RequireDailyConsent({ action: 'CREATE_DOCUMENT' })
   async uploadDocument(
     @Param('trabajadorId') trabajadorId: string,
     @Body() createDocumentoExternoDto: CreateDocumentoExternoDto,

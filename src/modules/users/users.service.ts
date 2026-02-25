@@ -104,7 +104,11 @@ export class UsersService {
       permisos.gestionarDocumentosDiagnostico = false;
       permisos.gestionarDocumentosEvaluacion = false;
       permisos.gestionarDocumentosExternos = false;
-      permisos.gestionarCuestionariosAdicionales = false;
+      permisos.gestionarOtrosDocumentos = false;
+    }
+    // Si el usuario es Técnico Evaluador, no puede tener gestionarDocumentosDiagnostico
+    if (user.role === 'Técnico Evaluador') {
+      permisos.gestionarDocumentosDiagnostico = false;
     }
 
     return this.userModel

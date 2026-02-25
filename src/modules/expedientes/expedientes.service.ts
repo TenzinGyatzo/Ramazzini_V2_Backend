@@ -2007,20 +2007,25 @@ export class ExpedientesService {
         `Tipo de documento ${documentType} no soportado`,
       );
     }
-    const docs = await model
+    const query = model
       .find({ idTrabajador: trabajadorId })
       .populate('createdBy', '_id username role')
       .populate('finalizadoPor', 'username')
-      .populate('anuladoPor', 'username')
-      .populate({
+      .populate('anuladoPor', 'username');
+
+    // documentoExterno no tiene consentimientoDiarioId en su schema
+    if (documentType !== 'documentoExterno') {
+      query.populate({
         path: 'consentimientoDiarioId',
         select: '_id acceptedAt consentMethod acceptedByUserId',
         populate: {
           path: 'acceptedByUserId',
           select: 'username nombre',
         },
-      })
-      .exec();
+      });
+    }
+
+    const docs = await query.exec();
 
     // Enriquecer lesiones con rutaPDF cuando falte (para vincular con PDFs existentes)
     if (documentType === 'lesion') {
@@ -2093,20 +2098,24 @@ export class ExpedientesService {
         `Tipo de documento ${documentType} no soportado`,
       );
     }
-    return model
+    const query = model
       .findById(id)
       .populate('createdBy', '_id username role')
       .populate('finalizadoPor', 'username')
-      .populate('anuladoPor', 'username')
-      .populate({
+      .populate('anuladoPor', 'username');
+
+    if (documentType !== 'documentoExterno') {
+      query.populate({
         path: 'consentimientoDiarioId',
         select: '_id acceptedAt consentMethod acceptedByUserId',
         populate: {
           path: 'acceptedByUserId',
           select: 'username nombre',
         },
-      })
-      .exec();
+      });
+    }
+
+    return query.exec();
   }
 
   async upsertDocumentoExterno(
