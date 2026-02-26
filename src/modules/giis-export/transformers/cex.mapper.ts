@@ -155,12 +155,16 @@ export function mapNotaMedicaToCexRow(
 
   const codigo1 = extractCieCode(consulta.codigoCIE10Principal);
   const comp = consulta.codigosCIE10Complementarios || [];
-  const codigo2Raw = comp[0]
-    ? extractCieCode(comp[0])
-    : consulta.codigoCIEDiagnostico2
-      ? extractCieCode(consulta.codigoCIEDiagnostico2 as string)
-      : '';
-  const codigo2 = codigo2Raw || 'R69X';
+  const primeraVezDiag2 = consulta.primeraVezDiagnostico2;
+  const codigo2Raw =
+    primeraVezDiag2 === -1
+      ? ''
+      : comp[0]
+        ? extractCieCode(comp[0])
+        : consulta.codigoCIEDiagnostico2
+          ? extractCieCode(consulta.codigoCIEDiagnostico2 as string)
+          : '';
+  const codigo2 = primeraVezDiag2 === -1 ? '' : codigo2Raw || 'R69X';
 
   const nombreCompletoPrestador = (prestador?.nombre ?? '').trim();
   const parsed = nombreCompletoPrestador
@@ -226,13 +230,35 @@ export function mapNotaMedicaToCexRow(
     paisProcedencia: -1,
     genero: genero ?? 0,
     derechohabiencia: '99',
-    fechaConsulta: toDDMMAAAA(consulta.fechaNotaMedica) || '',
+    // CEX: fechaConsulta no posterior al día de registro; si es futura, normalizar a hoy
+    fechaConsulta: (() => {
+      const d = consulta.fechaNotaMedica
+        ? new Date(consulta.fechaNotaMedica)
+        : null;
+      if (!d || isNaN(d.getTime())) return '';
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const dNorm = new Date(
+        Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+      );
+      const useDate = dNorm > today ? today : d;
+      return toDDMMAAAA(useDate) || '';
+    })(),
     servicioAtencion: 4, // 4 = Consulta Externa General
     peso: 999,
     talla: 999,
     circunferenciaCintura: 0,
-    sistolica: consulta.tensionArterialSistolica ?? 0,
-    diastolica: consulta.tensionArterialDiastolica ?? 0,
+    // CEX: si diastolica=0, sistolica debe ser 0 (y viceversa)
+    sistolica: (() => {
+      const s = consulta.tensionArterialSistolica ?? 0;
+      const d = consulta.tensionArterialDiastolica ?? 0;
+      return d === 0 ? 0 : s;
+    })(),
+    diastolica: (() => {
+      const s = consulta.tensionArterialSistolica ?? 0;
+      const d = consulta.tensionArterialDiastolica ?? 0;
+      return s === 0 ? 0 : d;
+    })(),
     frecuenciaCardiaca: consulta.frecuenciaCardiaca ?? 0,
     frecuenciaRespiratoria: consulta.frecuenciaRespiratoria ?? 0,
     temperatura: consulta.temperatura ?? 0,

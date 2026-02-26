@@ -56,7 +56,10 @@ export class LoginLockoutService {
     const newCount = updated?.failedAttempts ?? 1;
     if (newCount >= MAX_FAILED_ATTEMPTS) {
       await this.loginLockoutModel
-        .updateOne({ email: normalized }, { $set: { lockedUntil: lockoutUntil } })
+        .updateOne(
+          { email: normalized },
+          { $set: { lockedUntil: lockoutUntil } },
+        )
         .exec();
     }
   }

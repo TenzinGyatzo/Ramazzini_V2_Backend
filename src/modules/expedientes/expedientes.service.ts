@@ -1600,7 +1600,8 @@ export class ExpedientesService {
 
     // 7. Validate LSEX/LINF/LSUP (sex and age) against GIIS catalog for CIE codes
     if (trabajador?.fechaNacimiento && trabajador?.sexo) {
-      const cie10Fields: Array<{ field: string; value: string | string[] }> = [];
+      const cie10Fields: Array<{ field: string; value: string | string[] }> =
+        [];
       if (lesionDto.codigoCIEAfeccionPrincipal) {
         cie10Fields.push({
           field: 'codigoCIEAfeccionPrincipal',
@@ -1613,7 +1614,10 @@ export class ExpedientesService {
           value: lesionDto.afeccionPrincipalReseleccionada.trim(),
         });
       }
-      if (lesionDto.afeccionesTratadas && Array.isArray(lesionDto.afeccionesTratadas)) {
+      if (
+        lesionDto.afeccionesTratadas &&
+        Array.isArray(lesionDto.afeccionesTratadas)
+      ) {
         const codes: string[] = [];
         for (const item of lesionDto.afeccionesTratadas) {
           if (typeof item === 'string' && item) {
@@ -1642,9 +1646,7 @@ export class ExpedientesService {
               issue.reason === 'Sexo no permitido'
                 ? `sexo del trabajador (${issue.sexoTrabajador}) no permitido por catálogo (LSEX: ${issue.lsex})`
                 : `edad (${issue.edadTrabajador} años) fuera de rango del catálogo (LINF: ${issue.linf ?? 'NO'}, LSUP: ${issue.lsup ?? 'NO'})`;
-            errors.push(
-              `CIE-10 ${issue.cie10} en ${issue.field}: ${reason}`,
-            );
+            errors.push(`CIE-10 ${issue.cie10} en ${issue.field}: ${reason}`);
           }
         }
       }

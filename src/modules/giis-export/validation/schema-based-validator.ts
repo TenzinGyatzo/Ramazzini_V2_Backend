@@ -5,13 +5,11 @@
  */
 
 import { GiisSchema, GiisSchemaField } from '../schema-loader';
-import { ValidationError, ValidationSeverity } from './validation.types';
+import { ValidationError } from './validation.types';
 import {
   validateCURPFormat,
   isGenericCURP,
 } from '../../../utils/curp-validator.util';
-
-const GENERIC_CURP = 'XXXX999999XXXXXX99';
 
 /** Optional async catalog validation; when not provided, catalog checks are skipped. */
 export interface CatalogLookup {
@@ -43,7 +41,6 @@ function getNum(
 
 /** Allowed characters for names (validationRaw: A–Z Ñ, mayúsculas; especiales: - , . / ' ¨) */
 const NAME_REGEX = /^[A-ZÑ\s\-,\.\/'¨]+$/;
-const SPECIAL_ONLY = /[\-,\.\/'¨]/g;
 
 function hasConsecutiveSpecial(s: string): boolean {
   const specials = s.replace(/\s/g, '').replace(/[A-ZÑ]/g, '');
@@ -87,11 +84,15 @@ export async function validateRowAgainstSchema(
     const raw = getStr(row, field.name);
     const isEmpty = raw === '';
 
-    // Required (con excepción GIIS: codigoCIEDiagnostico3 en CEX puede quedar vacío según circunstancia)
+    // Required (excepciones CEX: codigoCIEDiagnostico2/3 vacíos cuando primeraVezDiagnostico2/3 = -1)
     if (field.requiredColumn && isEmpty) {
       const allowEmptyCie3 =
         guide === 'CEX' && field.name === 'codigoCIEDiagnostico3';
-      if (!allowEmptyCie3) {
+      const allowEmptyCie2 =
+        guide === 'CEX' &&
+        field.name === 'codigoCIEDiagnostico2' &&
+        getNum(row, 'primeraVezDiagnostico2') === -1;
+      if (!allowEmptyCie3 && !allowEmptyCie2) {
         errors.push({
           guide,
           rowIndex,
@@ -364,6 +365,133 @@ async function validateFieldByRule(
       }
     }
     return errors;
+  }
+
+  // CEX: rangos de signos vitales según schema
+  if (guide === 'CEX') {
+    const n = getNum(row, name);
+    if (name === 'sistolica') {
+      const diast = getNum(row, 'diastolica');
+      if (n !== null && n !== 0) {
+        if (diast === 0) {
+          errors.push({
+            guide,
+            rowIndex,
+            field: name,
+            cause: 'CEX: si diastólica=0, sistólica debe ser 0',
+            severity: 'blocker',
+          });
+        } else if (n < 50 || n > 300) {
+          errors.push({
+            guide,
+            rowIndex,
+            field: name,
+            cause: 'CEX: sistólica debe estar entre 50 y 300 mmHg',
+            severity: 'blocker',
+          });
+        }
+      }
+      if (n !== null && diast !== null && n > 0 && diast > 0 && n < diast) {
+        errors.push({
+          guide,
+          rowIndex,
+          field: name,
+          cause: 'CEX: sistólica debe ser >= diastólica',
+          severity: 'blocker',
+        });
+      }
+    }
+    if (name === 'diastolica') {
+      const sist = getNum(row, 'sistolica');
+      if (n !== null && n !== 0) {
+        if (sist === 0) {
+          errors.push({
+            guide,
+            rowIndex,
+            field: name,
+            cause: 'CEX: si sistólica=0, diastólica debe ser 0',
+            severity: 'blocker',
+          });
+        } else if (n < 20 || n > 200) {
+          errors.push({
+            guide,
+            rowIndex,
+            field: name,
+            cause: 'CEX: diastólica debe estar entre 20 y 200 mmHg',
+            severity: 'blocker',
+          });
+        }
+      }
+    }
+    if (
+      name === 'frecuenciaCardiaca' &&
+      n !== null &&
+      n !== 0 &&
+      (n < 40 || n > 220)
+    ) {
+      errors.push({
+        guide,
+        rowIndex,
+        field: name,
+        cause: 'CEX: frecuencia cardíaca debe estar entre 40 y 220 lpm',
+        severity: 'blocker',
+      });
+    }
+    if (
+      name === 'frecuenciaRespiratoria' &&
+      n !== null &&
+      n !== 0 &&
+      (n < 10 || n > 99)
+    ) {
+      errors.push({
+        guide,
+        rowIndex,
+        field: name,
+        cause: 'CEX: frecuencia respiratoria debe estar entre 10 y 99 rpm',
+        severity: 'blocker',
+      });
+    }
+    if (name === 'temperatura' && n !== null && n !== 0 && (n < 30 || n > 44)) {
+      errors.push({
+        guide,
+        rowIndex,
+        field: name,
+        cause: 'CEX: temperatura debe estar entre 30 y 44 °C',
+        severity: 'blocker',
+      });
+    }
+    if (
+      name === 'saturacionOxigeno' &&
+      n !== null &&
+      n !== 0 &&
+      (n < 1 || n > 100)
+    ) {
+      errors.push({
+        guide,
+        rowIndex,
+        field: name,
+        cause: 'CEX: saturación de oxígeno debe estar entre 1 y 100 %',
+        severity: 'blocker',
+      });
+    }
+    if (name === 'peso' && n !== null && n !== 999 && (n < 1 || n > 400)) {
+      errors.push({
+        guide,
+        rowIndex,
+        field: name,
+        cause: 'CEX: peso debe estar entre 1 y 400 kg (999=desconoce)',
+        severity: 'blocker',
+      });
+    }
+    if (name === 'talla' && n !== null && n !== 999 && (n < 30 || n > 220)) {
+      errors.push({
+        guide,
+        rowIndex,
+        field: name,
+        cause: 'CEX: talla debe estar entre 30 y 220 cm (999=desconoce)',
+        severity: 'blocker',
+      });
+    }
   }
 
   // Numeric enums from validationRaw (0/1, 0/1/2/3/-1, etc.)

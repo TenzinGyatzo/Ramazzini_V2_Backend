@@ -63,10 +63,7 @@ import {
   RiesgoTrabajo,
   RiesgoTrabajoSchema,
 } from '../riesgos-trabajo/schemas/riesgo-trabajo.schema';
-import {
-  Lesion,
-  LesionSchema,
-} from '../expedientes/schemas/lesion.schema';
+import { Lesion, LesionSchema } from '../expedientes/schemas/lesion.schema';
 import { FilesModule } from '../files/files.module';
 import {
   CentroTrabajo,

@@ -579,9 +579,7 @@ export class CatalogsService implements OnModuleInit {
           return {
             code: String(record.CATALOG_KEY ?? record.codigo ?? record.code),
             description:
-              record.TIPO_PERSONAL ||
-              record.descripcion ||
-              record.description,
+              record.TIPO_PERSONAL || record.descripcion || record.description,
             source: 'GIIS',
             version: record.version,
           };
@@ -1363,7 +1361,10 @@ export class CatalogsService implements OnModuleInit {
 
       if (filterVariant === 'afeccion') {
         if (!this.isCIE10AfeccionPrincipalValid(cieEntry.code)) continue;
-        const entryExt = cieEntry as CIE10Entry & { rubricaType?: string; afPrin?: string };
+        const entryExt = cieEntry as CIE10Entry & {
+          rubricaType?: string;
+          afPrin?: string;
+        };
         if (entryExt.rubricaType === 'B') continue;
         if (entryExt.afPrin !== undefined && entryExt.afPrin !== 'SI') continue;
       }

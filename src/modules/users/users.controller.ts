@@ -309,7 +309,8 @@ export class UsersController {
     }
 
     // Bloqueo temporal tras 5 intentos fallidos
-    const lockoutStatus = await this.loginLockoutService.getLockoutStatus(email);
+    const lockoutStatus =
+      await this.loginLockoutService.getLockoutStatus(email);
     if (lockoutStatus.locked && lockoutStatus.retryAfterSeconds != null) {
       const minutes = Math.ceil(lockoutStatus.retryAfterSeconds / 60);
       // Resolver usuario para auditoría (mismo actorId/proveedorSaludId que en el resto del login)
@@ -328,7 +329,9 @@ export class UsersController {
           actorId: actorIdForAudit,
           actionType: AuditActionType.LOGIN_BLOCKED,
           resourceType: 'AUTH',
-          resourceId: userForAudit ? (userForAudit as any)._id.toString() : null,
+          resourceId: userForAudit
+            ? (userForAudit as any)._id.toString()
+            : null,
           payload: this.buildLoginFailPayload(
             email,
             LOGIN_FAIL_REASON.LOCKOUT,

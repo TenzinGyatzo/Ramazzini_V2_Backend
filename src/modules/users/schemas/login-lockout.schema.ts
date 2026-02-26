@@ -20,5 +20,8 @@ export const LoginLockoutSchema = SchemaFactory.createForClass(LoginLockout);
 // TTL: MongoDB elimina el documento cuando lockedUntil ha pasado (para limpieza)
 LoginLockoutSchema.index(
   { lockedUntil: 1 },
-  { expireAfterSeconds: 0, partialFilterExpression: { lockedUntil: { $exists: true, $ne: null } } },
+  {
+    expireAfterSeconds: 0,
+    partialFilterExpression: { lockedUntil: { $exists: true, $ne: null } },
+  },
 );

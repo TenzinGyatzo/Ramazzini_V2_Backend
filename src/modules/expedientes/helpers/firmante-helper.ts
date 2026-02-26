@@ -307,7 +307,11 @@ export class FirmanteHelper {
     const nombreCompleto = (doc.nombre ?? '').trim();
     const parsed = nombreCompleto
       ? parseNombreCompleto(nombreCompleto)
-      : { nombrePrestador: '', primerApellidoPrestador: '', segundoApellidoPrestador: '' };
+      : {
+          nombrePrestador: '',
+          primerApellidoPrestador: '',
+          segundoApellidoPrestador: '',
+        };
     return {
       curp: doc.curp?.trim(),
       nombre: parsed.nombrePrestador?.trim() || 'NA',

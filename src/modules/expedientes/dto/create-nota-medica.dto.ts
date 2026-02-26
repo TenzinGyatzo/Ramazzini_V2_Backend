@@ -9,11 +9,13 @@ import {
   IsString,
   Max,
   Min,
-  Matches,
   IsArray,
   IsBoolean,
   IsIn,
+  Validate,
+  ValidateIf,
 } from 'class-validator';
+import { SistolicaMayorIgualDiastolicaConstraint } from '../validators/nota-medica-signos-vitales.validator';
 
 const tipoNota = ['Inicial', 'Seguimiento', 'Alta'];
 
@@ -42,42 +44,57 @@ export class CreateNotaMedicaDto {
   @IsString({ message: 'La exploración física debe ser un string' })
   exploracionFisica: string;
 
-  // Signos Vitales
+  // Signos Vitales - CEX NOM-024: rangos ampliados, 0 = desconoce
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 0 })
-  @Min(60)
-  @Max(200)
-  tensionArterialSistolica: number;
+  @ValidateIf(
+    (o) =>
+      o.tensionArterialSistolica != null && o.tensionArterialSistolica !== 0,
+  )
+  @Min(50, { message: 'CEX: sistólica mínimo 50 mmHg' })
+  @Max(300, { message: 'CEX: sistólica máximo 300 mmHg' })
+  @Validate(SistolicaMayorIgualDiastolicaConstraint)
+  tensionArterialSistolica?: number;
 
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 0 })
+  @ValidateIf(
+    (o) =>
+      o.tensionArterialDiastolica != null && o.tensionArterialDiastolica !== 0,
+  )
+  @Min(20, { message: 'CEX: diastólica mínimo 20 mmHg' })
+  @Max(200, { message: 'CEX: diastólica máximo 200 mmHg' })
+  tensionArterialDiastolica?: number;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 0 })
+  @ValidateIf((o) => o.frecuenciaCardiaca != null && o.frecuenciaCardiaca !== 0)
   @Min(40)
-  @Max(150)
-  tensionArterialDiastolica: number;
-
-  @IsOptional()
-  @Min(40)
-  @Max(150)
-  @IsNumber({ maxDecimalPlaces: 0 })
-  frecuenciaCardiaca: number;
+  @Max(220)
+  frecuenciaCardiaca?: number;
 
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 0 })
-  @Min(12)
-  @Max(45)
-  frecuenciaRespiratoria: number;
+  @ValidateIf(
+    (o) => o.frecuenciaRespiratoria != null && o.frecuenciaRespiratoria !== 0,
+  )
+  @Min(10)
+  @Max(99)
+  frecuenciaRespiratoria?: number;
 
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 1 })
-  @Min(35)
-  @Max(41)
-  temperatura: number;
+  @ValidateIf((o) => o.temperatura != null && o.temperatura !== 0)
+  @Min(30)
+  @Max(44)
+  temperatura?: number;
 
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 0 })
-  @Min(80)
+  @ValidateIf((o) => o.saturacionOxigeno != null && o.saturacionOxigeno !== 0)
+  @Min(1)
   @Max(100)
-  saturacionOxigeno: number;
+  saturacionOxigeno?: number;
 
   @IsOptional()
   @IsString({ message: 'El diagnóstico debe ser un string' })
@@ -113,10 +130,10 @@ export class CreateNotaMedicaDto {
     { maxDecimalPlaces: 0 },
     { message: 'primeraVezDiagnostico2 debe ser un número' },
   )
-  @IsIn([0, 1], {
-    message: 'primeraVezDiagnostico2 debe ser 0 (No) o 1 (Sí)',
+  @IsIn([-1, 0, 1], {
+    message: 'primeraVezDiagnostico2 debe ser -1 (No aplica), 0 (No) o 1 (Sí)',
   })
-  primeraVezDiagnostico2?: number; // 0=No, 1=Si
+  primeraVezDiagnostico2?: number; // -1=No aplica, 0=No, 1=Si
 
   @IsOptional()
   @IsString({ message: 'El código CIE-10 diagnóstico 2 debe ser un string' })

@@ -274,7 +274,12 @@ describe('CEX mapper unit', () => {
         codigoCIE10Principal: 'A150',
         relacionTemporal: 0,
       };
-      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo2);
+      const row = mapNotaMedicaToCexRow(
+        consulta,
+        context,
+        trabajador,
+        prestadorTipo2,
+      );
       expect(row.sintomaticoRespiratorioTb).toBe(1);
     });
 
@@ -284,7 +289,12 @@ describe('CEX mapper unit', () => {
         codigoCIE10Principal: 'A15.0 - Tuberculosis respiratoria',
         relacionTemporal: 0,
       };
-      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo2);
+      const row = mapNotaMedicaToCexRow(
+        consulta,
+        context,
+        trabajador,
+        prestadorTipo2,
+      );
       expect(row.sintomaticoRespiratorioTb).toBe(1);
     });
 
@@ -295,7 +305,12 @@ describe('CEX mapper unit', () => {
         codigosCIE10Complementarios: ['J00', 'A161 - TB pulmonar'],
         relacionTemporal: 0,
       };
-      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo2);
+      const row = mapNotaMedicaToCexRow(
+        consulta,
+        context,
+        trabajador,
+        prestadorTipo2,
+      );
       expect(row.sintomaticoRespiratorioTb).toBe(1);
     });
 
@@ -306,7 +321,12 @@ describe('CEX mapper unit', () => {
         codigoCIEDiagnostico2: 'A161',
         relacionTemporal: 0,
       };
-      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo2);
+      const row = mapNotaMedicaToCexRow(
+        consulta,
+        context,
+        trabajador,
+        prestadorTipo2,
+      );
       expect(row.sintomaticoRespiratorioTb).toBe(1);
     });
 
@@ -316,7 +336,12 @@ describe('CEX mapper unit', () => {
         codigoCIE10Principal: 'J00',
         relacionTemporal: 0,
       };
-      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo2);
+      const row = mapNotaMedicaToCexRow(
+        consulta,
+        context,
+        trabajador,
+        prestadorTipo2,
+      );
       expect(row.sintomaticoRespiratorioTb).toBe(0);
     });
 
@@ -326,7 +351,12 @@ describe('CEX mapper unit', () => {
         codigoCIE10Principal: 'A150',
         relacionTemporal: 0,
       };
-      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo15);
+      const row = mapNotaMedicaToCexRow(
+        consulta,
+        context,
+        trabajador,
+        prestadorTipo15,
+      );
       expect(row.sintomaticoRespiratorioTb).toBe(-1);
     });
 
@@ -336,7 +366,12 @@ describe('CEX mapper unit', () => {
         codigoCIE10Principal: 'A150',
         relacionTemporal: 0,
       };
-      const row = mapNotaMedicaToCexRow(consulta, context, trabajador, prestadorTipo16);
+      const row = mapNotaMedicaToCexRow(
+        consulta,
+        context,
+        trabajador,
+        prestadorTipo16,
+      );
       expect(row.sintomaticoRespiratorioTb).toBe(-1);
     });
   });
